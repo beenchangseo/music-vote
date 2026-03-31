@@ -20,8 +20,11 @@ function toDateKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function toDateTimeLocal(dateKey: string, hour: number, minute: number) {
-  return `${dateKey}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+function toISOWithTimezone(dateKey: string, hour: number, minute: number) {
+  // Create Date in user's local timezone, then convert to ISO string (UTC)
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const d = new Date(year, month - 1, day, hour, minute, 0);
+  return d.toISOString();
 }
 
 function formatDeadline(dateKey: string, hour: number, minute: number) {
@@ -94,7 +97,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
     if (!selectedDate) return;
     setSelectedHour(hour);
     setSelectedMinute(minute);
-    onChange(toDateTimeLocal(selectedDate, hour, minute));
+    onChange(toISOWithTimezone(selectedDate, hour, minute));
     setOpen(false);
   }
 
