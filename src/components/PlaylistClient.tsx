@@ -229,12 +229,12 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
           {/* CTA: Create your own */}
           {songsWithUserVote.length > 0 && (
             <div className="mt-8 bg-surface border border-border rounded-2xl p-5 text-center">
-              <p className="text-sm text-gray-400 mb-3">우리 밴드도 셋리스트를 투표로 정해보세요</p>
+              <p className="text-sm text-gray-400 mb-3">새로운 셋리스트를 만들고 싶다면?</p>
               <a
                 href="/"
                 className="inline-block px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-sm font-semibold transition-all active:scale-95"
               >
-                우리 밴드도 만들기
+                셋리스트 만들기
               </a>
             </div>
           )}
