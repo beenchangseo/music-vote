@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: #8b5cf6;
+  --color-primary-hover: #7c3aed;
+  --color-upvote: #22c55e;
+  --color-downvote: #ef4444;
+  --color-surface: #111827;
+  --color-surface-hover: #1f2937;
+  --color-border: #374151;
+  --animate-slide-up: slide-up 0.3s ease-out;
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-gradient: gradient 8s ease infinite;
+  --animate-float-slow: float 6s ease-in-out infinite;
+  --animate-float-mid: float 4s ease-in-out infinite;
+  --animate-float-fast: float 3s ease-in-out infinite;
+  --perspective-1000: 1000px;
+  --transform-3d: preserve-3d;
+  --rotate-y-12: rotateY(12deg);
+  --rotate-x-6: rotateX(6deg);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
+
+@keyframes gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
+}
+
+.perspective-1000 { perspective: 1000px; }
+.transform-3d { transform-style: preserve-3d; }
+.hover\:rotate-y-12:hover { transform: rotateY(12deg); }
+.hover\:rotate-x-6:hover { transform: rotateX(6deg); }
+.hover\:rotate-y-12:hover.hover\:rotate-x-6:hover { transform: rotateY(12deg) rotateX(6deg); }
+.animate-gradient { background-size: 200% 200%; animation: gradient 8s ease infinite; }
