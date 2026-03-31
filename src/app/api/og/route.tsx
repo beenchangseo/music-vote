@@ -6,8 +6,10 @@ export const runtime = "edge";
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const title = searchParams.get("title") || "Plypick";
+  const subtitle = searchParams.get("subtitle") || "";
   const songs = searchParams.get("songs") || "0";
   const participants = parseInt(searchParams.get("participants") || "0", 10) || 0;
+  const isHome = !!subtitle;
 
   return new ImageResponse(
     (
@@ -67,15 +69,21 @@ export async function GET(request: NextRequest) {
             alignItems: "center",
           }}
         >
-          <span>{songs}곡 등록</span>
-          {participants > 0 && (
+          {isHome ? (
+            <span>{subtitle}</span>
+          ) : (
             <>
-              <span style={{ color: "#4b5563" }}>·</span>
-              <span>{participants}명 참여</span>
+              <span>{songs}곡 등록</span>
+              {participants > 0 && (
+                <>
+                  <span style={{ color: "#4b5563" }}>·</span>
+                  <span>{participants}명 참여</span>
+                </>
+              )}
+              <span style={{ color: "#4b5563" }}>|</span>
+              <span>Plypick</span>
             </>
           )}
-          <span style={{ color: "#4b5563" }}>|</span>
-          <span>Plypick</span>
         </div>
 
         {/* CTA */}
