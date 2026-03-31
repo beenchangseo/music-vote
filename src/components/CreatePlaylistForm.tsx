@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPlaylist } from "@/actions/playlist";
+import DeadlinePicker from "./DeadlinePicker";
 
 interface CreatedPlaylist {
   id: string;
@@ -15,7 +16,6 @@ interface CreatedPlaylist {
 export default function CreatePlaylistForm() {
   const [title, setTitle] = useState("");
   const [deadline, setDeadline] = useState("");
-  const [showDeadline, setShowDeadline] = useState(false);
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState<CreatedPlaylist | null>(null);
   const [copied, setCopied] = useState(false);
@@ -146,33 +146,9 @@ export default function CreatePlaylistForm() {
         </button>
       </div>
 
-      {/* Deadline toggle */}
+      {/* Deadline picker */}
       <div className="mt-3">
-        {!showDeadline ? (
-          <button
-            type="button"
-            onClick={() => setShowDeadline(true)}
-            className="text-sm text-gray-500 hover:text-primary transition-colors"
-          >
-            + 투표 마감일 설정
-          </button>
-        ) : (
-          <div className="flex items-center gap-2 animate-fade-in">
-            <input
-              type="datetime-local"
-              value={deadline}
-              onChange={(e) => setDeadline(e.target.value)}
-              className="flex-1 px-3 py-2 rounded-xl bg-surface border border-border text-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-            />
-            <button
-              type="button"
-              onClick={() => { setShowDeadline(false); setDeadline(""); }}
-              className="text-sm text-gray-500 hover:text-red-400 transition-colors shrink-0"
-            >
-              취소
-            </button>
-          </div>
-        )}
+        <DeadlinePicker value={deadline} onChange={setDeadline} />
       </div>
     </form>
   );
