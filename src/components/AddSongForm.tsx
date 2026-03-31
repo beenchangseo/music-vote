@@ -46,6 +46,7 @@ export default function AddSongForm({ playlistId, shareCode, nickname }: AddSong
             setShowManualTitle(false);
           }}
           placeholder="YouTube URL을 붙여넣으세요"
+          enterKeyHint="send"
           className="flex-1 px-4 py-3 rounded-xl bg-gray-800 border border-border text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
         />
         <button
