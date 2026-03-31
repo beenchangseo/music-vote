@@ -120,6 +120,7 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
             shareCode={shareCode}
             isAdmin={isAdmin}
             adminToken={adminToken}
+            participantCount={participantCount}
           />
 
           {/* Participant count + deadline info */}
@@ -225,9 +226,22 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
             )}
           </div>
 
+          {/* CTA: Create your own */}
+          {songsWithUserVote.length > 0 && (
+            <div className="mt-8 bg-surface border border-border rounded-2xl p-5 text-center">
+              <p className="text-sm text-gray-400 mb-3">우리 밴드도 셋리스트를 투표로 정해보세요</p>
+              <a
+                href="/"
+                className="inline-block px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-sm font-semibold transition-all active:scale-95"
+              >
+                우리 밴드도 만들기
+              </a>
+            </div>
+          )}
+
           {/* AdSense placeholder */}
           {songsWithUserVote.length > 0 && (
-            <div className="mt-8 py-4 border border-dashed border-gray-700 rounded-xl text-center text-xs text-gray-600">
+            <div className="mt-4 py-4 border border-dashed border-gray-700 rounded-xl text-center text-xs text-gray-600">
               광고 영역 (AdSense 승인 후 활성화)
             </div>
           )}

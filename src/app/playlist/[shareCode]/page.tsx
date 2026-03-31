@@ -20,26 +20,54 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!playlist) return { title: "Music Vote" };
 
+  const { data: playlistData } = await supabase
+    .from("playlists")
+    .select("id")
+    .eq("share_code", shareCode)
+    .single();
+
+  const playlistId = playlistData?.id || "";
+
   const { count: songCount } = await supabase
     .from("songs")
     .select("id", { count: "exact", head: true })
-    .eq("playlist_id", (await supabase.from("playlists").select("id").eq("share_code", shareCode).single()).data?.id || "");
+    .eq("playlist_id", playlistId);
 
-  const title = `${playlist.title} - Music Vote`;
-  const description = `${songCount || 0}곡 등록 | 밴드 곡 투표에 참여하세요!`;
+  // Count unique participants
+  const { data: songIds } = await supabase
+    .from("songs")
+    .select("id")
+    .eq("playlist_id", playlistId);
+
+  let participantCount = 0;
+  if (songIds && songIds.length > 0) {
+    const { data: votes } = await supabase
+      .from("votes")
+      .select("nickname")
+      .in("song_id", songIds.map((s: { id: string }) => s.id));
+    if (votes) {
+      const uniqueNicknames = new Set(votes.map((v: { nickname: string }) => v.nickname.toLowerCase()));
+      participantCount = uniqueNicknames.size;
+    }
+  }
+
+  const metaTitle = `${playlist.title} - Music Vote`;
+  const description = participantCount > 0
+    ? `${songCount || 0}곡 등록 · ${participantCount}명 참여 중`
+    : `${songCount || 0}곡 등록 | 밴드 곡 투표에 참여하세요!`;
 
   return {
-    title,
+    title: metaTitle,
     description,
     openGraph: {
-      title,
+      title: metaTitle,
       description,
       type: "website",
-      images: [`/api/og?title=${encodeURIComponent(playlist.title)}&songs=${songCount || 0}`],
+      images: [`/api/og?title=${encodeURIComponent(playlist.title)}&songs=${songCount || 0}&participants=${participantCount}`],
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: metaTitle,
       description,
     },
   };

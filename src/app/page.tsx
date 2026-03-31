@@ -63,7 +63,16 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="px-4 py-6 text-center text-xs text-gray-600">
-        Music Vote &mdash; 밴드를 위한 곡 투표 서비스
+        <p>Music Vote &mdash; 밴드를 위한 곡 투표 서비스</p>
+        <div className="mt-2 flex items-center justify-center gap-3">
+          <a href="/about" className="hover:text-gray-400 transition-colors">소개</a>
+          <span>·</span>
+          <a href="/guide" className="hover:text-gray-400 transition-colors">사용 가이드</a>
+          <span>·</span>
+          <a href="/privacy" className="hover:text-gray-400 transition-colors">개인정보처리방침</a>
+          <span>·</span>
+          <a href="/terms" className="hover:text-gray-400 transition-colors">이용약관</a>
+        </div>
       </footer>
     </main>
   );
