@@ -19,7 +19,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Music Vote - 밴드 곡 투표",
+  title: "Plypick - 밴드 곡 투표",
   description: "밴드 구성원들과 함께 다음 공연 곡을 투표로 선정하세요",
 };
 

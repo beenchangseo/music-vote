@@ -1,4 +1,4 @@
--- Music Vote Database Schema
+-- Plypick Database Schema
 -- Run this in Supabase SQL Editor
 
 -- Enable CITEXT extension for case-insensitive nicknames

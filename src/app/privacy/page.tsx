@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "개인정보처리방침 - Music Vote",
-  description: "Music Vote(plypick.kr) 개인정보처리방침",
+  title: "개인정보처리방침 - Plypick",
+  description: "Plypick(plypick.kr) 개인정보처리방침",
 };
 
 export default function PrivacyPage() {
@@ -14,7 +14,7 @@ export default function PrivacyPage() {
         <div className="space-y-6 text-gray-300 text-sm leading-relaxed">
           <section>
             <h2 className="text-lg font-semibold text-gray-100 mb-2">1. 수집하는 개인정보</h2>
-            <p>Music Vote(이하 &quot;서비스&quot;)는 최소한의 정보만 수집합니다.</p>
+            <p>Plypick(이하 &quot;서비스&quot;)는 최소한의 정보만 수집합니다.</p>
             <ul className="list-disc list-inside mt-2 space-y-1 text-gray-400">
               <li>닉네임: 투표 참여 시 사용자가 직접 입력 (필수)</li>
               <li>접속 IP: 서비스 보안 및 악용 방지 목적 (자동 수집)</li>

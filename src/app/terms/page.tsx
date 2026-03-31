@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "이용약관 - Music Vote",
-  description: "Music Vote(plypick.kr) 서비스 이용약관",
+  title: "이용약관 - Plypick",
+  description: "Plypick(plypick.kr) 서비스 이용약관",
 };
 
 export default function TermsPage() {
@@ -15,7 +15,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-lg font-semibold text-gray-100 mb-2">제1조 (목적)</h2>
             <p>
-              본 약관은 Music Vote(이하 &quot;서비스&quot;)의 이용 조건 및 절차,
+              본 약관은 Plypick(이하 &quot;서비스&quot;)의 이용 조건 및 절차,
               이용자와 서비스 운영자의 권리와 의무를 규정함을 목적으로 합니다.
             </p>
           </section>

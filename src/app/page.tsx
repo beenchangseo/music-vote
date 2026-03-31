@@ -25,7 +25,7 @@ export default function Home() {
               </svg>
             </div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Music Vote
+              Plypick
             </h1>
             <p className="text-gray-400 mt-3 text-lg">
               밴드 곡을 투표로 선정하세요
@@ -63,7 +63,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="px-4 py-6 text-center text-xs text-gray-600">
-        <p>Music Vote &mdash; 밴드를 위한 곡 투표 서비스</p>
+        <p>Plypick &mdash; 밴드를 위한 곡 투표 서비스</p>
         <div className="mt-2 flex items-center justify-center gap-3">
           <a href="/about" className="hover:text-gray-400 transition-colors">소개</a>
           <span>·</span>

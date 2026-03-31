@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "밴드 투표 서비스란? - Music Vote",
+  title: "밴드 투표 서비스란? - Plypick",
   description:
-    "밴드 곡 투표 서비스 Music Vote(plypick.kr)를 소개합니다. 밴드 멤버들과 다음 공연 셋리스트를 투표로 정하세요.",
+    "밴드 곡 투표 서비스 Plypick(plypick.kr)를 소개합니다. 밴드 멤버들과 다음 공연 셋리스트를 투표로 정하세요.",
 };
 
 export default function AboutPage() {
@@ -36,10 +36,10 @@ export default function AboutPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-gray-100 mb-3">
-              Music Vote가 해결합니다
+              Plypick가 해결합니다
             </h2>
             <p>
-              Music Vote(plypick.kr)는 밴드 멤버들이 다음 공연이나 합주에서 연주할 곡을
+              Plypick(plypick.kr)는 밴드 멤버들이 다음 공연이나 합주에서 연주할 곡을
               투표로 선정할 수 있는 무료 웹 서비스입니다.
             </p>
             <ul className="mt-4 space-y-3">

@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     .eq("share_code", shareCode)
     .single();
 
-  if (!playlist) return { title: "Music Vote" };
+  if (!playlist) return { title: "Plypick" };
 
   const { data: playlistData } = await supabase
     .from("playlists")
@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
   }
 
-  const metaTitle = `${playlist.title} - Music Vote`;
+  const metaTitle = `${playlist.title} - Plypick`;
   const description = participantCount > 0
     ? `${songCount || 0}곡 등록 · ${participantCount}명 참여 중`
     : `${songCount || 0}곡 등록 | 밴드 곡 투표에 참여하세요!`;

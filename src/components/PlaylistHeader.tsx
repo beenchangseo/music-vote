@@ -70,7 +70,7 @@ export default function PlaylistHeader({
     const url = `${window.location.origin}/playlist/${shareCode}?utm_source=webshare&utm_medium=share&utm_campaign=${shareCode}`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: `Music Vote: ${title}`, url });
+        await navigator.share({ title: `Plypick: ${title}`, url });
         return;
       } catch {
         // Fallback to clipboard

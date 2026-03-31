@@ -5,7 +5,7 @@ export const runtime = "edge";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
-  const title = searchParams.get("title") || "Music Vote";
+  const title = searchParams.get("title") || "Plypick";
   const songs = searchParams.get("songs") || "0";
   const participants = parseInt(searchParams.get("participants") || "0", 10) || 0;
 
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
             </>
           )}
           <span style={{ color: "#4b5563" }}>|</span>
-          <span>Music Vote</span>
+          <span>Plypick</span>
         </div>
 
         {/* CTA */}
