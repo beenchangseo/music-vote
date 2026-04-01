@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deletePlaylist } from "@/actions/playlist";
+import { useDialog } from "./DialogProvider";
+import AnnouncementButton from "./AnnouncementButton";
 
 declare global {
   interface Window {
@@ -23,6 +25,7 @@ interface PlaylistHeaderProps {
   isAdmin: boolean;
   adminToken: string | null;
   participantCount?: number;
+  announcement?: string | null;
 }
 
 export default function PlaylistHeader({
@@ -33,10 +36,12 @@ export default function PlaylistHeader({
   isAdmin,
   adminToken,
   participantCount = 0,
+  announcement,
 }: PlaylistHeaderProps) {
   const [copied, setCopied] = useState(false);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const { showDanger, showAlert } = useDialog();
 
   function handleKakaoShare() {
     const url = `${window.location.origin}/playlist/${shareCode}?utm_source=kakao&utm_medium=share&utm_campaign=${shareCode}`;
@@ -85,13 +90,14 @@ export default function PlaylistHeader({
     }
   }
 
-  function handleDelete() {
-    if (!adminToken || !confirm("정말 이 플레이리스트를 삭제하시겠습니까? 모든 곡과 투표가 삭제됩니다.")) return;
+  async function handleDelete() {
+    if (!adminToken) return;
+    const ok = await showDanger("정말 이 플레이리스트를 삭제하시겠습니까?\n모든 곡과 투표가 삭제됩니다.");
+    if (!ok) return;
 
     startTransition(async () => {
       try {
         await deletePlaylist(playlistId, adminToken);
-        // Remove from localStorage
         let myPlaylists = [];
         try { myPlaylists = JSON.parse(localStorage.getItem("myPlaylists") || "[]"); } catch { /* ignore */ }
         if (!Array.isArray(myPlaylists)) myPlaylists = [];
@@ -99,7 +105,7 @@ export default function PlaylistHeader({
         try { localStorage.setItem("myPlaylists", JSON.stringify(updated)); } catch { /* quota */ }
         router.push("/");
       } catch {
-        alert("삭제에 실패했습니다.");
+        showAlert("삭제에 실패했습니다.");
       }
     });
   }
@@ -121,6 +127,14 @@ export default function PlaylistHeader({
             <path d="M12 3C6.48 3 2 6.54 2 10.86c0 2.77 1.81 5.2 4.53 6.6-.2.73-.72 2.65-.83 3.06-.13.52.19.51.4.37.17-.11 2.63-1.78 3.7-2.51.7.1 1.42.16 2.2.16 5.52 0 10-3.54 10-7.86S17.52 3 12 3z" />
           </svg>
         </button>
+        {/* Announcement */}
+        <AnnouncementButton
+          playlistId={playlistId}
+          announcement={announcement ?? null}
+          isAdmin={isAdmin}
+          adminToken={adminToken}
+          shareCode={shareCode}
+        />
         {/* General share */}
         <button
           onClick={handleShare}

@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import DialogProvider from "@/components/DialogProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -53,7 +54,9 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`${geistSans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-gray-950 text-gray-100 font-sans pb-[env(safe-area-inset-bottom)]">
-        {children}
+        <DialogProvider>
+          {children}
+        </DialogProvider>
         <Analytics />
         <SpeedInsights />
         <Script

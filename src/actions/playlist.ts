@@ -4,7 +4,7 @@ import { nanoid } from "nanoid";
 import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-export async function createPlaylist(title: string, deadline?: string) {
+export async function createPlaylist(title: string, deadline?: string, setlistCount?: number) {
   if (!title || title.length > 100) {
     throw new Error("플레이리스트 제목은 1~100자여야 합니다.");
   }
@@ -19,7 +19,12 @@ export async function createPlaylist(title: string, deadline?: string) {
 
     const { data, error } = await supabase
       .from("playlists")
-      .insert({ title, share_code: shareCode, deadline: deadline || null })
+      .insert({
+        title,
+        share_code: shareCode,
+        deadline: deadline || null,
+        setlist_count: setlistCount && setlistCount > 0 ? setlistCount : null,
+      })
       .select("id, share_code")
       .single();
 
@@ -42,6 +47,35 @@ export async function createPlaylist(title: string, deadline?: string) {
   }
 
   throw new Error("share_code 생성에 실패했습니다. 다시 시도해주세요.");
+}
+
+export async function updateAnnouncement(
+  playlistId: string,
+  adminToken: string,
+  announcement: string,
+  shareCode: string
+) {
+  const admin = createAdminClient();
+
+  const { data: adminData } = await admin
+    .from("playlist_admin")
+    .select("admin_token")
+    .eq("playlist_id", playlistId)
+    .single();
+
+  if (!adminData || adminData.admin_token !== adminToken) {
+    throw new Error("권한이 없습니다.");
+  }
+
+  const { error } = await admin
+    .from("playlists")
+    .update({ announcement: announcement || null })
+    .eq("id", playlistId);
+
+  if (error) throw new Error("공지사항 저장에 실패했습니다.");
+
+  revalidatePath(`/playlist/${shareCode}`);
+  return { success: true };
 }
 
 export async function deletePlaylist(playlistId: string, adminToken: string) {

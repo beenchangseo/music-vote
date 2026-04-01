@@ -53,3 +53,14 @@
 .hover\:rotate-x-6:hover { transform: rotateX(6deg); }
 .hover\:rotate-y-12:hover.hover\:rotate-x-6:hover { transform: rotateY(12deg) rotateX(6deg); }
 .animate-gradient { background-size: 200% 200%; animation: gradient 8s ease infinite; }
+
+/* Print styles for setlist */
+@media print {
+  body { background: white !important; color: black !important; }
+  .print\:hidden { display: none !important; }
+  .print\:bg-yellow-50 { background-color: #fefce8 !important; }
+  .print\:border-yellow-300 { border-color: #fde047 !important; }
+  .print\:text-yellow-800 { color: #854d0e !important; }
+  .print\:text-yellow-600 { color: #ca8a04 !important; }
+  .print\:bg-yellow-100 { background-color: #fef9c3 !important; }
+}

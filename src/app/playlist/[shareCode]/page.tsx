@@ -79,7 +79,7 @@ export default async function PlaylistPage({ params }: PageProps) {
 
   const { data: playlist } = await supabase
     .from("playlists")
-    .select("id, title, share_code, deadline, created_at")
+    .select("id, title, share_code, deadline, created_at, setlist_count, announcement, setlist_confirmed")
     .eq("share_code", shareCode)
     .single();
 

@@ -44,6 +44,42 @@ export async function addSong(
   return { success: true, needsManualTitle: !metadata && !manualTitle };
 }
 
+export async function updateSongMeta(
+  songId: string,
+  playlistId: string,
+  shareCode: string,
+  data: { keyMemo?: string | null; tempoBpm?: number | null; durationSeconds?: number | null }
+) {
+  const supabase = await createServerSupabaseClient();
+
+  // Verify song belongs to playlist
+  const { data: song } = await supabase
+    .from("songs")
+    .select("id")
+    .eq("id", songId)
+    .eq("playlist_id", playlistId)
+    .single();
+
+  if (!song) throw new Error("곡을 찾을 수 없습니다.");
+
+  const updateData: Record<string, unknown> = {};
+  if (data.keyMemo !== undefined) updateData.key_memo = data.keyMemo;
+  if (data.tempoBpm !== undefined) updateData.tempo_bpm = data.tempoBpm;
+  if (data.durationSeconds !== undefined) updateData.duration_seconds = data.durationSeconds;
+
+  if (Object.keys(updateData).length === 0) return { success: true };
+
+  const { error } = await supabase
+    .from("songs")
+    .update(updateData)
+    .eq("id", songId);
+
+  if (error) throw new Error("곡 정보 업데이트에 실패했습니다.");
+
+  revalidatePath(`/playlist/${shareCode}`);
+  return { success: true };
+}
+
 export async function removeSong(
   songId: string,
   playlistId: string,
