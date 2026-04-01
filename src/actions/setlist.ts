@@ -100,6 +100,32 @@ export async function addSetlistItem(
   return data as SetlistItem;
 }
 
+export async function addSetlistItemPublic(
+  playlistId: string,
+  item: { item_type: string; label: string; duration_seconds: number; position: number },
+  shareCode: string
+): Promise<SetlistItem> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("setlist_items")
+    .insert({
+      playlist_id: playlistId,
+      position: item.position,
+      item_type: item.item_type,
+      song_id: null,
+      label: item.label,
+      duration_seconds: item.duration_seconds,
+    })
+    .select()
+    .single();
+
+  if (error || !data) throw new Error("인터벌 블럭 추가에 실패했습니다.");
+
+  revalidatePath(`/playlist/${shareCode}`);
+  return data as SetlistItem;
+}
+
 export async function addSongToSetlist(
   playlistId: string,
   songId: string,
@@ -138,25 +164,14 @@ export async function addSongToSetlist(
 
 export async function updateSetlistOrder(
   playlistId: string,
-  adminToken: string,
+  _adminToken: string | null,
   itemIds: string[],
   shareCode: string
 ) {
-  const admin = createAdminClient();
+  const supabase = await createServerSupabaseClient();
 
-  const { data: adminData } = await admin
-    .from("playlist_admin")
-    .select("admin_token")
-    .eq("playlist_id", playlistId)
-    .single();
-
-  if (!adminData || adminData.admin_token !== adminToken) {
-    throw new Error("권한이 없습니다.");
-  }
-
-  // Bulk update positions
   for (let i = 0; i < itemIds.length; i++) {
-    const { error } = await admin
+    const { error } = await supabase
       .from("setlist_items")
       .update({ position: i })
       .eq("id", itemIds[i])
@@ -170,23 +185,13 @@ export async function updateSetlistOrder(
 
 export async function removeSetlistItem(
   playlistId: string,
-  adminToken: string,
+  _adminToken: string | null,
   itemId: string,
   shareCode: string
 ) {
-  const admin = createAdminClient();
+  const supabase = await createServerSupabaseClient();
 
-  const { data: adminData } = await admin
-    .from("playlist_admin")
-    .select("admin_token")
-    .eq("playlist_id", playlistId)
-    .single();
-
-  if (!adminData || adminData.admin_token !== adminToken) {
-    throw new Error("권한이 없습니다.");
-  }
-
-  const { error } = await admin
+  const { error } = await supabase
     .from("setlist_items")
     .delete()
     .eq("id", itemId)

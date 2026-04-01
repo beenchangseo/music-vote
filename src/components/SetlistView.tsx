@@ -70,7 +70,7 @@ export default function SetlistView({
   }, [sortedItems, songMap]);
 
   function handleMoveUp(index: number) {
-    if (index <= 0 || !adminToken) return;
+    if (index <= 0) return;
     const newItems = [...sortedItems];
     [newItems[index - 1], newItems[index]] = [newItems[index], newItems[index - 1]];
     const reordered = newItems.map((item, i) => ({ ...item, position: i }));
@@ -84,7 +84,7 @@ export default function SetlistView({
   }
 
   function handleMoveDown(index: number) {
-    if (index >= sortedItems.length - 1 || !adminToken) return;
+    if (index >= sortedItems.length - 1) return;
     const newItems = [...sortedItems];
     [newItems[index], newItems[index + 1]] = [newItems[index + 1], newItems[index]];
     const reordered = newItems.map((item, i) => ({ ...item, position: i }));
@@ -98,7 +98,6 @@ export default function SetlistView({
   }
 
   const handleRemove = useCallback(async (itemId: string) => {
-    if (!adminToken) return;
     const ok = await showDanger("이 항목을 삭제하시겠습니까?");
     if (!ok) return;
     onItemsChange(setlistItems.filter((i) => i.id !== itemId));
@@ -108,7 +107,7 @@ export default function SetlistView({
         await removeSetlistItem(playlistId, adminToken, itemId, shareCode);
       } catch { /* ignore */ }
     });
-  }, [adminToken, showDanger, onItemsChange, setlistItems, playlistId, shareCode]);
+  }, [showDanger, onItemsChange, setlistItems, playlistId, adminToken, shareCode]);
 
   if (loading) {
     return (
@@ -126,30 +125,27 @@ export default function SetlistView({
           <p className="text-lg font-medium">셋리스트가 비어있습니다</p>
           <p className="mt-1 text-sm">플레이리스트에서 곡을 셋리스트에 추가해보세요</p>
         </div>
-        {isAdmin && (
-          <div className="mt-4">
-            {showAddForm ? (
-              <AddIntervalForm
-                playlistId={playlistId}
-                adminToken={adminToken!}
-                shareCode={shareCode}
-                nextPosition={0}
-                onAdded={(item) => {
-                  onItemsChange([...setlistItems, item]);
-                  setShowAddForm(false);
-                }}
-                onCancel={() => setShowAddForm(false)}
-              />
-            ) : (
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="w-full py-3 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary/50 text-sm text-gray-500 hover:text-primary transition-colors"
-              >
-                + 인터벌 블럭 추가
-              </button>
-            )}
-          </div>
-        )}
+        <div className="mt-4">
+          {showAddForm ? (
+            <AddIntervalForm
+              playlistId={playlistId}
+              shareCode={shareCode}
+              nextPosition={0}
+              onAdded={(item) => {
+                onItemsChange([...setlistItems, item]);
+                setShowAddForm(false);
+              }}
+              onCancel={() => setShowAddForm(false)}
+            />
+          ) : (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="w-full py-3 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary/50 text-sm text-gray-500 hover:text-primary transition-colors"
+            >
+              + 인터벌 블럭 추가
+            </button>
+          )}
+        </div>
       </div>
     );
   }
@@ -187,7 +183,7 @@ export default function SetlistView({
                 item={item}
                 index={index}
                 total={sortedItems.length}
-                isAdmin={isAdmin}
+                isAdmin={true}
                 onMoveUp={() => handleMoveUp(index)}
                 onMoveDown={() => handleMoveDown(index)}
                 onRemove={() => handleRemove(item.id)}
@@ -203,17 +199,14 @@ export default function SetlistView({
               key={item.id}
               className="bg-surface rounded-xl border border-border p-3 flex items-center gap-3"
             >
-              {/* Position */}
               <span className="text-xs text-gray-500 w-5 text-center shrink-0">{index + 1}</span>
 
-              {/* Thumbnail */}
               {song.thumbnail_url && (
                 <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0">
                   <Image src={song.thumbnail_url} alt={song.title} fill sizes="40px" className="object-cover" />
                 </div>
               )}
 
-              {/* Info */}
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-gray-100 truncate">{song.title}</p>
                 <div className="flex items-center gap-2 text-xs text-gray-400">
@@ -227,50 +220,45 @@ export default function SetlistView({
                 </div>
               </div>
 
-              {/* Admin controls */}
-              {isAdmin && (
-                <div className="flex items-center gap-1 shrink-0">
-                  <button onClick={() => handleMoveUp(index)} disabled={index === 0} className="p-1 text-gray-500 hover:text-gray-200 disabled:opacity-30 transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
-                  </button>
-                  <button onClick={() => handleMoveDown(index)} disabled={index === sortedItems.length - 1} className="p-1 text-gray-500 hover:text-gray-200 disabled:opacity-30 transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                  </button>
-                  <button onClick={() => handleRemove(item.id)} className="p-1 text-gray-500 hover:text-red-400 transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                  </button>
-                </div>
-              )}
+              {/* Controls — all participants */}
+              <div className="flex items-center gap-1 shrink-0">
+                <button onClick={() => handleMoveUp(index)} disabled={index === 0} className="p-1 text-gray-500 hover:text-gray-200 disabled:opacity-30 transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
+                </button>
+                <button onClick={() => handleMoveDown(index)} disabled={index === sortedItems.length - 1} className="p-1 text-gray-500 hover:text-gray-200 disabled:opacity-30 transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                <button onClick={() => handleRemove(item.id)} className="p-1 text-gray-500 hover:text-red-400 transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
             </div>
           );
         })}
       </div>
 
-      {/* Add interval block (admin only) */}
-      {isAdmin && (
-        <div className="mt-4">
-          {showAddForm ? (
-            <AddIntervalForm
-              playlistId={playlistId}
-              adminToken={adminToken!}
-              shareCode={shareCode}
-              nextPosition={sortedItems.length}
-              onAdded={(item) => {
-                onItemsChange([...setlistItems, item]);
-                setShowAddForm(false);
-              }}
-              onCancel={() => setShowAddForm(false)}
-            />
-          ) : (
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="w-full py-3 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary/50 text-sm text-gray-500 hover:text-primary transition-colors"
-            >
-              + 인터벌 블럭 추가
-            </button>
-          )}
-        </div>
-      )}
+      {/* Add interval block — all participants */}
+      <div className="mt-4">
+        {showAddForm ? (
+          <AddIntervalForm
+            playlistId={playlistId}
+            shareCode={shareCode}
+            nextPosition={sortedItems.length}
+            onAdded={(item) => {
+              onItemsChange([...setlistItems, item]);
+              setShowAddForm(false);
+            }}
+            onCancel={() => setShowAddForm(false)}
+          />
+        ) : (
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="w-full py-3 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary/50 text-sm text-gray-500 hover:text-primary transition-colors"
+          >
+            + 인터벌 블럭 추가
+          </button>
+        )}
+      </div>
     </div>
   );
 }

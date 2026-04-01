@@ -14,7 +14,13 @@ export default function NicknameModal({ onSubmit }: NicknameModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem("nickname");
+    // 현재 플리 URL에서 shareCode 추출하여 플리별 닉네임 저장
+    const path = window.location.pathname;
+    const match = path.match(/\/playlist\/([^/]+)/);
+    const shareCode = match?.[1];
+    const key = shareCode ? `nickname_${shareCode}` : "nickname";
+
+    const saved = localStorage.getItem(key);
     if (saved) {
       onSubmit(saved);
     } else {
@@ -56,7 +62,11 @@ export default function NicknameModal({ onSubmit }: NicknameModalProps) {
     e.preventDefault();
     if (!nickname.trim()) return;
     const trimmed = nickname.trim();
-    try { localStorage.setItem("nickname", trimmed); } catch { /* quota */ }
+    const path = window.location.pathname;
+    const match = path.match(/\/playlist\/([^/]+)/);
+    const shareCode = match?.[1];
+    const key = shareCode ? `nickname_${shareCode}` : "nickname";
+    try { localStorage.setItem(key, trimmed); } catch { /* quota */ }
     setShow(false);
     onSubmit(trimmed);
   }

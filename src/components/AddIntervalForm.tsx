@@ -2,19 +2,18 @@
 
 import { useState, useTransition } from "react";
 import { useDialog } from "./DialogProvider";
-import { addSetlistItem } from "@/actions/setlist";
+import { addSetlistItemPublic } from "@/actions/setlist";
 import type { SetlistItem } from "@/lib/types";
 
 interface AddIntervalFormProps {
   playlistId: string;
-  adminToken: string;
   shareCode: string;
   nextPosition: number;
   onAdded: (item: SetlistItem) => void;
   onCancel: () => void;
 }
 
-export default function AddIntervalForm({ playlistId, adminToken, shareCode, nextPosition, onAdded, onCancel }: AddIntervalFormProps) {
+export default function AddIntervalForm({ playlistId, shareCode, nextPosition, onAdded, onCancel }: AddIntervalFormProps) {
   const [label, setLabel] = useState("");
   const [minutes, setMinutes] = useState("");
   const [seconds, setSeconds] = useState("");
@@ -29,7 +28,7 @@ export default function AddIntervalForm({ playlistId, adminToken, shareCode, nex
 
     startTransition(async () => {
       try {
-        const item = await addSetlistItem(playlistId, adminToken, {
+        const item = await addSetlistItemPublic(playlistId, {
           item_type: "interval",
           label: label.trim(),
           duration_seconds: durationSeconds,
