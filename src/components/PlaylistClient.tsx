@@ -56,7 +56,10 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
   useEffect(() => {
     try {
       const myPlaylists = JSON.parse(localStorage.getItem("myPlaylists") || "[]");
-      const found = myPlaylists.find((p: { id: string }) => p.id === playlist.id);
+      // Match by id (UUID) OR by shareCode — covers pre-migration and cross-reference cases
+      const found = myPlaylists.find(
+        (p: { id?: string; shareCode?: string }) => p.id === playlist.id || p.shareCode === shareCode
+      );
       setAdminToken(found?.adminToken || null);
     } catch { /* ignore */ }
   // eslint-disable-next-line react-hooks/exhaustive-deps
