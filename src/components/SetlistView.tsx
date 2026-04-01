@@ -121,9 +121,35 @@ export default function SetlistView({
 
   if (sortedItems.length === 0) {
     return (
-      <div className="mt-6 text-center py-16 text-gray-500">
-        <p className="text-lg font-medium">셋리스트가 비어있습니다</p>
-        <p className="mt-1 text-sm">플레이리스트에서 셋리스트를 확정하면 곡이 표시됩니다</p>
+      <div className="mt-6">
+        <div className="text-center py-12 text-gray-500">
+          <p className="text-lg font-medium">셋리스트가 비어있습니다</p>
+          <p className="mt-1 text-sm">플레이리스트에서 곡을 셋리스트에 추가해보세요</p>
+        </div>
+        {isAdmin && (
+          <div className="mt-4">
+            {showAddForm ? (
+              <AddIntervalForm
+                playlistId={playlistId}
+                adminToken={adminToken!}
+                shareCode={shareCode}
+                nextPosition={0}
+                onAdded={(item) => {
+                  onItemsChange([...setlistItems, item]);
+                  setShowAddForm(false);
+                }}
+                onCancel={() => setShowAddForm(false)}
+              />
+            ) : (
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="w-full py-3 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary/50 text-sm text-gray-500 hover:text-primary transition-colors"
+              >
+                + 인터벌 블럭 추가
+              </button>
+            )}
+          </div>
+        )}
       </div>
     );
   }
