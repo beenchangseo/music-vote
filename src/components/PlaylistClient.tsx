@@ -152,23 +152,9 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
   // Player queue
   const { state: playerState, actions: playerActions } = usePlayerQueue(songsWithUserVote);
 
-  // Persistent player: one YouTubePlayer instance, always mounted (hidden when idle).
-  // On mobile, calling loadVideoById() synchronously inside a click handler
-  // chains the user gesture so the browser allows playback without a second tap.
-  const prevVideoIdRef = useRef<string | null>(null);
-
-  // Fallback: handle programmatic song changes (playNext, repeat) via useEffect
-  const currentVideoId = playerState.currentSong?.youtube_video_id ?? null;
-  useEffect(() => {
-    if (!currentVideoId) {
-      prevVideoIdRef.current = null;
-      return;
-    }
-    if (prevVideoIdRef.current && prevVideoIdRef.current !== currentVideoId) {
-      playerRef.current?.loadVideoById(currentVideoId);
-    }
-    prevVideoIdRef.current = currentVideoId;
-  }, [currentVideoId]);
+  // No need to call loadVideoById on song switch — each SongCard mounts
+  // a fresh YouTubePlayer with the correct videoId prop when isCurrent becomes true.
+  // loadVideoById is only used for repeat-one (same component stays mounted).
 
   const handleEnded = useCallback(() => {
     if (playerState.repeatMode === "one" && playerState.currentSong) {
@@ -180,19 +166,13 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
 
   const handleTogglePlay = useCallback((songId: string) => {
     if (playerState.currentSongId === songId) {
-      playerActions.playSong("");
+      // Clicking current song again → close/collapse the player
+      playerActions.playSong(""); // clear currentSongId
       playerActions.setIsPlaying(false);
     } else {
-      // Call loadVideoById synchronously within user gesture — mobile browsers
-      // recognize this as user-initiated and allow autoplay.
-      const song = songsWithUserVote.find((s) => s.id === songId);
-      if (song?.youtube_video_id) {
-        playerRef.current?.loadVideoById(song.youtube_video_id);
-        prevVideoIdRef.current = song.youtube_video_id;
-      }
       playerActions.playSong(songId);
     }
-  }, [playerState.currentSongId, playerActions, songsWithUserVote]);
+  }, [playerState.currentSongId, playerActions]);
 
   const handleAutoplayBlocked = useCallback(() => {
     playerActions.setAutoplayBlocked(true);
@@ -277,37 +257,7 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
             </p>
           )}
 
-          {/* Persistent YouTube Player — always mounted, hidden when no song.
-              Pre-initializing lets loadVideoById() work within user gesture on mobile. */}
-          <div className={`mt-4 relative bg-surface rounded-2xl border border-primary/50 overflow-hidden ${playerState.currentSong ? "" : "hidden"}`}>
-            <YouTubePlayer
-              ref={playerRef}
-              videoId={null}
-              onEnded={handleEnded}
-              onPlay={() => playerActions.setIsPlaying(true)}
-              onPause={() => playerActions.setIsPlaying(false)}
-              onAutoplayBlocked={handleAutoplayBlocked}
-            />
-            {playerState.currentSong && (
-              <>
-                <button
-                  onClick={() => handleTogglePlay(playerState.currentSongId!)}
-                  className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
-                  aria-label="플레이어 닫기"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-                <div className="px-4 py-2.5">
-                  <p className="text-sm font-medium text-gray-100 truncate">{playerState.currentSong.title}</p>
-                  {playerState.currentSong.artist && (
-                    <p className="text-xs text-gray-400 truncate">{playerState.currentSong.artist}</p>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
+          {/* YouTube Player is rendered inline inside SongCard */}
 
           {/* === MODE: PLAYLIST === */}
           {navMode === "playlist" && (
@@ -419,6 +369,11 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
                       onTogglePlay={() => handleTogglePlay(song.id)}
                       isExpired={isExpired}
                       isHighlighted={highlightedSongIds.has(song.id)}
+                      playerRef={playerState.currentSongId === song.id ? playerRef : undefined}
+                      onEnded={playerState.currentSongId === song.id ? handleEnded : undefined}
+                      onPlayerPlay={playerState.currentSongId === song.id ? () => playerActions.setIsPlaying(true) : undefined}
+                      onPlayerPause={playerState.currentSongId === song.id ? () => playerActions.setIsPlaying(false) : undefined}
+                      onAutoplayBlocked={playerState.currentSongId === song.id ? handleAutoplayBlocked : undefined}
                       onAddToSetlist={handleAddToSetlist}
                     />
                   ))

@@ -2,10 +2,12 @@
 
 import { useState, useTransition, useRef, useEffect } from "react";
 import Image from "next/image";
+import YouTubePlayer from "./YouTubePlayer";
 import VoteButtons from "./VoteButtons";
 import CommentModal from "./CommentModal";
 import { useDialog } from "./DialogProvider";
 import { removeSong } from "@/actions/song";
+import type { YouTubePlayerHandle } from "./YouTubePlayer";
 import type { SongWithScore } from "@/lib/types";
 
 interface SongCardProps {
@@ -22,6 +24,11 @@ interface SongCardProps {
   onTogglePlay: () => void;
   isExpired?: boolean;
   isHighlighted?: boolean;
+  playerRef?: React.RefObject<YouTubePlayerHandle | null>;
+  onEnded?: () => void;
+  onPlayerPlay?: () => void;
+  onPlayerPause?: () => void;
+  onAutoplayBlocked?: () => void;
   onAddToSetlist?: (songId: string) => void;
 }
 
@@ -39,6 +46,11 @@ export default function SongCard({
   onTogglePlay,
   isExpired = false,
   isHighlighted = false,
+  playerRef,
+  onEnded,
+  onPlayerPlay,
+  onPlayerPause,
+  onAutoplayBlocked,
   onAddToSetlist,
 }: SongCardProps) {
   const [isPending, startTransition] = useTransition();
@@ -77,6 +89,27 @@ export default function SongCard({
   if (viewMode === "compact") {
     return (
       <div className={`bg-surface rounded-xl border transition-all hover:border-gray-600 ${showMenu ? "overflow-visible" : "overflow-hidden"} ${isHighlighted ? "border-yellow-500/50 bg-yellow-900/5" : isCurrent ? "border-primary/50" : "border-border"} ${isPending ? "opacity-50" : ""}`}>
+        {isCurrent && (
+          <div className="relative">
+            <YouTubePlayer
+              ref={playerRef}
+              videoId={song.youtube_video_id}
+              onEnded={onEnded}
+              onPlay={onPlayerPlay}
+              onPause={onPlayerPause}
+              onAutoplayBlocked={onAutoplayBlocked}
+            />
+            <button
+              onClick={onTogglePlay}
+              className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+              aria-label="영상 닫기"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
         <div className="flex items-center gap-3 p-3">
           {/* Thumbnail + play */}
           <button
@@ -212,36 +245,50 @@ export default function SongCard({
   // Card (video) view
   return (
     <div className={`bg-surface rounded-2xl border overflow-hidden transition-all hover:border-gray-600 ${isCurrent ? "border-primary/50" : "border-border"} ${isPending ? "opacity-50" : ""}`}>
-      <button
-        onClick={onTogglePlay}
-        className="relative w-full aspect-video bg-gray-800 group"
-        aria-label={`${song.title} ${isCurrent ? "닫기" : "재생"}`}
-      >
-        {song.thumbnail_url && (
-          <Image
-            src={song.thumbnail_url}
-            alt={song.title}
-            fill
-            sizes="(max-width: 448px) 100vw, 448px"
-            className="object-cover"
+      {isCurrent ? (
+        <div className="relative">
+          <YouTubePlayer
+            ref={playerRef}
+            videoId={song.youtube_video_id}
+            onEnded={onEnded}
+            onPlay={onPlayerPlay}
+            onPause={onPlayerPause}
+            onAutoplayBlocked={onAutoplayBlocked}
           />
-        )}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
-          {isPlaying ? (
-            <div className="w-14 h-14 flex items-center justify-center rounded-full shadow-lg bg-primary/80">
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-              </svg>
-            </div>
-          ) : (
+          <button
+            onClick={onTogglePlay}
+            className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+            aria-label="영상 닫기"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={onTogglePlay}
+          className="relative w-full aspect-video bg-gray-800 group"
+          aria-label={`${song.title} 재생`}
+        >
+          {song.thumbnail_url && (
+            <Image
+              src={song.thumbnail_url}
+              alt={song.title}
+              fill
+              sizes="(max-width: 448px) 100vw, 448px"
+              className="object-cover"
+            />
+          )}
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
             <div className="w-14 h-14 flex items-center justify-center rounded-full shadow-lg bg-red-600 group-hover:bg-red-500 transition-colors">
               <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </div>
-          )}
-        </div>
-      </button>
+          </div>
+        </button>
+      )}
 
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
