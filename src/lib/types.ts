@@ -7,6 +7,7 @@ export interface Playlist {
   setlist_count: number | null;
   announcement: string | null;
   setlist_confirmed: boolean;
+  creator_nickname: string | null;
   created_at: string;
 }
 

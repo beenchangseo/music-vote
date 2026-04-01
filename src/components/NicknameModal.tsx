@@ -4,12 +4,14 @@ import { useState, useEffect, useRef } from "react";
 
 interface NicknameModalProps {
   onSubmit: (nickname: string) => void;
+  existingNicknames?: string[];
 }
 
-export default function NicknameModal({ onSubmit }: NicknameModalProps) {
+export default function NicknameModal({ onSubmit, existingNicknames = [] }: NicknameModalProps) {
   const [nickname, setNickname] = useState("");
   const [show, setShow] = useState(false);
   const [checked, setChecked] = useState(false);
+  const [warning, setWarning] = useState("");
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -58,16 +60,28 @@ export default function NicknameModal({ onSubmit }: NicknameModalProps) {
     };
   }, [show]);
 
+  const isDuplicate = nickname.trim() && existingNicknames.some(
+    (n) => n.toLowerCase() === nickname.trim().toLowerCase()
+  );
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!nickname.trim()) return;
     const trimmed = nickname.trim();
+
+    // If duplicate, show warning first — second submit confirms
+    if (isDuplicate && !warning) {
+      setWarning(`"${trimmed}" 닉네임이 이미 사용 중입니다. 본인이라면 다시 눌러주세요.`);
+      return;
+    }
+
     const path = window.location.pathname;
     const match = path.match(/\/playlist\/([^/]+)/);
     const shareCode = match?.[1];
     const key = shareCode ? `nickname_${shareCode}` : "nickname";
     try { localStorage.setItem(key, trimmed); } catch { /* quota */ }
     setShow(false);
+    setWarning("");
     onSubmit(trimmed);
   }
 
@@ -91,19 +105,24 @@ export default function NicknameModal({ onSubmit }: NicknameModalProps) {
           <input
             type="text"
             value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
+            onChange={(e) => { setNickname(e.target.value); setWarning(""); }}
             placeholder="닉네임"
             maxLength={20}
             autoFocus
             enterKeyHint="done"
             className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-border text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-center text-lg"
           />
+          {warning && (
+            <p className="mt-2 text-xs text-yellow-400 text-center">{warning}</p>
+          )}
           <button
             type="submit"
             disabled={!nickname.trim()}
-            className="w-full mt-4 px-6 py-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+            className={`w-full mt-4 px-6 py-3 rounded-xl text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 ${
+              warning ? "bg-yellow-600 hover:bg-yellow-500" : "bg-primary hover:bg-primary-hover"
+            }`}
           >
-            시작하기
+            {warning ? "본인이 맞습니다" : "시작하기"}
           </button>
         </form>
       </div>

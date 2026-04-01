@@ -56,7 +56,6 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
   useEffect(() => {
     try {
       const myPlaylists = JSON.parse(localStorage.getItem("myPlaylists") || "[]");
-      // Match by id (UUID) OR by shareCode — covers pre-migration and cross-reference cases
       const found = myPlaylists.find(
         (p: { id?: string; shareCode?: string }) => p.id === playlist.id || p.shareCode === shareCode
       );
@@ -65,7 +64,11 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isAdmin = !!adminToken;
+  // Admin = nickname matches creator_nickname (DB-based, no localStorage dependency)
+  // Falls back to legacy adminToken for old playlists without creator_nickname
+  const isAdmin = playlist.creator_nickname
+    ? nickname.toLowerCase() === playlist.creator_nickname.toLowerCase()
+    : !!adminToken;
   const isExpired = playlist.deadline ? new Date(playlist.deadline) < new Date() : false;
 
   // Lazy load setlist items on first mode switch
@@ -211,7 +214,13 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
 
   return (
     <>
-      <NicknameModal onSubmit={handleNickname} />
+      <NicknameModal
+        onSubmit={handleNickname}
+        existingNicknames={Array.from(new Set(songs.flatMap((s) => [
+          ...s.votes.map((v) => v.nickname),
+          ...(s.added_by ? [s.added_by] : []),
+        ])))}
+      />
 
       <div className="min-h-full bg-gray-950">
         <div className={`max-w-lg mx-auto px-4 py-6 ${bottomPadding}`}>

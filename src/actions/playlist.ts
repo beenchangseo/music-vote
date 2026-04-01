@@ -4,7 +4,7 @@ import { nanoid } from "nanoid";
 import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-export async function createPlaylist(title: string, deadline?: string, setlistCount?: number) {
+export async function createPlaylist(title: string, deadline?: string, setlistCount?: number, creatorNickname?: string) {
   if (!title || title.length > 100) {
     throw new Error("플레이리스트 제목은 1~100자여야 합니다.");
   }
@@ -24,6 +24,7 @@ export async function createPlaylist(title: string, deadline?: string, setlistCo
         share_code: shareCode,
         deadline: deadline || null,
         setlist_count: setlistCount && setlistCount > 0 ? setlistCount : null,
+        creator_nickname: creatorNickname || null,
       })
       .select("id, share_code")
       .single();
@@ -47,6 +48,24 @@ export async function createPlaylist(title: string, deadline?: string, setlistCo
   }
 
   throw new Error("share_code 생성에 실패했습니다. 다시 시도해주세요.");
+}
+
+export async function updateAnnouncementPublic(
+  playlistId: string,
+  announcement: string,
+  shareCode: string
+) {
+  const supabase = await createServerSupabaseClient();
+
+  const { error } = await supabase
+    .from("playlists")
+    .update({ announcement: announcement || null })
+    .eq("id", playlistId);
+
+  if (error) throw new Error("공지사항 저장에 실패했습니다.");
+
+  revalidatePath(`/playlist/${shareCode}`);
+  return { success: true };
 }
 
 export async function updateAnnouncement(

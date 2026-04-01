@@ -131,8 +131,6 @@ export default function PlaylistHeader({
         <AnnouncementButton
           playlistId={playlistId}
           announcement={announcement ?? null}
-          isAdmin={isAdmin}
-          adminToken={adminToken}
           shareCode={shareCode}
         />
         {/* General share */}

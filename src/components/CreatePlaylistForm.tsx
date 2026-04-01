@@ -20,6 +20,7 @@ function getTodayString() {
 
 export default function CreatePlaylistForm() {
   const [title, setTitle] = useState("");
+  const [creatorNickname, setCreatorNickname] = useState("");
   const [deadlineDate, setDeadlineDate] = useState("");
   const [deadlineTime, setDeadlineTime] = useState("23:59");
   const [setlistCount, setSetlistCount] = useState(0);
@@ -49,7 +50,8 @@ export default function CreatePlaylistForm() {
       const result = await createPlaylist(
         title.trim(),
         deadlineISO || undefined,
-        setlistCount > 0 ? setlistCount : undefined
+        setlistCount > 0 ? setlistCount : undefined,
+        creatorNickname.trim() || undefined
       );
 
       let myPlaylists = [];
@@ -64,6 +66,8 @@ export default function CreatePlaylistForm() {
       try { localStorage.setItem("myPlaylists", JSON.stringify(myPlaylists)); } catch { /* quota */ }
 
       const url = `${window.location.origin}/playlist/${result.shareCode}`;
+      // Pre-save nickname for this playlist so NicknameModal auto-fills
+      try { localStorage.setItem(`nickname_${result.shareCode}`, creatorNickname.trim()); } catch { /* quota */ }
       setCreated({ ...result, title: title.trim(), url });
     } catch {
       showAlert("플레이리스트 생성에 실패했습니다. 다시 시도해주세요.");
@@ -143,26 +147,36 @@ export default function CreatePlaylistForm() {
   // Creation form
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto">
-      <div className="flex gap-2">
+      <div className="space-y-2">
         <input
           type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="플레이리스트 이름을 입력하세요"
-          maxLength={100}
-          className="flex-1 px-4 py-3 rounded-xl bg-surface border border-border text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+          value={creatorNickname}
+          onChange={(e) => setCreatorNickname(e.target.value)}
+          placeholder="방장 닉네임을 입력하세요"
+          maxLength={20}
+          className="w-full px-4 py-3 rounded-xl bg-surface border border-border text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
         />
-        <button
-          type="submit"
-          disabled={!title.trim() || loading}
-          className="px-6 py-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
-        >
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="플레이리스트 이름을 입력하세요"
+            maxLength={100}
+            className="flex-1 px-4 py-3 rounded-xl bg-surface border border-border text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+          />
+          <button
+            type="submit"
+            disabled={!title.trim() || !creatorNickname.trim() || loading}
+            className="px-6 py-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+          >
           {loading ? (
             <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
             "만들기"
           )}
         </button>
+        </div>
       </div>
 
       {/* Options card */}
