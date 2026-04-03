@@ -50,6 +50,21 @@ export async function createPlaylist(title: string, deadline?: string, setlistCo
   throw new Error("share_code 생성에 실패했습니다. 다시 시도해주세요.");
 }
 
+export async function updateCreatorNickname(
+  playlistId: string,
+  creatorNickname: string,
+  shareCode: string
+) {
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase
+    .from("playlists")
+    .update({ creator_nickname: creatorNickname })
+    .eq("id", playlistId);
+  if (error) throw new Error("닉네임 저장에 실패했습니다.");
+  revalidatePath(`/playlist/${shareCode}`);
+  return { success: true };
+}
+
 export async function updateAnnouncementPublic(
   playlistId: string,
   announcement: string,

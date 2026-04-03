@@ -151,17 +151,9 @@ export default function SongCard({
           {/* Song info */}
           <div className="min-w-0 flex-1">
             <h3 className={`font-medium text-sm truncate ${isCurrent ? "text-primary" : "text-gray-100"}`}>{song.title}</h3>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              {song.artist && (
-                <span className="text-xs text-gray-400 truncate">{song.artist}</span>
-              )}
-              {song.added_by && (
-                <>
-                  {song.artist && <span className="text-xs text-gray-600">·</span>}
-                  <span className="text-xs text-primary/70 truncate shrink-0">{song.added_by}</span>
-                </>
-              )}
-            </div>
+            {song.artist && (
+              <p className="text-xs text-gray-400 truncate mt-0.5">{song.artist}</p>
+            )}
           </div>
 
           {/* Vote buttons */}
@@ -189,7 +181,12 @@ export default function SongCard({
               </svg>
             </button>
             {showMenu && (
-              <div className="absolute right-0 top-8 z-20 w-40 bg-gray-800 border border-border rounded-xl shadow-lg overflow-hidden">
+              <div className="absolute right-0 top-8 z-20 w-44 bg-gray-800 border border-border rounded-xl shadow-lg overflow-hidden">
+                {song.added_by && (
+                  <div className="px-3 py-2 text-xs text-gray-500 border-b border-border truncate">
+                    추가: <span className="text-gray-300">{song.added_by}</span>
+                  </div>
+                )}
                 <button
                   onClick={() => { setShowComments(true); setShowMenu(false); }}
                   className="w-full px-3 py-2.5 text-left text-sm text-gray-200 hover:bg-gray-700 transition-colors flex items-center gap-2"
@@ -290,17 +287,9 @@ export default function SongCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h3 className={`font-semibold truncate ${isCurrent ? "text-primary" : "text-gray-100"}`}>{song.title}</h3>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              {song.artist && (
-                <span className="text-sm text-gray-400 truncate">{song.artist}</span>
-              )}
-              {song.added_by && (
-                <>
-                  {song.artist && <span className="text-sm text-gray-600">·</span>}
-                  <span className="text-sm text-primary/70 shrink-0">{song.added_by} 추가</span>
-                </>
-              )}
-            </div>
+            {song.artist && (
+              <p className="text-sm text-gray-400 truncate mt-0.5">{song.artist}</p>
+            )}
           </div>
           <VoteButtons
             songId={song.id}

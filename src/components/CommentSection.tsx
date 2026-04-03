@@ -18,6 +18,7 @@ export default function CommentSection({ songId, comments, nickname, shareCode, 
   const myComment = nickname ? comments.find((c) => c.nickname.toLowerCase() === nickname.toLowerCase()) : null;
   const [content, setContent] = useState(myComment?.content || "");
   const [isEditing, setIsEditing] = useState(false);
+  const [showAllComments, setShowAllComments] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { showAlert } = useDialog();
 
@@ -53,16 +54,29 @@ export default function CommentSection({ songId, comments, nickname, shareCode, 
 
   return (
     <div className="px-3 py-2">
-      {/* Other comments */}
-      {comments.filter((c) => c.nickname.toLowerCase() !== nickname.toLowerCase()).map((c) => (
-        <div key={c.id} className="mb-2">
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <span className="text-xs font-medium text-primary/70">{c.nickname}</span>
-            <span className="text-[10px] text-gray-600">{new Date(c.updated_at).toLocaleDateString("ko-KR")}</span>
-          </div>
-          <p className="text-xs text-gray-300 whitespace-pre-wrap">{c.content}</p>
-        </div>
-      ))}
+      {/* Other comments — show max 2, expandable */}
+      {(() => {
+        const others = comments.filter((c) => c.nickname.toLowerCase() !== nickname.toLowerCase());
+        const visible = showAllComments ? others : others.slice(0, 2);
+        return (
+          <>
+            {visible.map((c) => (
+              <div key={c.id} className="mb-2">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-xs font-medium text-primary/70 truncate max-w-[120px]">{c.nickname}</span>
+                  <span className="text-[10px] text-gray-600">{new Date(c.updated_at).toLocaleDateString("ko-KR")}</span>
+                </div>
+                <p className="text-xs text-gray-300 whitespace-pre-wrap">{c.content}</p>
+              </div>
+            ))}
+            {others.length > 2 && !showAllComments && (
+              <button onClick={() => setShowAllComments(true)} className="text-xs text-primary/70 hover:text-primary mb-1">
+                댓글 {others.length - 2}개 더보기
+              </button>
+            )}
+          </>
+        );
+      })()}
 
       {/* My comment */}
       {nickname && (

@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useDialog } from "./DialogProvider";
-import { createPlaylist } from "@/actions/playlist";
+import { createPlaylist, updateCreatorNickname } from "@/actions/playlist";
 
 interface CreatedPlaylist {
   id: string;
@@ -20,19 +20,18 @@ function getTodayString() {
 
 export default function CreatePlaylistForm() {
   const [title, setTitle] = useState("");
-  const [creatorNickname, setCreatorNickname] = useState("");
   const [deadlineDate, setDeadlineDate] = useState("");
   const [deadlineTime, setDeadlineTime] = useState("23:59");
   const [setlistCount, setSetlistCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState<CreatedPlaylist | null>(null);
-  const { showAlert } = useDialog();
+  const [creatorNickname, setCreatorNickname] = useState("");
   const [copied, setCopied] = useState(false);
+  const { showAlert } = useDialog();
   const router = useRouter();
 
   const todayStr = useMemo(() => getTodayString(), []);
 
-  // Convert date + time to ISO string for server
   const deadlineISO = useMemo(() => {
     if (!deadlineDate) return "";
     const [year, month, day] = deadlineDate.split("-").map(Number);
@@ -50,8 +49,7 @@ export default function CreatePlaylistForm() {
       const result = await createPlaylist(
         title.trim(),
         deadlineISO || undefined,
-        setlistCount > 0 ? setlistCount : undefined,
-        creatorNickname.trim() || undefined
+        setlistCount > 0 ? setlistCount : undefined
       );
 
       let myPlaylists = [];
@@ -66,8 +64,6 @@ export default function CreatePlaylistForm() {
       try { localStorage.setItem("myPlaylists", JSON.stringify(myPlaylists)); } catch { /* quota */ }
 
       const url = `${window.location.origin}/playlist/${result.shareCode}`;
-      // Pre-save nickname for this playlist so NicknameModal auto-fills
-      try { localStorage.setItem(`nickname_${result.shareCode}`, creatorNickname.trim()); } catch { /* quota */ }
       setCreated({ ...result, title: title.trim(), url });
     } catch {
       showAlert("플레이리스트 생성에 실패했습니다. 다시 시도해주세요.");
@@ -86,11 +82,19 @@ export default function CreatePlaylistForm() {
     }
   }
 
-  function handleGoToPlaylist() {
-    if (created) router.push(`/playlist/${created.shareCode}`);
+  async function handleGoToPlaylist() {
+    if (!created) return;
+    // Save creator nickname if entered
+    if (creatorNickname.trim()) {
+      try {
+        await updateCreatorNickname(created.id, creatorNickname.trim(), created.shareCode);
+        localStorage.setItem(`nickname_${created.shareCode}`, creatorNickname.trim());
+      } catch { /* ignore */ }
+    }
+    router.push(`/playlist/${created.shareCode}`);
   }
 
-  // QR + URL Modal after creation
+  // Success screen — QR + URL + nickname input
   if (created) {
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(created.url)}&bgcolor=111827&color=ffffff`;
 
@@ -107,30 +111,29 @@ export default function CreatePlaylistForm() {
           <p className="text-sm text-gray-400 mb-6">플레이리스트가 생성되었습니다!</p>
 
           <div className="bg-gray-800 rounded-xl p-4 inline-block mb-4">
-            <img
-              src={qrUrl}
-              alt="QR 코드"
-              width={160}
-              height={160}
-              className="mx-auto"
-            />
+            <img src={qrUrl} alt="QR 코드" width={160} height={160} className="mx-auto" />
           </div>
 
           <p className="text-xs text-gray-500 mb-4">밴드 멤버에게 QR코드를 보여주거나 링크를 공유하세요</p>
 
           <div className="flex gap-2 mb-4">
-            <input
-              type="text"
-              value={created.url}
-              readOnly
-              className="flex-1 px-3 py-2.5 rounded-xl bg-gray-800 border border-border text-gray-300 text-sm truncate"
-            />
-            <button
-              onClick={handleCopy}
-              className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-sm font-semibold transition-all active:scale-95 shrink-0"
-            >
+            <input type="text" value={created.url} readOnly className="flex-1 px-3 py-2.5 rounded-xl bg-gray-800 border border-border text-gray-300 text-sm truncate" />
+            <button onClick={handleCopy} className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-sm font-semibold transition-all active:scale-95 shrink-0">
               {copied ? "복사됨!" : "복사"}
             </button>
+          </div>
+
+          {/* Creator nickname — entered here after creation */}
+          <div className="mb-4">
+            <input
+              type="text"
+              value={creatorNickname}
+              onChange={(e) => setCreatorNickname(e.target.value)}
+              placeholder="방장 닉네임을 입력하세요"
+              maxLength={20}
+              className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-border text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-center"
+            />
+            <p className="text-xs text-gray-500 mt-1.5">방장 닉네임으로 공지사항 등 관리 기능을 사용합니다</p>
           </div>
 
           <button
@@ -144,39 +147,29 @@ export default function CreatePlaylistForm() {
     );
   }
 
-  // Creation form
+  // Creation form — no nickname here
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto">
-      <div className="space-y-2">
+      <div className="flex gap-2">
         <input
           type="text"
-          value={creatorNickname}
-          onChange={(e) => setCreatorNickname(e.target.value)}
-          placeholder="방장 닉네임을 입력하세요"
-          maxLength={20}
-          className="w-full px-4 py-3 rounded-xl bg-surface border border-border text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="플레이리스트 이름을 입력하세요"
+          maxLength={100}
+          className="flex-1 px-4 py-3 rounded-xl bg-surface border border-border text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
         />
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="플레이리스트 이름을 입력하세요"
-            maxLength={100}
-            className="flex-1 px-4 py-3 rounded-xl bg-surface border border-border text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-          />
-          <button
-            type="submit"
-            disabled={!title.trim() || !creatorNickname.trim() || loading}
-            className="px-6 py-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
-          >
+        <button
+          type="submit"
+          disabled={!title.trim() || loading}
+          className="px-6 py-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+        >
           {loading ? (
             <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
             "만들기"
           )}
         </button>
-        </div>
       </div>
 
       {/* Options card */}
@@ -185,7 +178,7 @@ export default function CreatePlaylistForm() {
           <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">옵션 설정</p>
         </div>
 
-        {/* === 투표 마감일: Native Date Picker === */}
+        {/* 투표 마감일 */}
         <div className="px-4 py-3">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
@@ -197,33 +190,13 @@ export default function CreatePlaylistForm() {
               <label className="block text-sm text-gray-200 font-medium text-left">투표 마감일</label>
               <p className="text-xs text-gray-400 mt-0.5 mb-2 text-left">마감일이 지나면 투표가 종료됩니다</p>
               <div className="flex gap-2">
-                <input
-                  type="date"
-                  value={deadlineDate}
-                  onChange={(e) => setDeadlineDate(e.target.value)}
-                  min={todayStr}
-                  className="flex-1 px-3 py-2.5 rounded-xl bg-gray-800 border border-border text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-                  style={{ colorScheme: "dark" }}
-                />
+                <input type="date" value={deadlineDate} onChange={(e) => setDeadlineDate(e.target.value)} min={todayStr} className="flex-1 px-3 py-2.5 rounded-xl bg-gray-800 border border-border text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all" style={{ colorScheme: "dark" }} />
                 {deadlineDate && (
-                  <input
-                    type="time"
-                    value={deadlineTime}
-                    onChange={(e) => setDeadlineTime(e.target.value)}
-                    className="w-28 px-3 py-2.5 rounded-xl bg-gray-800 border border-border text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-                    style={{ colorScheme: "dark" }}
-                  />
+                  <input type="time" value={deadlineTime} onChange={(e) => setDeadlineTime(e.target.value)} className="w-28 px-3 py-2.5 rounded-xl bg-gray-800 border border-border text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all" style={{ colorScheme: "dark" }} />
                 )}
                 {deadlineDate && (
-                  <button
-                    type="button"
-                    onClick={() => { setDeadlineDate(""); setDeadlineTime("23:59"); }}
-                    className="p-2.5 rounded-xl text-gray-500 hover:text-red-400 hover:bg-gray-800 transition-all shrink-0"
-                    aria-label="마감일 삭제"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                  <button type="button" onClick={() => { setDeadlineDate(""); setDeadlineTime("23:59"); }} className="p-2.5 rounded-xl text-gray-500 hover:text-red-400 hover:bg-gray-800 transition-all shrink-0" aria-label="마감일 삭제">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
                 )}
               </div>
@@ -231,12 +204,9 @@ export default function CreatePlaylistForm() {
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="mx-4">
-          <div className="border-t border-gray-700/50" />
-        </div>
+        <div className="mx-4"><div className="border-t border-gray-700/50" /></div>
 
-        {/* === 셋리스트 곡 수: Stepper UI === */}
+        {/* 셋리스트 곡 수 */}
         <div className="px-4 py-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -248,33 +218,13 @@ export default function CreatePlaylistForm() {
               <label className="block text-sm text-gray-200 font-medium text-left">셋리스트 곡 수</label>
               <p className="text-xs text-gray-400 mt-0.5 text-left">투표 종료 후 상위 N곡이 셋리스트로 선정됩니다</p>
             </div>
-
-            {/* Stepper: [ - ] [ N ] [ + ] */}
             <div className="flex items-center gap-1 shrink-0">
-              <button
-                type="button"
-                onClick={() => setSetlistCount((c) => Math.max(0, c - 1))}
-                disabled={setlistCount <= 0}
-                className="w-11 h-11 flex items-center justify-center rounded-xl bg-gray-800 border border-border text-gray-300 hover:bg-gray-700 hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
-                aria-label="곡 수 줄이기"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" d="M5 12h14" />
-                </svg>
+              <button type="button" onClick={() => setSetlistCount((c) => Math.max(0, c - 1))} disabled={setlistCount <= 0} className="w-11 h-11 flex items-center justify-center rounded-xl bg-gray-800 border border-border text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-30 transition-all active:scale-95" aria-label="곡 수 줄이기">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" d="M5 12h14" /></svg>
               </button>
-              <span className="w-10 text-center text-sm font-semibold text-gray-100 tabular-nums">
-                {setlistCount > 0 ? setlistCount : "-"}
-              </span>
-              <button
-                type="button"
-                onClick={() => setSetlistCount((c) => Math.min(30, c + 1))}
-                disabled={setlistCount >= 30}
-                className="w-11 h-11 flex items-center justify-center rounded-xl bg-gray-800 border border-border text-gray-300 hover:bg-gray-700 hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
-                aria-label="곡 수 늘리기"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-                </svg>
+              <span className="w-10 text-center text-sm font-semibold text-gray-100 tabular-nums">{setlistCount > 0 ? setlistCount : "-"}</span>
+              <button type="button" onClick={() => setSetlistCount((c) => Math.min(30, c + 1))} disabled={setlistCount >= 30} className="w-11 h-11 flex items-center justify-center rounded-xl bg-gray-800 border border-border text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-30 transition-all active:scale-95" aria-label="곡 수 늘리기">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" d="M12 5v14M5 12h14" /></svg>
               </button>
             </div>
           </div>

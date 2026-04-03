@@ -155,14 +155,9 @@ export default function SetlistView({
       {/* Runtime + Print */}
       <div className="flex items-center justify-between mb-4">
         <div className="text-sm text-gray-400">
-          {sortedItems.length}개 항목 · 총 러닝타임{" "}
-          <span className="text-primary font-medium">
-            {totalRuntime > 0 ? formatTime(totalRuntime) : "0:00"}
-          </span>
+          <div>{sortedItems.length}개 항목 · 총 러닝타임 <span className="text-primary font-medium">{totalRuntime > 0 ? formatTime(totalRuntime) : "0:00"}</span></div>
           {missingDurationCount > 0 && (
-            <span className="text-xs text-yellow-500 ml-1">
-              ({missingDurationCount}곡 시간 미입력 — 합주 모드에서 입력)
-            </span>
+            <div className="text-xs text-yellow-500 mt-0.5">{missingDurationCount}곡 시간 미입력 — 합주 모드에서 입력</div>
           )}
         </div>
         <button

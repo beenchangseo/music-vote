@@ -139,13 +139,14 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
       </div>
 
       {/* Metronome body */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 -mt-8">
         {/* Beat indicators */}
-        <div className="flex gap-4 mb-8">
+        <p className="text-xs text-gray-500 mb-2">4/4 박자</p>
+        <div className="flex gap-5 mb-6">
           {[0, 1, 2, 3].map((i) => (
             <div
               key={i}
-              className={`w-5 h-5 rounded-full transition-all duration-75 ${
+              className={`w-6 h-6 rounded-full transition-all duration-75 ${
                 isPlaying && beat === i
                   ? i === 0
                     ? "bg-primary scale-125 shadow-lg shadow-primary/50"
@@ -157,13 +158,13 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
         </div>
 
         {/* BPM display */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <p className="text-7xl font-bold text-gray-100 tabular-nums">{bpm}</p>
           <p className="text-sm text-gray-500 mt-1">BPM</p>
         </div>
 
         {/* BPM controls */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => setBpm((b) => Math.max(40, b - 5))}
             className="w-12 h-12 rounded-full bg-gray-800 border border-border text-gray-300 text-xl font-bold hover:bg-gray-700 transition-colors"
