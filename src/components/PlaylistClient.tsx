@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { flushSync } from "react-dom";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Image from "next/image";
 import { useDialog } from "./DialogProvider";
@@ -165,11 +166,15 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
 
   const handleTogglePlay = useCallback((songId: string) => {
     if (playerState.currentSongId === songId) {
-      // Clicking current song again → close/collapse the player
-      playerActions.playSong(""); // clear currentSongId
+      playerActions.playSong("");
       playerActions.setIsPlaying(false);
     } else {
-      playerActions.playSong(songId);
+      // flushSync forces synchronous DOM update within the user tap gesture,
+      // so the iframe is inserted before the browser's gesture timeout expires.
+      // This allows autoplay=1 to work on mobile Safari/Chrome.
+      flushSync(() => {
+        playerActions.playSong(songId);
+      });
     }
   }, [playerState.currentSongId, playerActions]);
 
