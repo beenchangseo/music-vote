@@ -20,19 +20,17 @@ interface YouTubePlayerProps {
 
 const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
   function YouTubePlayer({ videoId, onEnded, onPlay, onPause, onError, onAutoplayBlocked }, ref) {
-    const containerRef = useRef<HTMLDivElement>(null);
+    const iframeId = useRef(`yt-${Math.random().toString(36).slice(2, 9)}`).current;
     const playerRef = useRef<YT.Player | null>(null);
     const [ready, setReady] = useState(false);
-    const [hasError, setHasError] = useState(false);
-    const pendingVideoRef = useRef<string | null>(null);
-    const autoplayCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const autoplayCheckRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Keep callback refs stable
     const onEndedRef = useRef(onEnded);
     const onPlayRef = useRef(onPlay);
     const onPauseRef = useRef(onPause);
     const onErrorRef = useRef(onError);
     const onAutoplayBlockedRef = useRef(onAutoplayBlocked);
-
-    // Keep refs in sync
     onEndedRef.current = onEnded;
     onPlayRef.current = onPlay;
     onPauseRef.current = onPause;
@@ -40,66 +38,37 @@ const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
     onAutoplayBlockedRef.current = onAutoplayBlocked;
 
     const clearAutoplayCheck = useCallback(() => {
-      if (autoplayCheckTimerRef.current) {
-        clearTimeout(autoplayCheckTimerRef.current);
-        autoplayCheckTimerRef.current = null;
+      if (autoplayCheckRef.current) {
+        clearTimeout(autoplayCheckRef.current);
+        autoplayCheckRef.current = null;
       }
     }, []);
 
-    useImperativeHandle(ref, () => ({
-      play() {
-        playerRef.current?.playVideo();
-      },
-      pause() {
-        playerRef.current?.pauseVideo();
-      },
-      loadVideoById(id: string) {
-        setHasError(false);
-        if (playerRef.current && ready) {
-          playerRef.current.loadVideoById(id);
-          // Check for autoplay block after 1.5s
-          clearAutoplayCheck();
-          autoplayCheckTimerRef.current = setTimeout(() => {
-            if (playerRef.current) {
-              const state = playerRef.current.getPlayerState();
-              if (state === YT.PlayerState.UNSTARTED || state === YT.PlayerState.CUED) {
-                onAutoplayBlockedRef.current?.();
-              }
-            }
-          }, 1500);
-        } else {
-          pendingVideoRef.current = id;
-        }
-      },
-    }), [ready, clearAutoplayCheck]);
-
+    // Attach YT API to the existing iframe after it renders
     useEffect(() => {
+      if (!videoId) return;
+
       let destroyed = false;
 
       loadYouTubeAPI().then((ytApi) => {
-        if (destroyed || !containerRef.current) return;
+        if (destroyed) return;
 
-        const initialVideoId = pendingVideoRef.current || videoId || undefined;
-        pendingVideoRef.current = null;
-
-        playerRef.current = new ytApi.Player(containerRef.current, {
-          height: "100%",
-          width: "100%",
-          videoId: initialVideoId,
-          playerVars: {
-            autoplay: initialVideoId ? 1 : 0,
-            rel: 0,
-            modestbranding: 1,
-            playsinline: 1,
-          },
+        // Attach to existing iframe (does NOT replace it)
+        playerRef.current = new ytApi.Player(iframeId, {
           events: {
             onReady() {
               if (!destroyed) {
                 setReady(true);
-                if (pendingVideoRef.current) {
-                  playerRef.current?.loadVideoById(pendingVideoRef.current);
-                  pendingVideoRef.current = null;
-                }
+                // Check if autoplay was blocked on mobile (1.5s after ready)
+                clearAutoplayCheck();
+                autoplayCheckRef.current = setTimeout(() => {
+                  if (playerRef.current && !destroyed) {
+                    const state = playerRef.current.getPlayerState();
+                    if (state === ytApi.PlayerState.UNSTARTED || state === ytApi.PlayerState.CUED) {
+                      onAutoplayBlockedRef.current?.();
+                    }
+                  }
+                }, 1500);
               }
             },
             onStateChange(event: { data: YT.PlayerState }) {
@@ -119,10 +88,7 @@ const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
               }
             },
             onError() {
-              if (!destroyed) {
-                setHasError(true);
-                onErrorRef.current?.();
-              }
+              if (!destroyed) onErrorRef.current?.();
             },
           },
         });
@@ -131,32 +97,58 @@ const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
       return () => {
         destroyed = true;
         clearAutoplayCheck();
-        playerRef.current?.destroy();
+        // Don't call destroy() — React will remove the iframe from DOM.
+        // Calling destroy() on an API-attached iframe can cause errors.
         playerRef.current = null;
+        setReady(false);
       };
-    // Initialize once
+    // Re-run when videoId changes (iframe is re-created via key={videoId})
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [videoId]);
 
-    if (hasError && videoId) {
-      return (
-        <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-          <iframe
-            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&playsinline=1`}
-            title="YouTube video"
-            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-            referrerPolicy="strict-origin-when-cross-origin"
-            allowFullScreen
-            className="absolute inset-0 w-full h-full"
-          />
-        </div>
-      );
-    }
+    useImperativeHandle(ref, () => ({
+      play() {
+        playerRef.current?.playVideo();
+      },
+      pause() {
+        playerRef.current?.pauseVideo();
+      },
+      loadVideoById(id: string) {
+        if (playerRef.current && ready) {
+          playerRef.current.loadVideoById(id);
+          clearAutoplayCheck();
+          autoplayCheckRef.current = setTimeout(() => {
+            if (playerRef.current) {
+              const state = playerRef.current.getPlayerState();
+              if (state === YT.PlayerState.UNSTARTED || state === YT.PlayerState.CUED) {
+                onAutoplayBlockedRef.current?.();
+              }
+            }
+          }, 1500);
+        }
+      },
+    }), [ready, clearAutoplayCheck]);
 
+    // Cleanup on unmount
+    useEffect(() => {
+      return () => clearAutoplayCheck();
+    }, [clearAutoplayCheck]);
+
+    if (!videoId) return null;
+
+    // Render iframe directly — this preserves the user gesture chain on mobile.
+    // The iframe is inserted synchronously during React render (within tap handler),
+    // so autoplay=1 is allowed by mobile browsers.
     return (
-      <div
-        ref={containerRef}
-        className="relative w-full aspect-video rounded-lg overflow-hidden bg-black"
+      <iframe
+        id={iframeId}
+        key={videoId}
+        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1&playsinline=1&rel=0&modestbranding=1`}
+        title="YouTube video"
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+        referrerPolicy="strict-origin-when-cross-origin"
+        allowFullScreen
+        className="w-full aspect-video rounded-lg"
       />
     );
   }

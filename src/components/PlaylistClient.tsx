@@ -8,7 +8,6 @@ import NicknameModal from "./NicknameModal";
 import PlaylistHeader from "./PlaylistHeader";
 import AddSongForm from "./AddSongForm";
 import SongCard from "./SongCard";
-import YouTubePlayer from "./YouTubePlayer";
 import MiniPlayer from "./MiniPlayer";
 import NavigationBar from "./NavigationBar";
 import SetlistView from "./SetlistView";
@@ -383,12 +382,12 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
               {/* CTA: Create your own */}
               {songsWithUserVote.length > 0 && (
                 <div className="mt-8 bg-surface border border-border rounded-2xl p-5 text-center">
-                  <p className="text-sm text-gray-400 mb-3">새로운 셋리스트를 만들고 싶다면?</p>
+                  <p className="text-sm text-gray-400 mb-3">새로운 플레이리스트를 만들고 싶다면?</p>
                   <a
                     href="/"
                     className="inline-block px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-sm font-semibold transition-all active:scale-95"
                   >
-                    셋리스트 만들기
+                    플레이리스트 만들기
                   </a>
                 </div>
               )}
