@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import { flushSync } from "react-dom";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Image from "next/image";
 import { useDialog } from "./DialogProvider";
@@ -169,18 +168,9 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
       playerActions.playSong("");
       playerActions.setIsPlaying(false);
     } else {
-      // flushSync forces synchronous DOM update within the user tap gesture,
-      // so the iframe is inserted before the browser's gesture timeout expires.
-      // This allows autoplay=1 to work on mobile Safari/Chrome.
-      flushSync(() => {
-        playerActions.playSong(songId);
-      });
+      playerActions.playSong(songId);
     }
   }, [playerState.currentSongId, playerActions]);
-
-  const handleAutoplayBlocked = useCallback(() => {
-    playerActions.setAutoplayBlocked(true);
-  }, [playerActions]);
 
   // Setlist add confirm dialog
   const [setlistConfirmSongId, setSetlistConfirmSongId] = useState<string | null>(null);
@@ -377,7 +367,6 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
                       onEnded={playerState.currentSongId === song.id ? handleEnded : undefined}
                       onPlayerPlay={playerState.currentSongId === song.id ? () => playerActions.setIsPlaying(true) : undefined}
                       onPlayerPause={playerState.currentSongId === song.id ? () => playerActions.setIsPlaying(false) : undefined}
-                      onAutoplayBlocked={playerState.currentSongId === song.id ? handleAutoplayBlocked : undefined}
                       onAddToSetlist={handleAddToSetlist}
                     />
                   ))

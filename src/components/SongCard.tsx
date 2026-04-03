@@ -28,7 +28,6 @@ interface SongCardProps {
   onEnded?: () => void;
   onPlayerPlay?: () => void;
   onPlayerPause?: () => void;
-  onAutoplayBlocked?: () => void;
   onAddToSetlist?: (songId: string) => void;
 }
 
@@ -50,7 +49,6 @@ export default function SongCard({
   onEnded,
   onPlayerPlay,
   onPlayerPause,
-  onAutoplayBlocked,
   onAddToSetlist,
 }: SongCardProps) {
   const [isPending, startTransition] = useTransition();
@@ -97,7 +95,6 @@ export default function SongCard({
               onEnded={onEnded}
               onPlay={onPlayerPlay}
               onPause={onPlayerPause}
-              onAutoplayBlocked={onAutoplayBlocked}
             />
             <button
               onClick={onTogglePlay}
@@ -253,7 +250,6 @@ export default function SongCard({
             onEnded={onEnded}
             onPlay={onPlayerPlay}
             onPause={onPlayerPause}
-            onAutoplayBlocked={onAutoplayBlocked}
           />
           <button
             onClick={onTogglePlay}

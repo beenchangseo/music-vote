@@ -11,17 +11,11 @@ interface MiniPlayerProps {
 }
 
 export default function MiniPlayer({ state, actions, playerRef }: MiniPlayerProps) {
-  const { currentSong, isPlaying, repeatMode, shuffleMode, autoplayBlocked } = state;
+  const { currentSong, isPlaying, repeatMode, shuffleMode } = state;
 
   if (!currentSong) return null;
 
   function handlePlayPause() {
-    if (autoplayBlocked) {
-      // User gesture — try playing again
-      playerRef.current?.play();
-      actions.setAutoplayBlocked(false);
-      return;
-    }
     if (isPlaying) {
       playerRef.current?.pause();
     } else {
@@ -53,16 +47,6 @@ export default function MiniPlayer({ state, actions, playerRef }: MiniPlayerProp
           )}
         </div>
 
-        {/* Autoplay blocked prompt */}
-        {autoplayBlocked && (
-          <button
-            onClick={handlePlayPause}
-            className="text-xs text-yellow-400 hover:text-yellow-300 transition-colors shrink-0 animate-pulse"
-          >
-            탭하여 재생
-          </button>
-        )}
-
         {/* Controls */}
         <div className="flex items-center gap-1 shrink-0">
           {/* Shuffle */}
@@ -84,7 +68,7 @@ export default function MiniPlayer({ state, actions, playerRef }: MiniPlayerProp
             className="p-2 rounded-full text-white hover:text-primary transition-colors"
             aria-label={isPlaying ? "일시정지" : "재생"}
           >
-            {isPlaying && !autoplayBlocked ? (
+            {isPlaying ? (
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
               </svg>

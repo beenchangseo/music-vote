@@ -11,7 +11,6 @@ export interface PlayerState {
   shuffleMode: boolean;
   isPlaying: boolean;
   currentSong: SongWithScore | null;
-  autoplayBlocked: boolean;
 }
 
 export interface PlayerActions {
@@ -20,7 +19,6 @@ export interface PlayerActions {
   toggleRepeat(): void;
   toggleShuffle(): void;
   setIsPlaying(v: boolean): void;
-  setAutoplayBlocked(v: boolean): void;
 }
 
 export function usePlayerQueue(songs: SongWithScore[]): {
@@ -31,7 +29,6 @@ export function usePlayerQueue(songs: SongWithScore[]): {
   const [repeatMode, setRepeatMode] = useState<RepeatMode>("off");
   const [shuffleMode, setShuffleMode] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
 
   const currentSong = useMemo(
     () => songs.find((s) => s.id === currentSongId) ?? null,
@@ -40,48 +37,34 @@ export function usePlayerQueue(songs: SongWithScore[]): {
 
   const playSong = useCallback((id: string) => {
     if (!id) {
-      // Clear / close player
       setCurrentSongId(null);
       setIsPlaying(false);
       return;
     }
     setCurrentSongId(id);
     setIsPlaying(true);
-    setAutoplayBlocked(false);
   }, []);
 
   const playNext = useCallback(() => {
     if (songs.length === 0) return;
 
-    // Repeat one: stay on same song (caller triggers loadVideoById again)
     if (repeatMode === "one" && currentSongId) {
-      // Return same song — the caller re-triggers loadVideoById
-      // We briefly set to null then back to force a re-load
-      setAutoplayBlocked(false);
       return; // Handled by the caller checking repeatMode
     }
 
     if (shuffleMode) {
-      if (songs.length === 1) {
-        // Only one song — just replay it
-        setAutoplayBlocked(false);
-        return;
-      }
-      // Pick random song excluding current
+      if (songs.length === 1) return;
       const candidates = songs.filter((s) => s.id !== currentSongId);
       const randomIndex = Math.floor(Math.random() * candidates.length);
       setCurrentSongId(candidates[randomIndex].id);
       setIsPlaying(true);
-      setAutoplayBlocked(false);
       return;
     }
 
-    // Normal: advance to next in score order (wraps around)
     const currentIndex = songs.findIndex((s) => s.id === currentSongId);
     const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % songs.length;
     setCurrentSongId(songs[nextIndex].id);
     setIsPlaying(true);
-    setAutoplayBlocked(false);
   }, [songs, currentSongId, repeatMode, shuffleMode]);
 
   const toggleRepeat = useCallback(() => {
@@ -92,23 +75,8 @@ export function usePlayerQueue(songs: SongWithScore[]): {
     setShuffleMode((prev) => !prev);
   }, []);
 
-  const state: PlayerState = {
-    currentSongId,
-    repeatMode,
-    shuffleMode,
-    isPlaying,
-    currentSong,
-    autoplayBlocked,
+  return {
+    state: { currentSongId, repeatMode, shuffleMode, isPlaying, currentSong },
+    actions: { playSong, playNext, toggleRepeat, toggleShuffle, setIsPlaying },
   };
-
-  const actions: PlayerActions = {
-    playSong,
-    playNext,
-    toggleRepeat,
-    toggleShuffle,
-    setIsPlaying,
-    setAutoplayBlocked,
-  };
-
-  return { state, actions };
 }
