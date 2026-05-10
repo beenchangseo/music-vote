@@ -3,6 +3,7 @@
 import { useState, useMemo, useTransition, useCallback } from "react";
 import IntervalBlock from "./IntervalBlock";
 import AddIntervalForm from "./AddIntervalForm";
+import KakaoShareButton from "./KakaoShareButton";
 import { useDialog } from "./DialogProvider";
 import { removeSetlistItem, updateSetlistOrder } from "@/actions/setlist";
 import type { SetlistItem, SongWithScore } from "@/lib/types";
@@ -17,6 +18,9 @@ interface SetlistViewProps {
   adminToken: string | null;
   loading: boolean;
   onItemsChange: (items: SetlistItem[]) => void;
+  /** 셋리스트 공유 카드/OG에 사용 */
+  title: string;
+  participantCount?: number;
 }
 
 function formatTime(seconds: number): string {
@@ -34,6 +38,8 @@ export default function SetlistView({
   adminToken,
   loading,
   onItemsChange,
+  title,
+  participantCount = 0,
 }: SetlistViewProps) {
   const [isPending, startTransition] = useTransition();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -152,20 +158,58 @@ export default function SetlistView({
 
   return (
     <div className="mt-5">
-      {/* Runtime + Print */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-sm text-gray-400">
-          <div>{sortedItems.length}개 항목 · 총 러닝타임 <span className="text-primary font-medium">{totalRuntime > 0 ? formatTime(totalRuntime) : "0:00"}</span></div>
+      {/* Runtime + Actions toolbar */}
+      <div className="flex items-start justify-between mb-4 gap-3 print:hidden">
+        <div className="text-sm text-text-muted min-w-0">
+          <div>
+            {sortedItems.length}개 항목 · 총 러닝타임{" "}
+            <span className="text-primary font-medium">
+              {totalRuntime > 0 ? formatTime(totalRuntime) : "0:00"}
+            </span>
+          </div>
           {missingDurationCount > 0 && (
-            <div className="text-xs text-yellow-500 mt-0.5">{missingDurationCount}곡 시간 미입력 — 합주 모드에서 입력</div>
+            <div className="text-caption text-warning mt-0.5">
+              {missingDurationCount}곡 시간 미입력 — 합주 모드에서 입력
+            </div>
           )}
         </div>
-        <button
-          onClick={() => window.print()}
-          className="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition-colors print:hidden"
-        >
-          인쇄
-        </button>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          <KakaoShareButton
+            shareCode={shareCode}
+            variant="setlist"
+            title={title}
+            songs={songs.length}
+            participants={participantCount}
+            setlistCount={
+              sortedItems.filter((i) => i.item_type === "song").length
+            }
+            visualStyle="primary"
+            size="sm"
+            ariaLabel="셋리스트 카톡 공유"
+          >
+            카톡
+          </KakaoShareButton>
+          <a
+            href={`/api/setlist-image/${shareCode}`}
+            target="_blank"
+            rel="noopener"
+            className="inline-flex items-center justify-center gap-1 h-9 px-3 rounded-lg bg-surface-hover hover:bg-gray-700 text-caption text-text-muted hover:text-text font-semibold transition-colors"
+            aria-label="셋리스트 이미지 저장"
+            title="이미지로 저장 (모바일: 길게 눌러 저장)"
+          >
+            <ImageIcon /> 이미지
+          </a>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex items-center justify-center gap-1 h-9 px-3 rounded-lg bg-surface-hover hover:bg-gray-700 text-caption text-text-muted hover:text-text font-semibold transition-colors"
+            aria-label="인쇄 또는 PDF 저장"
+            title="인쇄 / PDF로 저장"
+          >
+            <PrintIcon /> 인쇄
+          </button>
+        </div>
       </div>
 
       {/* Items */}
@@ -255,5 +299,43 @@ export default function SetlistView({
         )}
       </div>
     </div>
+  );
+}
+
+function ImageIcon() {
+  return (
+    <svg
+      className="w-3.5 h-3.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      viewBox="0 0 24 24"
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+      />
+    </svg>
+  );
+}
+
+function PrintIcon() {
+  return (
+    <svg
+      className="w-3.5 h-3.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      viewBox="0 0 24 24"
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M6.72 13.829q-.094-.124-.184-.252M6.72 13.829a3 3 0 0 0 .12.243m-.12-.243-.077-.13M9 6.75V15m6-6v8.25m.124.282A23.074 23.074 0 0 1 12 18.75c-1.605 0-3.18-.182-4.7-.524-.341-.07-.682-.142-.953-.16M21 16.5c0 2.485-2.099 4.5-4.688 4.5-1.935 0-3.597-1.126-4.312-2.733-.715 1.607-2.377 2.733-4.313 2.733C4.1 21 2 18.985 2 16.5V8.25c0-1.243 1.05-2.25 2.344-2.25h3.5c1.295 0 2.344 1.007 2.344 2.25v8.25c0 .621.523 1.125 1.172 1.125.648 0 1.171-.504 1.171-1.125V8.25c0-1.243 1.05-2.25 2.344-2.25h3.5C20.95 6 22 7.007 22 8.25z"
+      />
+    </svg>
   );
 }

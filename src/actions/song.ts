@@ -2,6 +2,13 @@
 
 import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase/server";
 import { extractVideoId, fetchVideoMetadata } from "@/lib/youtube";
+import {
+  isValidKeyRoot,
+  isValidKeyMode,
+  isValidGenre,
+  isValidDifficulty,
+} from "@/lib/song-meta";
+import type { KeyRoot, KeyMode, Genre, Difficulty } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
 export async function addSong(
@@ -44,11 +51,21 @@ export async function addSong(
   return { success: true, needsManualTitle: !metadata && !manualTitle };
 }
 
+export interface SongMetaUpdate {
+  keyMemo?: string | null;
+  tempoBpm?: number | null;
+  durationSeconds?: number | null;
+  keyRoot?: KeyRoot | null;
+  keyMode?: KeyMode | null;
+  difficulty?: Difficulty | null;
+  genre?: Genre | null;
+}
+
 export async function updateSongMeta(
   songId: string,
   playlistId: string,
   shareCode: string,
-  data: { keyMemo?: string | null; tempoBpm?: number | null; durationSeconds?: number | null }
+  data: SongMetaUpdate,
 ) {
   const supabase = await createServerSupabaseClient();
 
@@ -63,9 +80,34 @@ export async function updateSongMeta(
   if (!song) throw new Error("곡을 찾을 수 없습니다.");
 
   const updateData: Record<string, unknown> = {};
-  if (data.keyMemo !== undefined) updateData.key_memo = data.keyMemo;
-  if (data.tempoBpm !== undefined) updateData.tempo_bpm = data.tempoBpm;
-  if (data.durationSeconds !== undefined) updateData.duration_seconds = data.durationSeconds;
+
+  if (data.keyMemo !== undefined) {
+    updateData.key_memo = data.keyMemo;
+  }
+  if (data.tempoBpm !== undefined) {
+    const bpm = data.tempoBpm;
+    updateData.tempo_bpm =
+      bpm == null ? null : bpm >= 40 && bpm <= 300 ? bpm : null;
+  }
+  if (data.durationSeconds !== undefined) {
+    updateData.duration_seconds = data.durationSeconds;
+  }
+  if (data.keyRoot !== undefined) {
+    updateData.key_root =
+      data.keyRoot == null ? null : isValidKeyRoot(data.keyRoot) ? data.keyRoot : null;
+  }
+  if (data.keyMode !== undefined) {
+    updateData.key_mode =
+      data.keyMode == null ? null : isValidKeyMode(data.keyMode) ? data.keyMode : null;
+  }
+  if (data.difficulty !== undefined) {
+    updateData.difficulty =
+      data.difficulty == null ? null : isValidDifficulty(data.difficulty) ? data.difficulty : null;
+  }
+  if (data.genre !== undefined) {
+    updateData.genre =
+      data.genre == null ? null : isValidGenre(data.genre) ? data.genre : null;
+  }
 
   if (Object.keys(updateData).length === 0) return { success: true };
 

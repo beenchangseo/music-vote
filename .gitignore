@@ -45,3 +45,6 @@ next-env.d.ts
 
 # Playwright MCP
 .playwright-mcp/
+
+# Internal research docs (not for the codebase)
+docs/

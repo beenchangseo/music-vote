@@ -1,20 +1,78 @@
+/* Pretendard — 한국어 가독성 최적화. dynamic subset = 사용된 글리프만 로드.
+ * @import 규칙은 모든 다른 규칙보다 먼저 와야 하므로 tailwindcss 위에 배치. */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
+  /* Font — Pretendard 우선, Geist는 영문/숫자 fallback */
+  --font-sans: "Pretendard Variable", "Pretendard", var(--font-geist-sans),
+    -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+
+  /* Brand colors */
   --color-primary: #8b5cf6;
   --color-primary-hover: #7c3aed;
+  --color-primary-soft: #312e81;
+
+  /* Semantic colors */
+  --color-success: #22c55e;
+  --color-success-soft: #14532d;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-danger-soft: #7f1d1d;
+
+  /* Vote colors (legacy aliases for compatibility) */
   --color-upvote: #22c55e;
   --color-downvote: #ef4444;
+
+  /* Surface scale (gray-950 ↔ gray-700) */
+  --color-bg: #030712;
   --color-surface: #111827;
   --color-surface-hover: #1f2937;
+  --color-surface-elevated: #1f2937;
   --color-border: #374151;
+  --color-border-strong: #4b5563;
+
+  /* Text scale */
+  --color-text: #f3f4f6;
+  --color-text-muted: #9ca3af;
+  --color-text-subtle: #6b7280;
+
+  /* Typography — 한국어 가독성 우선 (line-height 1.6+) */
+  --text-display: 2.5rem;
+  --text-display--line-height: 1.2;
+  --text-display--letter-spacing: -0.02em;
+
+  --text-h1: 1.875rem;
+  --text-h1--line-height: 1.3;
+  --text-h1--letter-spacing: -0.015em;
+
+  --text-h2: 1.5rem;
+  --text-h2--line-height: 1.35;
+  --text-h2--letter-spacing: -0.01em;
+
+  --text-h3: 1.25rem;
+  --text-h3--line-height: 1.4;
+
+  --text-body: 1rem;
+  --text-body--line-height: 1.65;
+
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.6;
+
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.5;
+
+  /* Animations */
   --animate-slide-up: slide-up 0.3s ease-out;
   --animate-fade-in: fade-in 0.2s ease-out;
   --animate-gradient: gradient 8s ease infinite;
   --animate-float-slow: float 6s ease-in-out infinite;
   --animate-float-mid: float 4s ease-in-out infinite;
   --animate-float-fast: float 3s ease-in-out infinite;
+  --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
+  --animate-bounce-slow: bounce-slow 2s ease-in-out infinite;
+
+  /* 3D */
   --perspective-1000: 1000px;
   --transform-3d: preserve-3d;
   --rotate-y-12: rotateY(12deg);
@@ -47,12 +105,30 @@
   50% { transform: translateY(-20px) rotate(5deg); }
 }
 
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
 .perspective-1000 { perspective: 1000px; }
 .transform-3d { transform-style: preserve-3d; }
 .hover\:rotate-y-12:hover { transform: rotateY(12deg); }
 .hover\:rotate-x-6:hover { transform: rotateX(6deg); }
 .hover\:rotate-y-12:hover.hover\:rotate-x-6:hover { transform: rotateY(12deg) rotateX(6deg); }
 .animate-gradient { background-size: 200% 200%; animation: gradient 8s ease infinite; }
+
+/* Body 기본 한국어 가독성 */
+body {
+  font-feature-settings: "ss01", "ss02", "cv01", "cv09";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
 
 /* Print styles for setlist */
 @media print {

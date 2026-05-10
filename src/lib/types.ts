@@ -11,6 +11,15 @@ export interface Playlist {
   created_at: string;
 }
 
+export type KeyRoot =
+  | "C" | "C#" | "D" | "D#" | "E" | "F"
+  | "F#" | "G" | "G#" | "A" | "A#" | "B";
+export type KeyMode = "major" | "minor";
+export type Genre =
+  | "rock" | "pop" | "ballad" | "indie" | "punk" | "metal"
+  | "jazz" | "hiphop" | "rnb" | "electronic" | "kpop" | "other";
+export type Difficulty = 1 | 2 | 3 | 4 | 5;
+
 export interface Song {
   id: string;
   playlist_id: string;
@@ -21,8 +30,12 @@ export interface Song {
   thumbnail_url: string | null;
   added_by: string | null;
   key_memo: string | null;
+  key_root: KeyRoot | null;
+  key_mode: KeyMode | null;
   tempo_bpm: number | null;
   duration_seconds: number | null;
+  difficulty: Difficulty | null;
+  genre: Genre | null;
   created_at: string;
 }
 

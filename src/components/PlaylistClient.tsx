@@ -16,6 +16,12 @@ import { usePlayerQueue } from "@/hooks/usePlayerQueue";
 import { getSetlistItems, confirmSetlist, addSongToSetlist } from "@/actions/setlist";
 import { getComments } from "@/actions/comment";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
+import FilterBar, {
+  DEFAULT_FILTER,
+  songMatchesFilter,
+  type FilterState,
+} from "./FilterBar";
+import KakaoShareButton from "./KakaoShareButton";
 import type { ViewMode } from "./NavigationBar";
 import type { Playlist, SongWithScore, SetlistItem, Comment } from "@/lib/types";
 
@@ -37,6 +43,7 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
   const [adminToken, setAdminToken] = useState<string | null>(null);
   const [voteOverrides, setVoteOverrides] = useState<Record<string, VoteOverride>>({});
   const [resultCopied, setResultCopied] = useState(false);
+  const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
 
   // Lazy-loaded data for setlist/rehearsal modes
   const [setlistItems, setSetlistItems] = useState<SetlistItem[] | null>(null);
@@ -140,6 +147,11 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
       b.score - a.score || new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
   }, [songs, nickname, voteOverrides]);
+
+  const filteredSongs = useMemo(
+    () => songsWithUserVote.filter((s) => songMatchesFilter(s, filter)),
+    [songsWithUserVote, filter],
+  );
 
   // Setlist highlight: top N songs after deadline
   const setlistCount = playlist.setlist_count;
@@ -263,6 +275,45 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
                 </div>
               )}
 
+              {/* Result share banner — voting closed + has top song */}
+              {isExpired && songsWithUserVote.length > 0 && (
+                <div className="mt-5 p-5 rounded-2xl bg-success/10 border border-success/30 text-center animate-fade-in">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/20 text-success text-caption font-bold mb-3">
+                    🎉 곡 결정
+                  </div>
+                  <p className="text-h3 font-bold text-text leading-snug truncate px-2">
+                    {songsWithUserVote[0].title}
+                  </p>
+                  {songsWithUserVote[0].artist && (
+                    <p className="text-sm text-text-muted truncate mt-1 mb-4 px-2">
+                      {songsWithUserVote[0].artist}
+                    </p>
+                  )}
+                  {songsWithUserVote[0].score > 0 && (
+                    <p className="text-caption text-text-muted mb-4">
+                      +{songsWithUserVote[0].score}점 1위 ·{" "}
+                      {participantCount > 0
+                        ? `${participantCount}명 참여`
+                        : `${songs.length}곡 후보`}
+                    </p>
+                  )}
+                  <KakaoShareButton
+                    shareCode={shareCode}
+                    variant="decided"
+                    title={playlist.title}
+                    songs={songs.length}
+                    participants={participantCount}
+                    topSong={songsWithUserVote[0].title}
+                    topArtist={songsWithUserVote[0].artist || undefined}
+                    topScore={Math.max(0, songsWithUserVote[0].score)}
+                    visualStyle="primary"
+                    size="md"
+                  >
+                    카톡 단톡방에 결과 공유
+                  </KakaoShareButton>
+                </div>
+              )}
+
               {/* Setlist confirmation banner */}
               {isExpired && setlistCount && !playlist.setlist_confirmed && (
                 <div className="mt-5 p-4 bg-primary/10 border border-primary/30 rounded-xl text-center">
@@ -289,6 +340,30 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
                   ) : (
                     <p className="text-xs text-gray-400">생성자가 셋리스트를 확정하면 셋리스트/합주 모드를 사용할 수 있습니다.</p>
                   )}
+                </div>
+              )}
+
+              {/* Setlist share banner — confirmed setlist */}
+              {playlist.setlist_confirmed && (
+                <div className="mt-5 p-5 rounded-2xl bg-primary/10 border border-primary/30 text-center animate-fade-in">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/20 text-primary text-caption font-bold mb-3">
+                    🎵 셋리스트 확정
+                  </div>
+                  <p className="text-sm text-text mb-4">
+                    총 {setlistCount || songsWithUserVote.length}곡 · 다음 공연 준비 완료
+                  </p>
+                  <KakaoShareButton
+                    shareCode={shareCode}
+                    variant="setlist"
+                    title={playlist.title}
+                    songs={songs.length}
+                    participants={participantCount}
+                    setlistCount={setlistCount || songsWithUserVote.length}
+                    visualStyle="primary"
+                    size="md"
+                  >
+                    셋리스트 카톡 공유
+                  </KakaoShareButton>
                 </div>
               )}
 
@@ -333,21 +408,68 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
                 </div>
               )}
 
+              {/* Filter bar */}
+              <FilterBar
+                filter={filter}
+                onChange={setFilter}
+                total={songsWithUserVote.length}
+                visible={filteredSongs.length}
+              />
+
               {/* Song list */}
               <div
                 ref={listParent}
                 className={`mt-3 ${viewMode === "compact" ? "space-y-2" : "space-y-4"}`}
               >
                 {songsWithUserVote.length === 0 ? (
-                  <div className="text-center py-16 text-gray-500">
-                    <svg className="w-16 h-16 mx-auto mb-4 text-gray-700" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" />
-                    </svg>
-                    <p className="text-lg font-medium">아직 곡이 없습니다</p>
-                    <p className="mt-1">YouTube URL을 붙여넣어 곡을 추가해보세요</p>
+                  <div className="mt-2 rounded-2xl border-2 border-dashed border-border bg-surface/40 px-6 py-10 text-center">
+                    {/* 위 입력창을 가리키는 화살표 + 음표 */}
+                    <div className="flex items-center justify-center gap-2 mb-5 text-primary animate-bounce-slow">
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2.5}
+                        viewBox="0 0 24 24"
+                        aria-hidden
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 11l7-7 7 7M5 19l7-7 7 7"
+                        />
+                      </svg>
+                      <span className="text-sm font-semibold">위 입력창부터</span>
+                    </div>
+
+                    <p className="text-h3 font-bold text-text mb-2">
+                      첫 곡을 추가해보세요
+                    </p>
+                    <p className="text-sm text-text-muted leading-relaxed max-w-xs mx-auto">
+                      YouTube 링크를 붙여넣으면<br />
+                      제목·썸네일이 자동으로 들어가요.
+                    </p>
+
+                    <div className="mt-6 flex flex-col gap-1.5 text-caption text-text-subtle">
+                      <p>곡 3개 이상 → 멤버에게 카톡으로 공유</p>
+                      <p>5분 안에 다음 합주곡 결정 끝.</p>
+                    </div>
+                  </div>
+                ) : filteredSongs.length === 0 ? (
+                  <div className="mt-2 rounded-2xl border border-dashed border-border bg-surface/30 px-6 py-8 text-center">
+                    <p className="text-sm text-text-muted">
+                      필터에 맞는 곡이 없어요.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setFilter(DEFAULT_FILTER)}
+                      className="mt-2 text-caption text-primary hover:underline underline-offset-2"
+                    >
+                      필터 초기화
+                    </button>
                   </div>
                 ) : (
-                  songsWithUserVote.map((song) => (
+                  filteredSongs.map((song) => (
                     <SongCard
                       key={song.id}
                       song={song}
@@ -399,6 +521,8 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
               adminToken={adminToken}
               loading={loadingSetlist}
               onItemsChange={setSetlistItems}
+              title={playlist.title}
+              participantCount={participantCount}
             />
           )}
 
