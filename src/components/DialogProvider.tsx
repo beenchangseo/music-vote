@@ -31,7 +31,7 @@ export function useDialog() {
 const buttonStyles = {
   primary: "bg-primary hover:bg-primary-hover text-white font-semibold",
   danger: "bg-red-600 hover:bg-red-500 text-white font-semibold",
-  ghost: "bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium",
+  ghost: "bg-surface-hover hover:bg-gray-700 text-gray-300 font-medium",
 };
 
 export default function DialogProvider({ children }: { children: ReactNode }) {
@@ -89,8 +89,8 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
 
       {dialog && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 px-4 animate-fade-in">
-          <div className="w-full max-w-xs bg-gray-900 border border-border rounded-2xl p-5 animate-slide-up shadow-2xl">
-            <h3 className="text-base font-bold text-gray-100 text-center">{dialog.title}</h3>
+          <div className="w-full max-w-xs bg-surface border border-border rounded-2xl p-5 animate-slide-up shadow-2xl">
+            <h3 className="text-base font-bold text-text text-center">{dialog.title}</h3>
             <p className="text-sm text-gray-300 text-center mt-2 whitespace-pre-wrap leading-relaxed">{dialog.message}</p>
             <div className={`mt-5 flex gap-2 ${dialog.buttons.length === 1 ? "" : ""}`}>
               {dialog.buttons.map((btn, i) => {
@@ -99,7 +99,7 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
                   <button
                     key={btn.label}
                     onClick={() => close(isLast)}
-                    className={`flex-1 py-2.5 rounded-xl text-sm transition-all active:scale-95 ${buttonStyles[btn.variant || "ghost"]}`}
+                    className={`flex-1 h-11 rounded-xl text-sm transition-all active:scale-95 ${buttonStyles[btn.variant || "ghost"]}`}
                   >
                     {btn.label}
                   </button>

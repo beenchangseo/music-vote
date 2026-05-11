@@ -53,7 +53,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={`${geistSans.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-gray-950 text-gray-100 font-sans pb-[env(safe-area-inset-bottom)]">
+      <body className="min-h-full flex flex-col bg-gray-950 text-text font-sans pb-[env(safe-area-inset-bottom)]">
         <DialogProvider>
           {children}
         </DialogProvider>

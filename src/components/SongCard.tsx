@@ -102,7 +102,7 @@ export default function SongCard({
             />
             <button
               onClick={onTogglePlay}
-              className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+              className="absolute top-2 right-2 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
               aria-label="영상 닫기"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -154,10 +154,10 @@ export default function SongCard({
 
           {/* Song info */}
           <div className="min-w-0 flex-1">
-            <h3 className={`font-medium text-sm truncate ${isCurrent ? "text-primary" : "text-gray-100"}`}>{song.title}</h3>
+            <h3 className={`font-medium text-sm truncate ${isCurrent ? "text-primary" : "text-text"}`}>{song.title}</h3>
             <div className="flex items-center gap-2 mt-0.5">
               {song.artist && (
-                <p className="text-xs text-gray-400 truncate min-w-0">{song.artist}</p>
+                <p className="text-xs text-text-muted truncate min-w-0">{song.artist}</p>
               )}
               {song.commentCount > 0 && (
                 <button
@@ -193,7 +193,7 @@ export default function SongCard({
           <div className="relative shrink-0" ref={showMenu ? menuRef : undefined}>
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="p-1.5 text-gray-500 hover:text-gray-200 transition-colors"
+              className="w-11 h-11 -mr-1.5 flex items-center justify-center rounded-lg text-text-subtle hover:text-gray-200 hover:bg-surface-hover transition-colors"
               aria-label="더보기"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -203,9 +203,9 @@ export default function SongCard({
               </svg>
             </button>
             {showMenu && (
-              <div className="absolute right-0 top-8 z-20 w-44 bg-gray-800 border border-border rounded-xl shadow-lg overflow-hidden">
+              <div className="absolute right-0 top-8 z-20 w-44 bg-surface-hover border border-border rounded-xl shadow-lg overflow-hidden">
                 {song.added_by && (
-                  <div className="px-3 py-2 text-xs text-gray-500 border-b border-border truncate">
+                  <div className="px-3 py-2 text-xs text-text-subtle border-b border-border truncate">
                     추가: <span className="text-gray-300">{song.added_by}</span>
                   </div>
                 )}
@@ -213,7 +213,7 @@ export default function SongCard({
                   onClick={() => { setShowComments(true); setShowMenu(false); }}
                   className="w-full px-3 py-2.5 text-left text-sm text-gray-200 hover:bg-gray-700 transition-colors flex items-center gap-2"
                 >
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
                   </svg>
                   댓글
@@ -278,7 +278,7 @@ export default function SongCard({
           />
           <button
             onClick={onTogglePlay}
-            className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+            className="absolute top-2 right-2 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
             aria-label="영상 닫기"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -289,7 +289,7 @@ export default function SongCard({
       ) : (
         <button
           onClick={onTogglePlay}
-          className="relative w-full aspect-video bg-gray-800 group"
+          className="relative w-full aspect-video bg-surface-hover group"
           aria-label={`${song.title} 재생`}
         >
           {song.thumbnail_url && (
@@ -314,9 +314,9 @@ export default function SongCard({
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className={`font-semibold truncate ${isCurrent ? "text-primary" : "text-gray-100"}`}>{song.title}</h3>
+            <h3 className={`font-semibold truncate ${isCurrent ? "text-primary" : "text-text"}`}>{song.title}</h3>
             {song.artist && (
-              <p className="text-sm text-gray-400 truncate mt-0.5">{song.artist}</p>
+              <p className="text-sm text-text-muted truncate mt-0.5">{song.artist}</p>
             )}
           </div>
           <VoteButtons
@@ -336,7 +336,7 @@ export default function SongCard({
             className={`text-xs transition-colors flex items-center gap-1 ${
               song.commentCount > 0
                 ? "text-primary hover:text-primary-hover font-semibold"
-                : "text-gray-500 hover:text-primary"
+                : "text-text-subtle hover:text-primary"
             }`}
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -352,7 +352,7 @@ export default function SongCard({
           {onAddToSetlist && (
             <button
               onClick={() => onAddToSetlist(song.id)}
-              className="text-xs text-gray-500 hover:text-primary transition-colors flex items-center gap-1"
+              className="text-xs text-text-subtle hover:text-primary transition-colors flex items-center gap-1"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -364,7 +364,7 @@ export default function SongCard({
             <button
               onClick={handleRemove}
               disabled={isPending}
-              className="text-xs text-gray-500 hover:text-red-400 transition-colors"
+              className="text-xs text-text-subtle hover:text-red-400 transition-colors"
             >
               곡 삭제
             </button>

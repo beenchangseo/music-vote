@@ -155,7 +155,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
         <button
           type="button"
           onClick={handleClear}
-          className="p-2 text-gray-500 hover:text-red-400 transition-colors shrink-0"
+          className="p-2 text-text-subtle hover:text-red-400 transition-colors shrink-0"
           aria-label="마감일 삭제"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -171,7 +171,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary transition-colors"
+        className="flex items-center gap-1.5 text-sm text-text-subtle hover:text-primary transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
@@ -197,7 +197,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
                   className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all active:scale-95 ${
                     selectedDate === key
                       ? "bg-primary text-white"
-                      : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                      : "bg-surface-hover text-gray-300 hover:bg-gray-700"
                   }`}
                 >
                   {q.label}
@@ -212,7 +212,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
               type="button"
               onClick={prevMonth}
               disabled={!canGoPrev}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-1.5 rounded-lg text-text-muted hover:text-white hover:bg-surface-hover transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="이전 달"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -225,7 +225,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
             <button
               type="button"
               onClick={nextMonth}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+              className="p-1.5 rounded-lg text-text-muted hover:text-white hover:bg-surface-hover transition-colors"
               aria-label="다음 달"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -237,7 +237,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
           {/* Day headers */}
           <div className="grid grid-cols-7 mb-1">
             {DAYS.map((d) => (
-              <div key={d} className="text-center text-xs text-gray-500 py-1">
+              <div key={d} className="text-center text-xs text-text-subtle py-1">
                 {d}
               </div>
             ))}
@@ -266,7 +266,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
                       ? "text-gray-700 cursor-not-allowed"
                       : isToday
                       ? "text-primary bg-primary/10 hover:bg-primary/20"
-                      : "text-gray-300 hover:bg-gray-800"
+                      : "text-gray-300 hover:bg-surface-hover"
                   }`}
                 >
                   {day.getDate()}
@@ -280,7 +280,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
             <button
               type="button"
               onClick={() => { setOpen(false); setStep("date"); }}
-              className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+              className="text-sm text-text-subtle hover:text-gray-300 transition-colors"
             >
               취소
             </button>
@@ -294,7 +294,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
           <button
             type="button"
             onClick={() => setStep("date")}
-            className="flex items-center gap-1 text-sm text-gray-400 hover:text-white transition-colors mb-3"
+            className="flex items-center gap-1 text-sm text-text-muted hover:text-white transition-colors mb-3"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -310,7 +310,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
                 return `${d.getMonth() + 1}월 ${d.getDate()}일 (${DAYS[d.getDay()]})`;
               })()}
             </span>
-            <span className="text-gray-500 ml-1">시간을 선택하세요</span>
+            <span className="text-text-subtle ml-1">시간을 선택하세요</span>
           </p>
 
           {/* Time presets */}
@@ -323,7 +323,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
                 className={`py-3 rounded-xl text-sm font-medium transition-all active:scale-95 ${
                   selectedHour === t.hour && selectedMinute === t.minute
                     ? "bg-primary text-white"
-                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                    : "bg-surface-hover text-gray-300 hover:bg-gray-700"
                 }`}
               >
                 {t.label}
@@ -336,7 +336,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
             <button
               type="button"
               onClick={() => setShowCustomTime(true)}
-              className="w-full py-2 text-sm text-gray-500 hover:text-primary transition-colors"
+              className="w-full py-2 text-sm text-text-subtle hover:text-primary transition-colors"
             >
               직접 시간 입력
             </button>
@@ -345,7 +345,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
               <select
                 value={selectedHour ?? ""}
                 onChange={(e) => setSelectedHour(Number(e.target.value))}
-                className="flex-1 px-3 py-2.5 rounded-xl bg-gray-800 border border-border text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none text-center"
+                className="flex-1 px-3 py-2.5 rounded-xl bg-surface-hover border border-border text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none text-center"
               >
                 <option value="" disabled>시</option>
                 {Array.from({ length: 24 }, (_, i) => {
@@ -362,7 +362,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
               <select
                 value={selectedMinute}
                 onChange={(e) => setSelectedMinute(Number(e.target.value))}
-                className="flex-1 px-3 py-2.5 rounded-xl bg-gray-800 border border-border text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none text-center"
+                className="flex-1 px-3 py-2.5 rounded-xl bg-surface-hover border border-border text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none text-center"
               >
                 {[0, 10, 20, 30, 40, 50].map((m) => (
                   <option key={m} value={m}>{m}분</option>
@@ -386,7 +386,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
             <button
               type="button"
               onClick={handleClear}
-              className="text-sm text-gray-500 hover:text-red-400 transition-colors"
+              className="text-sm text-text-subtle hover:text-red-400 transition-colors"
             >
               취소
             </button>

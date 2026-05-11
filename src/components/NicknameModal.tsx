@@ -98,7 +98,7 @@ export default function NicknameModal({ onSubmit, existingNicknames = [] }: Nick
         keyboardVisible ? "rounded-2xl mb-0" : "rounded-t-2xl sm:rounded-2xl mb-0"
       }`}>
         <h2 className="text-xl font-bold text-center mb-2">환영합니다!</h2>
-        <p className="text-gray-400 text-center text-sm mb-6">
+        <p className="text-text-muted text-center text-sm mb-6">
           투표에 참여할 닉네임을 입력해주세요
         </p>
         <form onSubmit={handleSubmit}>
@@ -110,7 +110,7 @@ export default function NicknameModal({ onSubmit, existingNicknames = [] }: Nick
             maxLength={20}
             autoFocus
             enterKeyHint="done"
-            className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-border text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-center text-lg"
+            className="w-full px-4 py-3 rounded-xl bg-surface-hover border border-border text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-center text-lg"
           />
           {warning && (
             <p className="mt-2 text-xs text-yellow-400 text-center">{warning}</p>

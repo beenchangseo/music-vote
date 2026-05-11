@@ -244,14 +244,14 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
           />
 
           {/* Participant count + deadline info */}
-          <div className="mt-3 flex items-center justify-center gap-3 text-sm text-gray-400">
+          <div className="mt-3 flex items-center justify-center gap-3 text-sm text-text-muted">
             {participantCount > 0 && (
               <span>{participantCount}명 참여</span>
             )}
             {playlist.deadline && (
               <>
                 {participantCount > 0 && <span className="text-gray-600">|</span>}
-                <span className={isExpired ? "text-red-400" : "text-gray-400"}>
+                <span className={isExpired ? "text-red-400" : "text-text-muted"}>
                   {isExpired ? "투표 마감" : `마감: ${new Date(playlist.deadline).toLocaleDateString("ko-KR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}`}
                 </span>
               </>
@@ -271,7 +271,7 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
           )}
 
           {nickname && (
-            <p className="mt-4 text-sm text-gray-500 text-center">
+            <p className="mt-4 text-sm text-text-subtle text-center">
               <span className="text-primary font-medium">{nickname}</span>
               (으)로 참여 중
             </p>
@@ -352,7 +352,7 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
                       셋리스트 확정하기
                     </button>
                   ) : (
-                    <p className="text-xs text-gray-400">생성자가 셋리스트를 확정하면 셋리스트/합주 모드를 사용할 수 있습니다.</p>
+                    <p className="text-xs text-text-muted">생성자가 셋리스트를 확정하면 셋리스트/합주 모드를 사용할 수 있습니다.</p>
                   )}
                 </div>
               )}
@@ -385,21 +385,21 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
               {songsWithUserVote.length > 0 && (
                 <div className="mt-5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
+                    <span className="text-xs text-text-subtle uppercase tracking-wider font-semibold">
                       {songs.length}곡
                     </span>
                     <button
                       onClick={handleShareResults}
-                      className="text-xs text-gray-500 hover:text-primary transition-colors"
+                      className="text-xs text-text-subtle hover:text-primary transition-colors"
                     >
                       {resultCopied ? "복사됨!" : "결과 공유"}
                     </button>
                   </div>
-                  <div className="flex bg-gray-800 rounded-lg p-0.5">
+                  <div className="flex bg-surface-hover rounded-lg p-0.5">
                     <button
                       onClick={() => setViewMode("compact")}
                       className={`p-1.5 rounded-md transition-colors ${
-                        viewMode === "compact" ? "bg-gray-600 text-white" : "text-gray-400 hover:text-gray-200"
+                        viewMode === "compact" ? "bg-gray-600 text-white" : "text-text-muted hover:text-gray-200"
                       }`}
                       aria-label="리스트 보기"
                     >
@@ -410,7 +410,7 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
                     <button
                       onClick={() => setViewMode("card")}
                       className={`p-1.5 rounded-md transition-colors ${
-                        viewMode === "card" ? "bg-gray-600 text-white" : "text-gray-400 hover:text-gray-200"
+                        viewMode === "card" ? "bg-gray-600 text-white" : "text-text-muted hover:text-gray-200"
                       }`}
                       aria-label="카드 보기"
                     >
@@ -513,7 +513,7 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
               {/* CTA: Create your own */}
               {songsWithUserVote.length > 0 && (
                 <div className="mt-8 bg-surface border border-border rounded-2xl p-5 text-center">
-                  <p className="text-sm text-gray-400 mb-3">새로운 플레이리스트를 만들고 싶다면?</p>
+                  <p className="text-sm text-text-muted mb-3">새로운 플레이리스트를 만들고 싶다면?</p>
                   <Link
                     href="/"
                     className="inline-block px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-sm font-semibold transition-all active:scale-95"
@@ -560,7 +560,7 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
       {/* Setlist add confirm dialog */}
       {setlistConfirmSong && (
         <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/50 px-4 pb-28">
-          <div className="w-full max-w-sm bg-gray-900 border border-border rounded-2xl p-5 animate-slide-up">
+          <div className="w-full max-w-sm bg-surface border border-border rounded-2xl p-5 animate-slide-up">
             <div className="flex items-center gap-3 mb-4">
               {setlistConfirmSong.thumbnail_url && (
                 <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
@@ -574,9 +574,9 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-gray-100 truncate">{setlistConfirmSong.title}</p>
+                <p className="text-sm font-medium text-text truncate">{setlistConfirmSong.title}</p>
                 {setlistConfirmSong.artist && (
-                  <p className="text-xs text-gray-400 truncate">{setlistConfirmSong.artist}</p>
+                  <p className="text-xs text-text-muted truncate">{setlistConfirmSong.artist}</p>
                 )}
               </div>
             </div>
@@ -584,7 +584,7 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
             <div className="flex gap-2">
               <button
                 onClick={() => setSetlistConfirmSongId(null)}
-                className="flex-1 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-sm text-gray-300 font-medium transition-colors"
+                className="flex-1 py-2.5 rounded-xl bg-surface-hover hover:bg-gray-700 text-sm text-gray-300 font-medium transition-colors"
               >
                 취소
               </button>

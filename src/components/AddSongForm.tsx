@@ -50,7 +50,7 @@ export default function AddSongForm({ playlistId, shareCode, nickname }: AddSong
               }}
               placeholder="YouTube URL을 붙여넣으세요"
               enterKeyHint="send"
-              className="flex-1 px-4 py-3 rounded-xl bg-gray-800 border border-border text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
+              className="flex-1 px-4 py-3 rounded-xl bg-surface-hover border border-border text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
             />
             <button
               type="submit"
@@ -71,7 +71,7 @@ export default function AddSongForm({ playlistId, shareCode, nickname }: AddSong
                 value={manualTitle}
                 onChange={(e) => setManualTitle(e.target.value)}
                 placeholder="곡 제목을 직접 입력해주세요 (메타데이터를 가져올 수 없습니다)"
-                className="w-full px-4 py-2 rounded-xl bg-gray-800 border border-yellow-600/50 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all text-sm"
+                className="w-full px-4 py-2 rounded-xl bg-surface-hover border border-yellow-600/50 text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all text-sm"
               />
             </div>
           )}

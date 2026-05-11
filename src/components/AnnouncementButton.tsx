@@ -40,7 +40,7 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
         className={`relative p-2.5 rounded-xl border transition-all active:scale-95 ${
           announcement
             ? "bg-surface hover:bg-surface-hover border-primary/30 text-primary"
-            : "bg-surface hover:bg-surface-hover border-border text-gray-500"
+            : "bg-surface hover:bg-surface-hover border-border text-text-subtle"
         }`}
         aria-label="공지사항"
         title={announcement ? "공지사항 보기/수정" : "공지사항 작성"}
@@ -56,10 +56,10 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
 
       {showModal && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 px-4">
-          <div className="bg-gray-900 border border-border rounded-2xl p-5 w-full max-w-sm">
-            <h3 className="text-lg font-bold text-gray-100 mb-3">📌 공지사항</h3>
+          <div className="bg-surface border border-border rounded-2xl p-5 w-full max-w-sm">
+            <h3 className="text-lg font-bold text-text mb-3">📌 공지사항</h3>
             {announcement && !text && (
-              <div className="mb-3 p-3 bg-gray-800/50 rounded-xl">
+              <div className="mb-3 p-3 bg-surface-hover/50 rounded-xl">
                 <p className="text-sm text-gray-300 whitespace-pre-wrap">{announcement}</p>
               </div>
             )}
@@ -69,12 +69,12 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
               placeholder="멤버들에게 전달할 공지사항을 작성하세요"
               rows={4}
               maxLength={500}
-              className="w-full px-3 py-2 rounded-xl bg-gray-800 border border-border text-gray-100 placeholder-gray-500 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-3 py-2 rounded-xl bg-surface-hover border border-border text-text placeholder-text-subtle text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <div className="flex justify-between items-center mt-3">
-              <span className="text-xs text-gray-500">{text.length}/500</span>
+              <span className="text-xs text-text-subtle">{text.length}/500</span>
               <div className="flex gap-2">
-                <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">닫기</button>
+                <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-text-muted hover:text-gray-200">닫기</button>
                 <button
                   onClick={handleSave}
                   disabled={isPending}

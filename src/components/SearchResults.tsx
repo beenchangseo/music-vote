@@ -33,7 +33,7 @@ export default function SearchResults({
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="flex items-center gap-3 p-2 rounded-xl bg-gray-800/50 animate-pulse"
+            className="flex items-center gap-3 p-2 rounded-xl bg-surface-hover/50 animate-pulse"
           >
             <div className="w-16 h-10 rounded-lg bg-gray-700" />
             <div className="flex-1 space-y-1.5">
@@ -49,7 +49,7 @@ export default function SearchResults({
   if (results.length === 0) return null;
 
   return (
-    <div className="mt-2 space-y-1 max-h-80 overflow-y-auto rounded-xl border border-border bg-gray-800/50 p-1">
+    <div className="mt-2 space-y-1 max-h-80 overflow-y-auto rounded-xl border border-border bg-surface-hover/50 p-1">
       {results.map((result) => (
         <button
           key={result.videoId}
@@ -72,8 +72,8 @@ export default function SearchResults({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm text-gray-100 truncate">{result.title}</p>
-            <p className="text-xs text-gray-400 truncate">{result.author}</p>
+            <p className="text-sm text-text truncate">{result.title}</p>
+            <p className="text-xs text-text-muted truncate">{result.author}</p>
           </div>
           <div className="shrink-0">
             {addingId === result.videoId ? (

@@ -82,10 +82,10 @@ export default function CommentSection({ songId, comments, nickname, shareCode, 
       {nickname && (
         <div className="mt-2">
           {myComment && !isEditing ? (
-            <div className="bg-gray-800/50 rounded-lg p-2">
+            <div className="bg-surface-hover/50 rounded-lg p-2">
               <div className="flex items-center justify-between mb-0.5">
                 <span className="text-xs font-medium text-primary">{nickname} (나)</span>
-                <button onClick={() => setIsEditing(true)} className="text-[10px] text-gray-500 hover:text-gray-300">수정</button>
+                <button onClick={() => setIsEditing(true)} className="text-[10px] text-text-subtle hover:text-gray-300">수정</button>
               </div>
               <p className="text-xs text-gray-300 whitespace-pre-wrap">{myComment.content}</p>
             </div>
@@ -97,13 +97,13 @@ export default function CommentSection({ songId, comments, nickname, shareCode, 
                 placeholder={`${nickname}의 메모를 남겨보세요 (1000자)`}
                 maxLength={1000}
                 rows={2}
-                className="w-full px-2 py-1.5 rounded-lg bg-gray-800 border border-border text-xs text-gray-200 placeholder-gray-600 resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full px-2 py-1.5 rounded-lg bg-surface-hover border border-border text-xs text-gray-200 placeholder-text-subtle resize-none focus:outline-none focus:ring-1 focus:ring-primary"
               />
               <div className="flex items-center justify-between">
                 <span className="text-[10px] text-gray-600">{content.length}/1000</span>
                 <div className="flex gap-2">
                   {isEditing && (
-                    <button onClick={() => { setIsEditing(false); setContent(myComment?.content || ""); }} className="text-xs text-gray-500">취소</button>
+                    <button onClick={() => { setIsEditing(false); setContent(myComment?.content || ""); }} className="text-xs text-text-subtle">취소</button>
                   )}
                   <button
                     onClick={handleSubmit}

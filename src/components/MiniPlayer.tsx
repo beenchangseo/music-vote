@@ -24,7 +24,7 @@ export default function MiniPlayer({ state, actions, playerRef }: MiniPlayerProp
   }
 
   return (
-    <div className="fixed bottom-[52px] left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-sm border-t border-gray-700/50 print:hidden">
+    <div className="fixed bottom-[52px] left-0 right-0 z-50 bg-surface/95 backdrop-blur-sm border-t border-border/50 print:hidden">
       <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
         {/* Thumbnail */}
         {currentSong.thumbnail_url && (
@@ -41,9 +41,9 @@ export default function MiniPlayer({ state, actions, playerRef }: MiniPlayerProp
 
         {/* Song info */}
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-gray-100 truncate">{currentSong.title}</p>
+          <p className="text-sm font-medium text-text truncate">{currentSong.title}</p>
           {currentSong.artist && (
-            <p className="text-xs text-gray-400 truncate">{currentSong.artist}</p>
+            <p className="text-xs text-text-muted truncate">{currentSong.artist}</p>
           )}
         </div>
 
@@ -53,7 +53,7 @@ export default function MiniPlayer({ state, actions, playerRef }: MiniPlayerProp
           <button
             onClick={actions.toggleShuffle}
             className={`p-2 rounded-full transition-colors ${
-              shuffleMode ? "text-primary" : "text-gray-400 hover:text-gray-200"
+              shuffleMode ? "text-primary" : "text-text-muted hover:text-gray-200"
             }`}
             aria-label={shuffleMode ? "셔플 끄기" : "셔플 켜기"}
           >
@@ -82,7 +82,7 @@ export default function MiniPlayer({ state, actions, playerRef }: MiniPlayerProp
           {/* Next */}
           <button
             onClick={actions.playNext}
-            className="p-2 rounded-full text-gray-400 hover:text-gray-200 transition-colors"
+            className="p-2 rounded-full text-text-muted hover:text-gray-200 transition-colors"
             aria-label="다음 곡"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -94,7 +94,7 @@ export default function MiniPlayer({ state, actions, playerRef }: MiniPlayerProp
           <button
             onClick={actions.toggleRepeat}
             className={`p-2 rounded-full transition-colors ${
-              repeatMode === "one" ? "text-primary" : "text-gray-400 hover:text-gray-200"
+              repeatMode === "one" ? "text-primary" : "text-text-muted hover:text-gray-200"
             }`}
             aria-label={repeatMode === "one" ? "반복 끄기" : "한곡 반복"}
           >

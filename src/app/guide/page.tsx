@@ -11,10 +11,10 @@ export default function GuidePage() {
   return (
     <main className="min-h-full bg-gray-950">
       <div className="max-w-2xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold text-gray-100 mb-4">
+        <h1 className="text-3xl font-bold text-text mb-4">
           셋리스트 정하는 방법
         </h1>
-        <p className="text-gray-400 mb-8">
+        <p className="text-text-muted mb-8">
           Plypick를 활용한 밴드 셋리스트 투표 가이드
         </p>
 
@@ -25,7 +25,7 @@ export default function GuidePage() {
               <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
                 1
               </div>
-              <h2 className="text-xl font-semibold text-gray-100">
+              <h2 className="text-xl font-semibold text-text">
                 플레이리스트 만들기
               </h2>
             </div>
@@ -33,7 +33,7 @@ export default function GuidePage() {
               홈 화면에서 플레이리스트 이름을 입력합니다.
               밴드 이름, 공연명, 날짜 등을 넣으면 구분하기 쉽습니다.
             </p>
-            <p className="mt-2 text-gray-400">
+            <p className="mt-2 text-text-muted">
               예시: &quot;락밴드 7월 공연 후보곡&quot;, &quot;2026 여름 합주 셋리스트&quot;
             </p>
             <p className="mt-2">
@@ -47,7 +47,7 @@ export default function GuidePage() {
               <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
                 2
               </div>
-              <h2 className="text-xl font-semibold text-gray-100">
+              <h2 className="text-xl font-semibold text-text">
                 곡 후보 추가하기
               </h2>
             </div>
@@ -55,7 +55,7 @@ export default function GuidePage() {
               YouTube에서 연주하고 싶은 곡을 검색하고, URL을 붙여넣으면 됩니다.
               곡 제목, 아티스트, 썸네일이 자동으로 가져와집니다.
             </p>
-            <p className="mt-2 text-gray-400">
+            <p className="mt-2 text-text-muted">
               팁: YouTube Music, 일반 YouTube, Shorts URL 모두 지원됩니다.
               누가 추가했는지 표시되므로, 각 멤버가 자유롭게 곡을 추가하세요.
             </p>
@@ -67,7 +67,7 @@ export default function GuidePage() {
               <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
                 3
               </div>
-              <h2 className="text-xl font-semibold text-gray-100">
+              <h2 className="text-xl font-semibold text-text">
                 멤버에게 링크 공유
               </h2>
             </div>
@@ -75,7 +75,7 @@ export default function GuidePage() {
               플레이리스트를 만들면 공유 링크와 QR 코드가 생성됩니다.
               카카오톡 단톡방에 링크를 보내면 멤버들이 바로 참여할 수 있습니다.
             </p>
-            <p className="mt-2 text-gray-400">
+            <p className="mt-2 text-text-muted">
               회원가입이 필요 없습니다. 링크를 열고 닉네임만 입력하면 바로 투표할 수 있어요.
             </p>
           </section>
@@ -86,7 +86,7 @@ export default function GuidePage() {
               <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
                 4
               </div>
-              <h2 className="text-xl font-semibold text-gray-100">
+              <h2 className="text-xl font-semibold text-text">
                 투표하기
               </h2>
             </div>
@@ -107,7 +107,7 @@ export default function GuidePage() {
               <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
                 5
               </div>
-              <h2 className="text-xl font-semibold text-gray-100">
+              <h2 className="text-xl font-semibold text-text">
                 결과 확인 및 공유
               </h2>
             </div>
@@ -119,10 +119,10 @@ export default function GuidePage() {
 
           {/* Tips */}
           <section className="bg-surface border border-border rounded-2xl p-6">
-            <h2 className="text-lg font-semibold text-gray-100 mb-3">
+            <h2 className="text-lg font-semibold text-text mb-3">
               효과적인 투표를 위한 팁
             </h2>
-            <ul className="space-y-2 text-gray-400 text-sm">
+            <ul className="space-y-2 text-text-muted text-sm">
               <li>• 곡 후보는 10곡 이내로 추리면 투표가 빨라집니다</li>
               <li>• 마감일을 설정하면 미루는 멤버도 참여하게 됩니다</li>
               <li>• 각 멤버가 직접 곡을 추가하면 참여도가 높아집니다</li>
@@ -140,8 +140,8 @@ export default function GuidePage() {
           </section>
         </div>
 
-        <div className="mt-12 pt-6 border-t border-gray-800">
-          <Link href="/" className="text-sm text-gray-500 hover:text-primary transition-colors">
+        <div className="mt-12 pt-6 border-t border-border">
+          <Link href="/" className="text-sm text-text-subtle hover:text-primary transition-colors">
             &larr; 홈으로 돌아가기
           </Link>
         </div>

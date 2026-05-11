@@ -132,8 +132,8 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
             </svg>
           </Link>
           <div>
-            <h1 className="text-lg font-bold text-gray-100">메트로놈</h1>
-            <p className="text-xs text-gray-500">{playlistTitle}</p>
+            <h1 className="text-lg font-bold text-text">메트로놈</h1>
+            <p className="text-xs text-text-subtle">{playlistTitle}</p>
           </div>
         </div>
       </div>
@@ -141,7 +141,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
       {/* Metronome body */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 -mt-8">
         {/* Beat indicators */}
-        <p className="text-xs text-gray-500 mb-2">4/4 박자</p>
+        <p className="text-xs text-text-subtle mb-2">4/4 박자</p>
         <div className="flex gap-5 mb-6">
           {[0, 1, 2, 3].map((i) => (
             <div
@@ -159,21 +159,21 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
 
         {/* BPM display */}
         <div className="text-center mb-6">
-          <p className="text-7xl font-bold text-gray-100 tabular-nums">{bpm}</p>
-          <p className="text-sm text-gray-500 mt-1">BPM</p>
+          <p className="text-7xl font-bold text-text tabular-nums">{bpm}</p>
+          <p className="text-sm text-text-subtle mt-1">BPM</p>
         </div>
 
         {/* BPM controls */}
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => setBpm((b) => Math.max(40, b - 5))}
-            className="w-12 h-12 rounded-full bg-gray-800 border border-border text-gray-300 text-xl font-bold hover:bg-gray-700 transition-colors"
+            className="w-12 h-12 rounded-full bg-surface-hover border border-border text-gray-300 text-xl font-bold hover:bg-gray-700 transition-colors"
           >
             -5
           </button>
           <button
             onClick={() => setBpm((b) => Math.max(40, b - 1))}
-            className="w-10 h-10 rounded-full bg-gray-800 border border-border text-gray-300 text-lg hover:bg-gray-700 transition-colors"
+            className="w-10 h-10 rounded-full bg-surface-hover border border-border text-gray-300 text-lg hover:bg-gray-700 transition-colors"
           >
             -
           </button>
@@ -200,13 +200,13 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
 
           <button
             onClick={() => setBpm((b) => Math.min(300, b + 1))}
-            className="w-10 h-10 rounded-full bg-gray-800 border border-border text-gray-300 text-lg hover:bg-gray-700 transition-colors"
+            className="w-10 h-10 rounded-full bg-surface-hover border border-border text-gray-300 text-lg hover:bg-gray-700 transition-colors"
           >
             +
           </button>
           <button
             onClick={() => setBpm((b) => Math.min(300, b + 5))}
-            className="w-12 h-12 rounded-full bg-gray-800 border border-border text-gray-300 text-xl font-bold hover:bg-gray-700 transition-colors"
+            className="w-12 h-12 rounded-full bg-surface-hover border border-border text-gray-300 text-xl font-bold hover:bg-gray-700 transition-colors"
           >
             +5
           </button>
@@ -218,7 +218,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
             <select
               value={selectedSongId}
               onChange={(e) => handleSongChange(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-border text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-3 rounded-xl bg-surface-hover border border-border text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">곡 선택...</option>
               {songs.map((s) => (
@@ -228,7 +228,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
               ))}
             </select>
             {selectedSong && (
-              <p className="text-center text-xs text-gray-500 mt-2">
+              <p className="text-center text-xs text-text-subtle mt-2">
                 현재: <span className="text-primary">{selectedSong.title}</span> · {selectedSong.tempo_bpm} BPM
               </p>
             )}

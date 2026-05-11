@@ -74,14 +74,14 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/50" onClick={onClose}>
       <div
-        className="w-full max-w-lg bg-gray-900 border-t border-border rounded-t-2xl animate-slide-up max-h-[70vh] flex flex-col"
+        className="w-full max-w-lg bg-surface border-t border-border rounded-t-2xl animate-slide-up max-h-[70vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
-          <h3 className="text-sm font-semibold text-gray-100 truncate flex-1">{songTitle}</h3>
-          <span className="text-xs text-gray-500 mx-2">{comments.length}개 댓글</span>
-          <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-200 transition-colors">
+          <h3 className="text-sm font-semibold text-text truncate flex-1">{songTitle}</h3>
+          <span className="text-xs text-text-subtle mx-2">{comments.length}개 댓글</span>
+          <button onClick={onClose} className="p-1 text-text-subtle hover:text-gray-200 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -95,11 +95,11 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
               <span className="inline-block w-6 h-6 border-2 border-gray-600 border-t-primary rounded-full animate-spin" />
             </div>
           ) : comments.length === 0 && !nickname ? (
-            <p className="text-center text-sm text-gray-500 py-8">아직 댓글이 없습니다</p>
+            <p className="text-center text-sm text-text-subtle py-8">아직 댓글이 없습니다</p>
           ) : (
             <>
               {otherComments.map((c) => (
-                <div key={c.id} className="bg-gray-800/50 rounded-xl p-3">
+                <div key={c.id} className="bg-surface-hover/50 rounded-xl p-3">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-medium text-primary/80">{c.nickname}</span>
                     <span className="text-[10px] text-gray-600">
@@ -116,8 +116,8 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-medium text-primary">{nickname} (나)</span>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => { setIsEditing(true); setContent(myComment.content); }} className="text-[10px] text-gray-500 hover:text-gray-300">수정</button>
-                      <button onClick={handleDelete} className="text-[10px] text-gray-500 hover:text-red-400">삭제</button>
+                      <button onClick={() => { setIsEditing(true); setContent(myComment.content); }} className="text-[10px] text-text-subtle hover:text-gray-300">수정</button>
+                      <button onClick={handleDelete} className="text-[10px] text-text-subtle hover:text-red-400">삭제</button>
                     </div>
                   </div>
                   <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">{myComment.content}</p>
@@ -136,13 +136,13 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
               placeholder={`${nickname}의 메모를 남겨보세요`}
               maxLength={1000}
               rows={3}
-              className="w-full px-3 py-2 rounded-xl bg-gray-800 border border-border text-sm text-gray-200 placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+              className="w-full px-3 py-2 rounded-xl bg-surface-hover border border-border text-sm text-gray-200 placeholder-text-subtle resize-none focus:outline-none focus:ring-2 focus:ring-primary transition-all"
             />
             <div className="flex items-center justify-between mt-2">
               <span className="text-[10px] text-gray-600">{content.length}/1000</span>
               <div className="flex gap-2">
                 {isEditing && (
-                  <button onClick={() => { setIsEditing(false); setContent(myComment?.content || ""); }} className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-300">
+                  <button onClick={() => { setIsEditing(false); setContent(myComment?.content || ""); }} className="px-3 py-1.5 text-xs text-text-subtle hover:text-gray-300">
                     취소
                   </button>
                 )}
@@ -160,7 +160,7 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
 
         {!nickname && (
           <div className="px-4 py-3 border-t border-border text-center shrink-0">
-            <p className="text-xs text-gray-500">닉네임을 입력하면 댓글을 작성할 수 있습니다</p>
+            <p className="text-xs text-text-subtle">닉네임을 입력하면 댓글을 작성할 수 있습니다</p>
           </div>
         )}
       </div>

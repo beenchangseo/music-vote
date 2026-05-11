@@ -48,7 +48,7 @@ export default function AddIntervalForm({ playlistId, shareCode, nextPosition, o
         value={label}
         onChange={(e) => setLabel(e.target.value)}
         placeholder="인터벌 설명 (예: 보컬 멘트, 기타 셋업 체인지)"
-        className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-border text-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+        className="w-full px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
       />
       <div className="flex items-center gap-2">
         <input
@@ -58,9 +58,9 @@ export default function AddIntervalForm({ playlistId, shareCode, nextPosition, o
           placeholder="분"
           min="0"
           max="60"
-          className="w-20 px-3 py-2 rounded-lg bg-gray-800 border border-border text-gray-100 placeholder-gray-500 text-sm text-center focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-20 px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm text-center focus:outline-none focus:ring-2 focus:ring-yellow-500"
         />
-        <span className="text-gray-500">:</span>
+        <span className="text-text-subtle">:</span>
         <input
           type="number"
           value={seconds}
@@ -68,10 +68,10 @@ export default function AddIntervalForm({ playlistId, shareCode, nextPosition, o
           placeholder="초"
           min="0"
           max="59"
-          className="w-20 px-3 py-2 rounded-lg bg-gray-800 border border-border text-gray-100 placeholder-gray-500 text-sm text-center focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-20 px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm text-center focus:outline-none focus:ring-2 focus:ring-yellow-500"
         />
         <div className="flex-1" />
-        <button type="button" onClick={onCancel} className="px-3 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors">
+        <button type="button" onClick={onCancel} className="px-3 py-2 text-sm text-text-muted hover:text-gray-200 transition-colors">
           취소
         </button>
         <button

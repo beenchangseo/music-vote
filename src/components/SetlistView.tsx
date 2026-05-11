@@ -118,7 +118,7 @@ export default function SetlistView({
 
   if (loading) {
     return (
-      <div className="mt-6 text-center py-16 text-gray-500">
+      <div className="mt-6 text-center py-16 text-text-subtle">
         <span className="inline-block w-8 h-8 border-2 border-gray-600 border-t-primary rounded-full animate-spin" />
         <p className="mt-3">셋리스트 불러오는 중...</p>
       </div>
@@ -128,7 +128,7 @@ export default function SetlistView({
   if (sortedItems.length === 0) {
     return (
       <div className="mt-6">
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-text-subtle">
           <p className="text-lg font-medium">셋리스트가 비어있습니다</p>
           <p className="mt-1 text-sm">플레이리스트에서 곡을 셋리스트에 추가해보세요</p>
         </div>
@@ -147,7 +147,7 @@ export default function SetlistView({
           ) : (
             <button
               onClick={() => setShowAddForm(true)}
-              className="w-full py-3 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary/50 text-sm text-gray-500 hover:text-primary transition-colors"
+              className="w-full py-3 rounded-xl border-2 border-dashed border-border hover:border-primary/50 text-sm text-text-subtle hover:text-primary transition-colors"
             >
               + 인터벌 블럭 추가
             </button>
@@ -244,7 +244,7 @@ export default function SetlistView({
               key={item.id}
               className="bg-surface rounded-xl border border-border p-3 flex items-center gap-3"
             >
-              <span className="text-xs text-gray-500 w-5 text-center shrink-0">{index + 1}</span>
+              <span className="text-xs text-text-subtle w-5 text-center shrink-0">{index + 1}</span>
 
               {song.thumbnail_url && (
                 <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0">
@@ -253,8 +253,8 @@ export default function SetlistView({
               )}
 
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-gray-100 truncate">{song.title}</p>
-                <div className="flex items-center gap-2 text-xs text-gray-400">
+                <p className="text-sm font-medium text-text truncate">{song.title}</p>
+                <div className="flex items-center gap-2 text-xs text-text-muted">
                   {song.artist && <span className="truncate">{song.artist}</span>}
                   {song.duration_seconds && (
                     <>
@@ -267,13 +267,13 @@ export default function SetlistView({
 
               {/* Controls — all participants */}
               <div className="flex items-center gap-1 shrink-0">
-                <button onClick={() => handleMoveUp(index)} disabled={index === 0} className="p-1 text-gray-500 hover:text-gray-200 disabled:opacity-30 transition-colors">
+                <button onClick={() => handleMoveUp(index)} disabled={index === 0} className="p-1 text-text-subtle hover:text-gray-200 disabled:opacity-30 transition-colors">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
                 </button>
-                <button onClick={() => handleMoveDown(index)} disabled={index === sortedItems.length - 1} className="p-1 text-gray-500 hover:text-gray-200 disabled:opacity-30 transition-colors">
+                <button onClick={() => handleMoveDown(index)} disabled={index === sortedItems.length - 1} className="p-1 text-text-subtle hover:text-gray-200 disabled:opacity-30 transition-colors">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                 </button>
-                <button onClick={() => handleRemove(item.id)} className="p-1 text-gray-500 hover:text-red-400 transition-colors">
+                <button onClick={() => handleRemove(item.id)} className="p-1 text-text-subtle hover:text-red-400 transition-colors">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
@@ -298,7 +298,7 @@ export default function SetlistView({
         ) : (
           <button
             onClick={() => setShowAddForm(true)}
-            className="w-full py-3 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary/50 text-sm text-gray-500 hover:text-primary transition-colors"
+            className="w-full py-3 rounded-xl border-2 border-dashed border-border hover:border-primary/50 text-sm text-text-subtle hover:text-primary transition-colors"
           >
             + 인터벌 블럭 추가
           </button>

@@ -132,7 +132,7 @@ export default function SongMeta({
               <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="ml-auto shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-md text-text-subtle hover:text-text hover:bg-surface-hover transition-colors"
+                className="ml-auto shrink-0 inline-flex items-center justify-center w-10 h-10 -mr-1 rounded-lg text-text-subtle hover:text-text hover:bg-surface-hover transition-colors"
                 aria-label="메타 편집"
               >
                 <PencilIcon />

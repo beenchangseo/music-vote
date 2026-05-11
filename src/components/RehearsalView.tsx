@@ -43,7 +43,7 @@ export default function RehearsalView({
 
   if (loading) {
     return (
-      <div className="mt-6 text-center py-16 text-gray-500">
+      <div className="mt-6 text-center py-16 text-text-subtle">
         <span className="inline-block w-8 h-8 border-2 border-gray-600 border-t-primary rounded-full animate-spin" />
         <p className="mt-3">합주 정보 불러오는 중...</p>
       </div>
@@ -52,7 +52,7 @@ export default function RehearsalView({
 
   if (songItems.length === 0) {
     return (
-      <div className="mt-6 text-center py-16 text-gray-500">
+      <div className="mt-6 text-center py-16 text-text-subtle">
         <p className="text-lg font-medium">합주 모드</p>
         <p className="mt-1 text-sm">셋리스트가 확정되면 곡별 키/템포/댓글을 관리할 수 있습니다</p>
       </div>
@@ -71,15 +71,15 @@ export default function RehearsalView({
           <div key={item.id} className="bg-surface rounded-xl border border-border overflow-hidden">
             {/* Song header */}
             <div className="flex items-center gap-3 p-3 border-b border-border">
-              <span className="text-xs text-gray-500 w-5 text-center shrink-0">{index + 1}</span>
+              <span className="text-xs text-text-subtle w-5 text-center shrink-0">{index + 1}</span>
               {song.thumbnail_url && (
                 <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0">
                   <Image src={song.thumbnail_url} alt={song.title} fill sizes="40px" className="object-cover" />
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-gray-100 truncate">{song.title}</p>
-                {song.artist && <p className="text-xs text-gray-400 truncate">{song.artist}</p>}
+                <p className="text-sm font-medium text-text truncate">{song.title}</p>
+                {song.artist && <p className="text-xs text-text-muted truncate">{song.artist}</p>}
               </div>
             </div>
 

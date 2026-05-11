@@ -11,16 +11,16 @@ export default function AboutPage() {
   return (
     <main className="min-h-full bg-gray-950">
       <div className="max-w-2xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold text-gray-100 mb-4">
+        <h1 className="text-3xl font-bold text-text mb-4">
           밴드 투표 서비스란?
         </h1>
-        <p className="text-gray-400 mb-8">
+        <p className="text-text-muted mb-8">
           밴드 셋리스트, 아직도 단톡방에서 정하고 계신가요?
         </p>
 
         <div className="space-y-8 text-gray-300 leading-relaxed">
           <section>
-            <h2 className="text-xl font-semibold text-gray-100 mb-3">
+            <h2 className="text-xl font-semibold text-text mb-3">
               셋리스트 정하기, 왜 어려울까?
             </h2>
             <p>
@@ -35,7 +35,7 @@ export default function AboutPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-100 mb-3">
+            <h2 className="text-xl font-semibold text-text mb-3">
               Plypick가 해결합니다
             </h2>
             <p>
@@ -64,8 +64,8 @@ export default function AboutPage() {
                 <li key={item.title} className="flex gap-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2.5 shrink-0" />
                   <div>
-                    <span className="font-medium text-gray-100">{item.title}</span>
-                    <span className="text-gray-400"> — {item.desc}</span>
+                    <span className="font-medium text-text">{item.title}</span>
+                    <span className="text-text-muted"> — {item.desc}</span>
                   </div>
                 </li>
               ))}
@@ -73,10 +73,10 @@ export default function AboutPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-100 mb-3">
+            <h2 className="text-xl font-semibold text-text mb-3">
               이런 분들께 추천합니다
             </h2>
-            <ul className="space-y-2 text-gray-400">
+            <ul className="space-y-2 text-text-muted">
               <li>• 공연이나 합주 셋리스트를 매번 톡방에서 정하는 밴드</li>
               <li>• 멤버 의견을 공평하게 반영하고 싶은 밴드 리더</li>
               <li>• 곡을 미리 들어보고 투표하고 싶은 밴드 멤버</li>
@@ -85,10 +85,10 @@ export default function AboutPage() {
           </section>
 
           <section className="bg-surface border border-border rounded-2xl p-6 text-center">
-            <p className="text-lg font-semibold text-gray-100 mb-2">
+            <p className="text-lg font-semibold text-text mb-2">
               지금 바로 시작하세요
             </p>
-            <p className="text-sm text-gray-400 mb-4">
+            <p className="text-sm text-text-muted mb-4">
               무료, 회원가입 없이, 30초면 플레이리스트를 만들 수 있습니다.
             </p>
             <Link
@@ -100,8 +100,8 @@ export default function AboutPage() {
           </section>
         </div>
 
-        <div className="mt-12 pt-6 border-t border-gray-800">
-          <Link href="/" className="text-sm text-gray-500 hover:text-primary transition-colors">
+        <div className="mt-12 pt-6 border-t border-border">
+          <Link href="/" className="text-sm text-text-subtle hover:text-primary transition-colors">
             &larr; 홈으로 돌아가기
           </Link>
         </div>

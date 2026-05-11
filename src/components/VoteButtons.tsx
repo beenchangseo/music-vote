@@ -66,7 +66,7 @@ export default function VoteButtons({
         className={`p-2.5 rounded-lg transition-all active:scale-90 ${
           localUserVote === 1
             ? "text-upvote bg-upvote/10"
-            : "text-gray-400 hover:text-upvote hover:bg-upvote/5"
+            : "text-text-muted hover:text-upvote hover:bg-upvote/5"
         }`}
         aria-label="업보트"
       >
@@ -81,7 +81,7 @@ export default function VoteButtons({
             ? "text-upvote"
             : score < 0
             ? "text-downvote"
-            : "text-gray-400"
+            : "text-text-muted"
         }`}
       >
         {score}
@@ -93,7 +93,7 @@ export default function VoteButtons({
         className={`p-2.5 rounded-lg transition-all active:scale-90 ${
           localUserVote === -1
             ? "text-downvote bg-downvote/10"
-            : "text-gray-400 hover:text-downvote hover:bg-downvote/5"
+            : "text-text-muted hover:text-downvote hover:bg-downvote/5"
         }`}
         aria-label="다운보트"
       >

@@ -49,7 +49,7 @@ export default function Modal({ open, onClose, children, title }: ModalProps) {
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-text-muted hover:text-text hover:bg-surface-hover transition-colors -mr-1"
+            className="w-11 h-11 -mr-2 rounded-lg flex items-center justify-center text-text-muted hover:text-text hover:bg-surface-hover transition-colors"
             aria-label="닫기"
           >
             <svg
