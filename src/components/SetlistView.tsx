@@ -6,6 +6,7 @@ import AddIntervalForm from "./AddIntervalForm";
 import KakaoShareButton from "./KakaoShareButton";
 import SetlistCalendarButton from "./SetlistCalendarButton";
 import { useDialog } from "./DialogProvider";
+import { track } from "@/lib/analytics";
 import { removeSetlistItem, updateSetlistOrder } from "@/actions/setlist";
 import type { SetlistItem, SongWithScore } from "@/lib/types";
 import Image from "next/image";
@@ -200,6 +201,7 @@ export default function SetlistView({
             href={`/api/setlist-image/${shareCode}`}
             target="_blank"
             rel="noopener"
+            onClick={() => track("setlist_exported", { format: "image" })}
             className="inline-flex items-center justify-center gap-1 h-9 px-3 rounded-lg bg-surface-hover hover:bg-gray-700 text-caption text-text-muted hover:text-text font-semibold transition-colors"
             aria-label="셋리스트 이미지 저장"
             title="이미지로 저장 (모바일: 길게 눌러 저장)"
@@ -208,7 +210,10 @@ export default function SetlistView({
           </a>
           <button
             type="button"
-            onClick={() => window.print()}
+            onClick={() => {
+              track("setlist_exported", { format: "print" });
+              window.print();
+            }}
             className="inline-flex items-center justify-center gap-1 h-9 px-3 rounded-lg bg-surface-hover hover:bg-gray-700 text-caption text-text-muted hover:text-text font-semibold transition-colors"
             aria-label="인쇄 또는 PDF 저장"
             title="인쇄 / PDF로 저장"

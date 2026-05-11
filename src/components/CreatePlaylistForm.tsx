@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useDialog } from "./DialogProvider";
 import { createPlaylist, updateCreatorNickname } from "@/actions/playlist";
+import { track } from "@/lib/analytics";
 
 interface CreatedPlaylist {
   id: string;
@@ -51,6 +53,11 @@ export default function CreatePlaylistForm() {
         deadlineISO || undefined,
         setlistCount > 0 ? setlistCount : undefined
       );
+
+      track("playlist_created", {
+        has_deadline: !!deadlineISO,
+        setlist_count: setlistCount,
+      });
 
       let myPlaylists = [];
       try { myPlaylists = JSON.parse(localStorage.getItem("myPlaylists") || "[]"); } catch { /* ignore */ }
@@ -111,7 +118,14 @@ export default function CreatePlaylistForm() {
           <p className="text-sm text-text-muted mb-6">플레이리스트가 생성되었습니다!</p>
 
           <div className="bg-surface-hover rounded-xl p-4 inline-block mb-4">
-            <img src={qrUrl} alt="QR 코드" width={160} height={160} className="mx-auto" />
+            <Image
+              src={qrUrl}
+              alt="QR 코드"
+              width={160}
+              height={160}
+              className="mx-auto"
+              unoptimized
+            />
           </div>
 
           <p className="text-xs text-text-subtle mb-4">밴드 멤버에게 QR코드를 보여주거나 링크를 공유하세요</p>

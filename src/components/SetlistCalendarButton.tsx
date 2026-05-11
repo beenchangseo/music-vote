@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import { track } from "@/lib/analytics";
 
 interface SetlistCalendarButtonProps {
   shareCode: string;
@@ -149,6 +150,7 @@ export default function SetlistCalendarButton({
               href={downloadUrl}
               download
               onClick={() => {
+                track("setlist_exported", { format: "ics" });
                 // 모달은 잠시 후 자동 닫기 (UX 부드럽게)
                 setTimeout(() => setOpen(false), 250);
               }}

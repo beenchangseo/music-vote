@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useDialog } from "./DialogProvider";
 import SheetMusicLinks from "./SheetMusicLinks";
 import { updateSongMeta } from "@/actions/song";
+import { track } from "@/lib/analytics";
 import {
   KEY_ROOTS,
   KEY_MODES,
@@ -61,6 +62,23 @@ export default function SongMeta({
     difficulty?: 1 | 2 | 3 | 4 | 5 | null;
     genre?: Genre | null;
   }) {
+    // 분석: 어떤 메타 필드가 가장 자주 편집되는지 추적
+    const fieldMap = {
+      keyRoot: "key",
+      keyMode: "key",
+      keyMemo: "key_memo",
+      tempoBpm: "bpm",
+      durationSeconds: "duration",
+      difficulty: "difficulty",
+      genre: "genre",
+    } as const;
+    for (const k of Object.keys(patch) as (keyof typeof fieldMap)[]) {
+      if (patch[k] !== undefined) {
+        track("meta_edited", { field: fieldMap[k] });
+        break;
+      }
+    }
+
     startTransition(async () => {
       try {
         await updateSongMeta(song.id, playlistId, shareCode, patch);

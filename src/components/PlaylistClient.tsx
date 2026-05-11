@@ -16,6 +16,7 @@ import RehearsalView from "./RehearsalView";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
 import { getSetlistItems, confirmSetlist, addSongToSetlist } from "@/actions/setlist";
 import { getComments } from "@/actions/comment";
+import { track } from "@/lib/analytics";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
 import FilterBar, {
   DEFAULT_FILTER,
@@ -343,6 +344,10 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
                         if (!ok) return;
                         try {
                           await confirmSetlist(playlist.id, adminToken, topSongIds, shareCode);
+                          track("setlist_confirmed", {
+                            song_count: topSongIds.length,
+                            auto: false,
+                          });
                         } catch {
                           showAlert("셋리스트 확정에 실패했습니다.");
                         }
@@ -425,7 +430,28 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
               {/* Filter bar */}
               <FilterBar
                 filter={filter}
-                onChange={setFilter}
+                onChange={(next) => {
+                  // 새로 활성화된 필터 차원만 트래킹
+                  if (next.bpm !== "all" && next.bpm !== filter.bpm) {
+                    track("filter_applied", { type: "bpm" });
+                  }
+                  if (next.metaOnly && !filter.metaOnly) {
+                    track("filter_applied", { type: "meta_only" });
+                  }
+                  if (next.keyRoot && next.keyRoot !== filter.keyRoot) {
+                    track("filter_applied", { type: "key" });
+                  }
+                  if (
+                    next.difficultyMax !== null &&
+                    next.difficultyMax !== filter.difficultyMax
+                  ) {
+                    track("filter_applied", { type: "difficulty" });
+                  }
+                  if (next.genres.length > filter.genres.length) {
+                    track("filter_applied", { type: "genre" });
+                  }
+                  setFilter(next);
+                }}
                 total={songsWithUserVote.length}
                 visible={filteredSongs.length}
               />

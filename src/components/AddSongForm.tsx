@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useDialog } from "./DialogProvider";
 import { addSong } from "@/actions/song";
+import { track } from "@/lib/analytics";
 
 interface AddSongFormProps {
   playlistId: string;
@@ -28,6 +29,7 @@ export default function AddSongForm({ playlistId, shareCode, nickname }: AddSong
           setShowManualTitle(true);
           return;
         }
+        track("song_added", { has_thumbnail: !result.needsManualTitle });
         setUrl("");
         setManualTitle("");
         setShowManualTitle(false);

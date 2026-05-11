@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useTransition } from "react";
 import { castVote } from "@/actions/vote";
+import { track } from "@/lib/analytics";
 
 interface VoteButtonsProps {
   songId: string;
@@ -40,14 +41,20 @@ export default function VoteButtons({
       // Toggle off
       scoreDelta = -voteType;
       setLocalUserVote(null);
+      track("vote_toggled", { vote_type: voteType as 1 | -1 });
     } else if (localUserVote !== null) {
       // Change direction
       scoreDelta = voteType * 2;
       setLocalUserVote(voteType);
+      track("vote_changed", {
+        from: localUserVote as 1 | -1,
+        to: voteType as 1 | -1,
+      });
     } else {
       // New vote
       scoreDelta = voteType;
       setLocalUserVote(voteType);
+      track("vote_cast", { vote_type: voteType as 1 | -1 });
     }
 
     // Notify parent for instant sort + score display

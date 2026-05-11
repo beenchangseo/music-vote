@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { track } from "@/lib/analytics";
 
 declare global {
   interface Window {
@@ -137,6 +138,7 @@ export default function KakaoShareButton({
   const [copied, setCopied] = useState(false);
 
   async function handleClick() {
+    track("kakao_shared", { variant });
     const origin = window.location.origin;
     const url = `${origin}/playlist/${shareCode}?utm_source=kakao&utm_medium=share&utm_campaign=${shareCode}&variant=${variant}`;
     const ogUrl = buildOgUrl(origin, variant, {
