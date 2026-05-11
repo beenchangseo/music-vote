@@ -30,6 +30,8 @@ interface SongCardProps {
   onPlayerPlay?: () => void;
   onPlayerPause?: () => void;
   onAddToSetlist?: (songId: string) => void;
+  /** false = 기명 모드. voter 닉네임을 모든 사용자에게 노출 */
+  votesAnonymous?: boolean;
 }
 
 export default function SongCard({
@@ -51,6 +53,7 @@ export default function SongCard({
   onPlayerPlay,
   onPlayerPause,
   onAddToSetlist,
+  votesAnonymous = true,
 }: SongCardProps) {
   const [isPending, startTransition] = useTransition();
   const [showMenu, setShowMenu] = useState(false);
@@ -152,9 +155,27 @@ export default function SongCard({
           {/* Song info */}
           <div className="min-w-0 flex-1">
             <h3 className={`font-medium text-sm truncate ${isCurrent ? "text-primary" : "text-gray-100"}`}>{song.title}</h3>
-            {song.artist && (
-              <p className="text-xs text-gray-400 truncate mt-0.5">{song.artist}</p>
-            )}
+            <div className="flex items-center gap-2 mt-0.5">
+              {song.artist && (
+                <p className="text-xs text-gray-400 truncate min-w-0">{song.artist}</p>
+              )}
+              {song.commentCount > 0 && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowComments(true);
+                  }}
+                  className="inline-flex items-center gap-0.5 shrink-0 h-5 px-1.5 rounded-md bg-primary/15 text-primary text-[11px] font-semibold hover:bg-primary/25 transition-colors"
+                  aria-label={`댓글 ${song.commentCount}개`}
+                >
+                  <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z" />
+                  </svg>
+                  {song.commentCount}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Vote buttons */}
@@ -224,6 +245,7 @@ export default function SongCard({
             )}
           </div>
         </div>
+        <VoterStrip votes={song.votes} hide={votesAnonymous} />
         <SongMeta
           song={song}
           playlistId={playlistId}
@@ -311,12 +333,21 @@ export default function SongCard({
         <div className="mt-2 flex items-center gap-2">
           <button
             onClick={() => setShowComments(true)}
-            className="text-xs text-gray-500 hover:text-primary transition-colors flex items-center gap-1"
+            className={`text-xs transition-colors flex items-center gap-1 ${
+              song.commentCount > 0
+                ? "text-primary hover:text-primary-hover font-semibold"
+                : "text-gray-500 hover:text-primary"
+            }`}
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
             </svg>
             댓글
+            {song.commentCount > 0 && (
+              <span className="ml-0.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-primary/20 text-[10px] font-bold tabular-nums">
+                {song.commentCount}
+              </span>
+            )}
           </button>
           {onAddToSetlist && (
             <button
@@ -353,6 +384,57 @@ export default function SongCard({
           shareCode={shareCode}
           onClose={() => setShowComments(false)}
         />
+      )}
+    </div>
+  );
+}
+
+// 기명 투표 모드일 때 voter 닉네임을 한 줄로 노출.
+function VoterStrip({
+  votes,
+  hide,
+}: {
+  votes: { vote_type: number; nickname: string }[];
+  hide: boolean;
+}) {
+  if (hide || votes.length === 0) return null;
+
+  const up = votes
+    .filter((v) => v.vote_type === 1)
+    .map((v) => v.nickname);
+  const down = votes
+    .filter((v) => v.vote_type === -1)
+    .map((v) => v.nickname);
+
+  if (up.length === 0 && down.length === 0) return null;
+
+  return (
+    <div className="px-3 py-1.5 border-b border-border flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-text-muted">
+      {up.length > 0 && (
+        <span className="inline-flex items-center gap-1 min-w-0">
+          <svg
+            className="w-3 h-3 text-success shrink-0"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden
+          >
+            <path d="M12 4l8 8h-5v8h-6v-8H4z" />
+          </svg>
+          <span className="truncate">{up.join(" · ")}</span>
+        </span>
+      )}
+      {down.length > 0 && (
+        <span className="inline-flex items-center gap-1 min-w-0">
+          <svg
+            className="w-3 h-3 text-danger shrink-0"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden
+          >
+            <path d="M12 20l-8-8h5V4h6v8h5z" />
+          </svg>
+          <span className="truncate">{down.join(" · ")}</span>
+        </span>
       )}
     </div>
   );

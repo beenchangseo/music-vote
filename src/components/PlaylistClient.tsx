@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Image from "next/image";
+import Link from "next/link";
 import { useDialog } from "./DialogProvider";
 import NicknameModal from "./NicknameModal";
 import PlaylistHeader from "./PlaylistHeader";
@@ -22,6 +23,7 @@ import FilterBar, {
   type FilterState,
 } from "./FilterBar";
 import KakaoShareButton from "./KakaoShareButton";
+import VotingModeToggle from "./VotingModeToggle";
 import type { ViewMode } from "./NavigationBar";
 import type { Playlist, SongWithScore, SetlistItem, Comment } from "@/lib/types";
 
@@ -256,6 +258,18 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
             )}
           </div>
 
+          {/* Admin-only: 투표 모드 토글 */}
+          {isAdmin && adminToken && (
+            <div className="mt-3 flex justify-center">
+              <VotingModeToggle
+                playlistId={playlist.id}
+                shareCode={shareCode}
+                adminToken={adminToken}
+                votesAnonymous={playlist.votes_anonymous}
+              />
+            </div>
+          )}
+
           {nickname && (
             <p className="mt-4 text-sm text-gray-500 text-center">
               <span className="text-primary font-medium">{nickname}</span>
@@ -473,6 +487,7 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
                     <SongCard
                       key={song.id}
                       song={song}
+                      votesAnonymous={playlist.votes_anonymous}
                       nickname={nickname}
                       shareCode={shareCode}
                       playlistId={playlist.id}
@@ -499,12 +514,12 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
               {songsWithUserVote.length > 0 && (
                 <div className="mt-8 bg-surface border border-border rounded-2xl p-5 text-center">
                   <p className="text-sm text-gray-400 mb-3">새로운 플레이리스트를 만들고 싶다면?</p>
-                  <a
+                  <Link
                     href="/"
                     className="inline-block px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-sm font-semibold transition-all active:scale-95"
                   >
                     플레이리스트 만들기
-                  </a>
+                  </Link>
                 </div>
               )}
             </>

@@ -4,6 +4,7 @@ import { useState, useMemo, useTransition, useCallback } from "react";
 import IntervalBlock from "./IntervalBlock";
 import AddIntervalForm from "./AddIntervalForm";
 import KakaoShareButton from "./KakaoShareButton";
+import SetlistCalendarButton from "./SetlistCalendarButton";
 import { useDialog } from "./DialogProvider";
 import { removeSetlistItem, updateSetlistOrder } from "@/actions/setlist";
 import type { SetlistItem, SongWithScore } from "@/lib/types";
@@ -190,6 +191,11 @@ export default function SetlistView({
           >
             카톡
           </KakaoShareButton>
+          <SetlistCalendarButton
+            shareCode={shareCode}
+            totalRuntimeSeconds={totalRuntime}
+            defaultTitle={`${title} — 합주`}
+          />
           <a
             href={`/api/setlist-image/${shareCode}`}
             target="_blank"
@@ -222,7 +228,7 @@ export default function SetlistView({
                 item={item}
                 index={index}
                 total={sortedItems.length}
-                isAdmin={true}
+                isAdmin={isAdmin}
                 onMoveUp={() => handleMoveUp(index)}
                 onMoveDown={() => handleMoveDown(index)}
                 onRemove={() => handleRemove(item.id)}

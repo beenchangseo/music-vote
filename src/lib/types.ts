@@ -8,6 +8,7 @@ export interface Playlist {
   announcement: string | null;
   setlist_confirmed: boolean;
   creator_nickname: string | null;
+  votes_anonymous: boolean;
   created_at: string;
 }
 
@@ -51,6 +52,7 @@ export interface SongWithScore extends Song {
   score: number;
   votes: Vote[];
   userVote: number | null; // 1, -1, or null
+  commentCount: number;
 }
 
 export interface Comment {

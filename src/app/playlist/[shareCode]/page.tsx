@@ -79,7 +79,7 @@ export default async function PlaylistPage({ params }: PageProps) {
 
   const { data: playlist } = await supabase
     .from("playlists")
-    .select("id, title, share_code, deadline, created_at, setlist_count, announcement, setlist_confirmed, creator_nickname")
+    .select("id, title, share_code, deadline, created_at, setlist_count, announcement, setlist_confirmed, creator_nickname, votes_anonymous")
     .eq("share_code", shareCode)
     .single();
 
@@ -92,17 +92,30 @@ export default async function PlaylistPage({ params }: PageProps) {
     .order("created_at", { ascending: true });
 
   const songIds = (songs || []).map((s: Song) => s.id);
-  const { data: votes } = songIds.length > 0
-    ? await supabase
-        .from("votes")
-        .select("*")
-        .in("song_id", songIds)
-    : { data: [] as Vote[] };
+  const [votesResult, commentsResult] = songIds.length > 0
+    ? await Promise.all([
+        supabase.from("votes").select("*").in("song_id", songIds),
+        supabase.from("comments").select("song_id").in("song_id", songIds),
+      ])
+    : [{ data: [] as Vote[] }, { data: [] as { song_id: string }[] }];
+
+  const votes = votesResult.data;
+  const commentRows = (commentsResult.data || []) as { song_id: string }[];
+  const commentCountMap: Record<string, number> = {};
+  for (const c of commentRows) {
+    commentCountMap[c.song_id] = (commentCountMap[c.song_id] || 0) + 1;
+  }
 
   const songsWithScores: SongWithScore[] = (songs || []).map((song: Song) => {
     const songVotes = (votes || []).filter((v: Vote) => v.song_id === song.id);
     const score = songVotes.reduce((sum: number, v: Vote) => sum + v.vote_type, 0);
-    return { ...song, score, votes: songVotes, userVote: null };
+    return {
+      ...song,
+      score,
+      votes: songVotes,
+      userVote: null,
+      commentCount: commentCountMap[song.id] ?? 0,
+    };
   });
 
   songsWithScores.sort((a, b) => b.score - a.score || new Date(a.created_at).getTime() - new Date(b.created_at).getTime());

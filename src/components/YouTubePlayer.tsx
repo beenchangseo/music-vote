@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useImperativeHandle, forwardRef, useState } from "react";
-import { loadYouTubeAPI, YT } from "@/lib/youtube-iframe";
+import { loadYouTubeAPI, type YT } from "@/lib/youtube-iframe";
 
 export interface YouTubePlayerHandle {
   play(): void;

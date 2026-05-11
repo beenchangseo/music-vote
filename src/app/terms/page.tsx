@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "이용약관 - Plypick",
@@ -80,9 +81,9 @@ export default function TermsPage() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-gray-800">
-          <a href="/" className="text-sm text-gray-500 hover:text-primary transition-colors">
+          <Link href="/" className="text-sm text-gray-500 hover:text-primary transition-colors">
             &larr; 홈으로 돌아가기
-          </a>
+          </Link>
         </div>
       </div>
     </main>

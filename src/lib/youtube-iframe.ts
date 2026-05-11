@@ -73,4 +73,6 @@ export function loadYouTubeAPI(): Promise<typeof YT> {
   return apiPromise;
 }
 
-export { YT };
+// YT은 `declare namespace`(ambient, 타입-전용). 일반 `export { YT }`는
+// webpack 모듈 파서가 런타임 값으로 해석 시도해 실패. type 한정 export.
+export type { YT };

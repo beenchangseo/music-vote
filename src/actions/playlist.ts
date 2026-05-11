@@ -112,6 +112,35 @@ export async function updateAnnouncement(
   return { success: true };
 }
 
+export async function updateVotingMode(
+  playlistId: string,
+  adminToken: string,
+  votesAnonymous: boolean,
+  shareCode: string,
+) {
+  const admin = createAdminClient();
+
+  const { data: adminData } = await admin
+    .from("playlist_admin")
+    .select("admin_token")
+    .eq("playlist_id", playlistId)
+    .single();
+
+  if (!adminData || adminData.admin_token !== adminToken) {
+    throw new Error("권한이 없습니다.");
+  }
+
+  const { error } = await admin
+    .from("playlists")
+    .update({ votes_anonymous: votesAnonymous })
+    .eq("id", playlistId);
+
+  if (error) throw new Error("투표 모드 변경에 실패했습니다.");
+
+  revalidatePath(`/playlist/${shareCode}`);
+  return { success: true };
+}
+
 export async function deletePlaylist(playlistId: string, adminToken: string) {
   const admin = createAdminClient();
 

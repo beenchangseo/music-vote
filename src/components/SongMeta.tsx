@@ -3,6 +3,7 @@
 import { useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { useDialog } from "./DialogProvider";
+import SheetMusicLinks from "./SheetMusicLinks";
 import { updateSongMeta } from "@/actions/song";
 import {
   KEY_ROOTS,
@@ -325,6 +326,9 @@ export default function SongMeta({
           ))}
         </div>
       </Field>
+
+      {/* 외부 악보 검색 */}
+      <SheetMusicLinks title={song.title} artist={song.artist} />
     </div>
   );
 }
