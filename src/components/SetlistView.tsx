@@ -165,7 +165,7 @@ export default function SetlistView({
       {posterUrl && (
         <div
           aria-hidden
-          className="pointer-events-none absolute -inset-x-4 -inset-y-5 -z-10 overflow-hidden"
+          className="pointer-events-none absolute -inset-x-4 -inset-y-5 overflow-hidden"
         >
           <Image
             src={posterUrl}
@@ -179,6 +179,7 @@ export default function SetlistView({
         </div>
       )}
 
+      <div className="relative">
       {/* Runtime + Actions toolbar */}
       <div className="flex items-center justify-between mb-4 gap-3 print:hidden">
         <div className="text-sm text-text-muted min-w-0 flex-1">
@@ -313,6 +314,7 @@ export default function SetlistView({
             + 인터벌 블럭 추가
           </button>
         )}
+      </div>
       </div>
     </div>
   );
