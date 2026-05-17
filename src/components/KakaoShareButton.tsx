@@ -29,6 +29,8 @@ interface KakaoShareButtonProps {
   topArtist?: string;
   topScore?: number;
   setlistCount?: number;
+  /** 셋리스트 OG 카드 배경에 합성될 포스터 이미지 URL */
+  posterUrl?: string | null;
   /** UI */
   children?: React.ReactNode;
   className?: string;
@@ -86,6 +88,7 @@ const buildOgUrl = (
     | "topArtist"
     | "topScore"
     | "setlistCount"
+    | "posterUrl"
   >,
 ) => {
   const sp = new URLSearchParams({
@@ -100,6 +103,7 @@ const buildOgUrl = (
   if (params.topScore != null) sp.set("topScore", String(params.topScore));
   if (params.setlistCount != null)
     sp.set("setlistCount", String(params.setlistCount));
+  if (params.posterUrl) sp.set("poster", params.posterUrl);
   return `${origin}/api/og?${sp.toString()}`;
 };
 
@@ -129,6 +133,7 @@ export default function KakaoShareButton({
   topArtist,
   topScore,
   setlistCount,
+  posterUrl,
   children,
   className = "",
   ariaLabel,
@@ -149,6 +154,7 @@ export default function KakaoShareButton({
       topArtist,
       topScore,
       setlistCount,
+      posterUrl,
     });
     const c = variantContent(variant, title, description, songs, participants);
 

@@ -5,6 +5,7 @@ import IntervalBlock from "./IntervalBlock";
 import AddIntervalForm from "./AddIntervalForm";
 import SetlistCalendarButton from "./SetlistCalendarButton";
 import PosterUploadButton from "./PosterUploadButton";
+import PosterPolaroid from "./PosterPolaroid";
 import Image from "next/image";
 import { useDialog } from "./DialogProvider";
 import { track } from "@/lib/analytics";
@@ -160,26 +161,14 @@ export default function SetlistView({
   }
 
   return (
-    <div className="relative mt-5">
-      {/* Blurred poster background — set behind content */}
+    <div className="mt-5">
+      {/* Poster polaroid — pinned 합주실 게시판 메타포 */}
       {posterUrl && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -inset-x-4 -inset-y-5 overflow-hidden"
-        >
-          <Image
-            src={posterUrl}
-            alt=""
-            fill
-            sizes="(max-width: 640px) 100vw, 512px"
-            className="object-cover scale-105 blur-md opacity-60"
-            priority={false}
-          />
-          <div className="absolute inset-0 bg-bg/50" />
+        <div className="flex justify-end -mb-2 print:hidden">
+          <PosterPolaroid posterUrl={posterUrl} />
         </div>
       )}
 
-      <div className="relative">
       {/* Runtime + Actions toolbar */}
       <div className="flex items-center justify-between mb-4 gap-3 print:hidden">
         <div className="text-sm text-text-muted min-w-0 flex-1">
@@ -314,7 +303,6 @@ export default function SetlistView({
             + 인터벌 블럭 추가
           </button>
         )}
-      </div>
       </div>
     </div>
   );

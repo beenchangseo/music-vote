@@ -405,6 +405,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
                     songs={songs.length}
                     participants={participantCount}
                     setlistCount={setlistCount || songsWithUserVote.length}
+                    posterUrl={playlist.poster_url}
                     visualStyle="primary"
                     size="md"
                   >
