@@ -130,6 +130,7 @@ export default async function PlaylistPage({ params }: PageProps) {
       shareCode={shareCode}
       userNickname={currentUser?.nickname}
       currentUserId={currentUser?.id ?? null}
+      currentUserAvatarUrl={currentUser?.avatarUrl ?? null}
     />
   );
 }

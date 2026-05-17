@@ -1,13 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 
 interface AuthMenuProps {
   nickname: string;
   avatarUrl: string | null;
+  /** PlaylistHeader 내부 등 명시적 배치 시 true. fixed 글로벌 슬롯과 별개. */
+  embedded?: boolean;
 }
 
-export default function AuthMenu({ nickname, avatarUrl }: AuthMenuProps) {
+export default function AuthMenu({ nickname, avatarUrl, embedded = false }: AuthMenuProps) {
+  const pathname = usePathname();
+  // 플리 페이지는 PlaylistHeader 가 embedded AuthMenu 를 자체 렌더 → 글로벌 fixed 슬롯은 숨김
+  if (!embedded && pathname?.startsWith("/playlist/")) return null;
+
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 

@@ -36,9 +36,10 @@ interface PlaylistClientProps {
   shareCode: string;
   userNickname?: string;
   currentUserId?: string | null;
+  currentUserAvatarUrl?: string | null;
 }
 
-export default function PlaylistClient({ playlist, songs, shareCode, userNickname, currentUserId }: PlaylistClientProps) {
+export default function PlaylistClient({ playlist, songs, shareCode, userNickname, currentUserId, currentUserAvatarUrl }: PlaylistClientProps) {
   // 신규(로그인 강제) 모드 vs 기존 익명 모드
   const requiresLogin = !!playlist.creator_user_id;
   const loggedIn = !!currentUserId;
@@ -255,6 +256,8 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
             adminToken={adminToken}
             participantCount={participantCount}
             announcement={playlist.announcement}
+            currentUserNickname={userNickname}
+            currentUserAvatarUrl={currentUserAvatarUrl}
           />
 
           {/* Invitation banner — login-required playlist, viewed by anonymous visitor */}

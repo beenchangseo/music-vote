@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { deletePlaylist } from "@/actions/playlist";
 import { useDialog } from "./DialogProvider";
 import AnnouncementButton from "./AnnouncementButton";
+import AuthMenu from "./AuthMenu";
 
 declare global {
   interface Window {
@@ -26,6 +27,8 @@ interface PlaylistHeaderProps {
   adminToken: string | null;
   participantCount?: number;
   announcement?: string | null;
+  currentUserNickname?: string;
+  currentUserAvatarUrl?: string | null;
 }
 
 export default function PlaylistHeader({
@@ -37,6 +40,8 @@ export default function PlaylistHeader({
   adminToken,
   participantCount = 0,
   announcement,
+  currentUserNickname,
+  currentUserAvatarUrl,
 }: PlaylistHeaderProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -118,6 +123,13 @@ export default function PlaylistHeader({
           announcement={announcement ?? null}
           shareCode={shareCode}
         />
+        {currentUserNickname && (
+          <AuthMenu
+            nickname={currentUserNickname}
+            avatarUrl={currentUserAvatarUrl ?? null}
+            embedded
+          />
+        )}
         {isAdmin && (
           <button
             onClick={handleDelete}
