@@ -83,11 +83,15 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Admin = nickname matches creator_nickname (DB-based, no localStorage dependency)
-  // Falls back to legacy adminToken for old playlists without creator_nickname
-  const isAdmin = playlist.creator_nickname
-    ? nickname.toLowerCase() === playlist.creator_nickname.toLowerCase()
-    : !!adminToken;
+  // Admin 판정 우선순위:
+  // 1) 로그인 모드 + 본인이 만든 플리 → creator_user_id 매칭
+  // 2) 익명 모드 + nickname == creator_nickname (DB 기반)
+  // 3) legacy adminToken fallback
+  const isAdmin = playlist.creator_user_id
+    ? !!currentUserId && currentUserId === playlist.creator_user_id
+    : playlist.creator_nickname
+      ? nickname.toLowerCase() === playlist.creator_nickname.toLowerCase()
+      : !!adminToken;
   const isExpired = playlist.deadline ? new Date(playlist.deadline) < new Date() : false;
 
   // Lazy load setlist items on first mode switch

@@ -4,6 +4,7 @@ import CreatePlaylistForm from "@/components/CreatePlaylistForm";
 import MyPlaylists from "@/components/MyPlaylists";
 import LoginButton from "@/components/LoginButton";
 import { getCurrentUser } from "@/lib/auth";
+import { getMyPlaylists } from "@/actions/playlist";
 
 export const metadata: Metadata = {
   title: "플레이리스트 만들기 - Plypick",
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 
 export default async function NewPlaylistPage() {
   const user = await getCurrentUser();
+  const dbPlaylists = user ? await getMyPlaylists() : [];
   return (
     <main className="min-h-full flex flex-col">
       <section className="flex-1 flex flex-col px-4 pt-6 pb-10">
@@ -52,7 +54,7 @@ export default async function NewPlaylistPage() {
           {user ? (
             <>
               <CreatePlaylistForm />
-              <MyPlaylists />
+              <MyPlaylists dbPlaylists={dbPlaylists} />
             </>
           ) : (
             <div className="bg-surface border border-border rounded-2xl p-6 text-center">

@@ -3,7 +3,34 @@
 import { nanoid } from "nanoid";
 import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
+import { assertPlaylistAdmin } from "@/lib/playlist-admin";
 import { revalidatePath } from "next/cache";
+
+export interface MyPlaylistDbEntry {
+  id: string;
+  shareCode: string;
+  title: string;
+}
+
+/**
+ * 로그인 사용자의 플리 목록 (creator_user_id = auth.uid()).
+ * 비로그인 시 빈 배열.
+ */
+export async function getMyPlaylists(): Promise<MyPlaylistDbEntry[]> {
+  const user = await getCurrentUser();
+  if (!user) return [];
+  const supabase = await createServerSupabaseClient();
+  const { data } = await supabase
+    .from("playlists")
+    .select("id, share_code, title, created_at")
+    .eq("creator_user_id", user.id)
+    .order("created_at", { ascending: false });
+  return (data || []).map((p) => ({
+    id: p.id,
+    shareCode: p.share_code,
+    title: p.title,
+  }));
+}
 
 export async function createPlaylist(title: string, deadline?: string, setlistCount?: number) {
   if (!title || title.length > 100) {
@@ -91,22 +118,12 @@ export async function updateAnnouncementPublic(
 
 export async function updateAnnouncement(
   playlistId: string,
-  adminToken: string,
+  adminToken: string | null,
   announcement: string,
   shareCode: string
 ) {
+  await assertPlaylistAdmin(playlistId, adminToken);
   const admin = createAdminClient();
-
-  const { data: adminData } = await admin
-    .from("playlist_admin")
-    .select("admin_token")
-    .eq("playlist_id", playlistId)
-    .single();
-
-  if (!adminData || adminData.admin_token !== adminToken) {
-    throw new Error("권한이 없습니다.");
-  }
-
   const { error } = await admin
     .from("playlists")
     .update({ announcement: announcement || null })
@@ -120,22 +137,12 @@ export async function updateAnnouncement(
 
 export async function updateVotingMode(
   playlistId: string,
-  adminToken: string,
+  adminToken: string | null,
   votesAnonymous: boolean,
   shareCode: string,
 ) {
+  await assertPlaylistAdmin(playlistId, adminToken);
   const admin = createAdminClient();
-
-  const { data: adminData } = await admin
-    .from("playlist_admin")
-    .select("admin_token")
-    .eq("playlist_id", playlistId)
-    .single();
-
-  if (!adminData || adminData.admin_token !== adminToken) {
-    throw new Error("권한이 없습니다.");
-  }
-
   const { error } = await admin
     .from("playlists")
     .update({ votes_anonymous: votesAnonymous })
@@ -147,19 +154,9 @@ export async function updateVotingMode(
   return { success: true };
 }
 
-export async function deletePlaylist(playlistId: string, adminToken: string) {
+export async function deletePlaylist(playlistId: string, adminToken: string | null) {
+  await assertPlaylistAdmin(playlistId, adminToken);
   const admin = createAdminClient();
-
-  const { data: adminData } = await admin
-    .from("playlist_admin")
-    .select("admin_token")
-    .eq("playlist_id", playlistId)
-    .single();
-
-  if (!adminData || adminData.admin_token !== adminToken) {
-    throw new Error("삭제 권한이 없습니다.");
-  }
-
   const { error } = await admin
     .from("playlists")
     .delete()

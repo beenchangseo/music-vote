@@ -1,6 +1,7 @@
 "use server";
 
 import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase/server";
+import { assertPlaylistAdmin } from "@/lib/playlist-admin";
 import { revalidatePath } from "next/cache";
 import type { SetlistItem } from "@/lib/types";
 
@@ -16,21 +17,12 @@ export async function getSetlistItems(playlistId: string): Promise<SetlistItem[]
 
 export async function confirmSetlist(
   playlistId: string,
-  adminToken: string,
+  adminToken: string | null,
   songIds: string[],
   shareCode: string
 ) {
+  await assertPlaylistAdmin(playlistId, adminToken);
   const admin = createAdminClient();
-
-  const { data: adminData } = await admin
-    .from("playlist_admin")
-    .select("admin_token")
-    .eq("playlist_id", playlistId)
-    .single();
-
-  if (!adminData || adminData.admin_token !== adminToken) {
-    throw new Error("권한이 없습니다.");
-  }
 
   // Transaction: update playlist + insert setlist items
   const { error: updateError } = await admin
@@ -65,21 +57,12 @@ export async function confirmSetlist(
 
 export async function addSetlistItem(
   playlistId: string,
-  adminToken: string,
+  adminToken: string | null,
   item: { item_type: string; label: string; duration_seconds: number; position: number },
   shareCode: string
 ): Promise<SetlistItem> {
+  await assertPlaylistAdmin(playlistId, adminToken);
   const admin = createAdminClient();
-
-  const { data: adminData } = await admin
-    .from("playlist_admin")
-    .select("admin_token")
-    .eq("playlist_id", playlistId)
-    .single();
-
-  if (!adminData || adminData.admin_token !== adminToken) {
-    throw new Error("권한이 없습니다.");
-  }
 
   const { data, error } = await admin
     .from("setlist_items")

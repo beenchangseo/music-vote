@@ -3,6 +3,7 @@
 import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { getPlaylistModeById } from "@/lib/playlist-mode";
+import { assertPlaylistAdmin } from "@/lib/playlist-admin";
 import { extractVideoId, fetchVideoMetadata } from "@/lib/youtube";
 import {
   isValidKeyRoot,
@@ -138,20 +139,11 @@ export async function updateSongMeta(
 export async function removeSong(
   songId: string,
   playlistId: string,
-  adminToken: string,
+  adminToken: string | null,
   shareCode: string
 ) {
+  await assertPlaylistAdmin(playlistId, adminToken);
   const admin = createAdminClient();
-
-  const { data: adminData } = await admin
-    .from("playlist_admin")
-    .select("admin_token")
-    .eq("playlist_id", playlistId)
-    .single();
-
-  if (!adminData || adminData.admin_token !== adminToken) {
-    throw new Error("삭제 권한이 없습니다.");
-  }
 
   const { error } = await admin
     .from("songs")
