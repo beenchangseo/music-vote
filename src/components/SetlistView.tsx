@@ -172,10 +172,10 @@ export default function SetlistView({
             alt=""
             fill
             sizes="(max-width: 640px) 100vw, 512px"
-            className="object-cover scale-110 blur-2xl opacity-30"
+            className="object-cover scale-105 blur-md opacity-60"
             priority={false}
           />
-          <div className="absolute inset-0 bg-bg/40" />
+          <div className="absolute inset-0 bg-bg/50" />
         </div>
       )}
 
