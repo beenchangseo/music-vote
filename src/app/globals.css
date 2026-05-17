@@ -35,7 +35,8 @@
   /* Text scale */
   --color-text: #f3f4f6;
   --color-text-muted: #9ca3af;
-  --color-text-subtle: #6b7280;
+  /* WCAG AA 대비 보장 (#8a93a4 on #111827 = ~5.0:1) */
+  --color-text-subtle: #8a93a4;
 
   /* Typography — 한국어 가독성 우선 (line-height 1.6+) */
   --text-display: 2.5rem;
@@ -128,6 +129,24 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+/* Reduced motion 접근성 — OS 설정 존중 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus-visible ring 글로벌 — 키보드 사용자 가시성 보장.
+ * 마우스 클릭에는 ring 없음, Tab 으로 이동 시에만 노출. */
+:where(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
 }
 
 /* Print styles for setlist */

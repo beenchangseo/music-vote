@@ -52,7 +52,7 @@ export default function SetlistCalendarButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center justify-center gap-1 h-9 px-3 rounded-lg bg-surface-hover hover:bg-gray-700 text-caption text-text-muted hover:text-text font-semibold transition-colors"
+        className="inline-flex items-center justify-center gap-1 h-9 px-3 rounded-lg bg-surface-hover hover:bg-border-strong text-caption text-text-muted hover:text-text font-semibold transition-colors"
         aria-label="캘린더에 합주 일정 추가"
         title="캘린더에 추가 (.ics 다운로드)"
       >

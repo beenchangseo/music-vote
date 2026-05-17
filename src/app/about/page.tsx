@@ -4,12 +4,12 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "밴드 투표 서비스란? - Plypick",
   description:
-    "밴드 곡 투표 서비스 Plypick(plypick.kr)를 소개합니다. 밴드 멤버들과 다음 공연 셋리스트를 투표로 정하세요.",
+    "밴드 곡 투표 서비스 Plypick(plypick.kr)를 소개해요. 밴드 멤버들과 다음 공연 셋리스트를 투표로 정하세요.",
 };
 
 export default function AboutPage() {
   return (
-    <main className="min-h-full bg-gray-950">
+    <main className="min-h-full bg-bg">
       <div className="max-w-2xl mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold text-text mb-4">
           밴드 투표 서비스란?
@@ -18,15 +18,15 @@ export default function AboutPage() {
           밴드 셋리스트, 아직도 단톡방에서 정하고 계신가요?
         </p>
 
-        <div className="space-y-8 text-gray-300 leading-relaxed">
+        <div className="space-y-8 text-text-muted leading-relaxed">
           <section>
             <h2 className="text-xl font-semibold text-text mb-3">
               셋리스트 정하기, 왜 어려울까?
             </h2>
             <p>
-              밴드 활동에서 가장 많이 반복되는 논의 중 하나가 &quot;다음에 뭐 치지?&quot;입니다.
+              밴드 활동에서 가장 많이 반복되는 논의 중 하나가 &quot;다음에 뭐 치지?&quot;예요.
               카카오톡이나 밴드 단톡방에서 곡 후보를 던지고, 각자 의견을 말하고,
-              결국 목소리 큰 사람 의견대로 정해지는 경우가 많습니다.
+              결국 목소리 큰 사람 의견대로 정해지는 경우가 많아요.
             </p>
             <p className="mt-2">
               모든 멤버의 의견을 공평하게 반영하고, 곡을 미리 들어보면서
@@ -36,11 +36,11 @@ export default function AboutPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-text mb-3">
-              Plypick가 해결합니다
+              Plypick가 해결해요
             </h2>
             <p>
               Plypick(plypick.kr)는 밴드 멤버들이 다음 공연이나 합주에서 연주할 곡을
-              투표로 선정할 수 있는 무료 웹 서비스입니다.
+              투표로 선정할 수 있는 무료 웹 서비스예요.
             </p>
             <ul className="mt-4 space-y-3">
               {[
@@ -50,15 +50,15 @@ export default function AboutPage() {
                 },
                 {
                   title: "공평한 투표",
-                  desc: "모든 멤버가 1인 1표로 찬성/반대 투표를 합니다. 점수순으로 자동 정렬되어 결과가 명확합니다.",
+                  desc: "모든 멤버가 1인 1표로 찬성/반대 투표를 해요. 점수순으로 자동 정렬되어 결과가 명확해요.",
                 },
                 {
                   title: "링크 하나로 시작",
-                  desc: "회원가입 없이, 닉네임만 입력하면 바로 참여할 수 있습니다. 카카오톡으로 링크를 공유하면 끝.",
+                  desc: "회원가입 없이, 닉네임만 입력하면 바로 참여할 수 있어요. 카카오톡으로 링크를 공유하면 끝.",
                 },
                 {
                   title: "마감일 설정",
-                  desc: "합주 전날까지 투표를 마감하면, 합주 당일에는 연습에만 집중할 수 있습니다.",
+                  desc: "합주 전날까지 투표를 마감하면, 합주 당일에는 연습에만 집중할 수 있어요.",
                 },
               ].map((item) => (
                 <li key={item.title} className="flex gap-3">
@@ -74,7 +74,7 @@ export default function AboutPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-text mb-3">
-              이런 분들께 추천합니다
+              이런 분들께 추천해요
             </h2>
             <ul className="space-y-2 text-text-muted">
               <li>• 공연이나 합주 셋리스트를 매번 톡방에서 정하는 밴드</li>
@@ -89,7 +89,7 @@ export default function AboutPage() {
               지금 바로 시작하세요
             </p>
             <p className="text-sm text-text-muted mb-4">
-              무료, 회원가입 없이, 30초면 플레이리스트를 만들 수 있습니다.
+              무료, 회원가입 없이, 30초면 플레이리스트를 만들 수 있어요.
             </p>
             <Link
               href="/"

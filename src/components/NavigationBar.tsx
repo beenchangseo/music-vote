@@ -28,7 +28,7 @@ export default function NavigationBar({ mode, onModeChange }: NavigationBarProps
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-full text-xs font-medium transition-all ${
                   isActive
                     ? "bg-primary text-white shadow-md"
-                    : "text-text-muted hover:text-gray-200"
+                    : "text-text-muted hover:text-text"
                 }`}
               >
                 <span>{tab.icon}</span>

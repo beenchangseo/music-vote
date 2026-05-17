@@ -65,7 +65,7 @@ export default function SheetMusicLinks({ title, artist }: SheetMusicLinksProps)
             target="_blank"
             rel="noopener noreferrer"
             title={s.note}
-            className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-surface-hover text-caption font-semibold text-text-muted hover:text-text hover:bg-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 h-10 px-2.5 rounded-lg bg-surface-hover text-caption font-semibold text-text-muted hover:text-text hover:bg-surface-hover transition-colors"
           >
             <ExternalIcon />
             {s.label}

@@ -13,7 +13,7 @@ export default async function Home() {
       {/* HERO — 첫 뷰포트, 후킹 우선 */}
       <section className="relative flex-1 flex flex-col justify-center px-4 pt-10 pb-12 min-h-[88vh] overflow-hidden">
         {/* Animated gradient bg */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/25 via-gray-950 to-indigo-900/25 animate-gradient pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/25 via-bg to-indigo-900/25 animate-gradient pointer-events-none" />
 
         {/* Floating notes */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">

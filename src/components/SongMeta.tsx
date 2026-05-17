@@ -398,7 +398,7 @@ function KeyChip({
     <button
       type="button"
       onClick={onClick}
-      className={`h-8 min-w-[36px] px-2.5 rounded-lg text-caption font-semibold transition-colors ${
+      className={`h-10 min-w-[36px] px-2.5 rounded-lg text-caption font-semibold transition-colors ${
         active
           ? "bg-primary text-white"
           : "bg-surface-hover text-text-muted hover:text-text"

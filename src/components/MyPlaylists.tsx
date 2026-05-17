@@ -77,7 +77,7 @@ export default function MyPlaylists({ loggedIn = true, dbPlaylists = [] }: MyPla
           <Link
             key={pl.shareCode}
             href={`/playlist/${pl.shareCode}`}
-            className="block w-full px-4 py-3 rounded-xl bg-surface border border-border hover:border-gray-600 transition-all text-left"
+            className="block w-full px-4 py-3 rounded-xl bg-surface border border-border hover:border-border-strong transition-all text-left"
           >
             <span className="text-text font-medium">{pl.title}</span>
           </Link>

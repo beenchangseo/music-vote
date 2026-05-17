@@ -31,7 +31,7 @@ export function useDialog() {
 const buttonStyles = {
   primary: "bg-primary hover:bg-primary-hover text-white font-semibold",
   danger: "bg-red-600 hover:bg-red-500 text-white font-semibold",
-  ghost: "bg-surface-hover hover:bg-gray-700 text-gray-300 font-medium",
+  ghost: "bg-surface-hover hover:bg-border-strong text-text-muted font-medium",
 };
 
 export default function DialogProvider({ children }: { children: ReactNode }) {
@@ -91,7 +91,7 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 px-4 animate-fade-in">
           <div className="w-full max-w-xs bg-surface border border-border rounded-2xl p-5 animate-slide-up shadow-2xl">
             <h3 className="text-base font-bold text-text text-center">{dialog.title}</h3>
-            <p className="text-sm text-gray-300 text-center mt-2 whitespace-pre-wrap leading-relaxed">{dialog.message}</p>
+            <p className="text-sm text-text-muted text-center mt-2 whitespace-pre-wrap leading-relaxed">{dialog.message}</p>
             <div className={`mt-5 flex gap-2 ${dialog.buttons.length === 1 ? "" : ""}`}>
               {dialog.buttons.map((btn, i) => {
                 const isLast = i === dialog.buttons.length - 1;

@@ -53,7 +53,7 @@ export default function MiniPlayer({ state, actions, playerRef }: MiniPlayerProp
           <button
             onClick={actions.toggleShuffle}
             className={`p-2 rounded-full transition-colors ${
-              shuffleMode ? "text-primary" : "text-text-muted hover:text-gray-200"
+              shuffleMode ? "text-primary" : "text-text-muted hover:text-text"
             }`}
             aria-label={shuffleMode ? "셔플 끄기" : "셔플 켜기"}
           >
@@ -82,7 +82,7 @@ export default function MiniPlayer({ state, actions, playerRef }: MiniPlayerProp
           {/* Next */}
           <button
             onClick={actions.playNext}
-            className="p-2 rounded-full text-text-muted hover:text-gray-200 transition-colors"
+            className="p-2 rounded-full text-text-muted hover:text-text transition-colors"
             aria-label="다음 곡"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -94,7 +94,7 @@ export default function MiniPlayer({ state, actions, playerRef }: MiniPlayerProp
           <button
             onClick={actions.toggleRepeat}
             className={`p-2 rounded-full transition-colors ${
-              repeatMode === "one" ? "text-primary" : "text-text-muted hover:text-gray-200"
+              repeatMode === "one" ? "text-primary" : "text-text-muted hover:text-text"
             }`}
             aria-label={repeatMode === "one" ? "반복 끄기" : "한곡 반복"}
           >

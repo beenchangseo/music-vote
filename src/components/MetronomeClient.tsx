@@ -119,7 +119,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
   const selectedSong = songs.find((s) => s.id === selectedSongId);
 
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col">
+    <div className="min-h-screen bg-bg flex flex-col">
       {/* Header */}
       <div className="max-w-lg mx-auto w-full px-4 py-4">
         <div className="flex items-center gap-3">
@@ -127,7 +127,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
             href={`/playlist/${shareCode}`}
             className="p-2 rounded-xl bg-surface border border-border hover:bg-surface-hover transition-colors"
           >
-            <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
           </Link>
@@ -151,7 +151,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
                   ? i === 0
                     ? "bg-primary scale-125 shadow-lg shadow-primary/50"
                     : "bg-white scale-110"
-                  : "bg-gray-700"
+                  : "bg-surface-hover"
               }`}
             />
           ))}
@@ -167,13 +167,13 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => setBpm((b) => Math.max(40, b - 5))}
-            className="w-12 h-12 rounded-full bg-surface-hover border border-border text-gray-300 text-xl font-bold hover:bg-gray-700 transition-colors"
+            className="w-12 h-12 rounded-full bg-surface-hover border border-border text-text-muted text-xl font-bold hover:bg-surface-hover transition-colors"
           >
             -5
           </button>
           <button
             onClick={() => setBpm((b) => Math.max(40, b - 1))}
-            className="w-10 h-10 rounded-full bg-surface-hover border border-border text-gray-300 text-lg hover:bg-gray-700 transition-colors"
+            className="w-10 h-10 rounded-full bg-surface-hover border border-border text-text-muted text-lg hover:bg-surface-hover transition-colors"
           >
             -
           </button>
@@ -200,13 +200,13 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
 
           <button
             onClick={() => setBpm((b) => Math.min(300, b + 1))}
-            className="w-10 h-10 rounded-full bg-surface-hover border border-border text-gray-300 text-lg hover:bg-gray-700 transition-colors"
+            className="w-10 h-10 rounded-full bg-surface-hover border border-border text-text-muted text-lg hover:bg-surface-hover transition-colors"
           >
             +
           </button>
           <button
             onClick={() => setBpm((b) => Math.min(300, b + 5))}
-            className="w-12 h-12 rounded-full bg-surface-hover border border-border text-gray-300 text-xl font-bold hover:bg-gray-700 transition-colors"
+            className="w-12 h-12 rounded-full bg-surface-hover border border-border text-text-muted text-xl font-bold hover:bg-surface-hover transition-colors"
           >
             +5
           </button>
@@ -218,7 +218,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
             <select
               value={selectedSongId}
               onChange={(e) => handleSongChange(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-surface-hover border border-border text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-3 rounded-xl bg-surface-hover border border-border text-text text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">곡 선택...</option>
               {songs.map((s) => (

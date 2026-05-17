@@ -248,7 +248,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
         />
       )}
 
-      <div className="min-h-full bg-gray-950">
+      <div className="min-h-full bg-bg">
         <div className={`max-w-lg mx-auto px-4 py-6 ${bottomPadding}`}>
           <PlaylistHeader
             playlistId={playlist.id}
@@ -279,7 +279,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
             )}
             {playlist.deadline && (
               <>
-                {participantCount > 0 && <span className="text-gray-600">|</span>}
+                {participantCount > 0 && <span className="text-text-subtle">|</span>}
                 <span className={isExpired ? "text-red-400" : "text-text-muted"}>
                   {isExpired ? "투표 마감" : `마감: ${new Date(playlist.deadline).toLocaleDateString("ko-KR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}`}
                 </span>
@@ -360,7 +360,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
               {/* Setlist confirmation banner */}
               {isExpired && setlistCount && !playlist.setlist_confirmed && (
                 <div className="mt-5 p-4 bg-primary/10 border border-primary/30 rounded-xl text-center">
-                  <p className="text-sm text-gray-200 mb-2">
+                  <p className="text-sm text-text mb-2">
                     투표가 마감되었습니다. 상위 {setlistCount}곡이 하이라이트됩니다.
                   </p>
                   {isAdmin ? (
@@ -432,7 +432,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
                     <button
                       onClick={() => setViewMode("compact")}
                       className={`p-1.5 rounded-md transition-colors ${
-                        viewMode === "compact" ? "bg-gray-600 text-white" : "text-text-muted hover:text-gray-200"
+                        viewMode === "compact" ? "bg-surface-hover text-white" : "text-text-muted hover:text-text"
                       }`}
                       aria-label="리스트 보기"
                     >
@@ -443,7 +443,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
                     <button
                       onClick={() => setViewMode("card")}
                       className={`p-1.5 rounded-md transition-colors ${
-                        viewMode === "card" ? "bg-gray-600 text-white" : "text-text-muted hover:text-gray-200"
+                        viewMode === "card" ? "bg-surface-hover text-white" : "text-text-muted hover:text-text"
                       }`}
                       aria-label="카드 보기"
                     >
@@ -635,11 +635,11 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
                 )}
               </div>
             </div>
-            <p className="text-sm text-gray-300 text-center mb-4">셋리스트에 추가할까요?</p>
+            <p className="text-sm text-text-muted text-center mb-4">셋리스트에 추가할까요?</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setSetlistConfirmSongId(null)}
-                className="flex-1 py-2.5 rounded-xl bg-surface-hover hover:bg-gray-700 text-sm text-gray-300 font-medium transition-colors"
+                className="flex-1 py-2.5 rounded-xl bg-surface-hover hover:bg-border-strong text-sm text-text-muted font-medium transition-colors"
               >
                 취소
               </button>

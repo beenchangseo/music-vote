@@ -93,7 +93,7 @@ export default function SongCard({
   // Compact (playlist-style) view
   if (viewMode === "compact") {
     return (
-      <div className={`bg-surface rounded-xl border transition-all hover:border-gray-600 ${showMenu ? "overflow-visible" : "overflow-hidden"} ${isHighlighted ? "border-yellow-500/50 bg-yellow-900/5" : isCurrent ? "border-primary/50" : "border-border"} ${isPending ? "opacity-50" : ""}`}>
+      <div className={`bg-surface rounded-xl border transition-all hover:border-border-strong ${showMenu ? "overflow-visible" : "overflow-hidden"} ${isHighlighted ? "border-yellow-500/50 bg-yellow-900/5" : isCurrent ? "border-primary/50" : "border-border"} ${isPending ? "opacity-50" : ""}`}>
         {isCurrent && (
           <div className="relative">
             <YouTubePlayer
@@ -197,7 +197,7 @@ export default function SongCard({
           <div className="relative shrink-0" ref={showMenu ? menuRef : undefined}>
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="w-11 h-11 -mr-1.5 flex items-center justify-center rounded-lg text-text-subtle hover:text-gray-200 hover:bg-surface-hover transition-colors"
+              className="w-11 h-11 flex items-center justify-center rounded-lg text-text-subtle hover:text-text hover:bg-surface-hover transition-colors"
               aria-label="더보기"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -210,12 +210,12 @@ export default function SongCard({
               <div className="absolute right-0 top-8 z-20 w-44 bg-surface-hover border border-border rounded-xl shadow-lg overflow-hidden">
                 {song.added_by && (
                   <div className="px-3 py-2 text-xs text-text-subtle border-b border-border truncate">
-                    추가: <span className="text-gray-300">{song.added_by}</span>
+                    추가: <span className="text-text-muted">{song.added_by}</span>
                   </div>
                 )}
                 <button
                   onClick={() => { setShowComments(true); setShowMenu(false); }}
-                  className="w-full px-3 py-2.5 text-left text-sm text-gray-200 hover:bg-gray-700 transition-colors flex items-center gap-2"
+                  className="w-full px-3 py-2.5 text-left text-sm text-text hover:bg-surface-hover transition-colors flex items-center gap-2"
                 >
                   <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
@@ -225,7 +225,7 @@ export default function SongCard({
                 {onAddToSetlist && (
                   <button
                     onClick={() => { onAddToSetlist(song.id); setShowMenu(false); }}
-                    className="w-full px-3 py-2.5 text-left text-sm text-gray-200 hover:bg-gray-700 transition-colors flex items-center gap-2"
+                    className="w-full px-3 py-2.5 text-left text-sm text-text hover:bg-surface-hover transition-colors flex items-center gap-2"
                   >
                     <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -237,7 +237,7 @@ export default function SongCard({
                   <button
                     onClick={() => { handleRemove(); setShowMenu(false); }}
                     disabled={isPending}
-                    className="w-full px-3 py-2.5 text-left text-sm text-red-400 hover:bg-gray-700 transition-colors flex items-center gap-2"
+                    className="w-full px-3 py-2.5 text-left text-sm text-red-400 hover:bg-surface-hover transition-colors flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -271,7 +271,7 @@ export default function SongCard({
 
   // Card (video) view
   return (
-    <div className={`bg-surface rounded-2xl border overflow-hidden transition-all hover:border-gray-600 ${isCurrent ? "border-primary/50" : "border-border"} ${isPending ? "opacity-50" : ""}`}>
+    <div className={`bg-surface rounded-2xl border overflow-hidden transition-all hover:border-border-strong ${isCurrent ? "border-primary/50" : "border-border"} ${isPending ? "opacity-50" : ""}`}>
       {isCurrent ? (
         <div className="relative">
           <YouTubePlayer

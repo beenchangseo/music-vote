@@ -31,7 +31,7 @@ export default async function AuthButton() {
       <form action="/auth/logout" method="post">
         <button
           type="submit"
-          className="h-8 px-2 text-caption text-text-muted hover:text-text transition-colors"
+          className="h-10 px-2 text-caption text-text-muted hover:text-text transition-colors"
         >
           로그아웃
         </button>

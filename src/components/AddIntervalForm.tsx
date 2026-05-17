@@ -71,7 +71,7 @@ export default function AddIntervalForm({ playlistId, shareCode, nextPosition, o
           className="w-20 px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm text-center focus:outline-none focus:ring-2 focus:ring-yellow-500"
         />
         <div className="flex-1" />
-        <button type="button" onClick={onCancel} className="px-3 py-2 text-sm text-text-muted hover:text-gray-200 transition-colors">
+        <button type="button" onClick={onCancel} className="px-3 py-2 text-sm text-text-muted hover:text-text transition-colors">
           취소
         </button>
         <button

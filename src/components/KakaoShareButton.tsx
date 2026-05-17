@@ -107,7 +107,7 @@ const styleMap: Record<NonNullable<KakaoShareButtonProps["visualStyle"]>, string
   primary:
     "bg-[#FEE500] hover:bg-[#FFE000] text-[#191919] font-semibold",
   secondary:
-    "bg-surface-hover hover:bg-gray-700 text-text font-semibold border border-border",
+    "bg-surface-hover hover:bg-border-strong text-text font-semibold border border-border",
   subtle:
     "bg-transparent hover:bg-surface-hover text-text-muted hover:text-text font-medium",
 };

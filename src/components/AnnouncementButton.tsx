@@ -50,7 +50,7 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
           <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16h14v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1h.5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5H8a1 1 0 0 1 1 1z" />
         </svg>
         {announcement && (
-          <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-gray-950" />
+          <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-bg" />
         )}
       </button>
 
@@ -60,7 +60,7 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
             <h3 className="text-lg font-bold text-text mb-3">📌 공지사항</h3>
             {announcement && !text && (
               <div className="mb-3 p-3 bg-surface-hover/50 rounded-xl">
-                <p className="text-sm text-gray-300 whitespace-pre-wrap">{announcement}</p>
+                <p className="text-sm text-text-muted whitespace-pre-wrap">{announcement}</p>
               </div>
             )}
             <textarea
@@ -74,7 +74,7 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
             <div className="flex justify-between items-center mt-3">
               <span className="text-xs text-text-subtle">{text.length}/500</span>
               <div className="flex gap-2">
-                <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-text-muted hover:text-gray-200">닫기</button>
+                <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-text-muted hover:text-text">닫기</button>
                 <button
                   onClick={handleSave}
                   disabled={isPending}

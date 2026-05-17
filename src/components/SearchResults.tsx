@@ -35,10 +35,10 @@ export default function SearchResults({
             key={i}
             className="flex items-center gap-3 p-2 rounded-xl bg-surface-hover/50 animate-pulse"
           >
-            <div className="w-16 h-10 rounded-lg bg-gray-700" />
+            <div className="w-16 h-10 rounded-lg bg-surface-hover" />
             <div className="flex-1 space-y-1.5">
-              <div className="h-3 bg-gray-700 rounded w-3/4" />
-              <div className="h-2.5 bg-gray-700 rounded w-1/2" />
+              <div className="h-3 bg-surface-hover rounded w-3/4" />
+              <div className="h-2.5 bg-surface-hover rounded w-1/2" />
             </div>
           </div>
         ))}
@@ -46,7 +46,13 @@ export default function SearchResults({
     );
   }
 
-  if (results.length === 0) return null;
+  if (results.length === 0) {
+    return (
+      <div className="mt-2 p-4 rounded-xl border border-border bg-surface-hover/30 text-center text-sm text-text-muted">
+        검색 결과가 없어요. 다른 키워드로 시도해보세요.
+      </div>
+    );
+  }
 
   return (
     <div className="mt-2 space-y-1 max-h-80 overflow-y-auto rounded-xl border border-border bg-surface-hover/50 p-1">
@@ -55,9 +61,9 @@ export default function SearchResults({
           key={result.videoId}
           onClick={() => onSelect(result)}
           disabled={addingId === result.videoId}
-          className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700/50 transition-colors text-left disabled:opacity-50"
+          className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-surface-hover/50 transition-colors text-left disabled:opacity-50"
         >
-          <div className="relative w-16 h-10 rounded-lg overflow-hidden shrink-0 bg-gray-700">
+          <div className="relative w-16 h-10 rounded-lg overflow-hidden shrink-0 bg-surface-hover">
             <Image
               src={result.thumbnail}
               alt={result.title}

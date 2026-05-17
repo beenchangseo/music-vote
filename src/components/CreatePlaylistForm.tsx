@@ -130,7 +130,7 @@ export default function CreatePlaylistForm() {
           <button
             type="button"
             onClick={handleGoToPlaylist}
-            className="w-full h-11 rounded-xl bg-surface-hover hover:bg-gray-700 text-text font-semibold transition-all active:scale-95"
+            className="w-full h-11 rounded-xl bg-surface-hover hover:bg-border-strong text-text font-semibold transition-all active:scale-95"
           >
             곡 추가하러 가기 →
           </button>
@@ -244,12 +244,12 @@ export default function CreatePlaylistForm() {
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <label className="block text-sm text-gray-200 font-medium text-left">투표 마감일</label>
+              <label className="block text-sm text-text font-medium text-left">투표 마감일</label>
               <p className="text-xs text-text-muted mt-0.5 mb-2 text-left">마감일이 지나면 투표가 종료됩니다</p>
               <div className="flex gap-2">
-                <input type="date" value={deadlineDate} onChange={(e) => setDeadlineDate(e.target.value)} min={todayStr} className="flex-1 px-3 py-2.5 rounded-xl bg-surface-hover border border-border text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all" style={{ colorScheme: "dark" }} />
+                <input type="date" value={deadlineDate} onChange={(e) => setDeadlineDate(e.target.value)} min={todayStr} className="flex-1 px-3 py-2.5 rounded-xl bg-surface-hover border border-border text-text text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all" style={{ colorScheme: "dark" }} />
                 {deadlineDate && (
-                  <input type="time" value={deadlineTime} onChange={(e) => setDeadlineTime(e.target.value)} className="w-28 px-3 py-2.5 rounded-xl bg-surface-hover border border-border text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all" style={{ colorScheme: "dark" }} />
+                  <input type="time" value={deadlineTime} onChange={(e) => setDeadlineTime(e.target.value)} className="w-28 px-3 py-2.5 rounded-xl bg-surface-hover border border-border text-text text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all" style={{ colorScheme: "dark" }} />
                 )}
                 {deadlineDate && (
                   <button type="button" onClick={() => { setDeadlineDate(""); setDeadlineTime("23:59"); }} className="p-2.5 rounded-xl text-text-subtle hover:text-red-400 hover:bg-surface-hover transition-all shrink-0" aria-label="마감일 삭제">
@@ -272,15 +272,15 @@ export default function CreatePlaylistForm() {
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <label className="block text-sm text-gray-200 font-medium text-left">셋리스트 곡 수</label>
+              <label className="block text-sm text-text font-medium text-left">셋리스트 곡 수</label>
               <p className="text-xs text-text-muted mt-0.5 text-left">투표 종료 후 상위 N곡이 셋리스트로 선정됩니다</p>
             </div>
             <div className="flex items-center gap-1 shrink-0">
-              <button type="button" onClick={() => setSetlistCount((c) => Math.max(0, c - 1))} disabled={setlistCount <= 0} className="w-11 h-11 flex items-center justify-center rounded-xl bg-surface-hover border border-border text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-30 transition-all active:scale-95" aria-label="곡 수 줄이기">
+              <button type="button" onClick={() => setSetlistCount((c) => Math.max(0, c - 1))} disabled={setlistCount <= 0} className="w-11 h-11 flex items-center justify-center rounded-xl bg-surface-hover border border-border text-text-muted hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-30 transition-all active:scale-95" aria-label="곡 수 줄이기">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" d="M5 12h14" /></svg>
               </button>
               <span className={`min-w-[5rem] text-center text-sm tabular-nums ${setlistCount > 0 ? "font-semibold text-text" : "text-text-subtle"}`}>{setlistCount > 0 ? `${setlistCount}곡` : "정하지 않음"}</span>
-              <button type="button" onClick={() => setSetlistCount((c) => Math.min(30, c + 1))} disabled={setlistCount >= 30} className="w-11 h-11 flex items-center justify-center rounded-xl bg-surface-hover border border-border text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-30 transition-all active:scale-95" aria-label="곡 수 늘리기">
+              <button type="button" onClick={() => setSetlistCount((c) => Math.min(30, c + 1))} disabled={setlistCount >= 30} className="w-11 h-11 flex items-center justify-center rounded-xl bg-surface-hover border border-border text-text-muted hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-30 transition-all active:scale-95" aria-label="곡 수 늘리기">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" d="M12 5v14M5 12h14" /></svg>
               </button>
             </div>

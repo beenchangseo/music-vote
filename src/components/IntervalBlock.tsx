@@ -45,13 +45,13 @@ export default function IntervalBlock({ item, index, total, isAdmin, onMoveUp, o
       {/* Admin controls */}
       {isAdmin && (
         <div className="flex items-center gap-1 shrink-0 print:hidden">
-          <button onClick={onMoveUp} disabled={index === 0} className="p-1 text-text-subtle hover:text-gray-200 disabled:opacity-30 transition-colors">
+          <button onClick={onMoveUp} disabled={index === 0} className="p-2.5 text-text-subtle hover:text-text disabled:opacity-30 transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
           </button>
-          <button onClick={onMoveDown} disabled={index === total - 1} className="p-1 text-text-subtle hover:text-gray-200 disabled:opacity-30 transition-colors">
+          <button onClick={onMoveDown} disabled={index === total - 1} className="p-2.5 text-text-subtle hover:text-text disabled:opacity-30 transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
           </button>
-          <button onClick={onRemove} className="p-1 text-text-subtle hover:text-red-400 transition-colors">
+          <button onClick={onRemove} className="p-2.5 text-text-subtle hover:text-red-400 transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>

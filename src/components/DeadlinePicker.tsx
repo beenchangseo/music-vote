@@ -197,7 +197,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
                   className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all active:scale-95 ${
                     selectedDate === key
                       ? "bg-primary text-white"
-                      : "bg-surface-hover text-gray-300 hover:bg-gray-700"
+                      : "bg-surface-hover text-text-muted hover:bg-surface-hover"
                   }`}
                 >
                   {q.label}
@@ -212,20 +212,20 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
               type="button"
               onClick={prevMonth}
               disabled={!canGoPrev}
-              className="p-1.5 rounded-lg text-text-muted hover:text-white hover:bg-surface-hover transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-2.5 rounded-lg text-text-muted hover:text-white hover:bg-surface-hover transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="이전 달"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
               </svg>
             </button>
-            <span className="text-sm font-semibold text-gray-200">
+            <span className="text-sm font-semibold text-text">
               {viewDate.getFullYear()}년 {viewDate.getMonth() + 1}월
             </span>
             <button
               type="button"
               onClick={nextMonth}
-              className="p-1.5 rounded-lg text-text-muted hover:text-white hover:bg-surface-hover transition-colors"
+              className="p-2.5 rounded-lg text-text-muted hover:text-white hover:bg-surface-hover transition-colors"
               aria-label="다음 달"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -263,10 +263,10 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
                     isSelected
                       ? "bg-primary text-white"
                       : isPast
-                      ? "text-gray-700 cursor-not-allowed"
+                      ? "text-text-subtle cursor-not-allowed"
                       : isToday
                       ? "text-primary bg-primary/10 hover:bg-primary/20"
-                      : "text-gray-300 hover:bg-surface-hover"
+                      : "text-text-muted hover:bg-surface-hover"
                   }`}
                 >
                   {day.getDate()}
@@ -280,7 +280,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
             <button
               type="button"
               onClick={() => { setOpen(false); setStep("date"); }}
-              className="text-sm text-text-subtle hover:text-gray-300 transition-colors"
+              className="text-sm text-text-subtle hover:text-text-muted transition-colors"
             >
               취소
             </button>
@@ -303,7 +303,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
           </button>
 
           {/* Selected date display */}
-          <p className="text-sm text-gray-300 mb-4">
+          <p className="text-sm text-text-muted mb-4">
             <span className="text-white font-semibold">
               {(() => {
                 const d = new Date(selectedDate + "T00:00");
@@ -323,7 +323,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
                 className={`py-3 rounded-xl text-sm font-medium transition-all active:scale-95 ${
                   selectedHour === t.hour && selectedMinute === t.minute
                     ? "bg-primary text-white"
-                    : "bg-surface-hover text-gray-300 hover:bg-gray-700"
+                    : "bg-surface-hover text-text-muted hover:bg-surface-hover"
                 }`}
               >
                 {t.label}
@@ -345,7 +345,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
               <select
                 value={selectedHour ?? ""}
                 onChange={(e) => setSelectedHour(Number(e.target.value))}
-                className="flex-1 px-3 py-2.5 rounded-xl bg-surface-hover border border-border text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none text-center"
+                className="flex-1 px-3 py-2.5 rounded-xl bg-surface-hover border border-border text-text text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none text-center"
               >
                 <option value="" disabled>시</option>
                 {Array.from({ length: 24 }, (_, i) => {
@@ -362,7 +362,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
               <select
                 value={selectedMinute}
                 onChange={(e) => setSelectedMinute(Number(e.target.value))}
-                className="flex-1 px-3 py-2.5 rounded-xl bg-surface-hover border border-border text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none text-center"
+                className="flex-1 px-3 py-2.5 rounded-xl bg-surface-hover border border-border text-text text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none text-center"
               >
                 {[0, 10, 20, 30, 40, 50].map((m) => (
                   <option key={m} value={m}>{m}분</option>

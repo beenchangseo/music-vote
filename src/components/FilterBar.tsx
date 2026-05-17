@@ -89,7 +89,7 @@ export default function FilterBar({
               key={opt.value}
               type="button"
               onClick={() => onChange({ ...filter, bpm: opt.value })}
-              className={`shrink-0 h-8 px-3 rounded-full text-caption font-semibold whitespace-nowrap transition-colors ${
+              className={`shrink-0 h-10 px-3 rounded-full text-caption font-semibold whitespace-nowrap transition-colors ${
                 active
                   ? "bg-primary text-white"
                   : "bg-surface border border-border text-text-muted hover:text-text"
@@ -105,7 +105,7 @@ export default function FilterBar({
         <button
           type="button"
           onClick={() => onChange({ ...filter, metaOnly: !filter.metaOnly })}
-          className={`shrink-0 h-8 px-3 rounded-full text-caption font-semibold whitespace-nowrap transition-colors ${
+          className={`shrink-0 h-10 px-3 rounded-full text-caption font-semibold whitespace-nowrap transition-colors ${
             filter.metaOnly
               ? "bg-primary text-white"
               : "bg-surface border border-border text-text-muted hover:text-text"
@@ -119,7 +119,7 @@ export default function FilterBar({
           type="button"
           onClick={() => setExpanded((v) => !v)}
           aria-expanded={expanded}
-          className={`shrink-0 h-8 px-3 rounded-full text-caption font-semibold whitespace-nowrap transition-colors inline-flex items-center gap-1 ${
+          className={`shrink-0 h-10 px-3 rounded-full text-caption font-semibold whitespace-nowrap transition-colors inline-flex items-center gap-1 ${
             advCount > 0 || expanded
               ? "bg-primary/15 border border-primary/40 text-primary"
               : "bg-surface border border-border text-text-muted hover:text-text"
@@ -151,7 +151,7 @@ export default function FilterBar({
           <button
             type="button"
             onClick={() => onChange(DEFAULT_FILTER)}
-            className="shrink-0 h-8 px-3 rounded-full text-caption text-text-muted hover:text-text underline underline-offset-2"
+            className="shrink-0 h-10 px-3 rounded-full text-caption text-text-muted hover:text-text underline underline-offset-2"
           >
             초기화
           </button>
@@ -172,7 +172,7 @@ export default function FilterBar({
                 onClick={() =>
                   onChange({ ...filter, keyRoot: null, keyMode: null })
                 }
-                className={`h-8 px-2.5 rounded-lg text-caption font-semibold transition-colors ${
+                className={`h-10 px-2.5 rounded-lg text-caption font-semibold transition-colors ${
                   !filter.keyRoot && !filter.keyMode
                     ? "bg-primary text-white"
                     : "bg-surface-hover text-text-muted hover:text-text"
@@ -192,7 +192,7 @@ export default function FilterBar({
                         keyRoot: active ? null : k,
                       })
                     }
-                    className={`h-8 min-w-[36px] px-2 rounded-lg text-caption font-bold transition-colors ${
+                    className={`h-10 min-w-[36px] px-2 rounded-lg text-caption font-bold transition-colors ${
                       active
                         ? "bg-primary text-white"
                         : "bg-surface-hover text-text-muted hover:text-text"
@@ -240,7 +240,7 @@ export default function FilterBar({
               <button
                 type="button"
                 onClick={() => onChange({ ...filter, difficultyMax: null })}
-                className={`h-8 px-3 rounded-lg text-caption font-semibold transition-colors ${
+                className={`h-10 px-3 rounded-lg text-caption font-semibold transition-colors ${
                   filter.difficultyMax === null
                     ? "bg-primary text-white"
                     : "bg-surface-hover text-text-muted hover:text-text"
@@ -260,7 +260,7 @@ export default function FilterBar({
                         difficultyMax: active ? null : d,
                       })
                     }
-                    className={`h-8 px-3 rounded-lg text-caption font-semibold transition-colors ${
+                    className={`h-10 px-3 rounded-lg text-caption font-semibold transition-colors ${
                       active
                         ? "bg-primary text-white"
                         : "bg-surface-hover text-text-muted hover:text-text"
@@ -291,7 +291,7 @@ export default function FilterBar({
                         : [...filter.genres, g.value];
                       onChange({ ...filter, genres: next });
                     }}
-                    className={`h-8 px-3 rounded-full text-caption font-semibold transition-colors ${
+                    className={`h-10 px-3 rounded-full text-caption font-semibold transition-colors ${
                       active
                         ? "bg-primary text-white"
                         : "bg-surface-hover text-text-muted hover:text-text"
