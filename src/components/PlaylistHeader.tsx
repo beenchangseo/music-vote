@@ -101,47 +101,52 @@ export default function PlaylistHeader({
   }
 
   return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="min-w-0">
-        <h1 className="text-2xl font-bold truncate">{title}</h1>
-        <p className="text-text-muted text-sm mt-1">{songCount}곡</p>
-      </div>
-      <div className="flex items-center gap-2 shrink-0">
-        {/* KakaoTalk share */}
-        <button
-          onClick={handleKakaoShare}
-          className="p-2.5 rounded-xl bg-[#FEE500] hover:bg-[#FDD800] border border-[#E5CC00] transition-all active:scale-95"
-          aria-label="카카오톡 공유"
-        >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#3C1E1E">
-            <path d="M12 3C6.48 3 2 6.54 2 10.86c0 2.77 1.81 5.2 4.53 6.6-.2.73-.72 2.65-.83 3.06-.13.52.19.51.4.37.17-.11 2.63-1.78 3.7-2.51.7.1 1.42.16 2.2.16 5.52 0 10-3.54 10-7.86S17.52 3 12 3z" />
-          </svg>
-        </button>
-        {/* Announcement */}
-        <AnnouncementButton
-          playlistId={playlistId}
-          announcement={announcement ?? null}
-          shareCode={shareCode}
-        />
-        {currentUserNickname && (
+    <div>
+      {/* Top row: avatar (above action buttons) */}
+      {currentUserNickname && (
+        <div className="flex justify-end mb-2">
           <AuthMenu
             nickname={currentUserNickname}
             avatarUrl={currentUserAvatarUrl ?? null}
             embedded
           />
-        )}
-        {isAdmin && (
+        </div>
+      )}
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold truncate">{title}</h1>
+          <p className="text-text-muted text-sm mt-1">{songCount}곡</p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {/* KakaoTalk share */}
           <button
-            onClick={handleDelete}
-            disabled={isPending}
-            className="p-2.5 rounded-xl bg-surface hover:bg-red-900/30 border border-border hover:border-red-800 transition-all active:scale-95 disabled:opacity-50"
-            aria-label="삭제"
+            onClick={handleKakaoShare}
+            className="p-2.5 rounded-xl bg-[#FEE500] hover:bg-[#FDD800] border border-[#E5CC00] transition-all active:scale-95"
+            aria-label="카카오톡 공유"
           >
-            <svg className="w-5 h-5 text-text-muted hover:text-red-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#3C1E1E">
+              <path d="M12 3C6.48 3 2 6.54 2 10.86c0 2.77 1.81 5.2 4.53 6.6-.2.73-.72 2.65-.83 3.06-.13.52.19.51.4.37.17-.11 2.63-1.78 3.7-2.51.7.1 1.42.16 2.2.16 5.52 0 10-3.54 10-7.86S17.52 3 12 3z" />
             </svg>
           </button>
-        )}
+          {/* Announcement */}
+          <AnnouncementButton
+            playlistId={playlistId}
+            announcement={announcement ?? null}
+            shareCode={shareCode}
+          />
+          {isAdmin && (
+            <button
+              onClick={handleDelete}
+              disabled={isPending}
+              className="p-2.5 rounded-xl bg-surface hover:bg-red-900/30 border border-border hover:border-red-800 transition-all active:scale-95 disabled:opacity-50"
+              aria-label="삭제"
+            >
+              <svg className="w-5 h-5 text-text-muted hover:text-red-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
