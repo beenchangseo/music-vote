@@ -48,3 +48,4 @@ next-env.d.ts
 
 # Internal research docs (not for the codebase)
 docs/
+.env*.local
