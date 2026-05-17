@@ -142,11 +142,11 @@ body {
 }
 
 /* Focus-visible ring 글로벌 — 키보드 사용자 가시성 보장.
- * 마우스 클릭에는 ring 없음, Tab 으로 이동 시에만 노출. */
+ * 마우스 클릭에는 ring 없음, Tab 으로 이동 시에만 노출.
+ * border-radius 는 요소가 자기 라운드를 유지하도록 건들지 않음. */
 :where(button, a, input, textarea, select, [tabindex]):focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
-  border-radius: 0.5rem;
 }
 
 /* Print styles for setlist */

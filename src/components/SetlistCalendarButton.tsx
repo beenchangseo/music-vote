@@ -53,10 +53,10 @@ export default function SetlistCalendarButton({
         type="button"
         onClick={() => setOpen(true)}
         className="inline-flex items-center justify-center gap-1 h-9 px-3 rounded-lg bg-surface-hover hover:bg-border-strong text-caption text-text-muted hover:text-text font-semibold transition-colors"
-        aria-label="캘린더에 합주 일정 추가"
-        title="캘린더에 추가 (.ics 다운로드)"
+        aria-label="공연 캘린더에 합주 일정 추가"
+        title="공연 캘린더에 추가 (.ics 다운로드)"
       >
-        <CalendarIcon /> 캘린더
+        <CalendarIcon /> 공연 캘린더
       </button>
 
       <Modal
@@ -154,7 +154,7 @@ export default function SetlistCalendarButton({
                 // 모달은 잠시 후 자동 닫기 (UX 부드럽게)
                 setTimeout(() => setOpen(false), 250);
               }}
-              className="flex-1 inline-flex items-center justify-center h-11 px-5 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold transition-all active:scale-[0.97]"
+              className="flex-1 inline-flex items-center justify-center gap-2 h-11 px-5 text-sm rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold transition-all active:scale-[0.97]"
             >
               다운로드
             </a>
