@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect } from "react";
 import { useDialog } from "./DialogProvider";
 import { addOrUpdateComment, deleteComment, getCommentsBySong } from "@/actions/comment";
 import type { Comment } from "@/lib/types";
+import LoginButton from "./LoginButton";
 
 interface CommentModalProps {
   songId: string;
@@ -11,9 +12,10 @@ interface CommentModalProps {
   nickname: string;
   shareCode: string;
   onClose: () => void;
+  loginGate?: boolean;
 }
 
-export default function CommentModal({ songId, songTitle, nickname, shareCode, onClose }: CommentModalProps) {
+export default function CommentModal({ songId, songTitle, nickname, shareCode, onClose, loginGate = false }: CommentModalProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [content, setContent] = useState("");
@@ -158,9 +160,16 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
           </div>
         )}
 
-        {!nickname && (
+        {!nickname && !loginGate && (
           <div className="px-4 py-3 border-t border-border text-center shrink-0">
             <p className="text-xs text-text-subtle">닉네임을 입력하면 댓글을 작성할 수 있습니다</p>
+          </div>
+        )}
+
+        {loginGate && (
+          <div className="px-4 py-3 border-t border-border text-center shrink-0">
+            <p className="text-xs text-text-subtle mb-2">댓글을 남기려면 로그인이 필요해요</p>
+            <LoginButton size="sm" />
           </div>
         )}
       </div>

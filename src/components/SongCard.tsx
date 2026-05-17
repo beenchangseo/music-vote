@@ -32,6 +32,8 @@ interface SongCardProps {
   onAddToSetlist?: (songId: string) => void;
   /** false = 기명 모드. voter 닉네임을 모든 사용자에게 노출 */
   votesAnonymous?: boolean;
+  /** 로그인 모드 + 비로그인 → 투표/댓글 시도 시 카카오 OAuth 트리거. */
+  loginGate?: boolean;
 }
 
 export default function SongCard({
@@ -54,6 +56,7 @@ export default function SongCard({
   onPlayerPause,
   onAddToSetlist,
   votesAnonymous = true,
+  loginGate = false,
 }: SongCardProps) {
   const [isPending, startTransition] = useTransition();
   const [showMenu, setShowMenu] = useState(false);
@@ -187,6 +190,7 @@ export default function SongCard({
             shareCode={shareCode}
             onVoteOptimistic={onVoteOptimistic}
             disabled={isExpired}
+            loginGate={loginGate}
           />
 
           {/* More menu (⋮) */}
@@ -258,6 +262,7 @@ export default function SongCard({
             nickname={nickname}
             shareCode={shareCode}
             onClose={() => setShowComments(false)}
+            loginGate={loginGate}
           />
         )}
       </div>
@@ -327,6 +332,7 @@ export default function SongCard({
             shareCode={shareCode}
             onVoteOptimistic={onVoteOptimistic}
             disabled={isExpired}
+            loginGate={loginGate}
           />
         </div>
 
@@ -383,6 +389,7 @@ export default function SongCard({
           nickname={nickname}
           shareCode={shareCode}
           onClose={() => setShowComments(false)}
+          loginGate={loginGate}
         />
       )}
     </div>

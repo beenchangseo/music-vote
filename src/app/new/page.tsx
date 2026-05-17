@@ -2,13 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import CreatePlaylistForm from "@/components/CreatePlaylistForm";
 import MyPlaylists from "@/components/MyPlaylists";
+import LoginButton from "@/components/LoginButton";
+import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "플레이리스트 만들기 - Plypick",
   description: "밴드 곡 투표 플레이리스트를 만들어 보세요",
 };
 
-export default function NewPlaylistPage() {
+export default async function NewPlaylistPage() {
+  const user = await getCurrentUser();
   return (
     <main className="min-h-full flex flex-col">
       <section className="flex-1 flex flex-col px-4 pt-6 pb-10">
@@ -46,9 +49,23 @@ export default function NewPlaylistPage() {
             이름만 정하면 끝. 옵션은 나중에 바꿀 수 있어요.
           </p>
 
-          <CreatePlaylistForm />
-
-          <MyPlaylists />
+          {user ? (
+            <>
+              <CreatePlaylistForm />
+              <MyPlaylists />
+            </>
+          ) : (
+            <div className="bg-surface border border-border rounded-2xl p-6 text-center">
+              <p className="text-body text-text mb-2 font-semibold">
+                플레이리스트를 만들려면 로그인이 필요해요
+              </p>
+              <p className="text-sm text-text-muted mb-5 leading-relaxed">
+                카카오 계정으로 1초만에 시작할 수 있어요.<br />
+                내가 만든 플레이리스트는 어디서든 다시 열 수 있어요.
+              </p>
+              <LoginButton next="/new" />
+            </div>
+          )}
         </div>
       </section>
     </main>

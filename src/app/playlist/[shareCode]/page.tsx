@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import PlaylistClient from "@/components/PlaylistClient";
 import type { Metadata } from "next";
 import type { Playlist, Song, Vote, SongWithScore } from "@/lib/types";
@@ -79,7 +80,7 @@ export default async function PlaylistPage({ params }: PageProps) {
 
   const { data: playlist } = await supabase
     .from("playlists")
-    .select("id, title, share_code, deadline, created_at, setlist_count, announcement, setlist_confirmed, creator_nickname, votes_anonymous")
+    .select("id, title, share_code, deadline, created_at, setlist_count, announcement, setlist_confirmed, creator_nickname, creator_user_id, votes_anonymous")
     .eq("share_code", shareCode)
     .single();
 
@@ -120,11 +121,15 @@ export default async function PlaylistPage({ params }: PageProps) {
 
   songsWithScores.sort((a, b) => b.score - a.score || new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
+  const currentUser = await getCurrentUser();
+
   return (
     <PlaylistClient
       playlist={playlist as Playlist}
       songs={songsWithScores}
       shareCode={shareCode}
+      userNickname={currentUser?.nickname}
+      currentUserId={currentUser?.id ?? null}
     />
   );
 }

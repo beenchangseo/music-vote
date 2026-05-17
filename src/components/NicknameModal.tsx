@@ -5,10 +5,12 @@ import { useState, useEffect, useRef } from "react";
 interface NicknameModalProps {
   onSubmit: (nickname: string) => void;
   existingNicknames?: string[];
+  /** Pre-fill from logged-in user (e.g., Kakao 닉네임). User can still edit. */
+  defaultNickname?: string;
 }
 
-export default function NicknameModal({ onSubmit, existingNicknames = [] }: NicknameModalProps) {
-  const [nickname, setNickname] = useState("");
+export default function NicknameModal({ onSubmit, existingNicknames = [], defaultNickname = "" }: NicknameModalProps) {
+  const [nickname, setNickname] = useState(defaultNickname);
   const [show, setShow] = useState(false);
   const [checked, setChecked] = useState(false);
   const [warning, setWarning] = useState("");

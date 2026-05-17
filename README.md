@@ -102,6 +102,8 @@ supabase-migration-v3.sql     # 댓글 + 셋리스트
 supabase-migration-v4.sql     # creator_nickname + 공지사항
 supabase-migration-v5.sql     # 5중 제약 메타 (key_root/mode, difficulty, genre)
 supabase-migration-v6.sql     # 익명/기명 투표 모드
+...
+...
 ```
 
 기존 운영 DB는 이미 실행한 마이그레이션을 건너뛸 수 있도록 모두 `IF NOT EXISTS`/`ADD COLUMN IF NOT EXISTS` 패턴 사용.

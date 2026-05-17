@@ -1,6 +1,8 @@
 "use server";
 
 import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
+import { getPlaylistModeById } from "@/lib/playlist-mode";
 import { extractVideoId, fetchVideoMetadata } from "@/lib/youtube";
 import {
   isValidKeyRoot,
@@ -34,6 +36,16 @@ export async function addSong(
   const thumbnailUrl = metadata?.thumbnail_url || `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
 
   const supabase = await createServerSupabaseClient();
+  const { requiresLogin } = await getPlaylistModeById(playlistId);
+
+  let addedByUserId: string | null = null;
+  let resolvedAddedBy: string | null = addedBy || null;
+  if (requiresLogin) {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("로그인이 필요합니다.");
+    addedByUserId = user.id;
+    resolvedAddedBy = user.nickname;
+  }
 
   const { error } = await supabase.from("songs").insert({
     playlist_id: playlistId,
@@ -42,7 +54,8 @@ export async function addSong(
     youtube_url: youtubeUrl,
     youtube_video_id: videoId,
     thumbnail_url: thumbnailUrl,
-    added_by: addedBy || null,
+    added_by: resolvedAddedBy,
+    added_by_user_id: addedByUserId,
   });
 
   if (error) throw new Error("곡 추가에 실패했습니다.");

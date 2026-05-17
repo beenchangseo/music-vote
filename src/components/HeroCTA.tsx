@@ -4,14 +4,27 @@ import { useState } from "react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import CreatePlaylistForm from "@/components/CreatePlaylistForm";
+import { triggerKakaoLogin } from "@/lib/kakao-login";
 
-export default function HeroCTA() {
+interface HeroCTAProps {
+  loggedIn: boolean;
+}
+
+export default function HeroCTA({ loggedIn }: HeroCTAProps) {
   const [open, setOpen] = useState(false);
+
+  function handleClick() {
+    if (!loggedIn) {
+      triggerKakaoLogin("/new");
+      return;
+    }
+    setOpen(true);
+  }
 
   return (
     <>
-      <Button onClick={() => setOpen(true)} size="lg" fullWidth>
-        지금 시작하기 →
+      <Button onClick={handleClick} size="lg" fullWidth>
+        {loggedIn ? "지금 시작하기 →" : "카카오로 시작하기 →"}
       </Button>
 
       <Modal

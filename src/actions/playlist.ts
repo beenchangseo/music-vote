@@ -2,14 +2,19 @@
 
 import { nanoid } from "nanoid";
 import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
-export async function createPlaylist(title: string, deadline?: string, setlistCount?: number, creatorNickname?: string) {
+export async function createPlaylist(title: string, deadline?: string, setlistCount?: number) {
   if (!title || title.length > 100) {
     throw new Error("플레이리스트 제목은 1~100자여야 합니다.");
   }
 
   const supabase = await createServerSupabaseClient();
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new Error("로그인이 필요합니다.");
+  }
   const admin = createAdminClient();
 
   const maxRetries = 3;
@@ -24,7 +29,8 @@ export async function createPlaylist(title: string, deadline?: string, setlistCo
         share_code: shareCode,
         deadline: deadline || null,
         setlist_count: setlistCount && setlistCount > 0 ? setlistCount : null,
-        creator_nickname: creatorNickname || null,
+        creator_nickname: user.nickname,
+        creator_user_id: user.id,
       })
       .select("id, share_code")
       .single();

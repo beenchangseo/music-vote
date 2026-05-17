@@ -32,9 +32,15 @@ function subscribe(callback: () => void) {
   return () => window.removeEventListener("storage", callback);
 }
 
-export default function MyPlaylists() {
+interface MyPlaylistsProps {
+  loggedIn?: boolean;
+}
+
+export default function MyPlaylists({ loggedIn = true }: MyPlaylistsProps) {
   const playlists = useSyncExternalStore(subscribe, getPlaylists, () => EMPTY_PLAYLISTS);
 
+  // 비로그인이면 localStorage 잔여 데이터를 노출하지 않음.
+  if (!loggedIn) return null;
   if (playlists.length === 0) return null;
 
   return (

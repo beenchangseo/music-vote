@@ -3,7 +3,9 @@ import { Geist } from "next/font/google";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Suspense } from "react";
 import DialogProvider from "@/components/DialogProvider";
+import AuthButton from "@/components/AuthButton";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -55,6 +57,11 @@ export default function RootLayout({
     <html lang="ko" className={`${geistSans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-gray-950 text-text font-sans pb-[env(safe-area-inset-bottom)]">
         <DialogProvider>
+          <div className="fixed top-2 right-2 z-50">
+            <Suspense fallback={null}>
+              <AuthButton />
+            </Suspense>
+          </div>
           {children}
         </DialogProvider>
         <Analytics />

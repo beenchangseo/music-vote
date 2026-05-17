@@ -9,9 +9,14 @@ interface AddSongFormProps {
   playlistId: string;
   shareCode: string;
   nickname: string;
+  /** 로그인 모드 + 비로그인 → 폼 대신 카카오 로그인 카드 노출. */
+  loginGate?: boolean;
 }
 
-export default function AddSongForm({ playlistId, shareCode, nickname }: AddSongFormProps) {
+export default function AddSongForm({ playlistId, shareCode, nickname, loginGate = false }: AddSongFormProps) {
+  // 로그인 모드 + 비로그인: 폼 자체를 숨김. 상단 invitation banner 가 CTA 담당.
+  if (loginGate) return null;
+
   const [url, setUrl] = useState("");
   const [manualTitle, setManualTitle] = useState("");
   const [showManualTitle, setShowManualTitle] = useState(false);

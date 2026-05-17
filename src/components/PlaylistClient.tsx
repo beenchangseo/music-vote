@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useDialog } from "./DialogProvider";
 import NicknameModal from "./NicknameModal";
+import LoginButton from "./LoginButton";
 import PlaylistHeader from "./PlaylistHeader";
 import AddSongForm from "./AddSongForm";
 import SongCard from "./SongCard";
@@ -37,10 +38,19 @@ interface PlaylistClientProps {
   playlist: Playlist;
   songs: SongWithScore[];
   shareCode: string;
+  userNickname?: string;
+  currentUserId?: string | null;
 }
 
-export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistClientProps) {
-  const [nickname, setNickname] = useState("");
+export default function PlaylistClient({ playlist, songs, shareCode, userNickname, currentUserId }: PlaylistClientProps) {
+  // 신규(로그인 강제) 모드 vs 기존 익명 모드
+  const requiresLogin = !!playlist.creator_user_id;
+  const loggedIn = !!currentUserId;
+  const loginGate = requiresLogin && !loggedIn;
+  // 로그인 모드 + 로그인 사용자: 카카오 닉을 즉시 nickname 상태로 사용 (NicknameModal 스킵)
+  const [nickname, setNickname] = useState(
+    requiresLogin && loggedIn ? (userNickname || "") : ""
+  );
   const [viewMode, setViewMode] = useState<"card" | "compact">("compact");
   const [navMode, setNavMode] = useState<ViewMode>("playlist");
   const [adminToken, setAdminToken] = useState<string | null>(null);
@@ -223,13 +233,16 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
 
   return (
     <>
-      <NicknameModal
-        onSubmit={handleNickname}
-        existingNicknames={Array.from(new Set(songs.flatMap((s) => [
-          ...s.votes.map((v) => v.nickname),
-          ...(s.added_by ? [s.added_by] : []),
-        ])))}
-      />
+      {!requiresLogin && (
+        <NicknameModal
+          onSubmit={handleNickname}
+          defaultNickname={userNickname}
+          existingNicknames={Array.from(new Set(songs.flatMap((s) => [
+            ...s.votes.map((v) => v.nickname),
+            ...(s.added_by ? [s.added_by] : []),
+          ])))}
+        />
+      )}
 
       <div className="min-h-full bg-gray-950">
         <div className={`max-w-lg mx-auto px-4 py-6 ${bottomPadding}`}>
@@ -243,6 +256,17 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
             participantCount={participantCount}
             announcement={playlist.announcement}
           />
+
+          {/* Invitation banner — login-required playlist, viewed by anonymous visitor */}
+          {loginGate && (
+            <div className="mt-4 flex items-center gap-3 bg-[#FEE500]/10 border border-[#FEE500]/40 rounded-xl px-3 py-2.5 animate-fade-in">
+              <p className="flex-1 min-w-0 text-sm text-text leading-tight truncate">
+                <span className="font-semibold">{playlist.creator_nickname || "친구"}</span>
+                님이 초대했어요
+              </p>
+              <LoginButton size="sm" label="카카오 로그인" />
+            </div>
+          )}
 
           {/* Participant count + deadline info */}
           <div className="mt-3 flex items-center justify-center gap-3 text-sm text-text-muted">
@@ -286,7 +310,7 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
               {/* Add song form (hide if expired) */}
               {!isExpired && (
                 <div className="mt-6">
-                  <AddSongForm playlistId={playlist.id} shareCode={shareCode} nickname={nickname} />
+                  <AddSongForm playlistId={playlist.id} shareCode={shareCode} nickname={nickname} loginGate={loginGate} />
                 </div>
               )}
 
@@ -531,6 +555,7 @@ export default function PlaylistClient({ playlist, songs, shareCode }: PlaylistC
                       onPlayerPlay={playerState.currentSongId === song.id ? () => playerActions.setIsPlaying(true) : undefined}
                       onPlayerPause={playerState.currentSongId === song.id ? () => playerActions.setIsPlaying(false) : undefined}
                       onAddToSetlist={handleAddToSetlist}
+                      loginGate={loginGate}
                     />
                   ))
                 )}

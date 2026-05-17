@@ -3,6 +3,7 @@
 import { useState, useEffect, useTransition } from "react";
 import { castVote } from "@/actions/vote";
 import { track } from "@/lib/analytics";
+import { triggerKakaoLogin } from "@/lib/kakao-login";
 
 interface VoteButtonsProps {
   songId: string;
@@ -12,6 +13,8 @@ interface VoteButtonsProps {
   shareCode: string;
   onVoteOptimistic?: (songId: string, scoreDelta: number) => void;
   disabled?: boolean;
+  /** 로그인 필수 모드 + 비로그인 → 클릭 시 카카오 OAuth. */
+  loginGate?: boolean;
 }
 
 export default function VoteButtons({
@@ -22,6 +25,7 @@ export default function VoteButtons({
   shareCode,
   onVoteOptimistic,
   disabled: disabledProp = false,
+  loginGate = false,
 }: VoteButtonsProps) {
   const [isPending, startTransition] = useTransition();
   // Only track userVote locally for button highlight
@@ -33,6 +37,10 @@ export default function VoteButtons({
   }, [userVote]);
 
   function handleVote(voteType: number) {
+    if (loginGate) {
+      triggerKakaoLogin();
+      return;
+    }
     if (!nickname || isPending || disabledProp) return;
 
     // Calculate score delta
@@ -69,7 +77,7 @@ export default function VoteButtons({
     <div className="flex items-center gap-1">
       <button
         onClick={() => handleVote(1)}
-        disabled={!nickname || disabledProp}
+        disabled={(!nickname && !loginGate) || disabledProp}
         className={`p-2.5 rounded-lg transition-all active:scale-90 ${
           localUserVote === 1
             ? "text-upvote bg-upvote/10"
@@ -96,7 +104,7 @@ export default function VoteButtons({
 
       <button
         onClick={() => handleVote(-1)}
-        disabled={!nickname || disabledProp}
+        disabled={(!nickname && !loginGate) || disabledProp}
         className={`p-2.5 rounded-lg transition-all active:scale-90 ${
           localUserVote === -1
             ? "text-downvote bg-downvote/10"

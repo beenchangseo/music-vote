@@ -8,6 +8,7 @@ export interface Playlist {
   announcement: string | null;
   setlist_confirmed: boolean;
   creator_nickname: string | null;
+  creator_user_id: string | null;
   votes_anonymous: boolean;
   created_at: string;
 }

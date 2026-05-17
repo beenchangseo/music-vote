@@ -38,6 +38,13 @@ type EventMap = {
   filter_applied: {
     type: "bpm" | "meta_only" | "key" | "difficulty" | "genre";
   };
+  auth_login_start: {
+    provider: "kakao";
+  };
+  auth_login_success: {
+    provider: "kakao";
+  };
+  auth_logout: Record<string, never>;
 };
 
 type EventName = keyof EventMap;

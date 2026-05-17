@@ -1,8 +1,11 @@
 import HeroCTA from "@/components/HeroCTA";
 import LivePreview from "@/components/LivePreview";
 import MyPlaylists from "@/components/MyPlaylists";
+import { getCurrentUser } from "@/lib/auth";
 
-export default function Home() {
+export default async function Home() {
+  const user = await getCurrentUser();
+  const loggedIn = !!user;
   return (
     <main className="min-h-full flex flex-col">
       {/* HERO — 첫 뷰포트, 후킹 우선 */}
@@ -63,10 +66,10 @@ export default function Home() {
           </div>
 
           {/* CTA */}
-          <HeroCTA />
+          <HeroCTA loggedIn={loggedIn} />
 
           {/* Returning user shortcut */}
-          <MyPlaylists />
+          <MyPlaylists loggedIn={loggedIn} />
         </div>
       </section>
 
@@ -115,7 +118,7 @@ export default function Home() {
             <p className="text-sm text-text mb-4">
               지금 첫 플레이리스트, 5분이면 시작.
             </p>
-            <HeroCTA />
+            <HeroCTA loggedIn={loggedIn} />
           </div>
         </div>
       </section>
