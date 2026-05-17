@@ -3,7 +3,6 @@
 import { useState, useMemo, useTransition, useCallback } from "react";
 import IntervalBlock from "./IntervalBlock";
 import AddIntervalForm from "./AddIntervalForm";
-import KakaoShareButton from "./KakaoShareButton";
 import SetlistCalendarButton from "./SetlistCalendarButton";
 import { useDialog } from "./DialogProvider";
 import { track } from "@/lib/analytics";
@@ -22,7 +21,6 @@ interface SetlistViewProps {
   onItemsChange: (items: SetlistItem[]) => void;
   /** 셋리스트 공유 카드/OG에 사용 */
   title: string;
-  participantCount?: number;
 }
 
 function formatTime(seconds: number): string {
@@ -41,7 +39,6 @@ export default function SetlistView({
   loading,
   onItemsChange,
   title,
-  participantCount = 0,
 }: SetlistViewProps) {
   const [isPending, startTransition] = useTransition();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -161,37 +158,26 @@ export default function SetlistView({
   return (
     <div className="mt-5">
       {/* Runtime + Actions toolbar */}
-      <div className="flex items-start justify-between mb-4 gap-3 print:hidden">
-        <div className="text-sm text-text-muted min-w-0">
-          <div>
-            {sortedItems.length}개 항목 · 총 러닝타임{" "}
-            <span className="text-primary font-medium">
+      <div className="flex items-center justify-between mb-4 gap-3 print:hidden">
+        <div className="text-sm text-text-muted min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 truncate">
+            <span className="tabular-nums">{sortedItems.length}개</span>
+            <span className="text-text-subtle" aria-hidden>·</span>
+            <span className="text-primary font-medium tabular-nums">
               {totalRuntime > 0 ? formatTime(totalRuntime) : "0:00"}
             </span>
+            {missingDurationCount > 0 && (
+              <span
+                className="text-caption text-warning truncate"
+                title={`${missingDurationCount}곡 시간 미입력 — 합주 모드에서 입력`}
+              >
+                · {missingDurationCount}곡 시간 미입력
+              </span>
+            )}
           </div>
-          {missingDurationCount > 0 && (
-            <div className="text-caption text-warning mt-0.5">
-              {missingDurationCount}곡 시간 미입력 — 합주 모드에서 입력
-            </div>
-          )}
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
-          <KakaoShareButton
-            shareCode={shareCode}
-            variant="setlist"
-            title={title}
-            songs={songs.length}
-            participants={participantCount}
-            setlistCount={
-              sortedItems.filter((i) => i.item_type === "song").length
-            }
-            visualStyle="primary"
-            size="sm"
-            ariaLabel="셋리스트 카톡 공유"
-          >
-            카톡
-          </KakaoShareButton>
           <SetlistCalendarButton
             shareCode={shareCode}
             totalRuntimeSeconds={totalRuntime}

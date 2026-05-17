@@ -562,7 +562,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
               loading={loadingSetlist}
               onItemsChange={setSetlistItems}
               title={playlist.title}
-              participantCount={participantCount}
             />
           )}
 
