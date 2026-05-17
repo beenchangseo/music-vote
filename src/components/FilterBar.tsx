@@ -24,14 +24,6 @@ export const DEFAULT_FILTER: FilterState = {
   genres: [],
 };
 
-const BPM_OPTIONS: { value: BpmBucket; label: string }[] = [
-  { value: "all", label: "BPM 전체" },
-  { value: "lt100", label: "< 100" },
-  { value: "100-130", label: "100–130" },
-  { value: "130-160", label: "130–160" },
-  { value: "gt160", label: "160+" },
-];
-
 interface FilterBarProps {
   filter: FilterState;
   onChange: (next: FilterState) => void;
@@ -82,26 +74,6 @@ export default function FilterBar({
     <div className="mt-3 pb-1">
       {/* horizontal chip strip — primary controls */}
       <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1 scrollbar-thin">
-        {BPM_OPTIONS.map((opt) => {
-          const active = filter.bpm === opt.value;
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => onChange({ ...filter, bpm: opt.value })}
-              className={`shrink-0 h-10 px-3 rounded-full text-caption font-semibold whitespace-nowrap transition-colors ${
-                active
-                  ? "bg-primary text-white"
-                  : "bg-surface border border-border text-text-muted hover:text-text"
-              }`}
-            >
-              {opt.label}
-            </button>
-          );
-        })}
-
-        <span className="shrink-0 w-px h-5 bg-border mx-1" aria-hidden />
-
         <button
           type="button"
           onClick={() => onChange({ ...filter, metaOnly: !filter.metaOnly })}

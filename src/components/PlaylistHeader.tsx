@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deletePlaylist } from "@/actions/playlist";
 import { useDialog } from "./DialogProvider";
@@ -38,12 +38,11 @@ export default function PlaylistHeader({
   participantCount = 0,
   announcement,
 }: PlaylistHeaderProps) {
-  const [copied, setCopied] = useState(false);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const { showDanger, showAlert } = useDialog();
 
-  function handleKakaoShare() {
+  async function handleKakaoShare() {
     const url = `${window.location.origin}/playlist/${shareCode}?utm_source=kakao&utm_medium=share&utm_campaign=${shareCode}`;
     const description = participantCount > 0
       ? `${songCount}곡 등록 · ${participantCount}명 참여 중`
@@ -66,27 +65,13 @@ export default function PlaylistHeader({
         return;
       }
     } catch {
-      // Kakao SDK failed, fall through to generic share
-    }
-    handleShare();
-  }
-
-  async function handleShare() {
-    const url = `${window.location.origin}/playlist/${shareCode}?utm_source=webshare&utm_medium=share&utm_campaign=${shareCode}`;
-    if (navigator.share) {
+      // Kakao SDK failed — fallback: copy to clipboard
       try {
-        await navigator.share({ title: `Plypick: ${title}`, url });
-        return;
+        await navigator.clipboard.writeText(url);
+        showAlert("카카오톡 공유에 실패해 링크를 복사했어요.");
       } catch {
-        // Fallback to clipboard
+        showAlert(`링크를 복사해주세요:\n${url}`);
       }
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      prompt("링크를 복사하세요:", url);
     }
   }
 
@@ -133,22 +118,6 @@ export default function PlaylistHeader({
           announcement={announcement ?? null}
           shareCode={shareCode}
         />
-        {/* General share */}
-        <button
-          onClick={handleShare}
-          className="p-2.5 rounded-xl bg-surface hover:bg-surface-hover border border-border transition-all active:scale-95"
-          aria-label="공유"
-        >
-          {copied ? (
-            <svg className="w-5 h-5 text-upvote" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
-            </svg>
-          )}
-        </button>
         {isAdmin && (
           <button
             onClick={handleDelete}

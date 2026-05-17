@@ -5,7 +5,6 @@ import Image from "next/image";
 import YouTubePlayer from "./YouTubePlayer";
 import VoteButtons from "./VoteButtons";
 import CommentModal from "./CommentModal";
-import SongMeta from "./SongMeta";
 import { useDialog } from "./DialogProvider";
 import { removeSong } from "@/actions/song";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
@@ -250,11 +249,6 @@ export default function SongCard({
           </div>
         </div>
         <VoterStrip votes={song.votes} hide={votesAnonymous} />
-        <SongMeta
-          song={song}
-          playlistId={playlistId}
-          shareCode={shareCode}
-        />
         {showComments && (
           <CommentModal
             songId={song.id}
@@ -377,11 +371,6 @@ export default function SongCard({
           )}
         </div>
       </div>
-      <SongMeta
-        song={song}
-        playlistId={playlistId}
-        shareCode={shareCode}
-      />
       {showComments && (
         <CommentModal
           songId={song.id}

@@ -24,7 +24,7 @@ export default async function AuthButton() {
             {user.nickname.slice(0, 1)}
           </div>
         )}
-        <span className="text-sm text-text max-w-[7rem] truncate">
+        <span className="hidden sm:inline text-sm text-text max-w-[7rem] truncate">
           {user.nickname}
         </span>
       </div>
