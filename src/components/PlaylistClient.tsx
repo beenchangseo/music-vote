@@ -19,11 +19,7 @@ import { getSetlistItems, confirmSetlist, addSongToSetlist } from "@/actions/set
 import { getComments } from "@/actions/comment";
 import { track } from "@/lib/analytics";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
-import FilterBar, {
-  DEFAULT_FILTER,
-  songMatchesFilter,
-  type FilterState,
-} from "./FilterBar";
+import { DEFAULT_FILTER, songMatchesFilter, type FilterState } from "./FilterBar";
 import KakaoShareButton from "./KakaoShareButton";
 import VotingModeToggle from "./VotingModeToggle";
 import type { ViewMode } from "./NavigationBar";
@@ -454,35 +450,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
                   </div>
                 </div>
               )}
-
-              {/* Filter bar */}
-              <FilterBar
-                filter={filter}
-                onChange={(next) => {
-                  // 새로 활성화된 필터 차원만 트래킹
-                  if (next.bpm !== "all" && next.bpm !== filter.bpm) {
-                    track("filter_applied", { type: "bpm" });
-                  }
-                  if (next.metaOnly && !filter.metaOnly) {
-                    track("filter_applied", { type: "meta_only" });
-                  }
-                  if (next.keyRoot && next.keyRoot !== filter.keyRoot) {
-                    track("filter_applied", { type: "key" });
-                  }
-                  if (
-                    next.difficultyMax !== null &&
-                    next.difficultyMax !== filter.difficultyMax
-                  ) {
-                    track("filter_applied", { type: "difficulty" });
-                  }
-                  if (next.genres.length > filter.genres.length) {
-                    track("filter_applied", { type: "genre" });
-                  }
-                  setFilter(next);
-                }}
-                total={songsWithUserVote.length}
-                visible={filteredSongs.length}
-              />
 
               {/* Song list */}
               <div
