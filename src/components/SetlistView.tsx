@@ -4,11 +4,12 @@ import { useState, useMemo, useTransition, useCallback } from "react";
 import IntervalBlock from "./IntervalBlock";
 import AddIntervalForm from "./AddIntervalForm";
 import SetlistCalendarButton from "./SetlistCalendarButton";
+import PosterUploadButton from "./PosterUploadButton";
+import Image from "next/image";
 import { useDialog } from "./DialogProvider";
 import { track } from "@/lib/analytics";
 import { removeSetlistItem, updateSetlistOrder } from "@/actions/setlist";
 import type { SetlistItem, SongWithScore } from "@/lib/types";
-import Image from "next/image";
 
 interface SetlistViewProps {
   setlistItems: SetlistItem[];
@@ -21,6 +22,8 @@ interface SetlistViewProps {
   onItemsChange: (items: SetlistItem[]) => void;
   /** 셋리스트 공유 카드/OG에 사용 */
   title: string;
+  /** 공연 포스터 URL (Storage public) — 배경 블러용 */
+  posterUrl?: string | null;
 }
 
 function formatTime(seconds: number): string {
@@ -39,6 +42,7 @@ export default function SetlistView({
   loading,
   onItemsChange,
   title,
+  posterUrl,
 }: SetlistViewProps) {
   const [isPending, startTransition] = useTransition();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -156,7 +160,25 @@ export default function SetlistView({
   }
 
   return (
-    <div className="mt-5">
+    <div className="relative mt-5">
+      {/* Blurred poster background — set behind content */}
+      {posterUrl && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -inset-x-4 -inset-y-5 -z-10 overflow-hidden"
+        >
+          <Image
+            src={posterUrl}
+            alt=""
+            fill
+            sizes="(max-width: 640px) 100vw, 512px"
+            className="object-cover scale-110 blur-2xl opacity-30"
+            priority={false}
+          />
+          <div className="absolute inset-0 bg-bg/40" />
+        </div>
+      )}
+
       {/* Runtime + Actions toolbar */}
       <div className="flex items-center justify-between mb-4 gap-3 print:hidden">
         <div className="text-sm text-text-muted min-w-0 flex-1">
@@ -183,17 +205,14 @@ export default function SetlistView({
             totalRuntimeSeconds={totalRuntime}
             defaultTitle={`${title} — 합주`}
           />
-          <a
-            href={`/api/setlist-image/${shareCode}`}
-            target="_blank"
-            rel="noopener"
-            onClick={() => track("setlist_exported", { format: "image" })}
-            className="inline-flex items-center justify-center gap-1 h-9 px-3 rounded-lg bg-surface-hover hover:bg-border-strong text-caption text-text-muted hover:text-text font-semibold transition-colors"
-            aria-label="셋리스트 이미지 저장"
-            title="이미지로 저장 (모바일: 길게 눌러 저장)"
-          >
-            <ImageIcon /> 이미지
-          </a>
+          {isAdmin && (
+            <PosterUploadButton
+              playlistId={playlistId}
+              adminToken={adminToken}
+              shareCode={shareCode}
+              hasPoster={!!posterUrl}
+            />
+          )}
           <button
             type="button"
             onClick={() => {
@@ -299,24 +318,6 @@ export default function SetlistView({
   );
 }
 
-function ImageIcon() {
-  return (
-    <svg
-      className="w-3.5 h-3.5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
-      aria-hidden
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-      />
-    </svg>
-  );
-}
 
 function PrintIcon() {
   return (

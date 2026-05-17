@@ -154,6 +154,110 @@ export async function updateVotingMode(
   return { success: true };
 }
 
+// ============================================================
+// 공연 포스터 (Supabase Storage: setlist-posters 버킷)
+// ============================================================
+
+const POSTER_BUCKET = "setlist-posters";
+const MAX_POSTER_BYTES = 5 * 1024 * 1024; // 5MB
+
+export async function uploadSetlistPoster(
+  playlistId: string,
+  adminToken: string | null,
+  formData: FormData,
+  shareCode: string,
+) {
+  await assertPlaylistAdmin(playlistId, adminToken);
+
+  const file = formData.get("poster");
+  if (!(file instanceof File)) throw new Error("파일이 없습니다.");
+  if (!file.type.startsWith("image/")) {
+    throw new Error("이미지 파일만 업로드할 수 있어요.");
+  }
+  if (file.size > MAX_POSTER_BYTES) {
+    throw new Error("파일이 너무 큽니다 (5MB 이하).");
+  }
+
+  const admin = createAdminClient();
+
+  // Path: {playlistId}/{timestamp}.{ext} — 이전 파일은 별도 정리 단계로 삭제
+  const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+  const path = `${playlistId}/${Date.now()}.${ext}`;
+
+  const { error: upErr } = await admin.storage
+    .from(POSTER_BUCKET)
+    .upload(path, file, {
+      contentType: file.type,
+      upsert: false,
+      cacheControl: "31536000",
+    });
+  if (upErr) throw new Error("업로드에 실패했습니다.");
+
+  const { data: pub } = admin.storage.from(POSTER_BUCKET).getPublicUrl(path);
+  const posterUrl = pub.publicUrl;
+
+  // 이전 포스터 경로 정리
+  const { data: prev } = await admin
+    .from("playlists")
+    .select("poster_url")
+    .eq("id", playlistId)
+    .single();
+
+  const { error: dbErr } = await admin
+    .from("playlists")
+    .update({ poster_url: posterUrl })
+    .eq("id", playlistId);
+  if (dbErr) throw new Error("저장에 실패했습니다.");
+
+  if (prev?.poster_url) {
+    const prevPath = extractPosterPath(prev.poster_url);
+    if (prevPath && prevPath !== path) {
+      await admin.storage.from(POSTER_BUCKET).remove([prevPath]).catch(() => {});
+    }
+  }
+
+  revalidatePath(`/playlist/${shareCode}`);
+  return { success: true, posterUrl };
+}
+
+export async function removeSetlistPoster(
+  playlistId: string,
+  adminToken: string | null,
+  shareCode: string,
+) {
+  await assertPlaylistAdmin(playlistId, adminToken);
+  const admin = createAdminClient();
+
+  const { data: prev } = await admin
+    .from("playlists")
+    .select("poster_url")
+    .eq("id", playlistId)
+    .single();
+
+  const { error: dbErr } = await admin
+    .from("playlists")
+    .update({ poster_url: null })
+    .eq("id", playlistId);
+  if (dbErr) throw new Error("저장에 실패했습니다.");
+
+  if (prev?.poster_url) {
+    const prevPath = extractPosterPath(prev.poster_url);
+    if (prevPath) {
+      await admin.storage.from(POSTER_BUCKET).remove([prevPath]).catch(() => {});
+    }
+  }
+
+  revalidatePath(`/playlist/${shareCode}`);
+  return { success: true };
+}
+
+function extractPosterPath(url: string): string | null {
+  const marker = `/storage/v1/object/public/${POSTER_BUCKET}/`;
+  const idx = url.indexOf(marker);
+  if (idx < 0) return null;
+  return url.slice(idx + marker.length);
+}
+
 export async function deletePlaylist(playlistId: string, adminToken: string | null) {
   await assertPlaylistAdmin(playlistId, adminToken);
   const admin = createAdminClient();

@@ -10,6 +10,7 @@ export interface Playlist {
   creator_nickname: string | null;
   creator_user_id: string | null;
   votes_anonymous: boolean;
+  poster_url: string | null;
   created_at: string;
 }
 
