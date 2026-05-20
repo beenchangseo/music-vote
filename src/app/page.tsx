@@ -2,10 +2,15 @@ import HeroCTA from "@/components/HeroCTA";
 import LivePreview from "@/components/LivePreview";
 import MyPlaylists from "@/components/MyPlaylists";
 import { getCurrentUser } from "@/lib/auth";
-import { getMyPlaylists } from "@/actions/playlist";
+import { getMyPlaylists, getHomeStats } from "@/actions/playlist";
+
+export const revalidate = 600; // 10분마다 통계 갱신
 
 export default async function Home() {
-  const user = await getCurrentUser();
+  const [user, stats] = await Promise.all([
+    getCurrentUser(),
+    getHomeStats().catch(() => ({ playlists: 0, users: 0, songs: 0 })),
+  ]);
   const loggedIn = !!user;
   const dbPlaylists = loggedIn ? await getMyPlaylists() : [];
   return (
@@ -124,6 +129,21 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* 사용자 통계 — 신뢰 시그널 */}
+      {(stats.playlists > 0 || stats.songs > 0 || stats.users > 0) && (
+        <section aria-label="현재 사용 현황" className="px-4 pb-8">
+          <div className="max-w-md mx-auto">
+            <p className="text-caption text-text-subtle text-center tabular-nums">
+              지금까지 합주 {stats.playlists.toLocaleString()}개
+              <span className="mx-1.5 text-text-subtle/60" aria-hidden>·</span>
+              밴드 멤버 {stats.users.toLocaleString()}명
+              <span className="mx-1.5 text-text-subtle/60" aria-hidden>·</span>
+              후보곡 {stats.songs.toLocaleString()}곡
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="px-4 py-6 text-center text-caption text-text-subtle">

@@ -6,6 +6,33 @@ import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
 import { revalidatePath } from "next/cache";
 
+/**
+ * 홈 페이지 하단 통계용 카운트.
+ * Cache 는 호출부에서 react cache() or revalidate 로.
+ */
+export async function getHomeStats(): Promise<{
+  playlists: number;
+  users: number;
+  songs: number;
+}> {
+  const admin = createAdminClient();
+  const [playlists, voteNicks, songs] = await Promise.all([
+    admin.from("playlists").select("id", { count: "exact", head: true }),
+    admin.from("votes").select("nickname"),
+    admin.from("songs").select("id", { count: "exact", head: true }),
+  ]);
+  const uniqueNicks = new Set(
+    (voteNicks.data || []).map((v: { nickname: string }) =>
+      v.nickname.toLowerCase(),
+    ),
+  );
+  return {
+    playlists: playlists.count ?? 0,
+    users: uniqueNicks.size,
+    songs: songs.count ?? 0,
+  };
+}
+
 export interface MyPlaylistDbEntry {
   id: string;
   shareCode: string;
