@@ -116,6 +116,36 @@
   50% { transform: translateY(-6px); }
 }
 
+/* Equalizer bars — 재생 데모 */
+@keyframes eq {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+/* Neon pulse — 상단 통계 박스 보더 글로우 */
+@keyframes neon-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 12px 0 rgba(139, 92, 246, 0.25),
+      inset 0 0 8px 0 rgba(139, 92, 246, 0.05);
+    border-color: rgba(139, 92, 246, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 24px 2px rgba(139, 92, 246, 0.55),
+      inset 0 0 16px 0 rgba(139, 92, 246, 0.18);
+    border-color: rgba(139, 92, 246, 0.7);
+  }
+}
+.animate-neon-pulse {
+  animation: neon-pulse 3.6s ease-in-out infinite;
+}
+.text-neon {
+  text-shadow:
+    0 0 8px rgba(139, 92, 246, 0.7),
+    0 0 16px rgba(139, 92, 246, 0.35);
+}
+
 .perspective-1000 { perspective: 1000px; }
 .transform-3d { transform-style: preserve-3d; }
 .hover\:rotate-y-12:hover { transform: rotateY(12deg); }

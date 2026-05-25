@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 
 interface SavedPlaylist {
@@ -44,8 +44,11 @@ interface MyPlaylistsProps {
   dbPlaylists?: DbPlaylist[];
 }
 
+const COLLAPSED_COUNT = 3;
+
 export default function MyPlaylists({ loggedIn = true, dbPlaylists = [] }: MyPlaylistsProps) {
   const localPlaylists = useSyncExternalStore(subscribe, getLocalPlaylists, () => EMPTY_PLAYLISTS);
+  const [expanded, setExpanded] = useState(false);
 
   // 병합: DB 기준 우선, shareCode 로 중복 제거, localStorage 잔여(익명 플리)도 표시
   const merged = useMemo(() => {
@@ -67,13 +70,16 @@ export default function MyPlaylists({ loggedIn = true, dbPlaylists = [] }: MyPla
   if (!loggedIn) return null;
   if (merged.length === 0) return null;
 
+  const visible = expanded ? merged : merged.slice(0, COLLAPSED_COUNT);
+  const hiddenCount = merged.length - COLLAPSED_COUNT;
+
   return (
     <div className="mt-10 w-full">
       <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-3">
         내 플레이리스트
       </h2>
       <div className="space-y-2">
-        {merged.map((pl) => (
+        {visible.map((pl) => (
           <Link
             key={pl.shareCode}
             href={`/playlist/${pl.shareCode}`}
@@ -83,6 +89,15 @@ export default function MyPlaylists({ loggedIn = true, dbPlaylists = [] }: MyPla
           </Link>
         ))}
       </div>
+      {!expanded && hiddenCount > 0 && (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="mt-2 w-full h-10 rounded-xl text-sm text-text-muted hover:text-text hover:bg-surface transition-colors"
+        >
+          전체 보기 ({merged.length}개) ↓
+        </button>
+      )}
     </div>
   );
 }
