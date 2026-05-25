@@ -12,9 +12,6 @@ interface AuthMenuProps {
 
 export default function AuthMenu({ nickname, avatarUrl, embedded = false }: AuthMenuProps) {
   const pathname = usePathname();
-  // 플리 페이지는 PlaylistHeader 가 embedded AuthMenu 를 자체 렌더 → 글로벌 fixed 슬롯은 숨김
-  if (!embedded && pathname?.startsWith("/playlist/")) return null;
-
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -35,6 +32,10 @@ export default function AuthMenu({ nickname, avatarUrl, embedded = false }: Auth
       window.removeEventListener("keydown", onKey);
     };
   }, [open]);
+
+  // 플리 페이지는 PlaylistHeader 가 embedded AuthMenu 를 자체 렌더 → 글로벌 fixed 슬롯은 숨김.
+  // (early return 은 모든 훅 호출 뒤에 — rules-of-hooks 준수)
+  if (!embedded && pathname?.startsWith("/playlist/")) return null;
 
   return (
     <div ref={ref} className="relative">

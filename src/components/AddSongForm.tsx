@@ -14,14 +14,15 @@ interface AddSongFormProps {
 }
 
 export default function AddSongForm({ playlistId, shareCode, nickname, loginGate = false }: AddSongFormProps) {
-  // 로그인 모드 + 비로그인: 폼 자체를 숨김. 상단 invitation banner 가 CTA 담당.
-  if (loginGate) return null;
-
   const [url, setUrl] = useState("");
   const [manualTitle, setManualTitle] = useState("");
   const [showManualTitle, setShowManualTitle] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { showAlert } = useDialog();
+
+  // 로그인 모드 + 비로그인: 폼 자체를 숨김. 상단 invitation banner 가 CTA 담당.
+  // (early return 은 모든 훅 호출 뒤에 — rules-of-hooks 준수)
+  if (loginGate) return null;
 
   function handleUrlSubmit(e: React.FormEvent) {
     e.preventDefault();
