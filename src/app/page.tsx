@@ -2,6 +2,7 @@ import HeroCTA from "@/components/HeroCTA";
 import DemoVote from "@/components/home/DemoVote";
 import DemoPlayback from "@/components/home/DemoPlayback";
 import DemoSetlist from "@/components/home/DemoSetlist";
+import DemoBand from "@/components/home/DemoBand";
 import MyPlaylists from "@/components/MyPlaylists";
 import { getCurrentUser } from "@/lib/auth";
 import { getMyPlaylists, getHomeStats } from "@/actions/playlist";
@@ -117,6 +118,13 @@ export default async function Home() {
       <section className="px-4 py-12 bg-surface/30 border-y border-border/50">
         <div className="max-w-md mx-auto">
           <DemoSetlist />
+        </div>
+      </section>
+
+      {/* DEMO 4 — 합주: 키·BPM·메트로놈·코멘트 (진짜 차별점) */}
+      <section className="px-4 py-12">
+        <div className="max-w-md mx-auto">
+          <DemoBand />
         </div>
       </section>
 
