@@ -151,9 +151,14 @@ function Brand() {
       }}
     >
       <Logo size={44} />
-      <span style={{ fontSize: 28, fontWeight: 800, color: C.text }}>
-        Plypick
-      </span>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <span style={{ fontSize: 28, fontWeight: 800, color: C.text, lineHeight: 1 }}>
+          Plypick
+        </span>
+        <span style={{ fontSize: 16, fontWeight: 700, color: C.textSubtle, marginTop: 4 }}>
+          plypick.kr
+        </span>
+      </div>
     </div>
   );
 }

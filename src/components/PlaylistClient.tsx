@@ -260,14 +260,18 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
             currentUserAvatarUrl={currentUserAvatarUrl}
           />
 
-          {/* Invitation banner — login-required playlist, viewed by anonymous visitor */}
+          {/* Invitation banner — 차분한 톤으로 (곡 리스트가 첫 시선을 가져가도록) */}
           {loginGate && (
-            <div className="mt-4 flex items-center gap-3 bg-[#FEE500]/10 border border-[#FEE500]/40 rounded-xl px-3 py-2.5 animate-fade-in">
-              <p className="flex-1 min-w-0 text-sm text-text leading-tight truncate">
-                <span className="font-semibold">{playlist.creator_nickname || "친구"}</span>
+            <div className="mt-3 flex items-center gap-2 bg-surface/60 border border-border rounded-lg px-3 py-2 animate-fade-in">
+              <p className="flex-1 min-w-0 text-caption text-text-muted leading-tight truncate">
+                <span className="font-semibold text-text">{playlist.creator_nickname || "친구"}</span>
                 님이 초대했어요
               </p>
-              <LoginButton size="sm" label="카카오 로그인" />
+              <LoginButton
+                size="sm"
+                label="로그인"
+                className="inline-flex items-center justify-center gap-1 h-8 px-3 text-caption font-semibold rounded-lg border border-border text-text-muted hover:text-text hover:border-border-strong hover:bg-surface-hover transition-colors shrink-0"
+              />
             </div>
           )}
 
@@ -536,18 +540,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
                 )}
               </div>
 
-              {/* CTA: Create your own */}
-              {songsWithUserVote.length > 0 && (
-                <div className="mt-8 bg-surface border border-border rounded-2xl p-5 text-center">
-                  <p className="text-sm text-text-muted mb-3">새로운 플레이리스트를 만들고 싶다면?</p>
-                  <Link
-                    href="/"
-                    className="inline-block px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-sm font-semibold transition-all active:scale-95"
-                  >
-                    플레이리스트 만들기
-                  </Link>
-                </div>
-              )}
             </>
           )}
 
@@ -579,6 +571,22 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
               loading={loadingComments}
               onCommentsChange={setComments}
             />
+          )}
+
+          {/* CTA: Create your own — 페이지 가장 아래 (모든 모드 공통, 곡이 있을 때만) */}
+          {songsWithUserVote.length > 0 && (
+            <div className="mt-10 mb-4 text-center">
+              <p className="text-caption text-text-subtle mb-2">새로운 플레이리스트가 필요하다면</p>
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-hover transition-colors"
+              >
+                플레이리스트 만들기
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </Link>
+            </div>
           )}
         </div>
       </div>
