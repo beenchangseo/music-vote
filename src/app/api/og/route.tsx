@@ -233,6 +233,7 @@ function PlaylistView({
       {/* Status pill */}
       <div
         style={{
+          display: "flex",
           alignSelf: "flex-start",
           padding: "10px 20px",
           borderRadius: 999,
@@ -249,6 +250,7 @@ function PlaylistView({
       {/* Title */}
       <div
         style={{
+          display: "flex",
           fontSize: 76,
           fontWeight: 800,
           color: C.text,
@@ -264,7 +266,7 @@ function PlaylistView({
       <div style={{ display: "flex", gap: 32, marginTop: "auto" }}>
         <Stat label="곡" value={songs} />
         {participants > 0 && <Stat label="명 참여" value={participants} />}
-        <div style={{ marginLeft: "auto" }}>
+        <div style={{ display: "flex", marginLeft: "auto" }}>
           <CTAPill>지금 투표하기 →</CTAPill>
         </div>
       </div>
@@ -302,6 +304,7 @@ function DecidedView({
 
       <div
         style={{
+          display: "flex",
           alignSelf: "flex-start",
           padding: "10px 20px",
           borderRadius: 999,
@@ -317,6 +320,7 @@ function DecidedView({
 
       <div
         style={{
+          display: "flex",
           fontSize: 26,
           color: C.textMuted,
           marginBottom: 12,
@@ -327,6 +331,7 @@ function DecidedView({
 
       <div
         style={{
+          display: "flex",
           fontSize: 84,
           fontWeight: 800,
           color: C.text,
@@ -342,6 +347,7 @@ function DecidedView({
       {topArtist && (
         <div
           style={{
+            display: "flex",
             fontSize: 32,
             color: C.textMuted,
           }}
@@ -354,6 +360,7 @@ function DecidedView({
         {topScore > 0 && (
           <div
             style={{
+              display: "flex",
               fontSize: 26,
               fontWeight: 700,
               color: C.success,
@@ -368,7 +375,7 @@ function DecidedView({
         )}
         {participants > 0 && <Stat label="명 참여" value={participants} />}
         {songs > 0 && <Stat label="곡 후보" value={songs} />}
-        <div style={{ marginLeft: "auto" }}>
+        <div style={{ display: "flex", marginLeft: "auto" }}>
           <CTAPill>전체 결과 보기 →</CTAPill>
         </div>
       </div>
@@ -450,6 +457,7 @@ function SetlistView({
 
       <div
         style={{
+          display: "flex",
           alignSelf: "flex-start",
           padding: "10px 20px",
           borderRadius: 999,
@@ -465,6 +473,7 @@ function SetlistView({
 
       <div
         style={{
+          display: "flex",
           fontSize: 76,
           fontWeight: 800,
           color: C.text,
@@ -479,6 +488,7 @@ function SetlistView({
 
       <div
         style={{
+          display: "flex",
           fontSize: 38,
           color: C.text,
           fontWeight: 700,
@@ -489,7 +499,7 @@ function SetlistView({
 
       <div style={{ display: "flex", gap: 32, marginTop: "auto" }}>
         {participants > 0 && <Stat label="명 참여" value={participants} />}
-        <div style={{ marginLeft: "auto" }}>
+        <div style={{ display: "flex", marginLeft: "auto" }}>
           <CTAPill>셋리스트 보기 →</CTAPill>
         </div>
       </div>
@@ -521,6 +531,7 @@ function CTAPill({ children }: { children: React.ReactNode }) {
   return (
     <div
       style={{
+        display: "flex",
         padding: "16px 28px",
         borderRadius: 14,
         background: C.brand,
