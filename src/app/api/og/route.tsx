@@ -3,12 +3,14 @@ import { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
-// Pretendard Bold via CDN — edge fetch + 1년 캐싱
+// Pretendard via CDN — satori(ImageResponse)는 OTF/TTF 만 지원, WOFF2 불가
+// (이전: woff2-subset → 매 요청 "Unsupported OpenType signature wO" 로 빈 PNG 반환)
+// edge fetch + 1년 캐싱 (~1.5MB/weight, 첫 요청 1회 비용)
 async function loadFont(weight: 700 | 800): Promise<ArrayBuffer> {
   const url =
     weight === 800
-      ? "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/web/static/woff2-subset/Pretendard-ExtraBold.subset.woff2"
-      : "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/web/static/woff2-subset/Pretendard-Bold.subset.woff2";
+      ? "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/public/static/Pretendard-ExtraBold.otf"
+      : "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/public/static/Pretendard-Bold.otf";
   const res = await fetch(url, {
     cf: { cacheTtl: 31536000 },
     next: { revalidate: 31536000 },
