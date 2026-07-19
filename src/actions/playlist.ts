@@ -208,6 +208,32 @@ export async function updateVotingMode(
   return { success: true };
 }
 
+export async function resetPlaylistVotes(
+  playlistId: string,
+  adminToken: string | null,
+  shareCode: string,
+) {
+  await assertPlaylistAdmin(playlistId, adminToken);
+  const admin = createAdminClient();
+  const { data: songs, error: songsError } = await admin
+    .from("songs")
+    .select("id")
+    .eq("playlist_id", playlistId);
+
+  if (songsError) throw new Error("투표 초기화에 실패했습니다.");
+  const songIds = (songs || []).map((song) => song.id);
+  if (songIds.length === 0) return { success: true, deletedCount: 0 };
+
+  const { count, error } = await admin
+    .from("votes")
+    .delete({ count: "exact" })
+    .in("song_id", songIds);
+
+  if (error) throw new Error("투표 초기화에 실패했습니다.");
+  revalidatePath(`/playlist/${shareCode}`);
+  return { success: true, deletedCount: count ?? 0 };
+}
+
 export async function updateSetlistEditMode(
   playlistId: string,
   adminToken: string | null,

@@ -1,7 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import Modal from "./ui/Modal";
+import Button from "./ui/Button";
 import { useDialog } from "./DialogProvider";
 import {
   applyVoteLimitToAll,
@@ -10,20 +12,35 @@ import {
   updateMemberVoteLimit,
   type VotingSettings,
 } from "@/actions/member";
+import { resetPlaylistVotes, updateVotingMode } from "@/actions/playlist";
 import type { VotingMode } from "@/lib/types";
 
 interface Props {
   playlistId: string;
   shareCode: string;
   adminToken: string | null;
+  supportsVoteAllocation: boolean;
   currentUserId?: string | null;
   onAllowanceChange?: (mode: VotingMode, usedVotes: number, voteLimit: number) => void;
+  onVotesAnonymousChange?: (votesAnonymous: boolean) => void;
+  onVotesReset?: () => void;
 }
 
-export default function VotingSettingsButton({ playlistId, shareCode, adminToken, currentUserId, onAllowanceChange }: Props) {
+export default function VotingSettingsButton({
+  playlistId,
+  shareCode,
+  adminToken,
+  supportsVoteAllocation,
+  currentUserId,
+  onAllowanceChange,
+  onVotesAnonymousChange,
+  onVotesReset,
+}: Props) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState<VotingSettings | null>(null);
   const [mode, setMode] = useState<VotingMode>("free");
+  const [votesAnonymous, setVotesAnonymous] = useState(true);
   const [defaultLimit, setDefaultLimit] = useState(3);
   const [isPending, startTransition] = useTransition();
   const { showAlert, showConfirm } = useDialog();
@@ -34,6 +51,7 @@ export default function VotingSettingsButton({ playlistId, shareCode, adminToken
       const next = await getVotingSettings(playlistId, adminToken);
       setSettings(next);
       setMode(next.mode);
+      setVotesAnonymous(next.votesAnonymous);
       setDefaultLimit(next.defaultVoteLimit);
     } catch (error) {
       showAlert(error instanceof Error ? error.message : "투표 설정을 불러오지 못했습니다.");
@@ -45,9 +63,52 @@ export default function VotingSettingsButton({ playlistId, shareCode, adminToken
     return getVotingSettings(playlistId, adminToken).then((next) => {
       setSettings(next);
       setMode(next.mode);
+      setVotesAnonymous(next.votesAnonymous);
       setDefaultLimit(next.defaultVoteLimit);
       const me = next.members.find((member) => member.user_id === currentUserId);
       if (me) onAllowanceChange?.(next.mode, me.used_votes, me.vote_limit);
+    });
+  }
+
+  async function changeVoteVisibility(next: boolean) {
+    if (next === votesAnonymous) return;
+    if (!next) {
+      const ok = await showConfirm(
+        "투표한 멤버 닉네임이 모두에게 보이게 됩니다.\n계속할까요?",
+        "기명 투표로 전환",
+      );
+      if (!ok) return;
+    }
+
+    startTransition(async () => {
+      try {
+        await updateVotingMode(playlistId, adminToken, next, shareCode);
+        setVotesAnonymous(next);
+        setSettings((current) => current ? { ...current, votesAnonymous: next } : current);
+        onVotesAnonymousChange?.(next);
+      } catch (error) {
+        showAlert(error instanceof Error ? error.message : "익명·기명 설정 변경에 실패했습니다.");
+      }
+    });
+  }
+
+  async function resetVotes() {
+    const ok = await showConfirm(
+      `현재 ${settings?.totalVotes ?? 0}개의 찬성·반대 투표가 모두 삭제되며 되돌릴 수 없어요.\n초기화할까요?`,
+      "모든 투표 초기화",
+    );
+    if (!ok) return;
+
+    startTransition(async () => {
+      try {
+        await resetPlaylistVotes(playlistId, adminToken, shareCode);
+        await refresh();
+        onVotesReset?.();
+        router.refresh();
+        showAlert("모든 투표를 초기화했어요.");
+      } catch (error) {
+        showAlert(error instanceof Error ? error.message : "투표 초기화에 실패했습니다.");
+      }
     });
   }
 
@@ -115,28 +176,66 @@ export default function VotingSettingsButton({ playlistId, shareCode, adminToken
           <div className="py-10 text-center text-sm text-text-muted">불러오는 중...</div>
         ) : (
           <div className={isPending ? "pointer-events-none opacity-70" : ""}>
-            <div className="grid grid-cols-2 gap-2">
-              {(["free", "allocated"] as VotingMode[]).map((value) => (
+            <section>
+              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 공개 범위</p>
+              <div className="mt-2 grid grid-cols-2 gap-2">
                 <button
-                  key={value}
                   type="button"
-                  disabled={settings.totalVotes > 0 && value !== settings.mode}
-                  onClick={() => setMode(value)}
-                  className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors disabled:opacity-40 ${
-                    mode === value
+                  onClick={() => changeVoteVisibility(true)}
+                  aria-pressed={votesAnonymous}
+                  className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors ${
+                    votesAnonymous
                       ? "border-primary bg-primary/15 text-primary"
                       : "border-border bg-surface text-text-muted"
                   }`}
                 >
-                  {value === "free" ? "자유 투표" : "투표권 할당"}
+                  익명 투표
                 </button>
-              ))}
-            </div>
-            {settings.totalVotes > 0 && (
-              <p className="mt-2 text-caption text-warning">투표가 시작되어 모드는 바꿀 수 없어요.</p>
-            )}
+                <button
+                  type="button"
+                  onClick={() => changeVoteVisibility(false)}
+                  aria-pressed={!votesAnonymous}
+                  className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors ${
+                    !votesAnonymous
+                      ? "border-primary bg-primary/15 text-primary"
+                      : "border-border bg-surface text-text-muted"
+                  }`}
+                >
+                  기명 투표
+                </button>
+              </div>
+              <p className="mt-2 text-caption text-text-muted">
+                {votesAnonymous
+                  ? "누가 어떻게 투표했는지 다른 참여자에게 보이지 않아요."
+                  : "투표한 멤버의 닉네임이 모든 참여자에게 보여요."}
+              </p>
+            </section>
 
-            {mode === "allocated" && (
+            {supportsVoteAllocation && (
+              <section className="mt-6 border-t border-border pt-5">
+                <p className="mb-2 text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 방식</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["free", "allocated"] as VotingMode[]).map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      disabled={settings.totalVotes > 0 && value !== settings.mode}
+                      onClick={() => setMode(value)}
+                      className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors disabled:opacity-40 ${
+                        mode === value
+                          ? "border-primary bg-primary/15 text-primary"
+                          : "border-border bg-surface text-text-muted"
+                      }`}
+                    >
+                      {value === "free" ? "자유 투표" : "투표권 할당"}
+                    </button>
+                  ))}
+                </div>
+                {settings.totalVotes > 0 && (
+                  <p className="mt-2 text-caption text-warning">투표가 시작되어 모드는 바꿀 수 없어요.</p>
+                )}
+
+                {mode === "allocated" && (
               <>
                 <div className="mt-5 rounded-xl border border-border bg-surface p-3">
                   <div className="flex items-center justify-between gap-3">
@@ -185,11 +284,30 @@ export default function VotingSettingsButton({ playlistId, shareCode, adminToken
               </>
             )}
 
-            {mode === "free" && (
-              <button type="button" onClick={saveConfiguration} className="mt-5 min-h-11 w-full rounded-xl bg-primary text-sm font-semibold text-white">
-                설정 저장
-              </button>
+                {mode === "free" && (
+                  <button type="button" onClick={saveConfiguration} className="mt-5 min-h-11 w-full rounded-xl bg-primary text-sm font-semibold text-white">
+                    설정 저장
+                  </button>
+                )}
+              </section>
             )}
+
+            <section className="mt-6 border-t border-border pt-5">
+              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 초기화</p>
+              <p className="mt-1 text-caption leading-relaxed text-text-muted">
+                모든 참여자의 찬성·반대 투표를 삭제해요. 곡과 참여자 정보는 유지돼요.
+              </p>
+              <Button
+                type="button"
+                variant="danger"
+                fullWidth
+                disabled={settings.totalVotes === 0}
+                onClick={resetVotes}
+                className="mt-3"
+              >
+                {settings.totalVotes > 0 ? `모든 투표 초기화 (${settings.totalVotes}개)` : "초기화할 투표가 없어요"}
+              </Button>
+            </section>
           </div>
         )}
       </Modal>

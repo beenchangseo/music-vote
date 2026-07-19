@@ -61,6 +61,7 @@ export async function getMyVoteAllowance(
 
 export interface VotingSettings {
   mode: VotingMode;
+  votesAnonymous: boolean;
   defaultVoteLimit: number;
   totalVotes: number;
   members: PlaylistMember[];
@@ -76,7 +77,7 @@ export async function getVotingSettings(
   const [{ data: playlist }, { data: members }, { data: votes }] = await Promise.all([
     admin
       .from("playlists")
-      .select("voting_mode, default_vote_limit")
+      .select("voting_mode, votes_anonymous, default_vote_limit")
       .eq("id", playlistId)
       .single(),
     admin
@@ -99,6 +100,7 @@ export async function getVotingSettings(
 
   return {
     mode: playlist.voting_mode as VotingMode,
+    votesAnonymous: playlist.votes_anonymous,
     defaultVoteLimit: playlist.default_vote_limit,
     totalVotes: (votes || []).length,
     members: (members || []).map((member) => ({

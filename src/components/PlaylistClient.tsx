@@ -21,7 +21,6 @@ import { track } from "@/lib/analytics";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
 import { DEFAULT_FILTER, songMatchesFilter, type FilterState } from "./FilterBar";
 import KakaoShareButton from "./KakaoShareButton";
-import VotingModeToggle from "./VotingModeToggle";
 import VotingSettingsButton from "./VotingSettingsButton";
 import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
@@ -58,6 +57,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
   const [resultCopied, setResultCopied] = useState(false);
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
   const [allowance, setAllowance] = useState<VoteAllowance | null>(null);
+  const [votesAnonymous, setVotesAnonymous] = useState(playlist.votes_anonymous);
   const [setlistEditMode, setSetlistEditMode] = useState(playlist.setlist_edit_mode);
 
   // Lazy-loaded data for setlist/rehearsal modes
@@ -311,26 +311,17 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
             )}
           </div>
 
-          {/* Admin-only: 투표 모드 토글 */}
-          {navMode !== "setlist" && isAdmin && adminToken && (
-            <div className="mt-3 flex justify-center">
-              <VotingModeToggle
-                playlistId={playlist.id}
-                shareCode={shareCode}
-                adminToken={adminToken}
-                votesAnonymous={playlist.votes_anonymous}
-              />
-            </div>
-          )}
-
-          {navMode !== "setlist" && isAdmin && requiresLogin && (
+          {navMode !== "setlist" && isAdmin && (requiresLogin || adminToken) && (
             <div className="mt-3 flex justify-center">
               <VotingSettingsButton
                 playlistId={playlist.id}
                 shareCode={shareCode}
                 adminToken={adminToken}
+                supportsVoteAllocation={requiresLogin}
                 currentUserId={currentUserId}
                 onAllowanceChange={(mode, usedVotes, voteLimit) => setAllowance({ mode, usedVotes, voteLimit })}
+                onVotesAnonymousChange={setVotesAnonymous}
+                onVotesReset={() => setVoteOverrides({})}
               />
             </div>
           )}
@@ -543,7 +534,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
                     <SongCard
                       key={song.id}
                       song={song}
-                      votesAnonymous={playlist.votes_anonymous}
+                      votesAnonymous={votesAnonymous}
                       nickname={nickname}
                       shareCode={shareCode}
                       playlistId={playlist.id}
