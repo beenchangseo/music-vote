@@ -10,9 +10,14 @@ export interface Playlist {
   creator_nickname: string | null;
   creator_user_id: string | null;
   votes_anonymous: boolean;
-  poster_url: string | null;
+  voting_mode: VotingMode;
+  default_vote_limit: number;
+  setlist_edit_mode: SetlistEditMode;
   created_at: string;
 }
+
+export type VotingMode = "free" | "allocated";
+export type SetlistEditMode = "everyone" | "host_only";
 
 export type KeyRoot =
   | "C" | "C#" | "D" | "D#" | "E" | "F"
@@ -32,6 +37,7 @@ export interface Song {
   youtube_video_id: string;
   thumbnail_url: string | null;
   added_by: string | null;
+  added_by_user_id: string | null;
   key_memo: string | null;
   key_root: KeyRoot | null;
   key_mode: KeyMode | null;
@@ -55,6 +61,7 @@ export interface SongWithScore extends Song {
   votes: Vote[];
   userVote: number | null; // 1, -1, or null
   commentCount: number;
+  versionCount: number;
 }
 
 export interface Comment {
@@ -73,6 +80,38 @@ export interface SetlistItem {
   item_type: "song" | "interval";
   song_id: string | null;
   label: string | null;
+  description: string | null;
   duration_seconds: number;
+  title_override: string | null;
+  duration_override_seconds: number | null;
   created_at: string;
+}
+
+export interface PlaylistMember {
+  playlist_id: string;
+  user_id: string;
+  display_name: string;
+  vote_limit: number;
+  used_votes: number;
+  joined_at: string;
+}
+
+export interface VoteAllowance {
+  mode: VotingMode;
+  voteLimit: number;
+  usedVotes: number;
+}
+
+export interface SongVersion {
+  id: string;
+  song_id: string;
+  youtube_url: string;
+  youtube_video_id: string;
+  title: string;
+  thumbnail_url: string | null;
+  description: string | null;
+  added_by_user_id: string | null;
+  added_by_nickname: string;
+  created_at: string;
+  updated_at: string;
 }

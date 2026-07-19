@@ -7,6 +7,7 @@ import { useDialog } from "./DialogProvider";
 import { createPlaylist } from "@/actions/playlist";
 import { track } from "@/lib/analytics";
 import KakaoShareButton from "./KakaoShareButton";
+import type { VotingMode } from "@/lib/types";
 
 interface CreatedPlaylist {
   id: string;
@@ -26,6 +27,8 @@ export default function CreatePlaylistForm() {
   const [deadlineDate, setDeadlineDate] = useState("");
   const [deadlineTime, setDeadlineTime] = useState("23:59");
   const [setlistCount, setSetlistCount] = useState(0);
+  const [votingMode, setVotingMode] = useState<VotingMode>("free");
+  const [defaultVoteLimit, setDefaultVoteLimit] = useState(3);
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState<CreatedPlaylist | null>(null);
   const [copied, setCopied] = useState(false);
@@ -53,7 +56,9 @@ export default function CreatePlaylistForm() {
       const result = await createPlaylist(
         title.trim(),
         deadlineISO || undefined,
-        setlistCount > 0 ? setlistCount : undefined
+        setlistCount > 0 ? setlistCount : undefined,
+        votingMode,
+        defaultVoteLimit,
       );
 
       track("playlist_created", {
@@ -195,6 +200,61 @@ export default function CreatePlaylistForm() {
         maxLength={100}
         className="w-full px-4 py-3 rounded-xl bg-surface border border-border text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
       />
+
+      <div className="mt-4 rounded-2xl border border-border bg-surface p-4">
+        <p className="text-sm font-semibold text-text">투표 방식</p>
+        <p className="mt-1 text-caption text-text-muted">
+          방을 만든 뒤에도 투표가 시작되기 전에는 바꿀 수 있어요.
+        </p>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setVotingMode("free")}
+            className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors ${
+              votingMode === "free"
+                ? "border-primary bg-primary/15 text-primary"
+                : "border-border bg-surface-hover text-text-muted"
+            }`}
+          >
+            자유 투표
+          </button>
+          <button
+            type="button"
+            onClick={() => setVotingMode("allocated")}
+            className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors ${
+              votingMode === "allocated"
+                ? "border-primary bg-primary/15 text-primary"
+                : "border-border bg-surface-hover text-text-muted"
+            }`}
+          >
+            투표권 할당
+          </button>
+        </div>
+        {votingMode === "allocated" && (
+          <div className="mt-3 flex items-center justify-between gap-3 animate-fade-in">
+            <div>
+              <label htmlFor="default-vote-limit" className="text-sm font-medium text-text">
+                기본 투표권
+              </label>
+              <p className="text-caption text-text-muted">새 참여자가 받는 표 수예요.</p>
+            </div>
+            <input
+              id="default-vote-limit"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={99}
+              step={1}
+              value={defaultVoteLimit}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                if (Number.isInteger(value)) setDefaultVoteLimit(Math.min(99, Math.max(1, value)));
+              }}
+              className="h-11 w-20 rounded-xl border border-border bg-surface-hover px-3 text-center text-text focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+        )}
+      </div>
 
       {/* Primary CTA — full-width below input */}
       <button

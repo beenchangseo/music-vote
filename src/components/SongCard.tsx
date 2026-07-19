@@ -5,6 +5,7 @@ import Image from "next/image";
 import YouTubePlayer from "./YouTubePlayer";
 import VoteButtons from "./VoteButtons";
 import CommentModal from "./CommentModal";
+import SongVersionModal from "./SongVersionModal";
 import { useDialog } from "./DialogProvider";
 import { removeSong } from "@/actions/song";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
@@ -33,6 +34,8 @@ interface SongCardProps {
   votesAnonymous?: boolean;
   /** 로그인 모드 + 비로그인 → 투표/댓글 시도 시 카카오 OAuth 트리거. */
   loginGate?: boolean;
+  currentUserId?: string | null;
+  onVoteAllowanceChange?: (usedVotes: number, voteLimit: number) => void;
 }
 
 export default function SongCard({
@@ -56,10 +59,14 @@ export default function SongCard({
   onAddToSetlist,
   votesAnonymous = true,
   loginGate = false,
+  currentUserId,
+  onVoteAllowanceChange,
 }: SongCardProps) {
   const [isPending, startTransition] = useTransition();
   const [showMenu, setShowMenu] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [showVersions, setShowVersions] = useState(false);
+  const [versionCount, setVersionCount] = useState(song.versionCount);
   const menuRef = useRef<HTMLDivElement>(null);
   const { showDanger, showAlert } = useDialog();
 
@@ -76,7 +83,6 @@ export default function SongCard({
   }, [showMenu]);
 
   async function handleRemove() {
-    if (!adminToken) return;
     const ok = await showDanger(`"${song.title}"을(를) 삭제하시겠습니까?`);
     if (!ok) return;
 
@@ -88,6 +94,8 @@ export default function SongCard({
       }
     });
   }
+
+  const canRemove = isAdmin || (!!currentUserId && currentUserId === song.added_by_user_id);
 
   // Compact (playlist-style) view
   if (viewMode === "compact") {
@@ -177,6 +185,11 @@ export default function SongCard({
                   {song.commentCount}
                 </button>
               )}
+              {versionCount > 0 && (
+                <button type="button" onClick={() => setShowVersions(true)} className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-0.5 rounded-md bg-warning-soft px-1.5 text-[11px] font-semibold text-warning" aria-label={`다른 버전 ${versionCount}개`}>
+                  <VersionIcon /> {versionCount}
+                </button>
+              )}
             </div>
           </div>
 
@@ -190,6 +203,7 @@ export default function SongCard({
             onVoteOptimistic={onVoteOptimistic}
             disabled={isExpired}
             loginGate={loginGate}
+            onAllowanceChange={onVoteAllowanceChange}
           />
 
           {/* More menu (⋮) */}
@@ -221,6 +235,9 @@ export default function SongCard({
                   </svg>
                   댓글
                 </button>
+                <button onClick={() => { setShowVersions(true); setShowMenu(false); }} className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-text hover:bg-surface-hover">
+                  <VersionIcon /> 다른 버전 {versionCount > 0 ? `(${versionCount})` : ""}
+                </button>
                 {onAddToSetlist && (
                   <button
                     onClick={() => { onAddToSetlist(song.id); setShowMenu(false); }}
@@ -232,7 +249,7 @@ export default function SongCard({
                     셋리스트에 추가
                   </button>
                 )}
-                {isAdmin && (
+                {canRemove && (
                   <button
                     onClick={() => { handleRemove(); setShowMenu(false); }}
                     disabled={isPending}
@@ -258,6 +275,9 @@ export default function SongCard({
             onClose={() => setShowComments(false)}
             loginGate={loginGate}
           />
+        )}
+        {showVersions && (
+          <SongVersionModal songId={song.id} songTitle={song.title} nickname={nickname} shareCode={shareCode} currentUserId={currentUserId} isAdmin={isAdmin} adminToken={adminToken} loginGate={loginGate} onCountChange={setVersionCount} onClose={() => setShowVersions(false)} />
         )}
       </div>
     );
@@ -327,6 +347,7 @@ export default function SongCard({
             onVoteOptimistic={onVoteOptimistic}
             disabled={isExpired}
             loginGate={loginGate}
+            onAllowanceChange={onVoteAllowanceChange}
           />
         </div>
 
@@ -349,6 +370,10 @@ export default function SongCard({
               </span>
             )}
           </button>
+          <button onClick={() => setShowVersions(true)} className={`flex min-h-11 items-center gap-1 text-xs transition-colors ${versionCount > 0 ? "font-semibold text-warning" : "text-text-subtle hover:text-warning"}`}>
+            <VersionIcon /> 다른 버전
+            {versionCount > 0 && <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warning-soft px-1 text-[10px] font-bold">{versionCount}</span>}
+          </button>
           {onAddToSetlist && (
             <button
               onClick={() => onAddToSetlist(song.id)}
@@ -360,7 +385,7 @@ export default function SongCard({
               셋리스트에 추가
             </button>
           )}
-          {isAdmin && (
+          {canRemove && (
             <button
               onClick={handleRemove}
               disabled={isPending}
@@ -381,7 +406,18 @@ export default function SongCard({
           loginGate={loginGate}
         />
       )}
+      {showVersions && (
+        <SongVersionModal songId={song.id} songTitle={song.title} nickname={nickname} shareCode={shareCode} currentUserId={currentUserId} isAdmin={isAdmin} adminToken={adminToken} loginGate={loginGate} onCountChange={setVersionCount} onClose={() => setShowVersions(false)} />
+      )}
     </div>
+  );
+}
+
+function VersionIcon() {
+  return (
+    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 3.75h9m-9 16.5h9M5.25 7.5l-2.25 2.25L5.25 12m13.5 0L21 14.25l-2.25 2.25M3 9.75h13.5M7.5 14.25H21" />
+    </svg>
   );
 }
 

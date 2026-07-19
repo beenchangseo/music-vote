@@ -5,6 +5,7 @@ import Image from "next/image";
 import SongMeta from "./SongMeta";
 import CommentSection from "./CommentSection";
 import type { SetlistItem, SongWithScore, Comment } from "@/lib/types";
+import { effectiveSetlistTitle } from "@/lib/setlist-domain";
 
 interface RehearsalViewProps {
   setlistItems: SetlistItem[];
@@ -78,7 +79,7 @@ export default function RehearsalView({
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-text truncate">{song.title}</p>
+                <p className="text-sm font-medium text-text truncate">{effectiveSetlistTitle(item, song)}</p>
                 {song.artist && <p className="text-xs text-text-muted truncate">{song.artist}</p>}
               </div>
             </div>

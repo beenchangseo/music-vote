@@ -2,19 +2,21 @@
 
 import { useState, useTransition } from "react";
 import { useDialog } from "./DialogProvider";
-import { addSetlistItemPublic } from "@/actions/setlist";
+import { addIntervalItem } from "@/actions/setlist";
 import type { SetlistItem } from "@/lib/types";
 
 interface AddIntervalFormProps {
   playlistId: string;
   shareCode: string;
   nextPosition: number;
+  adminToken: string | null;
   onAdded: (item: SetlistItem) => void;
   onCancel: () => void;
 }
 
-export default function AddIntervalForm({ playlistId, shareCode, nextPosition, onAdded, onCancel }: AddIntervalFormProps) {
+export default function AddIntervalForm({ playlistId, shareCode, nextPosition, adminToken, onAdded, onCancel }: AddIntervalFormProps) {
   const [label, setLabel] = useState("");
+  const [description, setDescription] = useState("");
   const [minutes, setMinutes] = useState("");
   const [seconds, setSeconds] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -24,13 +26,19 @@ export default function AddIntervalForm({ playlistId, shareCode, nextPosition, o
     e.preventDefault();
     if (!label.trim() || isPending) return;
 
-    const durationSeconds = (parseInt(minutes || "0") * 60) + parseInt(seconds || "0");
+    const minuteValue = Number(minutes || "0");
+    const secondValue = Number(seconds || "0");
+    if (!Number.isInteger(minuteValue) || minuteValue < 0 || !Number.isInteger(secondValue) || secondValue < 0 || secondValue > 59) {
+      showAlert("시간은 소수점 없이, 초는 0~59 사이로 입력해주세요.");
+      return;
+    }
+    const durationSeconds = minuteValue * 60 + secondValue;
 
     startTransition(async () => {
       try {
-        const item = await addSetlistItemPublic(playlistId, {
-          item_type: "interval",
+        const item = await addIntervalItem(playlistId, adminToken, {
           label: label.trim(),
+          description,
           duration_seconds: durationSeconds,
           position: nextPosition,
         }, shareCode);
@@ -47,8 +55,17 @@ export default function AddIntervalForm({ playlistId, shareCode, nextPosition, o
         type="text"
         value={label}
         onChange={(e) => setLabel(e.target.value)}
-        placeholder="인터벌 설명 (예: 보컬 멘트, 기타 셋업 체인지)"
+        placeholder="블록 이름 (예: 기타 셋업 변경)"
+        maxLength={50}
         className="w-full px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+      />
+      <textarea
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        placeholder="설명 (선택)"
+        maxLength={200}
+        rows={2}
+        className="w-full resize-none rounded-lg border border-border bg-surface-hover px-3 py-2 text-sm text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-yellow-500"
       />
       <div className="flex items-center gap-2">
         <input
@@ -57,7 +74,7 @@ export default function AddIntervalForm({ playlistId, shareCode, nextPosition, o
           onChange={(e) => setMinutes(e.target.value)}
           placeholder="분"
           min="0"
-          max="60"
+          step="1"
           className="w-20 px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm text-center focus:outline-none focus:ring-2 focus:ring-yellow-500"
         />
         <span className="text-text-subtle">:</span>
@@ -68,6 +85,7 @@ export default function AddIntervalForm({ playlistId, shareCode, nextPosition, o
           placeholder="초"
           min="0"
           max="59"
+          step="1"
           className="w-20 px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm text-center focus:outline-none focus:ring-2 focus:ring-yellow-500"
         />
         <div className="flex-1" />

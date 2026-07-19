@@ -17,7 +17,7 @@ ship 직전 마지막 점검표. 출시 시점에 한 번 위에서부터 통과
 
 - [ ] Production 프로젝트 ID 확인 (`NEXT_PUBLIC_SUPABASE_URL` 매칭)
 - [ ] `supabase-schema.sql` 실행 (신규 환경만)
-- [ ] 마이그레이션 v2 → v3 → v4 → v5 → v6 순서대로 실행 (모두 idempotent)
+- [ ] 마이그레이션 v2 → v3 → v4 → v5 → v6 → v7 → v8 → v9 → v10 순서대로 실행
 - [ ] RLS 활성화 확인:
       - `playlists` SELECT/INSERT public, UPDATE 없음
       - `playlist_admin` 정책 없음 = service_role만
@@ -41,7 +41,7 @@ ship 직전 마지막 점검표. 출시 시점에 한 번 위에서부터 통과
 - [ ] `vercel.json` 리전: `icn1` (한국 사용자 레이턴시 최소)
 - [ ] `vercel.json` crons: `/api/cron/auto-confirm-setlist`, `0 * * * *`
 - [ ] 배포 후 **Crons 탭**에서 매시간 트리거 활성화 확인
-- [ ] **Functions 탭**에서 edge route 확인 (`/api/og`, `/api/setlist-image`, `/api/setlist-ics`)
+- [ ] **Functions 탭**에서 export route 확인 (`/api/og`, `/api/setlist-image`, `/api/setlist-pdf`)
 - [ ] **Domains**: `plypick.kr` Production 연결, SSL 자동 갱신
 
 ## 5. 외부 통합
@@ -69,6 +69,7 @@ ship 직전 마지막 점검표. 출시 시점에 한 번 위에서부터 통과
 - [ ] 결정 OG: `/api/og?variant=decided&topSong=...` 정상
 - [ ] 셋리스트 OG: `/api/og?variant=setlist&...` 정상
 - [ ] 셋리스트 portrait: `/api/setlist-image/{shareCode}` 1080×1920 정상
+- [ ] 셋리스트 PDF: `/api/setlist-pdf/{shareCode}` 전체 항목·한글·다중 페이지 정상
 - [ ] sitemap + robots: `src/app/sitemap.ts`, `src/app/robots.ts` 검증
 - [ ] Google Search Console에 sitemap 제출
 - [ ] 네이버 서치어드바이저 등록 + 메타 태그 인증
@@ -105,7 +106,7 @@ ship 직전 마지막 점검표. 출시 시점에 한 번 위에서부터 통과
 
 - [ ] 본인 밴드 단톡방에 `plypick.kr` 공유 후 5인 멤버 가입 없이 투표 1라운드 완료
 - [ ] 결정 후 카톡 공유 카드 단톡방 노출 확인
-- [ ] 셋리스트 확정 → 카톡/이미지/ICS export 1회씩 시도
+- [ ] 셋리스트 확정 → 링크 공유/이미지/PDF 저장 1회씩 시도
 - [ ] 합주실 실제 사용 시 메트로놈 + 합주 모드 동작 확인
 - [ ] 본인이 발견한 막힌 지점 메모 → 다음 주 우선순위 1번에 투입
 

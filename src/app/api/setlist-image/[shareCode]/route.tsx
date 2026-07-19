@@ -8,11 +8,10 @@ export const runtime = "edge";
 async function loadFont(weight: 700 | 800): Promise<ArrayBuffer> {
   const url =
     weight === 800
-      ? "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/web/static/woff2-subset/Pretendard-ExtraBold.subset.woff2"
-      : "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/web/static/woff2-subset/Pretendard-Bold.subset.woff2";
+      ? "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/public/static/Pretendard-ExtraBold.otf"
+      : "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/public/static/Pretendard-Bold.otf";
   const res = await fetch(url, {
-    cf: { cacheTtl: 31536000 },
-    next: { revalidate: 31536000 },
+    cache: "no-store",
   } as RequestInit);
   return res.arrayBuffer();
 }
@@ -41,7 +40,10 @@ interface SetlistItemRow {
   item_type: "song" | "interval";
   song_id: string | null;
   label: string | null;
+  description: string | null;
   duration_seconds: number;
+  title_override: string | null;
+  duration_override_seconds: number | null;
 }
 interface SongRow {
   id: string;
@@ -55,7 +57,7 @@ interface SongRow {
 }
 
 export async function GET(
-  _req: NextRequest,
+  request: NextRequest,
   ctx: { params: Promise<{ shareCode: string }> },
 ) {
   const { shareCode } = await ctx.params;
@@ -80,7 +82,7 @@ export async function GET(
   // 2) setlist items
   const { data: items } = await supabase
     .from("setlist_items")
-    .select("position, item_type, song_id, label, duration_seconds")
+    .select("position, item_type, song_id, label, description, duration_seconds, title_override, duration_override_seconds")
     .eq("playlist_id", playlist.id)
     .order("position", { ascending: true });
 
@@ -108,16 +110,23 @@ export async function GET(
   for (const item of setlistItems) {
     if (item.item_type === "song" && item.song_id) {
       const s = songMap[item.song_id];
-      if (s?.duration_seconds) total += s.duration_seconds;
+      const duration = item.duration_override_seconds ?? s?.duration_seconds;
+      if (duration != null) total += duration;
     } else if (item.item_type === "interval") {
       total += item.duration_seconds || 0;
     }
   }
   const songCount = setlistItems.filter((i) => i.item_type === "song").length;
 
-  // 너무 많으면 처음 18개만 + "외 N곡 더"
-  const VISIBLE_LIMIT = 18;
-  const visible = setlistItems.slice(0, VISIBLE_LIMIT);
+  // 설명이 있는 인터벌은 더 많은 세로 공간을 배정하고, 들어가는 항목은 설명을 전부 표시한다.
+  const visible: SetlistItemRow[] = [];
+  let usedSpace = 0;
+  for (const item of setlistItems) {
+    const cost = item.item_type === "interval" && item.description ? 3 : 1;
+    if (usedSpace + cost > 18) break;
+    visible.push(item);
+    usedSpace += cost;
+  }
   const truncated = setlistItems.length - visible.length;
 
   const [fontBold, fontExtraBold] = await Promise.all([
@@ -125,7 +134,7 @@ export async function GET(
     loadFont(800),
   ]);
 
-  return new ImageResponse(
+  const response = new ImageResponse(
     (
       <div
         style={{
@@ -273,10 +282,13 @@ export async function GET(
                       letterSpacing: "-0.01em",
                     }}
                   >
-                    {isInterval
-                      ? item.label || "인터벌"
-                      : song?.title || "(곡 정보 없음)"}
+                    {isInterval ? item.label || "인터벌" : item.title_override || song?.title || "(곡 정보 없음)"}
                   </span>
+                  {isInterval && item.description && (
+                    <span style={{ fontSize: 20, color: C.textMuted, marginTop: 4, fontWeight: 700, whiteSpace: "pre-wrap" }}>
+                      {item.description}
+                    </span>
+                  )}
                   {!isInterval && song?.artist && (
                     <span
                       style={{
@@ -312,7 +324,7 @@ export async function GET(
                         {song.tempo_bpm} BPM
                       </span>
                     )}
-                    {song.duration_seconds && (
+                    {(item.duration_override_seconds ?? song.duration_seconds) != null && (
                       <span
                         style={{
                           fontSize: 20,
@@ -320,7 +332,7 @@ export async function GET(
                           fontWeight: 700,
                         }}
                       >
-                        {fmtRuntime(song.duration_seconds)}
+                        {fmtRuntime(item.duration_override_seconds ?? song.duration_seconds ?? 0)}
                       </span>
                     )}
                   </div>
@@ -394,4 +406,9 @@ export async function GET(
       ],
     },
   );
+  if (request.nextUrl.searchParams.get("download") === "1") {
+    response.headers.set("Content-Disposition", `attachment; filename="setlist-${shareCode}.png"`);
+    response.headers.set("Cache-Control", "private, no-store");
+  }
+  return response;
 }

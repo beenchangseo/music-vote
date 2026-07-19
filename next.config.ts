@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["pdfkit"],
   images: {
     remotePatterns: [
       {
@@ -10,11 +11,6 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "api.qrserver.com",
-      },
-      {
-        protocol: "https",
-        hostname: "aukclgwfdmjltutelffz.supabase.co",
-        pathname: "/storage/v1/object/public/**",
       },
     ],
   },

@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition } from "react";
 import { castVote } from "@/actions/vote";
 import { track } from "@/lib/analytics";
 import { triggerKakaoLogin } from "@/lib/kakao-login";
+import { useDialog } from "./DialogProvider";
 
 interface VoteButtonsProps {
   songId: string;
@@ -15,6 +16,7 @@ interface VoteButtonsProps {
   disabled?: boolean;
   /** 로그인 필수 모드 + 비로그인 → 클릭 시 카카오 OAuth. */
   loginGate?: boolean;
+  onAllowanceChange?: (usedVotes: number, voteLimit: number) => void;
 }
 
 export default function VoteButtons({
@@ -26,10 +28,12 @@ export default function VoteButtons({
   onVoteOptimistic,
   disabled: disabledProp = false,
   loginGate = false,
+  onAllowanceChange,
 }: VoteButtonsProps) {
   const [isPending, startTransition] = useTransition();
   // Only track userVote locally for button highlight
   const [localUserVote, setLocalUserVote] = useState(userVote);
+  const { showAlert } = useDialog();
 
   // Sync with server state when props change (after revalidation)
   useEffect(() => {
@@ -43,6 +47,7 @@ export default function VoteButtons({
     }
     if (!nickname || isPending || disabledProp) return;
 
+    const previousVote = localUserVote;
     // Calculate score delta
     let scoreDelta: number;
     if (localUserVote === voteType) {
@@ -69,7 +74,16 @@ export default function VoteButtons({
     onVoteOptimistic?.(songId, scoreDelta);
 
     startTransition(async () => {
-      await castVote(songId, nickname, voteType, shareCode);
+      try {
+        const result = await castVote(songId, nickname, voteType, shareCode);
+        if (result.allowance) {
+          onAllowanceChange?.(result.allowance.usedVotes, result.allowance.voteLimit);
+        }
+      } catch (error) {
+        setLocalUserVote(previousVote);
+        onVoteOptimistic?.(songId, -scoreDelta);
+        showAlert(error instanceof Error ? error.message : "투표에 실패했습니다.");
+      }
     });
   }
 

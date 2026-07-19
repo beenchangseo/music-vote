@@ -47,7 +47,6 @@ export async function GET(request: NextRequest) {
   const topArtist = searchParams.get("topArtist") || "";
   const topScore = parseInt(searchParams.get("topScore") || "0", 10);
   const setlistCount = parseInt(searchParams.get("setlistCount") || "0", 10);
-  const poster = searchParams.get("poster") || "";
 
   const [fontBold, fontExtraBold] = await Promise.all([
     loadFont(700),
@@ -70,7 +69,6 @@ export async function GET(request: NextRequest) {
       title={title}
       setlistCount={setlistCount || songs}
       participants={participants}
-      poster={poster}
     />;
   } else if (variant === "playlist") {
     body = <PlaylistView
@@ -392,12 +390,10 @@ function SetlistView({
   title,
   setlistCount,
   participants,
-  poster,
 }: {
   title: string;
   setlistCount: number;
   participants: number;
-  poster?: string;
 }) {
   return (
     <div
@@ -411,53 +407,6 @@ function SetlistView({
         position: "relative",
       }}
     >
-      {poster ? (
-        <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={poster}
-            alt=""
-            width={1200}
-            height={630}
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              filter: "blur(2px)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(180deg, rgba(10,10,15,0.65) 0%, rgba(10,10,15,0.85) 50%, rgba(10,10,15,0.95) 100%)",
-            }}
-          />
-          {/* Polaroid 미니어처 — 우상단 */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={poster}
-            alt=""
-            style={{
-              position: "absolute",
-              top: 60,
-              right: 64,
-              width: 200,
-              height: 270,
-              objectFit: "cover",
-              padding: 8,
-              paddingBottom: 32,
-              background: "#fff",
-              boxShadow: "0 16px 40px rgba(0,0,0,0.6)",
-              transform: "rotate(-3deg)",
-            }}
-          />
-        </>
-      ) : null}
-
       <Brand />
 
       <div

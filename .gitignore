@@ -48,5 +48,13 @@ next-env.d.ts
 
 # Internal research docs (not for the codebase)
 docs/
+!docs/
+docs/*
+!docs/adr/
+!docs/adr/*.md
+!docs/plans/
+!docs/plans/*.md
+!docs/results/
+!docs/results/*.md
 .env*.local
 .gstack/

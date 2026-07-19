@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
+import type { SetlistEditMode, VotingMode } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
 /**
@@ -59,7 +60,13 @@ export async function getMyPlaylists(): Promise<MyPlaylistDbEntry[]> {
   }));
 }
 
-export async function createPlaylist(title: string, deadline?: string, setlistCount?: number) {
+export async function createPlaylist(
+  title: string,
+  deadline?: string,
+  setlistCount?: number,
+  votingMode: VotingMode = "free",
+  defaultVoteLimit = 3,
+) {
   if (!title || title.length > 100) {
     throw new Error("플레이리스트 제목은 1~100자여야 합니다.");
   }
@@ -68,6 +75,12 @@ export async function createPlaylist(title: string, deadline?: string, setlistCo
   const user = await getCurrentUser();
   if (!user) {
     throw new Error("로그인이 필요합니다.");
+  }
+  if (votingMode !== "free" && votingMode !== "allocated") {
+    throw new Error("올바른 투표 방식을 선택해주세요.");
+  }
+  if (!Number.isInteger(defaultVoteLimit) || defaultVoteLimit < 1 || defaultVoteLimit > 99) {
+    throw new Error("기본 투표권은 1~99개여야 합니다.");
   }
   const admin = createAdminClient();
 
@@ -85,6 +98,8 @@ export async function createPlaylist(title: string, deadline?: string, setlistCo
         setlist_count: setlistCount && setlistCount > 0 ? setlistCount : null,
         creator_nickname: user.nickname,
         creator_user_id: user.id,
+        voting_mode: votingMode,
+        default_vote_limit: defaultVoteLimit,
       })
       .select("id, share_code")
       .single();
@@ -100,6 +115,18 @@ export async function createPlaylist(title: string, deadline?: string, setlistCo
 
     if (adminError) {
       // Rollback: delete the playlist since admin token failed
+      await admin.from("playlists").delete().eq("id", data.id);
+      throw new Error("플레이리스트 생성에 실패했습니다.");
+    }
+
+    const { error: memberError } = await admin.from("playlist_members").insert({
+      playlist_id: data.id,
+      user_id: user.id,
+      display_name: user.nickname,
+      vote_limit: defaultVoteLimit,
+    });
+
+    if (memberError) {
       await admin.from("playlists").delete().eq("id", data.id);
       throw new Error("플레이리스트 생성에 실패했습니다.");
     }
@@ -181,108 +208,24 @@ export async function updateVotingMode(
   return { success: true };
 }
 
-// ============================================================
-// 공연 포스터 (Supabase Storage: setlist-posters 버킷)
-// ============================================================
-
-const POSTER_BUCKET = "setlist-posters";
-const MAX_POSTER_BYTES = 5 * 1024 * 1024; // 5MB
-
-export async function uploadSetlistPoster(
+export async function updateSetlistEditMode(
   playlistId: string,
   adminToken: string | null,
-  formData: FormData,
+  mode: SetlistEditMode,
   shareCode: string,
 ) {
   await assertPlaylistAdmin(playlistId, adminToken);
-
-  const file = formData.get("poster");
-  if (!(file instanceof File)) throw new Error("파일이 없습니다.");
-  if (!file.type.startsWith("image/")) {
-    throw new Error("이미지 파일만 업로드할 수 있어요.");
+  if (mode !== "everyone" && mode !== "host_only") {
+    throw new Error("잘못된 셋리스트 권한입니다.");
   }
-  if (file.size > MAX_POSTER_BYTES) {
-    throw new Error("파일이 너무 큽니다 (5MB 이하).");
-  }
-
   const admin = createAdminClient();
-
-  // Path: {playlistId}/{timestamp}.{ext} — 이전 파일은 별도 정리 단계로 삭제
-  const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-  const path = `${playlistId}/${Date.now()}.${ext}`;
-
-  const { error: upErr } = await admin.storage
-    .from(POSTER_BUCKET)
-    .upload(path, file, {
-      contentType: file.type,
-      upsert: false,
-      cacheControl: "31536000",
-    });
-  if (upErr) throw new Error("업로드에 실패했습니다.");
-
-  const { data: pub } = admin.storage.from(POSTER_BUCKET).getPublicUrl(path);
-  const posterUrl = pub.publicUrl;
-
-  // 이전 포스터 경로 정리
-  const { data: prev } = await admin
+  const { error } = await admin
     .from("playlists")
-    .select("poster_url")
-    .eq("id", playlistId)
-    .single();
-
-  const { error: dbErr } = await admin
-    .from("playlists")
-    .update({ poster_url: posterUrl })
+    .update({ setlist_edit_mode: mode })
     .eq("id", playlistId);
-  if (dbErr) throw new Error("저장에 실패했습니다.");
-
-  if (prev?.poster_url) {
-    const prevPath = extractPosterPath(prev.poster_url);
-    if (prevPath && prevPath !== path) {
-      await admin.storage.from(POSTER_BUCKET).remove([prevPath]).catch(() => {});
-    }
-  }
-
+  if (error) throw new Error("셋리스트 권한 변경에 실패했습니다.");
   revalidatePath(`/playlist/${shareCode}`);
-  return { success: true, posterUrl };
-}
-
-export async function removeSetlistPoster(
-  playlistId: string,
-  adminToken: string | null,
-  shareCode: string,
-) {
-  await assertPlaylistAdmin(playlistId, adminToken);
-  const admin = createAdminClient();
-
-  const { data: prev } = await admin
-    .from("playlists")
-    .select("poster_url")
-    .eq("id", playlistId)
-    .single();
-
-  const { error: dbErr } = await admin
-    .from("playlists")
-    .update({ poster_url: null })
-    .eq("id", playlistId);
-  if (dbErr) throw new Error("저장에 실패했습니다.");
-
-  if (prev?.poster_url) {
-    const prevPath = extractPosterPath(prev.poster_url);
-    if (prevPath) {
-      await admin.storage.from(POSTER_BUCKET).remove([prevPath]).catch(() => {});
-    }
-  }
-
-  revalidatePath(`/playlist/${shareCode}`);
-  return { success: true };
-}
-
-function extractPosterPath(url: string): string | null {
-  const marker = `/storage/v1/object/public/${POSTER_BUCKET}/`;
-  const idx = url.indexOf(marker);
-  if (idx < 0) return null;
-  return url.slice(idx + marker.length);
+  return { success: true, mode };
 }
 
 export async function deletePlaylist(playlistId: string, adminToken: string | null) {

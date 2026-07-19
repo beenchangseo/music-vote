@@ -40,7 +40,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Server Component** `src/app/playlist/[shareCode]/page.tsx` → songs + votes + comment counts join → `PlaylistClient` 전달
 - **Client Component** `PlaylistClient` → 옵티미스틱 vote/추가 → Server Action 호출
 - **Server Actions** `src/actions/*` — `createServerSupabaseClient()` (anon + RLS) 또는 `createAdminClient()` (service_role, 권한 검사 필수)
-- **Edge Routes** `src/app/api/*/route.ts(x)` — OG/setlist-image/setlist-ics/cron. Pretendard 폰트는 CDN fetch + edge cache 1년
+- **Export Routes** `src/app/api/*/route.ts(x)` — OG/setlist-image는 Edge, setlist-pdf는 Node, cron은 서버 런타임. Pretendard 폰트는 CDN에서 로드
 
 ## 분석
 

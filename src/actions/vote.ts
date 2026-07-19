@@ -22,37 +22,21 @@ export async function castVote(
   if (requiresLogin) {
     const user = await getCurrentUser();
     if (!user) throw new Error("로그인이 필요합니다.");
-
-    const { data: existing } = await supabase
-      .from("votes")
-      .select("id, vote_type")
-      .eq("song_id", songId)
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (existing) {
-      if (existing.vote_type === voteType) {
-        const { error } = await supabase.from("votes").delete().eq("id", existing.id);
-        if (error) throw new Error("투표 취소에 실패했습니다.");
-      } else {
-        const { error } = await supabase
-          .from("votes")
-          .update({ vote_type: voteType })
-          .eq("id", existing.id);
-        if (error) throw new Error("투표 변경에 실패했습니다.");
-      }
-    } else {
-      const { error } = await supabase.from("votes").insert({
-        song_id: songId,
-        user_id: user.id,
-        nickname: user.nickname,
-        vote_type: voteType,
-      });
-      if (error) throw new Error("투표에 실패했습니다.");
-    }
+    const { data, error } = await supabase.rpc("cast_playlist_vote", {
+      p_song_id: songId,
+      p_vote_type: voteType,
+      p_nickname: user.nickname,
+    });
+    if (error) throw new Error(error.message || "투표에 실패했습니다.");
 
     revalidatePath(`/playlist/${shareCode}`);
-    return { success: true };
+    const row = data?.[0];
+    return {
+      success: true,
+      allowance: row
+        ? { usedVotes: row.used_votes, voteLimit: row.vote_limit }
+        : null,
+    };
   }
 
   // Anonymous mode (legacy): nickname 기반.
@@ -89,5 +73,5 @@ export async function castVote(
   }
 
   revalidatePath(`/playlist/${shareCode}`);
-  return { success: true };
+  return { success: true, allowance: null };
 }

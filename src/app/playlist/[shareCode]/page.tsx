@@ -80,7 +80,7 @@ export default async function PlaylistPage({ params }: PageProps) {
 
   const { data: playlist } = await supabase
     .from("playlists")
-    .select("id, title, share_code, deadline, created_at, setlist_count, announcement, setlist_confirmed, creator_nickname, creator_user_id, votes_anonymous, poster_url")
+    .select("id, title, share_code, deadline, created_at, setlist_count, announcement, setlist_confirmed, creator_nickname, creator_user_id, votes_anonymous, voting_mode, default_vote_limit, setlist_edit_mode")
     .eq("share_code", shareCode)
     .single();
 
@@ -93,18 +93,27 @@ export default async function PlaylistPage({ params }: PageProps) {
     .order("created_at", { ascending: true });
 
   const songIds = (songs || []).map((s: Song) => s.id);
-  const [votesResult, commentsResult] = songIds.length > 0
+  const [votesResult, commentsResult, versionsResult] = songIds.length > 0
     ? await Promise.all([
         supabase.from("votes").select("*").in("song_id", songIds),
         supabase.from("comments").select("song_id").in("song_id", songIds),
+        supabase.from("song_versions").select("song_id").in("song_id", songIds),
       ])
-    : [{ data: [] as Vote[] }, { data: [] as { song_id: string }[] }];
+    : [
+        { data: [] as Vote[] },
+        { data: [] as { song_id: string }[] },
+        { data: [] as { song_id: string }[] },
+      ];
 
   const votes = votesResult.data;
   const commentRows = (commentsResult.data || []) as { song_id: string }[];
   const commentCountMap: Record<string, number> = {};
   for (const c of commentRows) {
     commentCountMap[c.song_id] = (commentCountMap[c.song_id] || 0) + 1;
+  }
+  const versionCountMap: Record<string, number> = {};
+  for (const version of versionsResult.data || []) {
+    versionCountMap[version.song_id] = (versionCountMap[version.song_id] || 0) + 1;
   }
 
   const songsWithScores: SongWithScore[] = (songs || []).map((song: Song) => {
@@ -116,6 +125,7 @@ export default async function PlaylistPage({ params }: PageProps) {
       votes: songVotes,
       userVote: null,
       commentCount: commentCountMap[song.id] ?? 0,
+      versionCount: versionCountMap[song.id] ?? 0,
     };
   });
 

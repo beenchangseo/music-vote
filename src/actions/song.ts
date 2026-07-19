@@ -142,8 +142,29 @@ export async function removeSong(
   adminToken: string | null,
   shareCode: string
 ) {
-  await assertPlaylistAdmin(playlistId, adminToken);
   const admin = createAdminClient();
+  const { data: song } = await admin
+    .from("songs")
+    .select("id, added_by_user_id, playlists!inner(creator_user_id)")
+    .eq("id", songId)
+    .eq("playlist_id", playlistId)
+    .single<{
+      id: string;
+      added_by_user_id: string | null;
+      playlists: { creator_user_id: string | null };
+    }>();
+
+  if (!song) throw new Error("곡을 찾을 수 없습니다.");
+
+  if (song.playlists.creator_user_id) {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("로그인이 필요합니다.");
+    const isHost = user.id === song.playlists.creator_user_id;
+    const isAdder = user.id === song.added_by_user_id;
+    if (!isHost && !isAdder) throw new Error("이 곡을 삭제할 권한이 없습니다.");
+  } else {
+    await assertPlaylistAdmin(playlistId, adminToken);
+  }
 
   const { error } = await admin
     .from("songs")

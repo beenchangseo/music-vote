@@ -30,8 +30,9 @@ type EventMap = {
     auto: boolean;
   };
   setlist_exported: {
-    format: "ics" | "image" | "print";
+    format: "image" | "pdf";
   };
+  setlist_shared: { method: "link" };
   meta_edited: {
     field: "key" | "key_memo" | "bpm" | "duration" | "difficulty" | "genre";
   };

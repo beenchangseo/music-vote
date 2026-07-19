@@ -29,8 +29,8 @@
 - **카카오톡 리치 카드** — 4-variant OG (home/playlist/decided/setlist), Pretendard ExtraBold
 - **3-fallback 공유 체인** — Kakao Share → Web Share → Clipboard
 - **셋리스트 포트레이트 이미지** — 1080×1920 PNG (모바일 갤러리 저장 + 카톡)
-- **인쇄 / PDF** — 전용 print CSS
-- **합주 일정 ICS** — RFC 5545 캘린더 파일 다운로드 (날짜·시간·길이·장소)
+- **셋리스트 공유·저장** — 링크 공유, 세로 이미지, 전체 항목 PDF 다운로드
+- **셋리스트 편집** — 곡·인터벌 블록 수정, 권한 토글, 토탈 시간과 공유 파일
 - **외부 악보 단축** — Ultimate Guitar / Chordify / 뮤직노트 / 악보바다
 
 ### 디자인
@@ -40,7 +40,7 @@
 - **UI primitives**: Button / Input / Card / Modal
 
 ### 운영
-- **분석 이벤트** — 9종 (`playlist_created`, `song_added`, `vote_cast`, `kakao_shared`, `setlist_confirmed`, `setlist_exported`, `meta_edited`, `filter_applied`, `vote_changed`)
+- **분석 이벤트** — 셋리스트 링크 공유와 이미지·PDF 저장을 포함한 타입 안전 이벤트
 - **UTM 자동 부착** — 카톡 공유 시 variant별 추적
 
 ---
@@ -102,8 +102,10 @@ supabase-migration-v3.sql     # 댓글 + 셋리스트
 supabase-migration-v4.sql     # creator_nickname + 공지사항
 supabase-migration-v5.sql     # 5중 제약 메타 (key_root/mode, difficulty, genre)
 supabase-migration-v6.sql     # 익명/기명 투표 모드
-...
-...
+supabase-migration-v7.sql     # Kakao OAuth 계정 연동
+supabase-migration-v8.sql     # 로그인 모드 RLS
+supabase-migration-v9.sql     # 기존 공연 포스터 URL(운영 이력, v10에서 제거)
+supabase-migration-v10.sql    # 투표권·다른 버전·셋리스트 편집, 포스터 완전 제거
 ```
 
 기존 운영 DB는 이미 실행한 마이그레이션을 건너뛸 수 있도록 모두 `IF NOT EXISTS`/`ADD COLUMN IF NOT EXISTS` 패턴 사용.
@@ -148,7 +150,7 @@ src/
 │   └── api/
 │       ├── og/                               # 4-variant OG 이미지
 │       ├── setlist-image/[shareCode]/        # 1080×1920 포트레이트 PNG
-│       ├── setlist-ics/[shareCode]/          # RFC 5545 캘린더
+│       ├── setlist-pdf/[shareCode]/          # 전체 셋리스트 다중 페이지 PDF
 │       └── cron/auto-confirm-setlist/        # Vercel Cron 자동 확정
 ├── actions/                                  # Server Actions
 │   ├── playlist.ts                           # 생성·삭제·공지·투표 모드
@@ -165,7 +167,8 @@ src/
 │   ├── VoteButtons.tsx, FilterBar.tsx
 │   ├── KakaoShareButton.tsx                  # 3-fallback 공유
 │   ├── HeroCTA.tsx, LivePreview.tsx          # 랜딩 후킹
-│   ├── SetlistView.tsx, SetlistCalendarButton.tsx, RehearsalView.tsx
+│   ├── SetlistView.tsx, SetlistItemEditModal.tsx, RehearsalView.tsx
+│   ├── VotingSettingsButton.tsx, SongVersionModal.tsx
 │   ├── SheetMusicLinks.tsx                   # 외부 악보 검색
 │   ├── VotingModeToggle.tsx                  # 익명/기명 토글
 │   ├── CommentSection.tsx, CommentModal.tsx
@@ -193,7 +196,8 @@ src/
 | `vote_cast` / `vote_toggled` / `vote_changed` | `vote_type` / `from`+`to` |
 | `kakao_shared` | `variant` (playlist/decided/setlist) |
 | `setlist_confirmed` | `song_count`, `auto` |
-| `setlist_exported` | `format` (print/image/ics) |
+| `setlist_exported` | `format` (image/pdf) |
+| `setlist_shared` | `method` (link) |
 | `meta_edited` | `field` (key/bpm/difficulty/genre/...) |
 | `filter_applied` | `type` (bpm/meta_only/key/difficulty/genre) |
 
