@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { canReduceVoteLimit, isValidDefaultVoteLimit, remainingVotes } from "../vote-domain";
+import {
+  applyVotePress,
+  canReduceVoteLimit,
+  isValidDefaultVoteLimit,
+  remainingVotes,
+} from "../vote-domain";
 
 describe("vote allocation domain", () => {
   it("shows only allocated-mode remaining votes", () => {
@@ -17,5 +22,49 @@ describe("vote allocation domain", () => {
     expect(isValidDefaultVoteLimit(99)).toBe(true);
     expect(isValidDefaultVoteLimit(0)).toBe(false);
     expect(isValidDefaultVoteLimit(1.5)).toBe(false);
+  });
+
+  it("adds repeated votes on one song in allocated mode", () => {
+    expect(applyVotePress({ direction: 1, count: 2 }, 1, "allocated")).toEqual({
+      direction: 1,
+      count: 3,
+      scoreDelta: 1,
+      usageDelta: 1,
+      action: "added",
+    });
+  });
+
+  it("cancels repeated votes one at a time with the opposite arrow", () => {
+    expect(applyVotePress({ direction: 1, count: 3 }, -1, "allocated")).toEqual({
+      direction: 1,
+      count: 2,
+      scoreDelta: -1,
+      usageDelta: -1,
+      action: "removed",
+    });
+    expect(applyVotePress({ direction: 1, count: 1 }, -1, "allocated")).toEqual({
+      direction: null,
+      count: 0,
+      scoreDelta: -1,
+      usageDelta: -1,
+      action: "removed",
+    });
+    expect(applyVotePress({ direction: null, count: 0 }, -1, "allocated")).toEqual({
+      direction: -1,
+      count: 1,
+      scoreDelta: -1,
+      usageDelta: 1,
+      action: "added",
+    });
+  });
+
+  it("keeps the existing toggle behavior in free mode", () => {
+    expect(applyVotePress({ direction: 1, count: 1 }, 1, "free")).toEqual({
+      direction: null,
+      count: 0,
+      scoreDelta: -1,
+      usageDelta: -1,
+      action: "removed",
+    });
   });
 });

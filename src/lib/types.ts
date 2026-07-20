@@ -51,6 +51,7 @@ export interface Song {
 export interface Vote {
   id: string;
   song_id: string;
+  user_id: string | null;
   nickname: string;
   vote_type: number; // 1 or -1
   created_at: string;
@@ -60,6 +61,7 @@ export interface SongWithScore extends Song {
   score: number;
   votes: Vote[];
   userVote: number | null; // 1, -1, or null
+  userVoteCount: number;
   commentCount: number;
   versionCount: number;
 }

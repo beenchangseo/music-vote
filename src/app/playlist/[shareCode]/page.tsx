@@ -116,22 +116,26 @@ export default async function PlaylistPage({ params }: PageProps) {
     versionCountMap[version.song_id] = (versionCountMap[version.song_id] || 0) + 1;
   }
 
+  const currentUser = await getCurrentUser();
+
   const songsWithScores: SongWithScore[] = (songs || []).map((song: Song) => {
     const songVotes = (votes || []).filter((v: Vote) => v.song_id === song.id);
+    const userVotes = currentUser
+      ? songVotes.filter((vote) => vote.user_id === currentUser.id)
+      : [];
     const score = songVotes.reduce((sum: number, v: Vote) => sum + v.vote_type, 0);
     return {
       ...song,
       score,
       votes: songVotes,
-      userVote: null,
+      userVote: userVotes[0]?.vote_type ?? null,
+      userVoteCount: userVotes.length,
       commentCount: commentCountMap[song.id] ?? 0,
       versionCount: versionCountMap[song.id] ?? 0,
     };
   });
 
   songsWithScores.sort((a, b) => b.score - a.score || new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-
-  const currentUser = await getCurrentUser();
 
   return (
     <PlaylistClient

@@ -162,18 +162,22 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
     const mapped = songs.map((song) => {
       const override = voteOverrides[song.id];
       const effectiveDelta = override && override.baseScore === song.score ? override.delta : 0;
+      const myVotes = currentUserId
+        ? song.votes.filter((vote) => vote.user_id === currentUserId)
+        : nickname
+          ? song.votes.filter((vote) => vote.nickname.toLowerCase() === nickname.toLowerCase())
+          : [];
       return {
         ...song,
         score: song.score + effectiveDelta,
-        userVote: nickname
-          ? song.votes.find((v) => v.nickname.toLowerCase() === nickname.toLowerCase())?.vote_type ?? null
-          : null,
+        userVote: myVotes[0]?.vote_type ?? null,
+        userVoteCount: myVotes.length,
       };
     });
     return mapped.sort((a, b) =>
       b.score - a.score || new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
-  }, [songs, nickname, voteOverrides]);
+  }, [songs, currentUserId, nickname, voteOverrides]);
 
   const filteredSongs = useMemo(
     () => songsWithUserVote.filter((s) => songMatchesFilter(s, filter)),
@@ -534,6 +538,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
                     <SongCard
                       key={song.id}
                       song={song}
+                      votingMode={playlist.voting_mode}
                       votesAnonymous={votesAnonymous}
                       nickname={nickname}
                       shareCode={shareCode}

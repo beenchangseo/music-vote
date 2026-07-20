@@ -9,10 +9,11 @@ import SongVersionModal from "./SongVersionModal";
 import { useDialog } from "./DialogProvider";
 import { removeSong } from "@/actions/song";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
-import type { SongWithScore } from "@/lib/types";
+import type { SongWithScore, VotingMode } from "@/lib/types";
 
 interface SongCardProps {
   song: SongWithScore;
+  votingMode: VotingMode;
   nickname: string;
   shareCode: string;
   playlistId: string;
@@ -40,6 +41,7 @@ interface SongCardProps {
 
 export default function SongCard({
   song,
+  votingMode,
   nickname,
   shareCode,
   playlistId,
@@ -195,9 +197,12 @@ export default function SongCard({
 
           {/* Vote buttons */}
           <VoteButtons
+            key={`${song.id}-${song.userVote}-${song.userVoteCount}`}
             songId={song.id}
             score={song.score}
             userVote={song.userVote}
+            userVoteCount={song.userVoteCount}
+            votingMode={votingMode}
             nickname={nickname}
             shareCode={shareCode}
             onVoteOptimistic={onVoteOptimistic}
@@ -339,9 +344,12 @@ export default function SongCard({
             )}
           </div>
           <VoteButtons
+            key={`${song.id}-${song.userVote}-${song.userVoteCount}`}
             songId={song.id}
             score={song.score}
             userVote={song.userVote}
+            userVoteCount={song.userVoteCount}
+            votingMode={votingMode}
             nickname={nickname}
             shareCode={shareCode}
             onVoteOptimistic={onVoteOptimistic}
@@ -431,12 +439,23 @@ function VoterStrip({
 }) {
   if (hide || votes.length === 0) return null;
 
-  const up = votes
-    .filter((v) => v.vote_type === 1)
-    .map((v) => v.nickname);
-  const down = votes
-    .filter((v) => v.vote_type === -1)
-    .map((v) => v.nickname);
+  const summarize = (voteType: 1 | -1) => {
+    const counts = new Map<string, { nickname: string; count: number }>();
+    for (const vote of votes) {
+      if (vote.vote_type !== voteType) continue;
+      const key = vote.nickname.toLowerCase();
+      const current = counts.get(key);
+      counts.set(key, {
+        nickname: current?.nickname ?? vote.nickname,
+        count: (current?.count ?? 0) + 1,
+      });
+    }
+    return [...counts.values()].map(({ nickname, count }) => (
+      count > 1 ? `${nickname} ×${count}` : nickname
+    ));
+  };
+  const up = summarize(1);
+  const down = summarize(-1);
 
   if (up.length === 0 && down.length === 0) return null;
 

@@ -35,13 +35,14 @@ const song = {
   score: 0,
   votes: [],
   userVote: null,
+  userVoteCount: 0,
   commentCount: 0,
   versionCount: 0,
 } satisfies SongWithScore;
 
 function renderCard(overrides: { isAdmin: boolean; currentUserId: string }) {
   return render(
-    <SongCard song={song} nickname="멤버" shareCode="share" playlistId="playlist" isAdmin={overrides.isAdmin} adminToken={null} currentUserId={overrides.currentUserId} viewMode="card" isPlaying={false} isCurrent={false} onTogglePlay={() => undefined} />,
+    <SongCard song={song} votingMode="free" nickname="멤버" shareCode="share" playlistId="playlist" isAdmin={overrides.isAdmin} adminToken={null} currentUserId={overrides.currentUserId} viewMode="card" isPlaying={false} isCurrent={false} onTogglePlay={() => undefined} />,
   );
 }
 
