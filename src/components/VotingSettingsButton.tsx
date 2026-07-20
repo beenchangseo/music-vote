@@ -6,13 +6,11 @@ import Modal from "./ui/Modal";
 import Button from "./ui/Button";
 import { useDialog } from "./DialogProvider";
 import {
-  applyVoteLimitToAll,
-  configureVoting,
   getVotingSettings,
-  updateMemberVoteLimit,
+  saveVotingSettings,
   type VotingSettings,
 } from "@/actions/member";
-import { resetPlaylistVotes, updateVotingMode } from "@/actions/playlist";
+import { resetPlaylistVotes } from "@/actions/playlist";
 import type { VotingMode } from "@/lib/types";
 
 interface Props {
@@ -42,6 +40,7 @@ export default function VotingSettingsButton({
   const [mode, setMode] = useState<VotingMode>("free");
   const [votesAnonymous, setVotesAnonymous] = useState(true);
   const [defaultLimit, setDefaultLimit] = useState(3);
+  const [memberLimits, setMemberLimits] = useState<Record<string, string>>({});
   const [isPending, startTransition] = useTransition();
   const { showAlert, showConfirm } = useDialog();
 
@@ -53,6 +52,7 @@ export default function VotingSettingsButton({
       setMode(next.mode);
       setVotesAnonymous(next.votesAnonymous);
       setDefaultLimit(next.defaultVoteLimit);
+      setMemberLimits(Object.fromEntries(next.members.map((member) => [member.user_id, String(member.vote_limit)])));
     } catch (error) {
       showAlert(error instanceof Error ? error.message : "투표 설정을 불러오지 못했습니다.");
       setOpen(false);
@@ -65,6 +65,7 @@ export default function VotingSettingsButton({
       setMode(next.mode);
       setVotesAnonymous(next.votesAnonymous);
       setDefaultLimit(next.defaultVoteLimit);
+      setMemberLimits(Object.fromEntries(next.members.map((member) => [member.user_id, String(member.vote_limit)])));
       const me = next.members.find((member) => member.user_id === currentUserId);
       if (me) onAllowanceChange?.(next.mode, me.used_votes, me.vote_limit);
     });
@@ -79,17 +80,7 @@ export default function VotingSettingsButton({
       );
       if (!ok) return;
     }
-
-    startTransition(async () => {
-      try {
-        await updateVotingMode(playlistId, adminToken, next, shareCode);
-        setVotesAnonymous(next);
-        setSettings((current) => current ? { ...current, votesAnonymous: next } : current);
-        onVotesAnonymousChange?.(next);
-      } catch (error) {
-        showAlert(error instanceof Error ? error.message : "익명·기명 설정 변경에 실패했습니다.");
-      }
-    });
+    setVotesAnonymous(next);
   }
 
   async function resetVotes() {
@@ -117,10 +108,42 @@ export default function VotingSettingsButton({
       showAlert("기본 투표권은 1~99개여야 합니다.");
       return;
     }
+
+    const nextMemberLimits = settings?.members.map((member) => ({
+      userId: member.user_id,
+      voteLimit: mode === "allocated"
+        ? Number(memberLimits[member.user_id])
+        : member.vote_limit,
+      usedVotes: member.used_votes,
+      displayName: member.display_name,
+    })) ?? [];
+    const invalid = nextMemberLimits.find(({ voteLimit }) => (
+      !Number.isInteger(voteLimit) || voteLimit < 0 || voteLimit > 99
+    ));
+    if (invalid) {
+      showAlert(`${invalid.displayName}님의 투표권은 0~99개 정수여야 합니다.`);
+      return;
+    }
+    const belowUsage = nextMemberLimits.find(({ voteLimit, usedVotes }) => voteLimit < usedVotes);
+    if (belowUsage) {
+      showAlert(`${belowUsage.displayName}님이 이미 ${belowUsage.usedVotes}표를 사용 중이라 ${belowUsage.voteLimit}표로 줄일 수 없습니다.`);
+      return;
+    }
+
     startTransition(async () => {
       try {
-        await configureVoting(playlistId, mode, defaultLimit, shareCode);
+        await saveVotingSettings(
+          playlistId,
+          adminToken,
+          votesAnonymous,
+          mode,
+          defaultLimit,
+          nextMemberLimits.map(({ userId, voteLimit }) => ({ userId, voteLimit })),
+          shareCode,
+        );
+        onVotesAnonymousChange?.(votesAnonymous);
         await refresh();
+        router.refresh();
         setOpen(false);
       } catch (error) {
         showAlert(error instanceof Error ? error.message : "투표 설정 변경에 실패했습니다.");
@@ -129,31 +152,26 @@ export default function VotingSettingsButton({
   }
 
   function changeMember(userId: string, nextLimit: number) {
-    if (nextLimit < 0 || nextLimit > 99) return;
-    startTransition(async () => {
-      try {
-        await updateMemberVoteLimit(playlistId, userId, nextLimit, shareCode);
-        await refresh();
-      } catch (error) {
-        showAlert(error instanceof Error ? error.message : "투표권 변경에 실패했습니다.");
-      }
-    });
+    if (!Number.isInteger(nextLimit) || nextLimit < 0 || nextLimit > 99) return;
+    setMemberLimits((current) => ({ ...current, [userId]: String(nextLimit) }));
   }
 
   async function applyAll() {
+    if (!Number.isInteger(defaultLimit) || defaultLimit < 1 || defaultLimit > 99) {
+      showAlert("기본 투표권은 1~99개여야 합니다.");
+      return;
+    }
     const ok = await showConfirm(
-      `현재 참여자 모두에게 ${defaultLimit}표를 적용할까요?`,
-      "전체 참여자에게 적용",
+      `참여자별 입력값을 모두 ${defaultLimit}표로 맞출까요?\n설정 저장 전까지는 반영되지 않아요.`,
+      "전체 입력값 변경",
     );
     if (!ok) return;
-    startTransition(async () => {
-      try {
-        await applyVoteLimitToAll(playlistId, defaultLimit, shareCode);
-        await refresh();
-      } catch (error) {
-        showAlert(error instanceof Error ? error.message : "일괄 변경에 실패했습니다.");
-      }
-    });
+    const blocked = settings?.members.find((member) => member.used_votes > defaultLimit);
+    if (blocked) {
+      showAlert(`${blocked.display_name}님이 이미 ${blocked.used_votes}표를 사용 중이라 ${defaultLimit}표를 적용할 수 없습니다.`);
+      return;
+    }
+    setMemberLimits(Object.fromEntries((settings?.members ?? []).map((member) => [member.user_id, String(defaultLimit)])));
   }
 
   return (
@@ -236,61 +254,98 @@ export default function VotingSettingsButton({
                 )}
 
                 {mode === "allocated" && (
-              <>
-                <div className="mt-5 rounded-xl border border-border bg-surface p-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-medium text-text">새 참여자 기본 투표권</p>
-                      <p className="text-caption text-text-muted">
-                        {settings.mode === "allocated" ? "기존 참여자 값은 유지돼요." : "전환하면 현재 참여자에게도 적용돼요."}
-                      </p>
-                    </div>
-                    <input
-                      type="number"
-                      min={1}
-                      max={99}
-                      step={1}
-                      value={defaultLimit}
-                      onChange={(e) => setDefaultLimit(Number(e.target.value))}
-                      className="h-11 w-20 rounded-xl border border-border bg-surface-hover px-2 text-center text-text"
-                    />
-                  </div>
-                  <div className={`mt-3 grid gap-2 ${settings.mode === "allocated" ? "grid-cols-2" : "grid-cols-1"}`}>
-                    <button type="button" onClick={saveConfiguration} className="min-h-11 rounded-xl bg-primary text-sm font-semibold text-white">
-                      설정 저장
-                    </button>
-                    {settings.mode === "allocated" && (
-                      <button type="button" onClick={applyAll} className="min-h-11 rounded-xl border border-border bg-surface-hover text-sm font-semibold text-text-muted">
+                  <>
+                    <div className="mt-5 rounded-xl border border-border bg-surface p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-medium text-text">새 참여자 기본 투표권</p>
+                          <p className="text-caption text-text-muted">
+                            {settings.mode === "allocated" ? "기존 참여자 값은 유지돼요." : "전환하면 현재 참여자에게도 적용돼요."}
+                          </p>
+                        </div>
+                        <input
+                          type="number"
+                          min={1}
+                          max={99}
+                          step={1}
+                          inputMode="numeric"
+                          value={defaultLimit}
+                          onChange={(e) => setDefaultLimit(Number(e.target.value))}
+                          className="h-11 w-20 rounded-xl border border-border bg-surface-hover px-2 text-center text-text"
+                          aria-label="새 참여자 기본 투표권"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={applyAll}
+                        className="mt-3 min-h-11 w-full rounded-xl border border-border bg-surface-hover text-sm font-semibold text-text-muted"
+                      >
                         모두에게 적용
                       </button>
-                    )}
-                  </div>
-                </div>
-
-                {settings.mode === "allocated" && <div className="mt-5 space-y-2">
-                  <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">참여자</p>
-                  {settings.members.map((member) => (
-                    <div key={member.user_id} className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-text">{member.display_name}</p>
-                        <p className="text-caption text-text-muted">{member.vote_limit}표 중 {member.used_votes}표 사용</p>
-                      </div>
-                      <button type="button" onClick={() => changeMember(member.user_id, member.vote_limit - 1)} disabled={member.vote_limit <= 0 || member.vote_limit <= member.used_votes} className="h-11 w-11 rounded-xl border border-border text-text-muted disabled:opacity-30" aria-label={`${member.display_name} 투표권 줄이기`}>−</button>
-                      <span className="w-7 text-center text-sm font-bold tabular-nums text-text">{member.vote_limit}</span>
-                      <button type="button" onClick={() => changeMember(member.user_id, member.vote_limit + 1)} disabled={member.vote_limit >= 99} className="h-11 w-11 rounded-xl border border-border text-text-muted disabled:opacity-30" aria-label={`${member.display_name} 투표권 늘리기`}>+</button>
                     </div>
-                  ))}
-                </div>}
-              </>
-            )}
 
-                {mode === "free" && (
-                  <button type="button" onClick={saveConfiguration} className="mt-5 min-h-11 w-full rounded-xl bg-primary text-sm font-semibold text-white">
-                    설정 저장
-                  </button>
+                    <div className="mt-5 space-y-2">
+                      <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">참여자별 투표권</p>
+                      {settings.members.map((member) => {
+                        const stagedLimit = Number(memberLimits[member.user_id]);
+                        return (
+                          <div key={member.user_id} className="rounded-xl border border-border bg-surface p-3">
+                            <div className="flex items-center gap-2">
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-medium text-text">{member.display_name}</p>
+                                <p className="text-caption text-text-muted">{member.used_votes}표 사용</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => changeMember(member.user_id, stagedLimit - 1)}
+                                disabled={!Number.isInteger(stagedLimit) || stagedLimit <= member.used_votes}
+                                className="h-11 w-11 shrink-0 rounded-xl border border-border text-text-muted disabled:opacity-30"
+                                aria-label={`${member.display_name} 투표권 줄이기`}
+                              >
+                                −
+                              </button>
+                              <input
+                                type="number"
+                                min={member.used_votes}
+                                max={99}
+                                step={1}
+                                inputMode="numeric"
+                                value={memberLimits[member.user_id] ?? ""}
+                                onChange={(event) => setMemberLimits((current) => ({
+                                  ...current,
+                                  [member.user_id]: event.target.value,
+                                }))}
+                                className="h-11 w-16 shrink-0 rounded-xl border border-border bg-surface-hover px-1 text-center text-sm font-bold tabular-nums text-text"
+                                aria-label={`${member.display_name} 투표권 직접 입력`}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => changeMember(member.user_id, stagedLimit + 1)}
+                                disabled={!Number.isInteger(stagedLimit) || stagedLimit >= 99}
+                                className="h-11 w-11 shrink-0 rounded-xl border border-border text-text-muted disabled:opacity-30"
+                                aria-label={`${member.display_name} 투표권 늘리기`}
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
                 )}
               </section>
             )}
+
+            <Button
+              type="button"
+              fullWidth
+              onClick={saveConfiguration}
+              loading={isPending}
+              className="mt-6"
+            >
+              설정 저장
+            </Button>
 
             <section className="mt-6 border-t border-border pt-5">
               <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 초기화</p>

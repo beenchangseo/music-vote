@@ -67,6 +67,11 @@ export interface VotingSettings {
   members: PlaylistMember[];
 }
 
+export interface MemberVoteLimitInput {
+  userId: string;
+  voteLimit: number;
+}
+
 export async function getVotingSettings(
   playlistId: string,
   adminToken: string | null,
@@ -108,6 +113,58 @@ export async function getVotingSettings(
       used_votes: usedByUser.get(member.user_id) || 0,
     })) as PlaylistMember[],
   };
+}
+
+export async function saveVotingSettings(
+  playlistId: string,
+  adminToken: string | null,
+  votesAnonymous: boolean,
+  mode: VotingMode,
+  defaultVoteLimit: number,
+  memberLimits: MemberVoteLimitInput[],
+  shareCode: string,
+) {
+  await assertPlaylistAdmin(playlistId, adminToken);
+
+  if (typeof votesAnonymous !== "boolean") {
+    throw new Error("투표 공개 범위가 올바르지 않습니다.");
+  }
+  if (mode !== "free" && mode !== "allocated") {
+    throw new Error("잘못된 투표 방식입니다.");
+  }
+  if (!Number.isInteger(defaultVoteLimit) || defaultVoteLimit < 1 || defaultVoteLimit > 99) {
+    throw new Error("기본 투표권은 1~99개여야 합니다.");
+  }
+  if (memberLimits.some(({ voteLimit }) => !Number.isInteger(voteLimit) || voteLimit < 0 || voteLimit > 99)) {
+    throw new Error("참여자별 투표권은 0~99개 정수여야 합니다.");
+  }
+
+  const admin = createAdminClient();
+  const { data: playlist, error: playlistError } = await admin
+    .from("playlists")
+    .select("creator_user_id")
+    .eq("id", playlistId)
+    .single();
+
+  if (playlistError || !playlist) throw new Error("합주방을 찾을 수 없습니다.");
+  if (!playlist.creator_user_id && mode === "allocated") {
+    throw new Error("기존 합주방에서는 자유 투표만 사용할 수 있습니다.");
+  }
+
+  const { error } = await admin.rpc("save_playlist_voting_settings", {
+    p_playlist_id: playlistId,
+    p_votes_anonymous: votesAnonymous,
+    p_mode: mode,
+    p_default_limit: defaultVoteLimit,
+    p_member_limits: memberLimits.map(({ userId, voteLimit }) => ({
+      user_id: userId,
+      vote_limit: voteLimit,
+    })),
+  });
+
+  if (error) actionError(error, "투표 설정 변경에 실패했습니다.");
+  revalidatePath(`/playlist/${shareCode}`);
+  return { success: true };
 }
 
 export async function configureVoting(

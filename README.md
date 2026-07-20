@@ -106,6 +106,7 @@ supabase-migration-v7.sql     # Kakao OAuth 계정 연동
 supabase-migration-v8.sql     # 로그인 모드 RLS
 supabase-migration-v9.sql     # 기존 공연 포스터 URL(운영 이력, v10에서 제거)
 supabase-migration-v10.sql    # 투표권·다른 버전·셋리스트 편집, 포스터 완전 제거
+supabase-migration-v11.sql    # 투표 설정 일괄 저장
 ```
 
 기존 운영 DB는 이미 실행한 마이그레이션을 건너뛸 수 있도록 모두 `IF NOT EXISTS`/`ADD COLUMN IF NOT EXISTS` 패턴 사용.
