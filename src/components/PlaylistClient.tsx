@@ -15,6 +15,7 @@ import NavigationBar from "./NavigationBar";
 import SetlistView from "./SetlistView";
 import RehearsalView from "./RehearsalView";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
+import { usePlaylistVotes } from "@/hooks/usePlaylistVotes";
 import { getSetlistItems, confirmSetlist, addSongToSetlist } from "@/actions/setlist";
 import { getComments } from "@/actions/comment";
 import { track } from "@/lib/analytics";
@@ -26,11 +27,6 @@ import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import type { ViewMode } from "./NavigationBar";
 import type { Playlist, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/lib/types";
-
-interface VoteOverride {
-  delta: number;
-  baseScore: number;
-}
 
 interface PlaylistClientProps {
   playlist: Playlist;
@@ -54,7 +50,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
   const [viewMode, setViewMode] = useState<"card" | "compact">("compact");
   const [navMode, setNavMode] = useState<ViewMode>("playlist");
   const [adminToken, setAdminToken] = useState<string | null>(null);
-  const [voteOverrides, setVoteOverrides] = useState<Record<string, VoteOverride>>({});
   const [resultCopied, setResultCopied] = useState(false);
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
   const [allowance, setAllowance] = useState<VoteAllowance | null>(null);
@@ -130,60 +125,49 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
     }
   }, [playlist.id, setlistItems, comments, loadingSetlist, loadingComments]);
 
-  const serverScoreMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const song of songs) {
-      map[song.id] = song.score;
-    }
-    return map;
-  }, [songs]);
-
-  const handleVoteOptimistic = useCallback((songId: string, scoreDelta: number) => {
-    setVoteOverrides((prev) => {
-      const existing = prev[songId];
-      const currentServerScore = serverScoreMap[songId] ?? 0;
-      if (existing && existing.baseScore === currentServerScore) {
-        return { ...prev, [songId]: { delta: existing.delta + scoreDelta, baseScore: currentServerScore } };
-      }
-      return { ...prev, [songId]: { delta: scoreDelta, baseScore: currentServerScore } };
-    });
-  }, [serverScoreMap]);
-
-  const songsWithUserVote = useMemo(() => {
-    const mapped = songs.map((song) => {
-      const override = voteOverrides[song.id];
-      const effectiveDelta = override && override.baseScore === song.score ? override.delta : 0;
-      const myVotes = currentUserId
-        ? song.votes.filter((vote) => vote.user_id === currentUserId)
-        : nickname
-          ? song.votes.filter((vote) => vote.nickname.toLowerCase() === nickname.toLowerCase())
-          : [];
+  // 로그인 합주방은 서버가 계정 기준으로 내 표를 계산한다.
+  // 기존 익명 합주방만 화면에서 고른 닉네임으로 맞춘다.
+  const songsForVoting = useMemo(() => {
+    if (requiresLogin || !nickname) return songs;
+    const target = nickname.toLowerCase();
+    return songs.map((song) => {
+      const myVotes = song.votes.filter((vote) => vote.nickname.toLowerCase() === target);
       return {
         ...song,
-        score: song.score + effectiveDelta,
         userVote: myVotes[0]?.vote_type ?? null,
         userVoteCount: myVotes.length,
       };
     });
-    return mapped.sort((a, b) =>
-      b.score - a.score || new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    );
-  }, [songs, currentUserId, nickname, voteOverrides]);
+  }, [songs, requiresLogin, nickname]);
+
+  const handleAllowanceChange = useCallback((usedVotes: number, voteLimit: number) => {
+    setAllowance((current) => (current ? { ...current, usedVotes, voteLimit } : current));
+  }, []);
+
+  const { songsWithVotes, pressVote, isVotePending, resetVotes } = usePlaylistVotes({
+    songs: songsForVoting,
+    votingMode: playlist.voting_mode,
+    shareCode,
+    nickname,
+    allowance,
+    onAllowanceChange: handleAllowanceChange,
+    onError: showAlert,
+  });
 
   const filteredSongs = useMemo(
-    () => songsWithUserVote.filter((s) => songMatchesFilter(s, filter)),
-    [songsWithUserVote, filter],
+    () => songsWithVotes.filter((s) => songMatchesFilter(s, filter)),
+    [songsWithVotes, filter],
   );
 
   // Setlist highlight: top N songs after deadline
   const setlistCount = playlist.setlist_count;
   const highlightedSongIds = useMemo(() => {
     if (!isExpired || !setlistCount || setlistCount <= 0) return new Set<string>();
-    return new Set(songsWithUserVote.slice(0, setlistCount).map((s) => s.id));
-  }, [isExpired, setlistCount, songsWithUserVote]);
+    return new Set(songsWithVotes.slice(0, setlistCount).map((s) => s.id));
+  }, [isExpired, setlistCount, songsWithVotes]);
 
   // Player queue
-  const { state: playerState, actions: playerActions } = usePlayerQueue(songsWithUserVote);
+  const { state: playerState, actions: playerActions } = usePlayerQueue(songsWithVotes);
 
   // No need to call loadVideoById on song switch — each SongCard mounts
   // a fresh YouTubePlayer with the correct videoId prop when isCurrent becomes true.
@@ -208,7 +192,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
 
   // Setlist add confirm dialog
   const [setlistConfirmSongId, setSetlistConfirmSongId] = useState<string | null>(null);
-  const setlistConfirmSong = setlistConfirmSongId ? songsWithUserVote.find((s) => s.id === setlistConfirmSongId) : null;
+  const setlistConfirmSong = setlistConfirmSongId ? songsWithVotes.find((s) => s.id === setlistConfirmSongId) : null;
 
   const handleAddToSetlist = useCallback((songId: string) => {
     setSetlistConfirmSongId(songId);
@@ -226,7 +210,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
   }
 
   async function handleShareResults() {
-    const lines = songsWithUserVote.map((s, i) => `${i + 1}. ${s.title} (${s.score >= 0 ? "+" : ""}${s.score})`);
+    const lines = songsWithVotes.map((s, i) => `${i + 1}. ${s.title} (${s.score >= 0 ? "+" : ""}${s.score})`);
     const text = `${playlist.title} 투표 결과:\n${lines.join("\n")}\n\n${window.location.href}`;
     try {
       await navigator.clipboard.writeText(text);
@@ -316,7 +300,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                 currentUserId={currentUserId}
                 onAllowanceChange={(mode, usedVotes, voteLimit) => setAllowance({ mode, usedVotes, voteLimit })}
                 onVotesAnonymousChange={setVotesAnonymous}
-                onVotesReset={() => setVoteOverrides({})}
+                onVotesReset={resetVotes}
               />
             </div>
           )}
@@ -336,22 +320,22 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
               )}
 
               {/* Result share banner — voting closed + has top song */}
-              {isExpired && songsWithUserVote.length > 0 && (
+              {isExpired && songsWithVotes.length > 0 && (
                 <div className="mt-5 p-5 rounded-2xl bg-success/10 border border-success/30 text-center animate-fade-in">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/20 text-success text-caption font-bold mb-3">
                     🎉 곡 결정
                   </div>
                   <p className="text-h3 font-bold text-text leading-snug truncate px-2">
-                    {songsWithUserVote[0].title}
+                    {songsWithVotes[0].title}
                   </p>
-                  {songsWithUserVote[0].artist && (
+                  {songsWithVotes[0].artist && (
                     <p className="text-sm text-text-muted truncate mt-1 mb-4 px-2">
-                      {songsWithUserVote[0].artist}
+                      {songsWithVotes[0].artist}
                     </p>
                   )}
-                  {songsWithUserVote[0].score > 0 && (
+                  {songsWithVotes[0].score > 0 && (
                     <p className="text-caption text-text-muted mb-4">
-                      +{songsWithUserVote[0].score}점 1위 ·{" "}
+                      +{songsWithVotes[0].score}점 1위 ·{" "}
                       {participantCount > 0
                         ? `${participantCount}명 참여`
                         : `${songs.length}곡 후보`}
@@ -363,9 +347,9 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                     title={playlist.title}
                     songs={songs.length}
                     participants={participantCount}
-                    topSong={songsWithUserVote[0].title}
-                    topArtist={songsWithUserVote[0].artist || undefined}
-                    topScore={Math.max(0, songsWithUserVote[0].score)}
+                    topSong={songsWithVotes[0].title}
+                    topArtist={songsWithVotes[0].artist || undefined}
+                    topScore={Math.max(0, songsWithVotes[0].score)}
                     visualStyle="primary"
                     size="md"
                   >
@@ -383,7 +367,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                   {isAdmin ? (
                     <button
                       onClick={async () => {
-                        const topSongIds = songsWithUserVote.slice(0, setlistCount).map((s) => s.id);
+                        const topSongIds = songsWithVotes.slice(0, setlistCount).map((s) => s.id);
                         if (!adminToken) return;
                         const ok = await showConfirm(`상위 ${setlistCount}곡으로 셋리스트를 확정하시겠습니까?`);
                         if (!ok) return;
@@ -414,7 +398,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                     🎵 셋리스트 확정
                   </div>
                   <p className="text-sm text-text mb-4">
-                    총 {setlistCount || songsWithUserVote.length}곡 · 다음 공연 준비 완료
+                    총 {setlistCount || songsWithVotes.length}곡 · 다음 공연 준비 완료
                   </p>
                   <KakaoShareButton
                     shareCode={shareCode}
@@ -422,7 +406,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                     title={playlist.title}
                     songs={songs.length}
                     participants={participantCount}
-                    setlistCount={setlistCount || songsWithUserVote.length}
+                    setlistCount={setlistCount || songsWithVotes.length}
                     visualStyle="primary"
                     size="md"
                   >
@@ -432,7 +416,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
               )}
 
               {/* View mode toggle + results share */}
-              {songsWithUserVote.length > 0 && (
+              {songsWithVotes.length > 0 && (
                 <div className="mt-5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-text-subtle uppercase tracking-wider font-semibold">
@@ -477,7 +461,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                 ref={listParent}
                 className={`mt-3 ${viewMode === "compact" ? "space-y-2" : "space-y-4"}`}
               >
-                {songsWithUserVote.length === 0 ? (
+                {songsWithVotes.length === 0 ? (
                   <div className="mt-2 rounded-2xl border-2 border-dashed border-border bg-surface/40 px-6 py-10 text-center">
                     {/* 위 입력창을 가리키는 화살표 + 음표 */}
                     <div className="flex items-center justify-center gap-2 mb-5 text-primary animate-bounce-slow">
@@ -530,7 +514,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                       key={song.id}
                       song={song}
                       votingMode={playlist.voting_mode}
-                      allowance={allowance}
                       votesAnonymous={votesAnonymous}
                       nickname={nickname}
                       shareCode={shareCode}
@@ -538,7 +521,8 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                       isAdmin={isAdmin}
                       adminToken={adminToken}
                       viewMode={viewMode}
-                      onVoteOptimistic={handleVoteOptimistic}
+                      onVotePress={pressVote}
+                      votePending={isVotePending(song.id)}
                       isPlaying={playerState.currentSongId === song.id && playerState.isPlaying}
                       isCurrent={playerState.currentSongId === song.id}
                       onTogglePlay={() => handleTogglePlay(song.id)}
@@ -551,7 +535,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                       onAddToSetlist={canEditSetlist ? handleAddToSetlist : undefined}
                       loginGate={loginGate}
                       currentUserId={currentUserId}
-                      onVoteAllowanceChange={(usedVotes, voteLimit) => setAllowance((current) => current ? { ...current, usedVotes, voteLimit } : current)}
                     />
                   ))
                 )}
@@ -564,7 +547,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
           {navMode === "setlist" && (
             <SetlistView
               setlistItems={setlistItems || []}
-              songs={songsWithUserVote}
+              songs={songsWithVotes}
               playlistId={playlist.id}
               shareCode={shareCode}
               isAdmin={isAdmin}
@@ -582,7 +565,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
           {navMode === "rehearsal" && (
             <RehearsalView
               setlistItems={setlistItems || []}
-              songs={songsWithUserVote}
+              songs={songsWithVotes}
               comments={comments || []}
               playlistId={playlist.id}
               shareCode={shareCode}
@@ -593,7 +576,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
           )}
 
           {/* CTA: Create your own — 페이지 가장 아래 (모든 모드 공통, 곡이 있을 때만) */}
-          {songsWithUserVote.length > 0 && (
+          {songsWithVotes.length > 0 && (
             <div className="mt-10 mb-4 text-center">
               <p className="text-caption text-text-subtle mb-2">새로운 플레이리스트가 필요하다면</p>
               <Link

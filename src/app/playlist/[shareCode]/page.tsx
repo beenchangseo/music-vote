@@ -1,9 +1,18 @@
 import { notFound } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
+import { shouldExposeVoters } from "@/lib/vote-domain";
 import PlaylistClient from "@/components/PlaylistClient";
 import type { Metadata } from "next";
-import type { Playlist, Song, SongVoteRow, SongWithScore } from "@/lib/types";
+import type { Playlist, Song, SongWithScore } from "@/lib/types";
+
+/** votes 조회 결과. user_id 는 내 표를 고르는 데만 쓰고 화면으로 내려보내지 않는다. */
+type VoteRow = {
+  song_id: string;
+  user_id: string | null;
+  nickname: string;
+  vote_type: number;
+};
 
 interface PageProps {
   params: Promise<{ shareCode: string }>;
@@ -89,7 +98,7 @@ export default async function PlaylistPage({ params }: PageProps) {
         supabase.from("song_versions").select("song_id").in("song_id", songIds),
       ])
     : [
-        { data: [] as SongVoteRow[] },
+        { data: [] as VoteRow[] },
         { data: [] as { song_id: string }[] },
         { data: [] as { song_id: string }[] },
       ];
@@ -107,16 +116,27 @@ export default async function PlaylistPage({ params }: PageProps) {
 
   const currentUser = await getCurrentUser();
 
+  // 익명 모드에서는 누가 어디에 찍었는지를 화면으로 내려보내지 않는다.
+  // 화면에서 가리기만 하면 페이로드에는 그대로 남는다.
+  // 기존 익명 합주방은 계정이 없어 닉네임으로 내 표를 맞춰야 하므로 그대로 둔다.
+  const exposeVoters = shouldExposeVoters(playlist as Playlist);
+
   const songsWithScores: SongWithScore[] = (songs || []).map((song: Song) => {
-    const songVotes = (votes || []).filter((v: SongVoteRow) => v.song_id === song.id);
+    const songVotes = (votes || []).filter((v: VoteRow) => v.song_id === song.id);
     const userVotes = currentUser
       ? songVotes.filter((vote) => vote.user_id === currentUser.id)
       : [];
-    const score = songVotes.reduce((sum: number, v: SongVoteRow) => sum + v.vote_type, 0);
+    const score = songVotes.reduce((sum: number, v: VoteRow) => sum + v.vote_type, 0);
     return {
       ...song,
       score,
-      votes: songVotes,
+      votes: exposeVoters
+        ? songVotes.map((v) => ({
+            song_id: v.song_id,
+            nickname: v.nickname,
+            vote_type: v.vote_type,
+          }))
+        : [],
       userVote: userVotes[0]?.vote_type ?? null,
       userVoteCount: userVotes.length,
       commentCount: commentCountMap[song.id] ?? 0,

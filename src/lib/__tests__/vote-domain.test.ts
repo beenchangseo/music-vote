@@ -4,6 +4,7 @@ import {
   canReduceVoteLimit,
   isValidDefaultVoteLimit,
   remainingVotes,
+  shouldExposeVoters,
 } from "../vote-domain";
 
 describe("vote allocation domain", () => {
@@ -66,5 +67,25 @@ describe("vote allocation domain", () => {
       usageDelta: -1,
       action: "removed",
     });
+  });
+});
+
+describe("shouldExposeVoters", () => {
+  it("hides voter nicknames in an anonymous login room", () => {
+    expect(
+      shouldExposeVoters({ votes_anonymous: true, creator_user_id: "host" }),
+    ).toBe(false);
+  });
+
+  it("shows voter nicknames once the host turns on named voting", () => {
+    expect(
+      shouldExposeVoters({ votes_anonymous: false, creator_user_id: "host" }),
+    ).toBe(true);
+  });
+
+  it("keeps sending nicknames for legacy rooms that identify voters by nickname", () => {
+    expect(
+      shouldExposeVoters({ votes_anonymous: true, creator_user_id: null }),
+    ).toBe(true);
   });
 });

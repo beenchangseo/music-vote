@@ -48,10 +48,12 @@ export interface Song {
   created_at: string;
 }
 
-/** 합주방 화면이 쓰는 투표 열만 담는다. 행 전체를 클라이언트로 내리지 않는다. */
+/**
+ * 화면으로 내려보내는 투표 정보. 기명 모드에서만 채워진다.
+ * 계정 식별자는 포함하지 않는다.
+ */
 export interface SongVoteRow {
   song_id: string;
-  user_id: string | null;
   nickname: string;
   vote_type: number; // 1 or -1
 }

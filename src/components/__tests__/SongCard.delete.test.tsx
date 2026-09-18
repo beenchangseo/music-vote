@@ -42,7 +42,7 @@ const song = {
 
 function renderCard(overrides: { isAdmin: boolean; currentUserId: string }) {
   return render(
-    <SongCard song={song} votingMode="free" nickname="멤버" shareCode="share" playlistId="playlist" isAdmin={overrides.isAdmin} adminToken={null} currentUserId={overrides.currentUserId} viewMode="card" isPlaying={false} isCurrent={false} onTogglePlay={() => undefined} />,
+    <SongCard song={song} votingMode="free" nickname="멤버" shareCode="share" playlistId="playlist" isAdmin={overrides.isAdmin} adminToken={null} currentUserId={overrides.currentUserId} viewMode="card" onVotePress={() => undefined} isPlaying={false} isCurrent={false} onTogglePlay={() => undefined} />,
   );
 }
 
