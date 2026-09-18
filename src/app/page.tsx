@@ -79,7 +79,7 @@ export default async function Home() {
           <HeroCTA loggedIn={loggedIn} />
           {!loggedIn && (
             <p className="mt-3 text-center text-caption text-text-subtle">
-              카카오로 3초면 시작 · 멤버는 가입 없이 참여
+              카카오로 3초면 시작 · 멤버도 로그인 한 번이면 참여
             </p>
           )}
 

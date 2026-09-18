@@ -1,6 +1,6 @@
 # Plypick
 
-밴드 곡을 투표로 결정하세요. YouTube 링크를 붙이면 멤버들이 가입 없이 5분 안에 다음 합주 곡을 정합니다.
+밴드 곡을 투표로 결정하세요. YouTube 링크를 붙이면 멤버들이 카카오 로그인 한 번으로 5분 안에 다음 합주 곡을 정합니다.
 
 **Live:** [plypick.kr](https://plypick.kr)
 
@@ -11,13 +11,15 @@
 ## Features
 
 ### 코어
-- **5분 컷 투표** — 가입 없이 닉네임만으로 업/다운 투표, 토글·방향 전환 지원
+- **5분 컷 투표** — 카카오 로그인 한 번으로 업/다운 투표, 토글·방향 전환 지원 (닉네임은 카카오 프로필 자동)
 - **YouTube 자동 메타** — URL 붙이면 제목·아티스트·썸네일 자동
 - **5중 제약 곡 메타** — 키(C~B + Major/minor), BPM, 길이, 난이도(1~5★), 장르 12종
 - **5축 필터** — BPM 구간 / 메타 유무 / 키 / 난이도 ≤ / 장르 다중 선택
 - **실시간 정렬** — 점수순 자동 정렬 + auto-animate
 - **댓글** — 곡당 1인 1댓글 + 카드 표면 카운트 배지
 - **익명/기명 모드 토글** — 방장 admin 권한, 기명 시 voter 닉네임 노출
+- **투표권 할당** — 방장이 참여자별 투표권(1~99)을 정하고, 같은 후보곡에 반복 투표 가능
+- **다른 버전** — 후보곡마다 참고용 YouTube 링크 + 100자 설명 등록
 
 ### 셋리스트
 - **마감 후 자동 확정** — Vercel Cron 매시간 상위 N곡 자동 셋리스트 등록
@@ -55,7 +57,7 @@
 | Styling | Tailwind CSS v4 (@theme inline) |
 | Font | Pretendard Variable (CDN dynamic subset) |
 | Database | Supabase Postgres + RLS |
-| Auth | Anonymous (admin_token 분리 테이블) |
+| Auth | Kakao OAuth (Supabase Auth) — 기존 익명 합주방은 legacy 경로 유지 |
 | Image | next/image + next/og (Edge) |
 | Analytics | @vercel/analytics + Speed Insights |
 | Cron | Vercel Cron (icn1 region) |
@@ -68,7 +70,7 @@
 ### Prerequisites
 - Node.js 20+
 - Supabase 프로젝트 ([supabase.com](https://supabase.com))
-- Kakao Developers 앱 (선택, 카톡 공유)
+- Kakao Developers 앱 (필수 — 로그인 + 카톡 공유)
 
 ### Installation
 ```bash
