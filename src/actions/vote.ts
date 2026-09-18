@@ -5,12 +5,22 @@ import { getCurrentUser } from "@/lib/auth";
 import { getPlaylistModeBySong } from "@/lib/playlist-mode";
 import { revalidatePath } from "next/cache";
 
+export type CastVoteResult =
+  | {
+      success: true;
+      allowance: { usedVotes: number; voteLimit: number } | null;
+    }
+  | {
+      success: false;
+      reason: "vote_limit_reached";
+    };
+
 export async function castVote(
   songId: string,
   nickname: string,
   voteType: number,
   shareCode: string
-) {
+): Promise<CastVoteResult> {
   if (voteType !== 1 && voteType !== -1) {
     throw new Error("잘못된 투표 값입니다.");
   }
@@ -27,6 +37,9 @@ export async function castVote(
       p_vote_type: voteType,
       p_nickname: user.nickname,
     });
+    if (error?.code === "P0001" && error.message.includes("투표권을 모두 사용했습니다")) {
+      return { success: false, reason: "vote_limit_reached" };
+    }
     if (error) throw new Error(error.message || "투표에 실패했습니다.");
 
     revalidatePath(`/playlist/${shareCode}`);

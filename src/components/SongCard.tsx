@@ -9,11 +9,12 @@ import SongVersionModal from "./SongVersionModal";
 import { useDialog } from "./DialogProvider";
 import { removeSong } from "@/actions/song";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
-import type { SongWithScore, VotingMode } from "@/lib/types";
+import type { SongWithScore, VoteAllowance, VotingMode } from "@/lib/types";
 
 interface SongCardProps {
   song: SongWithScore;
   votingMode: VotingMode;
+  allowance?: VoteAllowance | null;
   nickname: string;
   shareCode: string;
   playlistId: string;
@@ -42,6 +43,7 @@ interface SongCardProps {
 export default function SongCard({
   song,
   votingMode,
+  allowance = null,
   nickname,
   shareCode,
   playlistId,
@@ -203,6 +205,7 @@ export default function SongCard({
             userVote={song.userVote}
             userVoteCount={song.userVoteCount}
             votingMode={votingMode}
+            allowance={allowance}
             nickname={nickname}
             shareCode={shareCode}
             onVoteOptimistic={onVoteOptimistic}
@@ -350,6 +353,7 @@ export default function SongCard({
             userVote={song.userVote}
             userVoteCount={song.userVoteCount}
             votingMode={votingMode}
+            allowance={allowance}
             nickname={nickname}
             shareCode={shareCode}
             onVoteOptimistic={onVoteOptimistic}

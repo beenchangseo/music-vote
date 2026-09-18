@@ -539,6 +539,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
                       key={song.id}
                       song={song}
                       votingMode={playlist.voting_mode}
+                      allowance={allowance}
                       votesAnonymous={votesAnonymous}
                       nickname={nickname}
                       shareCode={shareCode}

@@ -6,7 +6,10 @@ import { track } from "@/lib/analytics";
 import { triggerKakaoLogin } from "@/lib/kakao-login";
 import { useDialog } from "./DialogProvider";
 import { applyVotePress, type VoteDirection } from "@/lib/vote-domain";
-import type { VotingMode } from "@/lib/types";
+import type { VoteAllowance, VotingMode } from "@/lib/types";
+
+const VOTE_LIMIT_REACHED_MESSAGE =
+  "투표권을 모두 사용했어요. 기존 표를 취소하면 다시 투표할 수 있어요.";
 
 interface VoteButtonsProps {
   songId: string;
@@ -14,6 +17,7 @@ interface VoteButtonsProps {
   userVote: number | null;
   userVoteCount: number;
   votingMode: VotingMode;
+  allowance?: VoteAllowance | null;
   nickname: string;
   shareCode: string;
   onVoteOptimistic?: (songId: string, scoreDelta: number) => void;
@@ -29,6 +33,7 @@ export default function VoteButtons({
   userVote,
   userVoteCount,
   votingMode,
+  allowance = null,
   nickname,
   shareCode,
   onVoteOptimistic,
@@ -60,6 +65,13 @@ export default function VoteButtons({
       votingMode,
     );
 
+    const allowanceExhausted = allowance?.mode === "allocated"
+      && allowance.usedVotes >= allowance.voteLimit;
+    if (allowanceExhausted && next.usageDelta > 0) {
+      showAlert(VOTE_LIMIT_REACHED_MESSAGE);
+      return;
+    }
+
     setLocalUserVote(next.direction);
     setLocalUserVoteCount(next.count);
     if (next.action === "changed" && previousVote !== null) {
@@ -77,16 +89,27 @@ export default function VoteButtons({
     onVoteOptimistic?.(songId, next.scoreDelta);
 
     startTransition(async () => {
-      try {
-        const result = await castVote(songId, nickname, voteType, shareCode);
-        if (result.allowance) {
-          onAllowanceChange?.(result.allowance.usedVotes, result.allowance.voteLimit);
-        }
-      } catch (error) {
+      const rollback = () => {
         setLocalUserVote(previousVote);
         setLocalUserVoteCount(previousCount);
         onVoteOptimistic?.(songId, -next.scoreDelta);
-        showAlert(error instanceof Error ? error.message : "투표에 실패했습니다.");
+      };
+
+      try {
+        const result = await castVote(songId, nickname, voteType, shareCode);
+        if (!result.success) {
+          rollback();
+          if (result.reason === "vote_limit_reached") {
+            showAlert(VOTE_LIMIT_REACHED_MESSAGE);
+          }
+          return;
+        }
+        if (result.allowance) {
+          onAllowanceChange?.(result.allowance.usedVotes, result.allowance.voteLimit);
+        }
+      } catch {
+        rollback();
+        showAlert("투표에 실패했어요. 잠시 후 다시 시도해 주세요.");
       }
     });
   }
