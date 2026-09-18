@@ -3,7 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import PlaylistClient from "@/components/PlaylistClient";
 import type { Metadata } from "next";
-import type { Playlist, Song, Vote, SongWithScore } from "@/lib/types";
+import type { Playlist, Song, SongVoteRow, SongWithScore } from "@/lib/types";
 
 interface PageProps {
   params: Promise<{ shareCode: string }>;
@@ -15,47 +15,26 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const { data: playlist } = await supabase
     .from("playlists")
-    .select("title, share_code")
+    .select("id, title")
     .eq("share_code", shareCode)
     .single();
 
   if (!playlist) return { title: "Plypick" };
 
-  const { data: playlistData } = await supabase
-    .from("playlists")
-    .select("id")
-    .eq("share_code", shareCode)
+  // 후보곡·참여자 수는 playlist_stats 뷰에서 집계한다 (v14).
+  const { data: stats } = await supabase
+    .from("playlist_stats")
+    .select("song_count, participant_count")
+    .eq("playlist_id", playlist.id)
     .single();
 
-  const playlistId = playlistData?.id || "";
-
-  const { count: songCount } = await supabase
-    .from("songs")
-    .select("id", { count: "exact", head: true })
-    .eq("playlist_id", playlistId);
-
-  // Count unique participants
-  const { data: songIds } = await supabase
-    .from("songs")
-    .select("id")
-    .eq("playlist_id", playlistId);
-
-  let participantCount = 0;
-  if (songIds && songIds.length > 0) {
-    const { data: votes } = await supabase
-      .from("votes")
-      .select("nickname")
-      .in("song_id", songIds.map((s: { id: string }) => s.id));
-    if (votes) {
-      const uniqueNicknames = new Set(votes.map((v: { nickname: string }) => v.nickname.toLowerCase()));
-      participantCount = uniqueNicknames.size;
-    }
-  }
+  const songCount: number = stats?.song_count ?? 0;
+  const participantCount: number = stats?.participant_count ?? 0;
 
   const metaTitle = `${playlist.title} - Plypick`;
   const description = participantCount > 0
-    ? `${songCount || 0}곡 등록 · ${participantCount}명 참여 중`
-    : `${songCount || 0}곡 등록 | 밴드 곡 투표에 참여하세요!`;
+    ? `${songCount}곡 등록 · ${participantCount}명 참여 중`
+    : `${songCount}곡 등록 | 밴드 곡 투표에 참여하세요!`;
 
   return {
     title: metaTitle,
@@ -64,7 +43,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: metaTitle,
       description,
       type: "website",
-      images: [`/api/og?title=${encodeURIComponent(playlist.title)}&songs=${songCount || 0}&participants=${participantCount}`],
+      images: [`/api/og?title=${encodeURIComponent(playlist.title)}&songs=${songCount}&participants=${participantCount}`],
     },
     twitter: {
       card: "summary_large_image",
@@ -86,21 +65,31 @@ export default async function PlaylistPage({ params }: PageProps) {
 
   if (!playlist) notFound();
 
-  const { data: songs } = await supabase
-    .from("songs")
-    .select("*")
-    .eq("playlist_id", playlist.id)
-    .order("created_at", { ascending: true });
+  const [{ data: songs }, { data: stats }] = await Promise.all([
+    supabase
+      .from("songs")
+      .select("*")
+      .eq("playlist_id", playlist.id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("playlist_stats")
+      .select("participant_count")
+      .eq("playlist_id", playlist.id)
+      .single(),
+  ]);
 
   const songIds = (songs || []).map((s: Song) => s.id);
   const [votesResult, commentsResult, versionsResult] = songIds.length > 0
     ? await Promise.all([
-        supabase.from("votes").select("*").in("song_id", songIds),
+        supabase
+          .from("votes")
+          .select("song_id, user_id, nickname, vote_type")
+          .in("song_id", songIds),
         supabase.from("comments").select("song_id").in("song_id", songIds),
         supabase.from("song_versions").select("song_id").in("song_id", songIds),
       ])
     : [
-        { data: [] as Vote[] },
+        { data: [] as SongVoteRow[] },
         { data: [] as { song_id: string }[] },
         { data: [] as { song_id: string }[] },
       ];
@@ -119,11 +108,11 @@ export default async function PlaylistPage({ params }: PageProps) {
   const currentUser = await getCurrentUser();
 
   const songsWithScores: SongWithScore[] = (songs || []).map((song: Song) => {
-    const songVotes = (votes || []).filter((v: Vote) => v.song_id === song.id);
+    const songVotes = (votes || []).filter((v: SongVoteRow) => v.song_id === song.id);
     const userVotes = currentUser
       ? songVotes.filter((vote) => vote.user_id === currentUser.id)
       : [];
-    const score = songVotes.reduce((sum: number, v: Vote) => sum + v.vote_type, 0);
+    const score = songVotes.reduce((sum: number, v: SongVoteRow) => sum + v.vote_type, 0);
     return {
       ...song,
       score,
@@ -142,6 +131,7 @@ export default async function PlaylistPage({ params }: PageProps) {
       playlist={playlist as Playlist}
       songs={songsWithScores}
       shareCode={shareCode}
+      participantCount={stats?.participant_count ?? 0}
       userNickname={currentUser?.nickname}
       currentUserId={currentUser?.id ?? null}
       currentUserAvatarUrl={currentUser?.avatarUrl ?? null}

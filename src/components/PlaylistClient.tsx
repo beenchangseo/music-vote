@@ -36,12 +36,13 @@ interface PlaylistClientProps {
   playlist: Playlist;
   songs: SongWithScore[];
   shareCode: string;
+  participantCount: number;
   userNickname?: string;
   currentUserId?: string | null;
   currentUserAvatarUrl?: string | null;
 }
 
-export default function PlaylistClient({ playlist, songs, shareCode, userNickname, currentUserId, currentUserAvatarUrl }: PlaylistClientProps) {
+export default function PlaylistClient({ playlist, songs, shareCode, participantCount, userNickname, currentUserId, currentUserAvatarUrl }: PlaylistClientProps) {
   // 신규(로그인 강제) 모드 vs 기존 익명 모드
   const requiresLogin = !!playlist.creator_user_id;
   const loggedIn = !!currentUserId;
@@ -128,16 +129,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
       setLoadingComments(false);
     }
   }, [playlist.id, setlistItems, comments, loadingSetlist, loadingComments]);
-
-  const participantCount = useMemo(() => {
-    const nicknames = new Set<string>();
-    for (const song of songs) {
-      for (const vote of song.votes) {
-        nicknames.add(vote.nickname.toLowerCase());
-      }
-    }
-    return nicknames.size;
-  }, [songs]);
 
   const serverScoreMap = useMemo(() => {
     const map: Record<string, number> = {};

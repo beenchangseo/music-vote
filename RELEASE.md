@@ -17,7 +17,7 @@ ship 직전 마지막 점검표. 출시 시점에 한 번 위에서부터 통과
 
 - [ ] Production 프로젝트 ID 확인 (`NEXT_PUBLIC_SUPABASE_URL` 매칭)
 - [ ] `supabase-schema.sql` 실행 (신규 환경만)
-- [ ] 마이그레이션 v2 → v3 → v4 → v5 → v6 → v7 → v8 → v9 → v10 → v11 → v12 → v13 순서대로 실행
+- [ ] 마이그레이션 v2 → v3 → v4 → v5 → v6 → v7 → v8 → v9 → v10 → v11 → v12 → v13 → v14 순서대로 실행
 - [ ] RLS 활성화 확인:
       - `playlists` SELECT/INSERT public, UPDATE 없음
       - `playlist_admin` 정책 없음 = service_role만
@@ -26,7 +26,8 @@ ship 직전 마지막 점검표. 출시 시점에 한 번 위에서부터 통과
       - `comments` SELECT/INSERT public
       - `setlist_items` SELECT/INSERT public
 - [ ] `playlists.votes_anonymous` 컬럼 존재 + DEFAULT TRUE 확인
-- [ ] 인덱스 확인: `idx_songs_playlist_id`, `idx_songs_tempo_bpm`, `idx_songs_genre`
+- [ ] 인덱스 확인: `idx_songs_playlist_id`, `idx_songs_tempo_bpm`, `idx_songs_genre`, `idx_votes_song_id`
+- [ ] 뷰 확인: `home_stats`, `playlist_stats` (v14 미적용 시 통계가 0으로 표시됨)
 
 ## 3. Vercel 환경변수 (Production)
 

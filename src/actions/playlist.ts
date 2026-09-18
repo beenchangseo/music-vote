@@ -17,20 +17,14 @@ export async function getHomeStats(): Promise<{
   songs: number;
 }> {
   const admin = createAdminClient();
-  const [playlists, voteNicks, songs] = await Promise.all([
-    admin.from("playlists").select("id", { count: "exact", head: true }),
-    admin.from("votes").select("nickname"),
-    admin.from("songs").select("id", { count: "exact", head: true }),
-  ]);
-  const uniqueNicks = new Set(
-    (voteNicks.data || []).map((v: { nickname: string }) =>
-      v.nickname.toLowerCase(),
-    ),
-  );
+  const { data } = await admin
+    .from("home_stats")
+    .select("playlist_count, song_count, participant_count")
+    .single();
   return {
-    playlists: playlists.count ?? 0,
-    users: uniqueNicks.size,
-    songs: songs.count ?? 0,
+    playlists: data?.playlist_count ?? 0,
+    users: data?.participant_count ?? 0,
+    songs: data?.song_count ?? 0,
   };
 }
 

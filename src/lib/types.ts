@@ -48,18 +48,17 @@ export interface Song {
   created_at: string;
 }
 
-export interface Vote {
-  id: string;
+/** 합주방 화면이 쓰는 투표 열만 담는다. 행 전체를 클라이언트로 내리지 않는다. */
+export interface SongVoteRow {
   song_id: string;
   user_id: string | null;
   nickname: string;
   vote_type: number; // 1 or -1
-  created_at: string;
 }
 
 export interface SongWithScore extends Song {
   score: number;
-  votes: Vote[];
+  votes: SongVoteRow[];
   userVote: number | null; // 1, -1, or null
   userVoteCount: number;
   commentCount: number;
