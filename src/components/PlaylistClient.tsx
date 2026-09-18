@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -16,6 +17,7 @@ import SetlistView from "./SetlistView";
 import RehearsalView from "./RehearsalView";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
 import { usePlaylistVotes } from "@/hooks/usePlaylistVotes";
+import { usePlaylistRealtime } from "@/hooks/usePlaylistRealtime";
 import { getSetlistItems, confirmSetlist, addSongToSetlist } from "@/actions/setlist";
 import { getComments } from "@/actions/comment";
 import { track } from "@/lib/analytics";
@@ -63,6 +65,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
   const [loadingComments, setLoadingComments] = useState(false);
 
   const { showConfirm, showAlert } = useDialog();
+  const router = useRouter();
   const playerRef = useRef<YouTubePlayerHandle>(null);
   const [listParent] = useAutoAnimate({ duration: 300, easing: "ease-in-out" });
 
@@ -125,6 +128,20 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
     }
   }, [playlist.id, setlistItems, comments, loadingSetlist, loadingComments]);
 
+  // 다른 참여자의 변경 알림. 셋리스트·댓글은 서버 렌더가 아니라
+  // 클라이언트가 따로 받아둔 값이라 이미 열어본 목록만 다시 받아온다.
+  const handleRemoteChange = useCallback(() => {
+    router.refresh();
+    if (setlistItems !== null) {
+      getSetlistItems(playlist.id).then(setSetlistItems).catch(() => undefined);
+    }
+    if (comments !== null) {
+      getComments(playlist.id).then(setComments).catch(() => undefined);
+    }
+  }, [router, playlist.id, setlistItems, comments]);
+
+  const { notifyChange } = usePlaylistRealtime(shareCode, handleRemoteChange);
+
   // 로그인 합주방은 서버가 계정 기준으로 내 표를 계산한다.
   // 기존 익명 합주방만 화면에서 고른 닉네임으로 맞춘다.
   const songsForVoting = useMemo(() => {
@@ -152,6 +169,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
     allowance,
     onAllowanceChange: handleAllowanceChange,
     onError: showAlert,
+    onSaved: notifyChange,
   });
 
   const filteredSongs = useMemo(
@@ -204,6 +222,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
       const item = await addSongToSetlist(playlist.id, adminToken, setlistConfirmSongId, shareCode);
       setSetlistItems((prev) => prev ? [...prev, item] : [item]);
       setSetlistConfirmSongId(null);
+      notifyChange();
     } catch {
       showAlert("셋리스트 추가에 실패했습니다.");
     }
@@ -299,8 +318,14 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                 supportsVoteAllocation={requiresLogin}
                 currentUserId={currentUserId}
                 onAllowanceChange={(mode, usedVotes, voteLimit) => setAllowance({ mode, usedVotes, voteLimit })}
-                onVotesAnonymousChange={setVotesAnonymous}
-                onVotesReset={resetVotes}
+                onVotesAnonymousChange={(next) => {
+                  setVotesAnonymous(next);
+                  notifyChange();
+                }}
+                onVotesReset={() => {
+                  resetVotes();
+                  notifyChange();
+                }}
               />
             </div>
           )}
@@ -315,7 +340,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
               {/* Add song form (hide if expired) */}
               {!isExpired && (
                 <div className="mt-6">
-                  <AddSongForm playlistId={playlist.id} shareCode={shareCode} nickname={nickname} loginGate={loginGate} />
+                  <AddSongForm playlistId={playlist.id} shareCode={shareCode} nickname={nickname} loginGate={loginGate} onAdded={notifyChange} />
                 </div>
               )}
 
@@ -377,6 +402,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                             song_count: topSongIds.length,
                             auto: false,
                           });
+                          notifyChange();
                         } catch {
                           showAlert("셋리스트 확정에 실패했습니다.");
                         }
@@ -553,7 +579,10 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
               isAdmin={isAdmin}
               adminToken={adminToken}
               loading={loadingSetlist}
-              onItemsChange={setSetlistItems}
+              onItemsChange={(items) => {
+                setSetlistItems(items);
+                notifyChange();
+              }}
               title={playlist.title}
               editMode={setlistEditMode}
               canEdit={canEditSetlist}
@@ -571,7 +600,10 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
               shareCode={shareCode}
               nickname={nickname}
               loading={loadingComments}
-              onCommentsChange={setComments}
+              onCommentsChange={(next) => {
+                setComments(next);
+                notifyChange();
+              }}
             />
           )}
 

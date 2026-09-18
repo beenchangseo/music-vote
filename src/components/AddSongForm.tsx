@@ -11,9 +11,11 @@ interface AddSongFormProps {
   nickname: string;
   /** 로그인 모드 + 비로그인 → 폼 대신 카카오 로그인 카드 노출. */
   loginGate?: boolean;
+  /** 곡이 저장된 뒤 같은 합주방의 다른 화면에 알린다. */
+  onAdded?: () => void;
 }
 
-export default function AddSongForm({ playlistId, shareCode, nickname, loginGate = false }: AddSongFormProps) {
+export default function AddSongForm({ playlistId, shareCode, nickname, loginGate = false, onAdded }: AddSongFormProps) {
   const [url, setUrl] = useState("");
   const [manualTitle, setManualTitle] = useState("");
   const [showManualTitle, setShowManualTitle] = useState(false);
@@ -36,6 +38,7 @@ export default function AddSongForm({ playlistId, shareCode, nickname, loginGate
           return;
         }
         track("song_added", { has_thumbnail: !result.needsManualTitle });
+        onAdded?.();
         setUrl("");
         setManualTitle("");
         setShowManualTitle(false);

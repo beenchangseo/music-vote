@@ -61,7 +61,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `_global-error` Turbopack 프리렌더 실패는 Next 16.2.1 자체 회귀. Vercel 배포는 영향 없음, 로컬 `next build` 실패는 무시 가능 (dev 정상)
 - `youtube-iframe.ts` `YT` namespace는 ambient declare — `export type { YT }`로만 export. value import 금지
 - Spotify Web API audio-features는 2024-11 신규 앱 차단됨. 자동 BPM/키 채우기는 manual 입력 + 외부 도구 링크로 대체
-- `votes` 테이블 RLS: SELECT 공개 (UI 게이팅으로 익명/기명 결정). 기명 모드에서만 닉네임 노출
+- 익명 모드는 화면 가림이 아니라 서버 페이로드에서 투표자를 뺀다(`docs/adr/0011`). `SongWithScore.votes` 는 기명 모드일 때만 채워지고 계정 식별자는 어느 모드에서도 내려보내지 않는다
+- `votes` 테이블 RLS 는 아직 SELECT 공개다. 공개 anon 키로 직접 조회하면 익명 합주방의 투표자가 보인다 — 테이블 권한 좁히기는 남은 작업
+- 실시간은 내용 없는 broadcast 알림 + 재조회(`docs/adr/0010`). `postgres_changes` 로 `votes` 를 구독하면 익명 모드가 다시 뚫린다
 
 ## 한국어 카피 톤
 

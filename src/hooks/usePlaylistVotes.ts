@@ -33,6 +33,8 @@ interface UsePlaylistVotesOptions {
   allowance: VoteAllowance | null;
   onAllowanceChange: (usedVotes: number, voteLimit: number) => void;
   onError: (message: string) => void;
+  /** 표가 서버에 저장된 뒤 같은 합주방의 다른 화면에 알린다. */
+  onSaved?: () => void;
 }
 
 function sameSnapshot(a: VoteSnapshot, b: VoteSnapshot): boolean {
@@ -63,6 +65,7 @@ export function usePlaylistVotes({
   allowance,
   onAllowanceChange,
   onError,
+  onSaved,
 }: UsePlaylistVotesOptions) {
   const [overrides, setOverrides] = useState<Record<string, VoteOverride>>({});
   const [pendingSongIds, setPendingSongIds] = useState<Record<string, true>>({});
@@ -148,6 +151,7 @@ export function usePlaylistVotes({
           if (result.allowance) {
             onAllowanceChange(result.allowance.usedVotes, result.allowance.voteLimit);
           }
+          onSaved?.();
         } catch {
           clearOverride(songId);
           onError(VOTE_FAILED_MESSAGE);
@@ -167,6 +171,7 @@ export function usePlaylistVotes({
       nickname,
       onAllowanceChange,
       onError,
+      onSaved,
       shareCode,
       songs,
       songsWithVotes,

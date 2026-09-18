@@ -16,6 +16,7 @@
 - **5중 제약 곡 메타** — 키(C~B + Major/minor), BPM, 길이, 난이도(1~5★), 장르 12종
 - **5축 필터** — BPM 구간 / 메타 유무 / 키 / 난이도 ≤ / 장르 다중 선택
 - **실시간 정렬** — 점수순 자동 정렬 + auto-animate
+- **실시간 반영** — 같은 합주방을 연 화면끼리 broadcast 알림 후 각자 서버에서 재조회
 - **댓글** — 곡당 1인 1댓글 + 카드 표면 카운트 배지
 - **익명/기명 모드 토글** — 방장 admin 권한, 기명 시 voter 닉네임 노출
 - **투표권 할당** — 방장이 참여자별 투표권(1~99)을 정하고, 같은 후보곡에 반복 투표 가능
@@ -61,6 +62,7 @@
 | Image | next/image + next/og (Edge) |
 | Analytics | @vercel/analytics + Speed Insights |
 | Cron | Vercel Cron (icn1 region) |
+| Realtime | Supabase Realtime (broadcast 알림) |
 | Animation | @formkit/auto-animate |
 
 ---
