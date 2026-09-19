@@ -8,11 +8,8 @@ vi.mock("@/lib/supabase/server", () => ({
   }),
 }));
 
-import {
-  ARCHIVED_PLAYLIST_MESSAGE,
-  assertPlaylistWritable,
-  isArchivedPlaylist,
-} from "../playlist-access";
+import { assertPlaylistWritable } from "../playlist-access";
+import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "../playlist-archive";
 
 describe("isArchivedPlaylist", () => {
   it("treats a room without a creator account as archived", () => {

@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
-import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/lib/playlist-access";
+import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/lib/playlist-archive";
 
 /**
  * 합주방 관리 권한 검사. 통과하면 void, 아니면 throw.

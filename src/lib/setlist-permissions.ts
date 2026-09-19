@@ -1,9 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
-import {
-  ARCHIVED_PLAYLIST_MESSAGE,
-  isArchivedPlaylist,
-} from "@/lib/playlist-access";
+import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/lib/playlist-archive";
 import { createAdminClient } from "@/lib/supabase/server";
 
 export async function assertSetlistEditor(

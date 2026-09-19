@@ -2,11 +2,8 @@
 
 import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
-import {
-  ARCHIVED_PLAYLIST_MESSAGE,
-  assertPlaylistWritable,
-  isArchivedPlaylist,
-} from "@/lib/playlist-access";
+import { assertPlaylistWritable } from "@/lib/playlist-access";
+import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/lib/playlist-archive";
 import { extractVideoId, fetchVideoMetadata } from "@/lib/youtube";
 import {
   isValidKeyRoot,

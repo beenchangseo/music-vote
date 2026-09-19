@@ -27,7 +27,7 @@ import VotingSettingsButton from "./VotingSettingsButton";
 import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import type { ViewMode } from "./NavigationBar";
-import { isArchivedPlaylist } from "@/lib/playlist-access";
+import { isArchivedPlaylist } from "@/lib/playlist-archive";
 import type { Playlist, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/lib/types";
 
 interface PlaylistClientProps {

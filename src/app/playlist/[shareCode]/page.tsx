@@ -118,6 +118,14 @@ export default async function PlaylistPage({ params }: PageProps) {
         { data: [] as { song_id: string }[] },
       ];
 
+  // 뷰가 없으면 점수가 전부 0 으로 보인다. 배포 순서를 틀렸을 때 바로 알아채도록 남긴다.
+  if (summaryResult.error) {
+    console.error(
+      "[playlist] song_vote_summary 조회 실패 — supabase-migration-v15.sql 적용 여부 확인:",
+      summaryResult.error.message,
+    );
+  }
+
   const summaryMap = new Map<string, VoteSummaryRow>();
   for (const row of (summaryResult.data || []) as VoteSummaryRow[]) {
     summaryMap.set(row.song_id, row);

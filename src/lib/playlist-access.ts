@@ -1,16 +1,7 @@
+// 서버 전용. service_role 클라이언트를 쓰므로 화면에서 import 하지 않는다.
+// 화면이 필요한 순수 판정은 playlist-archive 에 있다.
 import { createAdminClient } from "@/lib/supabase/server";
-
-/**
- * 보관된 합주방: 카카오 로그인을 도입하기 전에 만들어진 익명 합주방.
- * `creator_user_id` 가 비어 있어 표와 글을 계정으로 묶을 수 없다.
- * 지난 기록은 그대로 볼 수 있지만 새로 쓸 수는 없다.
- */
-export const ARCHIVED_PLAYLIST_MESSAGE =
-  "보관된 합주방이에요. 지난 기록은 그대로 볼 수 있지만 새로 쓸 수는 없어요.";
-
-export function isArchivedPlaylist(playlist: { creator_user_id: string | null }): boolean {
-  return !playlist.creator_user_id;
-}
+import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/lib/playlist-archive";
 
 /** 합주방 id 로 보관 여부를 확인한다. */
 export async function isArchivedPlaylistId(playlistId: string): Promise<boolean> {
