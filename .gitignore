@@ -58,3 +58,4 @@ docs/*
 !docs/results/*.md
 .env*.local
 .gstack/
+.migration/
