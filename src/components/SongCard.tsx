@@ -393,6 +393,8 @@ function VoterStrip({
   votes: { vote_type: number; nickname: string }[];
   hide: boolean;
 }) {
+  const [expanded, setExpanded] = useState(false);
+
   if (hide || votes.length === 0) return null;
 
   const summarize = (voteType: 1 | -1) => {
@@ -415,34 +417,42 @@ function VoterStrip({
 
   if (up.length === 0 && down.length === 0) return null;
 
+  // 34곡 목록에서 모든 행에 이름을 깔면 소음이 크다. 기본은 수만 보이고 눌러서 편다.
+  // 같은 줄의 투표 버튼이 이미 44px 이라 이 버튼을 키워도 행 높이는 그대로다.
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-caption text-text-muted">
+    <button
+      type="button"
+      onClick={() => setExpanded((v) => !v)}
+      aria-expanded={expanded}
+      aria-label={expanded ? "투표한 사람 접기" : "투표한 사람 보기"}
+      className="flex min-h-11 min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-left text-caption text-text-muted"
+    >
       {up.length > 0 && (
-        <span className="inline-flex items-center gap-1 min-w-0">
-          <svg
-            className="w-3 h-3 text-success shrink-0"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden
-          >
+        <span className="inline-flex shrink-0 items-center gap-1">
+          <svg className="h-3 w-3 text-success" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
             <path d="M12 4l8 8h-5v8h-6v-8H4z" />
           </svg>
-          <span className="truncate">{up.join(" · ")}</span>
+          {up.length}
         </span>
       )}
       {down.length > 0 && (
-        <span className="inline-flex items-center gap-1 min-w-0">
-          <svg
-            className="w-3 h-3 text-danger shrink-0"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden
-          >
+        <span className="inline-flex shrink-0 items-center gap-1">
+          <svg className="h-3 w-3 text-danger" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
             <path d="M12 20l-8-8h5V4h6v8h5z" />
           </svg>
-          <span className="truncate">{down.join(" · ")}</span>
+          {down.length}
         </span>
       )}
-    </div>
+
+      {expanded ? (
+        <span className="min-w-0 flex-1 text-text-subtle">
+          {up.length > 0 && <span className="break-keep">{up.join(" · ")}</span>}
+          {up.length > 0 && down.length > 0 && <span className="mx-1">/</span>}
+          {down.length > 0 && <span className="break-keep">{down.join(" · ")}</span>}
+        </span>
+      ) : (
+        <span className="truncate text-text-subtle">누가 찍었는지 보기</span>
+      )}
+    </button>
   );
 }
