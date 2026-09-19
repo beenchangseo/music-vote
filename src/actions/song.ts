@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistWritable } from "@/lib/playlist-access";
 import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/lib/playlist-archive";
 import { extractVideoId, fetchVideoMetadata } from "@/lib/youtube";
+import { fetchSingleVideoDetails } from "@/lib/youtube-data";
 import {
   isValidKeyRoot,
   isValidKeyMode,
@@ -29,7 +30,12 @@ export async function addSong(
     throw new Error("올바른 YouTube URL을 입력해주세요.");
   }
 
-  const metadata = manualTitle ? null : await fetchVideoMetadata(videoId);
+  // 제목·썸네일은 oEmbed, 재생시간·임베드 가능 여부는 Data API 가 준다.
+  // 둘 다 실패해도 곡 추가는 진행한다.
+  const [metadata, details] = await Promise.all([
+    manualTitle ? Promise.resolve(null) : fetchVideoMetadata(videoId),
+    fetchSingleVideoDetails(videoId),
+  ]);
 
   const title = metadata?.title || manualTitle || youtubeUrl;
   const artist = metadata?.author_name || null;
@@ -49,6 +55,7 @@ export async function addSong(
     youtube_url: youtubeUrl,
     youtube_video_id: videoId,
     thumbnail_url: thumbnailUrl,
+    duration_seconds: details?.durationSeconds ?? null,
     added_by: user.nickname,
     added_by_user_id: user.id,
   });
@@ -56,7 +63,12 @@ export async function addSong(
   if (error) throw new Error("곡 추가에 실패했습니다.");
 
   revalidatePath(`/playlist/${shareCode}`);
-  return { success: true, needsManualTitle: !metadata && !manualTitle };
+  return {
+    success: true,
+    needsManualTitle: !metadata && !manualTitle,
+    // 임베드가 막힌 곡은 합주 중에 재생되지 않는다. 화면에서 알려준다.
+    notEmbeddable: details ? !details.embeddable : false,
+  };
 }
 
 export interface SongMetaUpdate {
