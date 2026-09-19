@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useDialog } from "./DialogProvider";
-import NicknameModal from "./NicknameModal";
 import LoginButton from "./LoginButton";
 import PlaylistHeader from "./PlaylistHeader";
 import AddSongForm from "./AddSongForm";
@@ -15,6 +15,8 @@ import NavigationBar from "./NavigationBar";
 import SetlistView from "./SetlistView";
 import RehearsalView from "./RehearsalView";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
+import { usePlaylistVotes } from "@/hooks/usePlaylistVotes";
+import { usePlaylistRealtime } from "@/hooks/usePlaylistRealtime";
 import { getSetlistItems, confirmSetlist, addSongToSetlist } from "@/actions/setlist";
 import { getComments } from "@/actions/comment";
 import { track } from "@/lib/analytics";
@@ -25,35 +27,29 @@ import VotingSettingsButton from "./VotingSettingsButton";
 import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import type { ViewMode } from "./NavigationBar";
+import { isArchivedPlaylist } from "@/lib/playlist-archive";
 import type { Playlist, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/lib/types";
-
-interface VoteOverride {
-  delta: number;
-  baseScore: number;
-}
 
 interface PlaylistClientProps {
   playlist: Playlist;
   songs: SongWithScore[];
   shareCode: string;
+  participantCount: number;
   userNickname?: string;
   currentUserId?: string | null;
   currentUserAvatarUrl?: string | null;
 }
 
-export default function PlaylistClient({ playlist, songs, shareCode, userNickname, currentUserId, currentUserAvatarUrl }: PlaylistClientProps) {
-  // 신규(로그인 강제) 모드 vs 기존 익명 모드
-  const requiresLogin = !!playlist.creator_user_id;
+export default function PlaylistClient({ playlist, songs, shareCode, participantCount, userNickname, currentUserId, currentUserAvatarUrl }: PlaylistClientProps) {
+  // 보관된 합주방: 로그인 도입 전 익명 합주방. 지난 기록만 읽는다.
+  const isArchived = isArchivedPlaylist(playlist);
   const loggedIn = !!currentUserId;
-  const loginGate = requiresLogin && !loggedIn;
-  // 로그인 모드 + 로그인 사용자: 카카오 닉을 즉시 nickname 상태로 사용 (NicknameModal 스킵)
-  const [nickname, setNickname] = useState(
-    requiresLogin && loggedIn ? (userNickname || "") : ""
-  );
+  const loginGate = !isArchived && !loggedIn;
+  // 닉네임은 카카오 프로필에서 그대로 쓴다.
+  const nickname = !isArchived && loggedIn ? userNickname || "" : "";
   const [viewMode, setViewMode] = useState<"card" | "compact">("compact");
   const [navMode, setNavMode] = useState<ViewMode>("playlist");
   const [adminToken, setAdminToken] = useState<string | null>(null);
-  const [voteOverrides, setVoteOverrides] = useState<Record<string, VoteOverride>>({});
   const [resultCopied, setResultCopied] = useState(false);
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
   const [allowance, setAllowance] = useState<VoteAllowance | null>(null);
@@ -67,12 +63,9 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
   const [loadingComments, setLoadingComments] = useState(false);
 
   const { showConfirm, showAlert } = useDialog();
+  const router = useRouter();
   const playerRef = useRef<YouTubePlayerHandle>(null);
   const [listParent] = useAutoAnimate({ duration: 300, easing: "ease-in-out" });
-
-  const handleNickname = useCallback((name: string) => {
-    setNickname(name);
-  }, []);
 
   useEffect(() => {
     try {
@@ -89,20 +82,19 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
   // 1) 로그인 모드 + 본인이 만든 플리 → creator_user_id 매칭
   // 2) 익명 모드 + nickname == creator_nickname (DB 기반)
   // 3) legacy adminToken fallback
-  const isAdmin = playlist.creator_user_id
-    ? !!currentUserId && currentUserId === playlist.creator_user_id
-    : playlist.creator_nickname
-      ? nickname.toLowerCase() === playlist.creator_nickname.toLowerCase()
-      : !!adminToken;
+  // 보관된 합주방에서 방장 표시는 남은 링크 토큰으로만 판정한다. 방 삭제에만 쓴다.
+  const isAdmin = isArchived
+    ? !!adminToken
+    : !!currentUserId && currentUserId === playlist.creator_user_id;
   const isExpired = playlist.deadline ? new Date(playlist.deadline) < new Date() : false;
-  const canEditSetlist = !loginGate && (setlistEditMode === "everyone" || isAdmin);
+  const canEditSetlist = !isArchived && !loginGate && (setlistEditMode === "everyone" || isAdmin);
 
   useEffect(() => {
-    if (!requiresLogin || !loggedIn) return;
+    if (isArchived || !loggedIn) return;
     registerPlaylistMember(playlist.id).then(setAllowance).catch(() => {
       showAlert("참여자 등록에 실패했습니다. 새로고침 후 다시 시도해주세요.");
     });
-  }, [loggedIn, playlist.id, requiresLogin, showAlert]);
+  }, [isArchived, loggedIn, playlist.id, showAlert]);
 
   // Lazy load setlist items on first mode switch
   const handleModeChange = useCallback(async (mode: ViewMode) => {
@@ -129,70 +121,49 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
     }
   }, [playlist.id, setlistItems, comments, loadingSetlist, loadingComments]);
 
-  const participantCount = useMemo(() => {
-    const nicknames = new Set<string>();
-    for (const song of songs) {
-      for (const vote of song.votes) {
-        nicknames.add(vote.nickname.toLowerCase());
-      }
+  // 다른 참여자의 변경 알림. 셋리스트·댓글은 서버 렌더가 아니라
+  // 클라이언트가 따로 받아둔 값이라 이미 열어본 목록만 다시 받아온다.
+  const handleRemoteChange = useCallback(() => {
+    router.refresh();
+    if (setlistItems !== null) {
+      getSetlistItems(playlist.id).then(setSetlistItems).catch(() => undefined);
     }
-    return nicknames.size;
-  }, [songs]);
-
-  const serverScoreMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const song of songs) {
-      map[song.id] = song.score;
+    if (comments !== null) {
+      getComments(playlist.id).then(setComments).catch(() => undefined);
     }
-    return map;
-  }, [songs]);
+  }, [router, playlist.id, setlistItems, comments]);
 
-  const handleVoteOptimistic = useCallback((songId: string, scoreDelta: number) => {
-    setVoteOverrides((prev) => {
-      const existing = prev[songId];
-      const currentServerScore = serverScoreMap[songId] ?? 0;
-      if (existing && existing.baseScore === currentServerScore) {
-        return { ...prev, [songId]: { delta: existing.delta + scoreDelta, baseScore: currentServerScore } };
-      }
-      return { ...prev, [songId]: { delta: scoreDelta, baseScore: currentServerScore } };
-    });
-  }, [serverScoreMap]);
+  const { notifyChange } = usePlaylistRealtime(shareCode, handleRemoteChange);
 
-  const songsWithUserVote = useMemo(() => {
-    const mapped = songs.map((song) => {
-      const override = voteOverrides[song.id];
-      const effectiveDelta = override && override.baseScore === song.score ? override.delta : 0;
-      const myVotes = currentUserId
-        ? song.votes.filter((vote) => vote.user_id === currentUserId)
-        : nickname
-          ? song.votes.filter((vote) => vote.nickname.toLowerCase() === nickname.toLowerCase())
-          : [];
-      return {
-        ...song,
-        score: song.score + effectiveDelta,
-        userVote: myVotes[0]?.vote_type ?? null,
-        userVoteCount: myVotes.length,
-      };
-    });
-    return mapped.sort((a, b) =>
-      b.score - a.score || new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    );
-  }, [songs, currentUserId, nickname, voteOverrides]);
+  const handleAllowanceChange = useCallback((usedVotes: number, voteLimit: number) => {
+    setAllowance((current) => (current ? { ...current, usedVotes, voteLimit } : current));
+  }, []);
+
+  const { songsWithVotes, pressVote, isVotePending, resetVotes } = usePlaylistVotes({
+    songs,
+    votingMode: playlist.voting_mode,
+    shareCode,
+    nickname,
+    allowance,
+    onAllowanceChange: handleAllowanceChange,
+    onError: showAlert,
+    onSaved: notifyChange,
+  });
 
   const filteredSongs = useMemo(
-    () => songsWithUserVote.filter((s) => songMatchesFilter(s, filter)),
-    [songsWithUserVote, filter],
+    () => songsWithVotes.filter((s) => songMatchesFilter(s, filter)),
+    [songsWithVotes, filter],
   );
 
   // Setlist highlight: top N songs after deadline
   const setlistCount = playlist.setlist_count;
   const highlightedSongIds = useMemo(() => {
     if (!isExpired || !setlistCount || setlistCount <= 0) return new Set<string>();
-    return new Set(songsWithUserVote.slice(0, setlistCount).map((s) => s.id));
-  }, [isExpired, setlistCount, songsWithUserVote]);
+    return new Set(songsWithVotes.slice(0, setlistCount).map((s) => s.id));
+  }, [isExpired, setlistCount, songsWithVotes]);
 
   // Player queue
-  const { state: playerState, actions: playerActions } = usePlayerQueue(songsWithUserVote);
+  const { state: playerState, actions: playerActions } = usePlayerQueue(songsWithVotes);
 
   // No need to call loadVideoById on song switch — each SongCard mounts
   // a fresh YouTubePlayer with the correct videoId prop when isCurrent becomes true.
@@ -217,7 +188,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
 
   // Setlist add confirm dialog
   const [setlistConfirmSongId, setSetlistConfirmSongId] = useState<string | null>(null);
-  const setlistConfirmSong = setlistConfirmSongId ? songsWithUserVote.find((s) => s.id === setlistConfirmSongId) : null;
+  const setlistConfirmSong = setlistConfirmSongId ? songsWithVotes.find((s) => s.id === setlistConfirmSongId) : null;
 
   const handleAddToSetlist = useCallback((songId: string) => {
     setSetlistConfirmSongId(songId);
@@ -229,13 +200,14 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
       const item = await addSongToSetlist(playlist.id, adminToken, setlistConfirmSongId, shareCode);
       setSetlistItems((prev) => prev ? [...prev, item] : [item]);
       setSetlistConfirmSongId(null);
+      notifyChange();
     } catch {
       showAlert("셋리스트 추가에 실패했습니다.");
     }
   }
 
   async function handleShareResults() {
-    const lines = songsWithUserVote.map((s, i) => `${i + 1}. ${s.title} (${s.score >= 0 ? "+" : ""}${s.score})`);
+    const lines = songsWithVotes.map((s, i) => `${i + 1}. ${s.title} (${s.score >= 0 ? "+" : ""}${s.score})`);
     const text = `${playlist.title} 투표 결과:\n${lines.join("\n")}\n\n${window.location.href}`;
     try {
       await navigator.clipboard.writeText(text);
@@ -251,17 +223,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
 
   return (
     <>
-      {!requiresLogin && (
-        <NicknameModal
-          onSubmit={handleNickname}
-          defaultNickname={userNickname}
-          existingNicknames={Array.from(new Set(songs.flatMap((s) => [
-            ...s.votes.map((v) => v.nickname),
-            ...(s.added_by ? [s.added_by] : []),
-          ])))}
-        />
-      )}
-
       <div className="min-h-full bg-bg">
         <div className={`max-w-lg mx-auto px-4 py-6 ${bottomPadding}`}>
           <PlaylistHeader
@@ -276,6 +237,21 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
             currentUserNickname={userNickname}
             currentUserAvatarUrl={currentUserAvatarUrl}
           />
+
+          {isArchived && (
+            <div className="mt-3 rounded-lg border border-border bg-surface/60 px-3 py-2 animate-fade-in" role="status">
+              <p className="text-caption leading-relaxed text-text-muted">
+                <span className="font-semibold text-text">보관된 합주방이에요.</span>{" "}
+                지난 투표 결과와 셋리스트는 그대로 볼 수 있지만, 새로 투표하거나 곡을 추가할 수는 없어요.
+              </p>
+              <Link
+                href="/"
+                className="mt-1.5 inline-flex min-h-11 items-center text-caption font-semibold text-primary hover:underline underline-offset-2"
+              >
+                새 합주방 만들기 →
+              </Link>
+            </div>
+          )}
 
           {/* Invitation banner — 차분한 톤으로 (곡 리스트가 첫 시선을 가져가도록) */}
           {loginGate && (
@@ -315,17 +291,23 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
             )}
           </div>
 
-          {navMode !== "setlist" && isAdmin && (requiresLogin || adminToken) && (
+          {navMode !== "setlist" && isAdmin && !isArchived && (
             <div className="mt-3 flex justify-center">
               <VotingSettingsButton
                 playlistId={playlist.id}
                 shareCode={shareCode}
                 adminToken={adminToken}
-                supportsVoteAllocation={requiresLogin}
+                supportsVoteAllocation
                 currentUserId={currentUserId}
                 onAllowanceChange={(mode, usedVotes, voteLimit) => setAllowance({ mode, usedVotes, voteLimit })}
-                onVotesAnonymousChange={setVotesAnonymous}
-                onVotesReset={() => setVoteOverrides({})}
+                onVotesAnonymousChange={(next) => {
+                  setVotesAnonymous(next);
+                  notifyChange();
+                }}
+                onVotesReset={() => {
+                  resetVotes();
+                  notifyChange();
+                }}
               />
             </div>
           )}
@@ -338,29 +320,29 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
           {navMode === "playlist" && (
             <>
               {/* Add song form (hide if expired) */}
-              {!isExpired && (
+              {!isExpired && !isArchived && (
                 <div className="mt-6">
-                  <AddSongForm playlistId={playlist.id} shareCode={shareCode} nickname={nickname} loginGate={loginGate} />
+                  <AddSongForm playlistId={playlist.id} shareCode={shareCode} loginGate={loginGate} onAdded={notifyChange} />
                 </div>
               )}
 
               {/* Result share banner — voting closed + has top song */}
-              {isExpired && songsWithUserVote.length > 0 && (
+              {isExpired && songsWithVotes.length > 0 && (
                 <div className="mt-5 p-5 rounded-2xl bg-success/10 border border-success/30 text-center animate-fade-in">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/20 text-success text-caption font-bold mb-3">
                     🎉 곡 결정
                   </div>
                   <p className="text-h3 font-bold text-text leading-snug truncate px-2">
-                    {songsWithUserVote[0].title}
+                    {songsWithVotes[0].title}
                   </p>
-                  {songsWithUserVote[0].artist && (
+                  {songsWithVotes[0].artist && (
                     <p className="text-sm text-text-muted truncate mt-1 mb-4 px-2">
-                      {songsWithUserVote[0].artist}
+                      {songsWithVotes[0].artist}
                     </p>
                   )}
-                  {songsWithUserVote[0].score > 0 && (
+                  {songsWithVotes[0].score > 0 && (
                     <p className="text-caption text-text-muted mb-4">
-                      +{songsWithUserVote[0].score}점 1위 ·{" "}
+                      +{songsWithVotes[0].score}점 1위 ·{" "}
                       {participantCount > 0
                         ? `${participantCount}명 참여`
                         : `${songs.length}곡 후보`}
@@ -372,9 +354,9 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
                     title={playlist.title}
                     songs={songs.length}
                     participants={participantCount}
-                    topSong={songsWithUserVote[0].title}
-                    topArtist={songsWithUserVote[0].artist || undefined}
-                    topScore={Math.max(0, songsWithUserVote[0].score)}
+                    topSong={songsWithVotes[0].title}
+                    topArtist={songsWithVotes[0].artist || undefined}
+                    topScore={Math.max(0, songsWithVotes[0].score)}
                     visualStyle="primary"
                     size="md"
                   >
@@ -392,7 +374,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
                   {isAdmin ? (
                     <button
                       onClick={async () => {
-                        const topSongIds = songsWithUserVote.slice(0, setlistCount).map((s) => s.id);
+                        const topSongIds = songsWithVotes.slice(0, setlistCount).map((s) => s.id);
                         if (!adminToken) return;
                         const ok = await showConfirm(`상위 ${setlistCount}곡으로 셋리스트를 확정하시겠습니까?`);
                         if (!ok) return;
@@ -402,6 +384,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
                             song_count: topSongIds.length,
                             auto: false,
                           });
+                          notifyChange();
                         } catch {
                           showAlert("셋리스트 확정에 실패했습니다.");
                         }
@@ -423,7 +406,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
                     🎵 셋리스트 확정
                   </div>
                   <p className="text-sm text-text mb-4">
-                    총 {setlistCount || songsWithUserVote.length}곡 · 다음 공연 준비 완료
+                    총 {setlistCount || songsWithVotes.length}곡 · 다음 공연 준비 완료
                   </p>
                   <KakaoShareButton
                     shareCode={shareCode}
@@ -431,7 +414,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
                     title={playlist.title}
                     songs={songs.length}
                     participants={participantCount}
-                    setlistCount={setlistCount || songsWithUserVote.length}
+                    setlistCount={setlistCount || songsWithVotes.length}
                     visualStyle="primary"
                     size="md"
                   >
@@ -441,7 +424,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
               )}
 
               {/* View mode toggle + results share */}
-              {songsWithUserVote.length > 0 && (
+              {songsWithVotes.length > 0 && (
                 <div className="mt-5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-text-subtle uppercase tracking-wider font-semibold">
@@ -486,7 +469,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
                 ref={listParent}
                 className={`mt-3 ${viewMode === "compact" ? "space-y-2" : "space-y-4"}`}
               >
-                {songsWithUserVote.length === 0 ? (
+                {songsWithVotes.length === 0 ? (
                   <div className="mt-2 rounded-2xl border-2 border-dashed border-border bg-surface/40 px-6 py-10 text-center">
                     {/* 위 입력창을 가리키는 화살표 + 음표 */}
                     <div className="flex items-center justify-center gap-2 mb-5 text-primary animate-bounce-slow">
@@ -546,7 +529,8 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
                       isAdmin={isAdmin}
                       adminToken={adminToken}
                       viewMode={viewMode}
-                      onVoteOptimistic={handleVoteOptimistic}
+                      onVotePress={pressVote}
+                      votePending={isVotePending(song.id)}
                       isPlaying={playerState.currentSongId === song.id && playerState.isPlaying}
                       isCurrent={playerState.currentSongId === song.id}
                       onTogglePlay={() => handleTogglePlay(song.id)}
@@ -559,7 +543,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
                       onAddToSetlist={canEditSetlist ? handleAddToSetlist : undefined}
                       loginGate={loginGate}
                       currentUserId={currentUserId}
-                      onVoteAllowanceChange={(usedVotes, voteLimit) => setAllowance((current) => current ? { ...current, usedVotes, voteLimit } : current)}
                     />
                   ))
                 )}
@@ -572,13 +555,16 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
           {navMode === "setlist" && (
             <SetlistView
               setlistItems={setlistItems || []}
-              songs={songsWithUserVote}
+              songs={songsWithVotes}
               playlistId={playlist.id}
               shareCode={shareCode}
               isAdmin={isAdmin}
               adminToken={adminToken}
               loading={loadingSetlist}
-              onItemsChange={setSetlistItems}
+              onItemsChange={(items) => {
+                setSetlistItems(items);
+                notifyChange();
+              }}
               title={playlist.title}
               editMode={setlistEditMode}
               canEdit={canEditSetlist}
@@ -590,18 +576,21 @@ export default function PlaylistClient({ playlist, songs, shareCode, userNicknam
           {navMode === "rehearsal" && (
             <RehearsalView
               setlistItems={setlistItems || []}
-              songs={songsWithUserVote}
+              songs={songsWithVotes}
               comments={comments || []}
               playlistId={playlist.id}
               shareCode={shareCode}
               nickname={nickname}
               loading={loadingComments}
-              onCommentsChange={setComments}
+              onCommentsChange={(next) => {
+                setComments(next);
+                notifyChange();
+              }}
             />
           )}
 
           {/* CTA: Create your own — 페이지 가장 아래 (모든 모드 공통, 곡이 있을 때만) */}
-          {songsWithUserVote.length > 0 && (
+          {songsWithVotes.length > 0 && (
             <div className="mt-10 mb-4 text-center">
               <p className="text-caption text-text-subtle mb-2">새로운 플레이리스트가 필요하다면</p>
               <Link

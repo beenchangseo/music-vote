@@ -48,18 +48,19 @@ export interface Song {
   created_at: string;
 }
 
-export interface Vote {
-  id: string;
+/**
+ * 화면으로 내려보내는 투표 정보. 기명 모드에서만 채워진다.
+ * 계정 식별자는 포함하지 않는다.
+ */
+export interface SongVoteRow {
   song_id: string;
-  user_id: string | null;
   nickname: string;
   vote_type: number; // 1 or -1
-  created_at: string;
 }
 
 export interface SongWithScore extends Song {
   score: number;
-  votes: Vote[];
+  votes: SongVoteRow[];
   userVote: number | null; // 1, -1, or null
   userVoteCount: number;
   commentCount: number;

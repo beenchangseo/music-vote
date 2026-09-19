@@ -17,20 +17,14 @@ export async function getHomeStats(): Promise<{
   songs: number;
 }> {
   const admin = createAdminClient();
-  const [playlists, voteNicks, songs] = await Promise.all([
-    admin.from("playlists").select("id", { count: "exact", head: true }),
-    admin.from("votes").select("nickname"),
-    admin.from("songs").select("id", { count: "exact", head: true }),
-  ]);
-  const uniqueNicks = new Set(
-    (voteNicks.data || []).map((v: { nickname: string }) =>
-      v.nickname.toLowerCase(),
-    ),
-  );
+  const { data } = await admin
+    .from("home_stats")
+    .select("playlist_count, song_count, participant_count")
+    .single();
   return {
-    playlists: playlists.count ?? 0,
-    users: uniqueNicks.size,
-    songs: songs.count ?? 0,
+    playlists: data?.playlist_count ?? 0,
+    users: data?.participant_count ?? 0,
+    songs: data?.song_count ?? 0,
   };
 }
 
@@ -140,10 +134,12 @@ export async function createPlaylist(
 export async function updateCreatorNickname(
   playlistId: string,
   creatorNickname: string,
-  shareCode: string
+  shareCode: string,
+  adminToken: string | null = null,
 ) {
-  const supabase = await createServerSupabaseClient();
-  const { error } = await supabase
+  await assertPlaylistAdmin(playlistId, adminToken);
+  const admin = createAdminClient();
+  const { error } = await admin
     .from("playlists")
     .update({ creator_nickname: creatorNickname })
     .eq("id", playlistId);
@@ -155,11 +151,13 @@ export async function updateCreatorNickname(
 export async function updateAnnouncementPublic(
   playlistId: string,
   announcement: string,
-  shareCode: string
+  shareCode: string,
+  adminToken: string | null = null,
 ) {
-  const supabase = await createServerSupabaseClient();
+  await assertPlaylistAdmin(playlistId, adminToken);
+  const admin = createAdminClient();
 
-  const { error } = await supabase
+  const { error } = await admin
     .from("playlists")
     .update({ announcement: announcement || null })
     .eq("id", playlistId);
@@ -255,7 +253,8 @@ export async function updateSetlistEditMode(
 }
 
 export async function deletePlaylist(playlistId: string, adminToken: string | null) {
-  await assertPlaylistAdmin(playlistId, adminToken);
+  // 보관된 합주방도 방장이 직접 정리할 수 있어야 한다.
+  await assertPlaylistAdmin(playlistId, adminToken, { allowArchived: true });
   const admin = createAdminClient();
   const { error } = await admin
     .from("playlists")

@@ -68,7 +68,7 @@ const variantContent = (
           description ||
           (participants > 0
             ? `${songs}곡 등록 · ${participants}명 참여 중`
-            : `${songs}곡 등록 · 카톡으로 받은 링크로 가입 없이 투표`),
+            : `${songs}곡 등록 · 카카오 로그인 한 번이면 투표 끝`),
         cta: "지금 투표하기",
       };
   }

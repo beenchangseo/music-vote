@@ -4,6 +4,7 @@ import {
   canReduceVoteLimit,
   isValidDefaultVoteLimit,
   remainingVotes,
+  shouldExposeVoters,
 } from "../vote-domain";
 
 describe("vote allocation domain", () => {
@@ -66,5 +67,15 @@ describe("vote allocation domain", () => {
       usageDelta: -1,
       action: "removed",
     });
+  });
+});
+
+describe("shouldExposeVoters", () => {
+  it("hides voter nicknames while the room is anonymous", () => {
+    expect(shouldExposeVoters({ votes_anonymous: true })).toBe(false);
+  });
+
+  it("shows voter nicknames once the host turns on named voting", () => {
+    expect(shouldExposeVoters({ votes_anonymous: false })).toBe(true);
   });
 });

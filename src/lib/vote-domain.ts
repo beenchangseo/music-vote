@@ -78,3 +78,11 @@ export function canReduceVoteLimit(usedVotes: number, nextLimit: number): boolea
 export function isValidDefaultVoteLimit(value: number): boolean {
   return Number.isInteger(value) && value >= 1 && value <= 99;
 }
+
+/**
+ * 투표자 닉네임을 화면으로 내려보낼지 정한다.
+ * 익명 모드는 화면에서 가리는 데 그치지 않고 페이로드에서도 빼야 한다.
+ */
+export function shouldExposeVoters(playlist: { votes_anonymous: boolean }): boolean {
+  return !playlist.votes_anonymous;
+}

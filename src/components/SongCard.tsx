@@ -9,6 +9,7 @@ import SongVersionModal from "./SongVersionModal";
 import { useDialog } from "./DialogProvider";
 import { removeSong } from "@/actions/song";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
+import type { VoteDirection } from "@/lib/vote-domain";
 import type { SongWithScore, VotingMode } from "@/lib/types";
 
 interface SongCardProps {
@@ -20,7 +21,9 @@ interface SongCardProps {
   isAdmin: boolean;
   adminToken: string | null;
   viewMode: "card" | "compact";
-  onVoteOptimistic?: (songId: string, scoreDelta: number) => void;
+  onVotePress: (songId: string, direction: VoteDirection) => void;
+  /** 이 곡의 투표 요청이 서버 응답을 기다리는 중. */
+  votePending?: boolean;
   isPlaying: boolean;
   isCurrent: boolean;
   onTogglePlay: () => void;
@@ -36,7 +39,6 @@ interface SongCardProps {
   /** 로그인 모드 + 비로그인 → 투표/댓글 시도 시 카카오 OAuth 트리거. */
   loginGate?: boolean;
   currentUserId?: string | null;
-  onVoteAllowanceChange?: (usedVotes: number, voteLimit: number) => void;
 }
 
 export default function SongCard({
@@ -48,7 +50,8 @@ export default function SongCard({
   isAdmin,
   adminToken,
   viewMode,
-  onVoteOptimistic,
+  onVotePress,
+  votePending = false,
   isPlaying,
   isCurrent,
   onTogglePlay,
@@ -62,7 +65,6 @@ export default function SongCard({
   votesAnonymous = true,
   loginGate = false,
   currentUserId,
-  onVoteAllowanceChange,
 }: SongCardProps) {
   const [isPending, startTransition] = useTransition();
   const [showMenu, setShowMenu] = useState(false);
@@ -90,7 +92,7 @@ export default function SongCard({
 
     startTransition(async () => {
       try {
-        await removeSong(song.id, playlistId, adminToken, shareCode);
+        await removeSong(song.id, playlistId, shareCode);
       } catch {
         showAlert("곡 삭제에 실패했습니다.");
       }
@@ -197,18 +199,14 @@ export default function SongCard({
 
           {/* Vote buttons */}
           <VoteButtons
-            key={`${song.id}-${song.userVote}-${song.userVoteCount}`}
-            songId={song.id}
             score={song.score}
             userVote={song.userVote}
             userVoteCount={song.userVoteCount}
             votingMode={votingMode}
-            nickname={nickname}
-            shareCode={shareCode}
-            onVoteOptimistic={onVoteOptimistic}
-            disabled={isExpired}
+            onPress={(direction) => onVotePress(song.id, direction)}
+            disabled={isExpired || (!nickname && !loginGate)}
+            pending={votePending}
             loginGate={loginGate}
-            onAllowanceChange={onVoteAllowanceChange}
           />
 
           {/* More menu (⋮) */}
@@ -344,18 +342,14 @@ export default function SongCard({
             )}
           </div>
           <VoteButtons
-            key={`${song.id}-${song.userVote}-${song.userVoteCount}`}
-            songId={song.id}
             score={song.score}
             userVote={song.userVote}
             userVoteCount={song.userVoteCount}
             votingMode={votingMode}
-            nickname={nickname}
-            shareCode={shareCode}
-            onVoteOptimistic={onVoteOptimistic}
-            disabled={isExpired}
+            onPress={(direction) => onVotePress(song.id, direction)}
+            disabled={isExpired || (!nickname && !loginGate)}
+            pending={votePending}
             loginGate={loginGate}
-            onAllowanceChange={onVoteAllowanceChange}
           />
         </div>
 

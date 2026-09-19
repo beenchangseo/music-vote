@@ -17,16 +17,19 @@ ship 직전 마지막 점검표. 출시 시점에 한 번 위에서부터 통과
 
 - [ ] Production 프로젝트 ID 확인 (`NEXT_PUBLIC_SUPABASE_URL` 매칭)
 - [ ] `supabase-schema.sql` 실행 (신규 환경만)
-- [ ] 마이그레이션 v2 → v3 → v4 → v5 → v6 → v7 → v8 → v9 → v10 순서대로 실행
-- [ ] RLS 활성화 확인:
-      - `playlists` SELECT/INSERT public, UPDATE 없음
+- [ ] 마이그레이션 v2 → … → v13 → v14 → v15 순서대로 실행
+- [ ] RLS 확인 (v15 기준):
+      - `playlists` SELECT/INSERT public, **UPDATE 정책 없음**
       - `playlist_admin` 정책 없음 = service_role만
-      - `songs` SELECT/INSERT public
-      - `votes` 전체 CRUD public
-      - `comments` SELECT/INSERT public
-      - `setlist_items` SELECT/INSERT public
+      - `songs` SELECT public, INSERT는 본인 계정만, **UPDATE 정책 없음**
+      - `votes` **정책 없음 + anon/authenticated REVOKE** (조회는 뷰로만)
+      - `comments` SELECT public, 쓰기는 본인 계정만
+      - `setlist_items` v10 정책 유지
+- [ ] `node scripts/audit-anon-access.mjs` 전부 통과 (공개 키로 votes 조회 불가)
 - [ ] `playlists.votes_anonymous` 컬럼 존재 + DEFAULT TRUE 확인
-- [ ] 인덱스 확인: `idx_songs_playlist_id`, `idx_songs_tempo_bpm`, `idx_songs_genre`
+- [ ] 인덱스 확인: `idx_songs_playlist_id`, `idx_songs_tempo_bpm`, `idx_songs_genre`, `idx_votes_song_id`
+- [ ] 뷰 확인: `home_stats`, `playlist_stats`, `song_vote_summary`, `song_voters`
+      (미적용 시 통계가 0으로 표시되고 합주방 화면의 점수가 모두 0이 됨)
 
 ## 3. Vercel 환경변수 (Production)
 
@@ -39,7 +42,10 @@ ship 직전 마지막 점검표. 출시 시점에 한 번 위에서부터 통과
 ## 4. Vercel 설정
 
 - [ ] `vercel.json` 리전: `icn1` (한국 사용자 레이턴시 최소)
-- [ ] `vercel.json` crons: `/api/cron/auto-confirm-setlist`, `0 * * * *`
+- [ ] `vercel.json` crons: `/api/cron/auto-confirm-setlist`, `0 15 * * *` (KST 자정)
+- [ ] `vercel.json` `git.deploymentEnabled`: `main` 만 `true`
+- [ ] Git 연동 확인: Project Settings → Git 에 `beenchangseo/music-vote` 연결됨
+- [ ] **마이그레이션을 먼저 적용한 뒤** `main` 에 머지 (push = 즉시 프로덕션)
 - [ ] 배포 후 **Crons 탭**에서 매시간 트리거 활성화 확인
 - [ ] **Functions 탭**에서 export route 확인 (`/api/og`, `/api/setlist-image`, `/api/setlist-pdf`)
 - [ ] **Domains**: `plypick.kr` Production 연결, SSL 자동 갱신
@@ -50,6 +56,7 @@ ship 직전 마지막 점검표. 출시 시점에 한 번 위에서부터 통과
       - JavaScript 키 `src/app/layout.tsx`에 인라인 — 필요 시 환경변수화 검토
       - 플랫폼 → Web → 도메인에 `https://plypick.kr` + `http://localhost:3000` 등록
       - 카카오톡 공유 사용 신청 활성
+      - 카카오 로그인 활성화 + Redirect URI에 Supabase 콜백 등록 (신규 합주방 필수, ADR 0009)
 - [ ] **YouTube oEmbed**: 인증 불필요, 동작 즉시
 - [ ] **Pretendard CDN** (`cdn.jsdelivr.net`): 무료 + 안정
 - [ ] **QR API** (`api.qrserver.com`): 무료, rate limit 관대
@@ -104,7 +111,7 @@ ship 직전 마지막 점검표. 출시 시점에 한 번 위에서부터 통과
 
 ## 11. 도그푸딩 (M0)
 
-- [ ] 본인 밴드 단톡방에 `plypick.kr` 공유 후 5인 멤버 가입 없이 투표 1라운드 완료
+- [ ] 본인 밴드 단톡방에 `plypick.kr` 공유 후 5인 멤버가 카카오 로그인으로 투표 1라운드 완료
 - [ ] 결정 후 카톡 공유 카드 단톡방 노출 확인
 - [ ] 셋리스트 확정 → 링크 공유/이미지/PDF 저장 1회씩 시도
 - [ ] 합주실 실제 사용 시 메트로놈 + 합주 모드 동작 확인
@@ -134,7 +141,7 @@ ship 직전 마지막 점검표. 출시 시점에 한 번 위에서부터 통과
 저희 밴드도 그래서 만든 도구입니다 → plypick.kr
 
 YouTube 링크 붙이고, 멤버에게 카톡으로 보내면 5분 안에 결정.
-가입 X. 닉네임만.
+카카오 로그인 한 번이면 끝. 닉네임은 자동.
 
 가능하면 한 번 써보고 솔직한 의견 부탁드려요.
 ```
@@ -148,7 +155,7 @@ plypick.kr
 👍 카톡으로 멤버 초대
 🎉 5분 안에 다음 합주곡 결정
 
-가입 없이 닉네임만. 한국 인디·취미 밴드를 위해 만들었어요.
+카카오 로그인 한 번이면 끝. 한국 인디·취미 밴드를 위해 만들었어요.
 ```
 
 ---
@@ -156,7 +163,7 @@ plypick.kr
 ## 출시 후 안 깨야 할 약속
 
 - **익명 투표가 디폴트** — 새 기능 추가하다가 voter 닉네임 노출 디폴트로 바꾸지 말 것
-- **가입 0 마찰** — 카카오 로그인 도입 시 반드시 *옵션*으로
+- **로그인은 카카오 1회** — 신규 합주방은 로그인이 필요하다(ADR 0009). 그 위에 닉네임 입력 등 추가 단계를 얹지 말 것
 - **카톡 공유는 빠르게** — 결정 직후 1탭으로 단톡방에 도달 가능해야 함
 - **모바일 first** — 데스크톱 우선 디자인 회귀 X
 - **한국어 카피 톤** — "스마트", "AI 추천" 류 마케팅 수사 금지

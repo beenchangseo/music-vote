@@ -1,6 +1,6 @@
 # Plypick
 
-밴드 곡을 투표로 결정하세요. YouTube 링크를 붙이면 멤버들이 가입 없이 5분 안에 다음 합주 곡을 정합니다.
+밴드 곡을 투표로 결정하세요. YouTube 링크를 붙이면 멤버들이 카카오 로그인 한 번으로 5분 안에 다음 합주 곡을 정합니다.
 
 **Live:** [plypick.kr](https://plypick.kr)
 
@@ -11,13 +11,16 @@
 ## Features
 
 ### 코어
-- **5분 컷 투표** — 가입 없이 닉네임만으로 업/다운 투표, 토글·방향 전환 지원
+- **5분 컷 투표** — 카카오 로그인 한 번으로 업/다운 투표, 토글·방향 전환 지원 (닉네임은 카카오 프로필 자동)
 - **YouTube 자동 메타** — URL 붙이면 제목·아티스트·썸네일 자동
 - **5중 제약 곡 메타** — 키(C~B + Major/minor), BPM, 길이, 난이도(1~5★), 장르 12종
 - **5축 필터** — BPM 구간 / 메타 유무 / 키 / 난이도 ≤ / 장르 다중 선택
 - **실시간 정렬** — 점수순 자동 정렬 + auto-animate
+- **실시간 반영** — 같은 합주방을 연 화면끼리 broadcast 알림 후 각자 서버에서 재조회
 - **댓글** — 곡당 1인 1댓글 + 카드 표면 카운트 배지
-- **익명/기명 모드 토글** — 방장 admin 권한, 기명 시 voter 닉네임 노출
+- **익명/기명 모드 토글** — 방장 admin 권한, 기명 시에만 voter 닉네임이 조회 뷰에 나타남
+- **투표권 할당** — 방장이 참여자별 투표권(1~99)을 정하고, 같은 후보곡에 반복 투표 가능
+- **다른 버전** — 후보곡마다 참고용 YouTube 링크 + 100자 설명 등록
 
 ### 셋리스트
 - **마감 후 자동 확정** — Vercel Cron 매시간 상위 N곡 자동 셋리스트 등록
@@ -55,10 +58,11 @@
 | Styling | Tailwind CSS v4 (@theme inline) |
 | Font | Pretendard Variable (CDN dynamic subset) |
 | Database | Supabase Postgres + RLS |
-| Auth | Anonymous (admin_token 분리 테이블) |
+| Auth | Kakao OAuth (Supabase Auth) — 로그인 이전 합주방은 읽기 전용 보관 |
 | Image | next/image + next/og (Edge) |
 | Analytics | @vercel/analytics + Speed Insights |
 | Cron | Vercel Cron (icn1 region) |
+| Realtime | Supabase Realtime (broadcast 알림) |
 | Animation | @formkit/auto-animate |
 
 ---
@@ -68,7 +72,7 @@
 ### Prerequisites
 - Node.js 20+
 - Supabase 프로젝트 ([supabase.com](https://supabase.com))
-- Kakao Developers 앱 (선택, 카톡 공유)
+- Kakao Developers 앱 (필수 — 로그인 + 카톡 공유)
 
 ### Installation
 ```bash
@@ -109,6 +113,8 @@ supabase-migration-v10.sql    # 투표권·다른 버전·셋리스트 편집, �
 supabase-migration-v11.sql    # 투표 설정 일괄 저장
 supabase-migration-v12.sql    # 할당 모드 후보곡 중복 투표
 supabase-migration-v13.sql    # 로그인 중복 투표를 막는 legacy 닉네임 제약 분리
+supabase-migration-v14.sql    # votes(song_id) 인덱스 복구 + 통계 집계 뷰
+supabase-migration-v15.sql    # 공개 anon 키 쓰기 경로 차단 + 투표 조회 뷰
 ```
 
 기존 운영 DB는 이미 실행한 마이그레이션을 건너뛸 수 있도록 모두 `IF NOT EXISTS`/`ADD COLUMN IF NOT EXISTS` 패턴 사용.
@@ -120,21 +126,36 @@ npm run dev
 http://localhost:3000
 
 ### Deployment
+
+`main` 브랜치에 push 하면 Vercel 이 프로덕션으로 자동 배포한다. 다른 브랜치는 배포하지 않는다.
+
 ```bash
-vercel --prod
+git switch main && git merge --no-ff <branch> && git push origin main
 ```
 
-`vercel.json`에 서울 리전(`icn1`) + 매시간 cron 등록:
+수동 배포가 필요하면 `vercel --prod`.
+
+`vercel.json` 설정:
 ```json
 {
   "regions": ["icn1"],
   "crons": [
-    { "path": "/api/cron/auto-confirm-setlist", "schedule": "0 * * * *" }
-  ]
+    { "path": "/api/cron/auto-confirm-setlist", "schedule": "0 15 * * *" }
+  ],
+  "git": {
+    "deploymentEnabled": { "*": false, "main": true }
+  }
 }
 ```
 
+- `regions` — 서울(`icn1`)
+- `crons` — 매일 15:00 UTC(= KST 자정) 셋리스트 자동 확정
+- `git.deploymentEnabled` — `main` 만 배포. 환경변수가 Production 스코프에만 있어 Preview 배포는 끈다.
+  Preview 를 켜려면 먼저 Preview 스코프 환경변수를 채울 것.
+
 Vercel Dashboard에서 환경변수(`CRON_SECRET`) 설정 후 첫 배포 시 Crons 탭에서 활성화 확인.
+
+**DB 마이그레이션이 있는 배포는 반드시 마이그레이션 먼저.** `main` push 는 즉시 프로덕션이다.
 
 ---
 

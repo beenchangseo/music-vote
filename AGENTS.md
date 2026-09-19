@@ -12,7 +12,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 1. **모바일 first** — 모든 신규 UI는 모바일에서 먼저 동작해야 함. 터치 영역 ≥44px.
 2. **카톡 공유가 코어 바이럴 루프** — 새 기능 추가 시 카톡 공유 카드에 어떻게 노출될지 먼저 고민.
-3. **익명 우선** — 가입 마찰 0 유지. 회원가입/로그인 도입은 별도 큰 결정.
+3. **로그인은 카카오 1회까지** — 모든 합주방은 카카오 로그인이 필요하다(`docs/adr/0009`). 닉네임·프로필은 카카오에서 자동으로 채우고, 그 위에 추가 입력 단계를 얹지 않는다. 로그인 이전 합주방은 읽기 전용 보관 상태다(`docs/adr/0012`) — 새 쓰기 경로를 만들 때 `assertPlaylistWritable` 을 지나가게 할 것.
 4. **타입·시맨틱 토큰 사용** — `text-gray-X` 대신 `text-text`/`text-text-muted`/`text-text-subtle`.
 5. **밴드 멤버가 운영자** — 본인 도그푸딩이 1차 검증. 인터뷰는 출시 후 보정용.
 
@@ -61,7 +61,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `_global-error` Turbopack 프리렌더 실패는 Next 16.2.1 자체 회귀. Vercel 배포는 영향 없음, 로컬 `next build` 실패는 무시 가능 (dev 정상)
 - `youtube-iframe.ts` `YT` namespace는 ambient declare — `export type { YT }`로만 export. value import 금지
 - Spotify Web API audio-features는 2024-11 신규 앱 차단됨. 자동 BPM/키 채우기는 manual 입력 + 외부 도구 링크로 대체
-- `votes` 테이블 RLS: SELECT 공개 (UI 게이팅으로 익명/기명 결정). 기명 모드에서만 닉네임 노출
+- 익명 모드는 화면 가림이 아니라 서버 페이로드에서 투표자를 뺀다(`docs/adr/0011`). `SongWithScore.votes` 는 기명 모드일 때만 채워지고 계정 식별자는 어느 모드에서도 내려보내지 않는다
+- 실시간은 내용 없는 broadcast 알림 + 재조회(`docs/adr/0010`). `postgres_changes` 로 `votes` 를 구독하면 익명 모드가 다시 뚫린다
+- `votes` 테이블은 공개 키로 직접 읽을 수 없다(`docs/adr/0013`). 투표 조회는 `song_vote_summary`·`song_voters` 뷰로만 한다. 쓰기는 Server Action 의 service_role 이나 SECURITY DEFINER 함수로만
 
 ## 한국어 카피 톤
 
