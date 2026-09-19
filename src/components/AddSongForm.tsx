@@ -38,6 +38,11 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
         }
         track("song_added", { has_thumbnail: !result.needsManualTitle });
         onAdded?.();
+        if (result.notEmbeddable) {
+          showAlert(
+            "이 영상은 외부 재생이 막혀 있어요. 곡은 추가했지만 합주 모드에서 재생되지 않을 수 있어요.",
+          );
+        }
         setUrl("");
         setManualTitle("");
         setShowManualTitle(false);

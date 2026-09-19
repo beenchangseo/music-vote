@@ -92,7 +92,14 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 # Vercel Cron 인증 (프로덕션에서 권장)
 CRON_SECRET=randomly-generated-32-char-hex
+
+# YouTube Data API v3 (선택)
+# 곡 추가 시 재생시간 자동 + 임베드 가능 여부 검사. 없으면 그 둘만 건너뛴다.
+YOUTUBE_API_KEY=your_youtube_data_api_key
 ```
+
+> `YOUTUBE_API_KEY` 는 서버에서만 쓴다. `NEXT_PUBLIC_` 접두사를 붙이지 말 것 —
+> 붙이면 브라우저 번들에 그대로 실려 아무나 쿼터를 쓸 수 있다.
 
 > Kakao JavaScript SDK 키는 현재 `src/app/layout.tsx`에 인라인. 별도 환경변수화는 향후 작업.
 
