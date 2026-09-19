@@ -12,7 +12,8 @@
 
 ### 코어
 - **5분 컷 투표** — 카카오 로그인 한 번으로 업/다운 투표, 토글·방향 전환 지원 (닉네임은 카카오 프로필 자동)
-- **YouTube 자동 메타** — URL 붙이면 제목·아티스트·썸네일 자동
+- **곡 이름으로 검색 추가** — 링크는 바로 추가, 그 외에는 YouTube 검색 후 미리듣고 추가
+- **YouTube 자동 메타** — 제목·아티스트·썸네일에 더해 재생시간까지 자동 (Data API)
 - **5중 제약 곡 메타** — 키(C~B + Major/minor), BPM, 길이, 난이도(1~5★), 장르 12종
 - **5축 필터** — BPM 구간 / 메타 유무 / 키 / 난이도 ≤ / 장르 다중 선택
 - **실시간 정렬** — 점수순 자동 정렬 + auto-animate
@@ -123,6 +124,7 @@ supabase-migration-v13.sql    # 로그인 중복 투표를 막는 legacy 닉네�
 supabase-migration-v14.sql    # votes(song_id) 인덱스 복구 + 통계 집계 뷰
 supabase-migration-v15.sql    # 공개 anon 키 쓰기 경로 차단 + 투표 조회 뷰
 supabase-migration-v16.sql    # 집계 뷰에 playlist_id 추가 (왕복 축소)
+supabase-migration-v17.sql    # YouTube 검색 결과 캐시
 ```
 
 기존 운영 DB는 이미 실행한 마이그레이션을 건너뛸 수 있도록 모두 `IF NOT EXISTS`/`ADD COLUMN IF NOT EXISTS` 패턴 사용.
@@ -210,7 +212,7 @@ src/
 │   ├── youtube.ts, youtube-iframe.ts         # oEmbed + IFrame API
 │   ├── song-meta.ts                          # KEY_ROOTS / GENRES + format / validate
 │   ├── analytics.ts                          # 타입 안전 track() wrapper
-│   ├── invidious.ts                          # 메타 fallback
+│   ├── youtube-data.ts                       # Data API (재생시간·임베드·검색)
 │   └── types.ts
 └── middleware.ts                             # Rate limiting
 ```
