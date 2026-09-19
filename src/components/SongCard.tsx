@@ -92,7 +92,7 @@ export default function SongCard({
 
     startTransition(async () => {
       try {
-        await removeSong(song.id, playlistId, adminToken, shareCode);
+        await removeSong(song.id, playlistId, shareCode);
       } catch {
         showAlert("곡 삭제에 실패했습니다.");
       }

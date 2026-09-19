@@ -53,7 +53,7 @@ describe("SongCard deletion permission", () => {
   it("lets a logged-in host request deletion even without a legacy admin token", async () => {
     renderCard({ isAdmin: true, currentUserId: "host" });
     fireEvent.click(screen.getByRole("button", { name: "곡 삭제" }));
-    await waitFor(() => expect(removeSong).toHaveBeenCalledWith("song", "playlist", null, "share"));
+    await waitFor(() => expect(removeSong).toHaveBeenCalledWith("song", "playlist", "share"));
   });
 
   it("lets the song adder request deletion", async () => {

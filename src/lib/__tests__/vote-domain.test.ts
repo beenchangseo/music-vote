@@ -71,21 +71,11 @@ describe("vote allocation domain", () => {
 });
 
 describe("shouldExposeVoters", () => {
-  it("hides voter nicknames in an anonymous login room", () => {
-    expect(
-      shouldExposeVoters({ votes_anonymous: true, creator_user_id: "host" }),
-    ).toBe(false);
+  it("hides voter nicknames while the room is anonymous", () => {
+    expect(shouldExposeVoters({ votes_anonymous: true })).toBe(false);
   });
 
   it("shows voter nicknames once the host turns on named voting", () => {
-    expect(
-      shouldExposeVoters({ votes_anonymous: false, creator_user_id: "host" }),
-    ).toBe(true);
-  });
-
-  it("keeps sending nicknames for legacy rooms that identify voters by nickname", () => {
-    expect(
-      shouldExposeVoters({ votes_anonymous: true, creator_user_id: null }),
-    ).toBe(true);
+    expect(shouldExposeVoters({ votes_anonymous: false })).toBe(true);
   });
 });

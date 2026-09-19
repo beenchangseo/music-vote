@@ -1,5 +1,9 @@
 import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
+import {
+  ARCHIVED_PLAYLIST_MESSAGE,
+  isArchivedPlaylist,
+} from "@/lib/playlist-access";
 import { createAdminClient } from "@/lib/supabase/server";
 
 export async function assertSetlistEditor(
@@ -14,14 +18,13 @@ export async function assertSetlistEditor(
     .single();
 
   if (!playlist) throw new Error("합주방을 찾을 수 없습니다.");
+  // 보관된 합주방은 셋리스트도 읽기 전용이다.
+  if (isArchivedPlaylist(playlist)) throw new Error(ARCHIVED_PLAYLIST_MESSAGE);
 
   if (playlist.setlist_edit_mode === "host_only") {
     await assertPlaylistAdmin(playlistId, adminToken);
     return;
   }
-
-  // 옛 익명 합주방은 기존의 링크 기반 공동 편집을 유지한다.
-  if (!playlist.creator_user_id) return;
 
   const user = await getCurrentUser();
   if (!user) throw new Error("로그인이 필요합니다.");

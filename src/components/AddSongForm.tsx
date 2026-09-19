@@ -8,14 +8,13 @@ import { track } from "@/lib/analytics";
 interface AddSongFormProps {
   playlistId: string;
   shareCode: string;
-  nickname: string;
   /** 로그인 모드 + 비로그인 → 폼 대신 카카오 로그인 카드 노출. */
   loginGate?: boolean;
   /** 곡이 저장된 뒤 같은 합주방의 다른 화면에 알린다. */
   onAdded?: () => void;
 }
 
-export default function AddSongForm({ playlistId, shareCode, nickname, loginGate = false, onAdded }: AddSongFormProps) {
+export default function AddSongForm({ playlistId, shareCode, loginGate = false, onAdded }: AddSongFormProps) {
   const [url, setUrl] = useState("");
   const [manualTitle, setManualTitle] = useState("");
   const [showManualTitle, setShowManualTitle] = useState(false);
@@ -32,7 +31,7 @@ export default function AddSongForm({ playlistId, shareCode, nickname, loginGate
 
     startTransition(async () => {
       try {
-        const result = await addSong(playlistId, url.trim(), shareCode, nickname || undefined, manualTitle.trim() || undefined);
+        const result = await addSong(playlistId, url.trim(), shareCode, manualTitle.trim() || undefined);
         if (result.needsManualTitle && !manualTitle) {
           setShowManualTitle(true);
           return;

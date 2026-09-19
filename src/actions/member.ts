@@ -2,6 +2,7 @@
 
 import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
+import { isArchivedPlaylistId } from "@/lib/playlist-access";
 import { createAdminClient, createServerSupabaseClient } from "@/lib/supabase/server";
 import type { PlaylistMember, VoteAllowance, VotingMode } from "@/lib/types";
 import { revalidatePath } from "next/cache";
@@ -15,6 +16,8 @@ export async function registerPlaylistMember(
 ): Promise<VoteAllowance | null> {
   const user = await getCurrentUser();
   if (!user) return null;
+  // 보관된 합주방은 참여자 개념이 없다.
+  if (await isArchivedPlaylistId(playlistId)) return null;
 
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase.rpc("register_playlist_member", {

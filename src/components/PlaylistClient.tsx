@@ -6,7 +6,6 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useDialog } from "./DialogProvider";
-import NicknameModal from "./NicknameModal";
 import LoginButton from "./LoginButton";
 import PlaylistHeader from "./PlaylistHeader";
 import AddSongForm from "./AddSongForm";
@@ -28,6 +27,7 @@ import VotingSettingsButton from "./VotingSettingsButton";
 import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import type { ViewMode } from "./NavigationBar";
+import { isArchivedPlaylist } from "@/lib/playlist-access";
 import type { Playlist, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/lib/types";
 
 interface PlaylistClientProps {
@@ -41,14 +41,12 @@ interface PlaylistClientProps {
 }
 
 export default function PlaylistClient({ playlist, songs, shareCode, participantCount, userNickname, currentUserId, currentUserAvatarUrl }: PlaylistClientProps) {
-  // 신규(로그인 강제) 모드 vs 기존 익명 모드
-  const requiresLogin = !!playlist.creator_user_id;
+  // 보관된 합주방: 로그인 도입 전 익명 합주방. 지난 기록만 읽는다.
+  const isArchived = isArchivedPlaylist(playlist);
   const loggedIn = !!currentUserId;
-  const loginGate = requiresLogin && !loggedIn;
-  // 로그인 모드 + 로그인 사용자: 카카오 닉을 즉시 nickname 상태로 사용 (NicknameModal 스킵)
-  const [nickname, setNickname] = useState(
-    requiresLogin && loggedIn ? (userNickname || "") : ""
-  );
+  const loginGate = !isArchived && !loggedIn;
+  // 닉네임은 카카오 프로필에서 그대로 쓴다.
+  const nickname = !isArchived && loggedIn ? userNickname || "" : "";
   const [viewMode, setViewMode] = useState<"card" | "compact">("compact");
   const [navMode, setNavMode] = useState<ViewMode>("playlist");
   const [adminToken, setAdminToken] = useState<string | null>(null);
@@ -69,10 +67,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
   const playerRef = useRef<YouTubePlayerHandle>(null);
   const [listParent] = useAutoAnimate({ duration: 300, easing: "ease-in-out" });
 
-  const handleNickname = useCallback((name: string) => {
-    setNickname(name);
-  }, []);
-
   useEffect(() => {
     try {
       const myPlaylists = JSON.parse(localStorage.getItem("myPlaylists") || "[]");
@@ -88,20 +82,19 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
   // 1) 로그인 모드 + 본인이 만든 플리 → creator_user_id 매칭
   // 2) 익명 모드 + nickname == creator_nickname (DB 기반)
   // 3) legacy adminToken fallback
-  const isAdmin = playlist.creator_user_id
-    ? !!currentUserId && currentUserId === playlist.creator_user_id
-    : playlist.creator_nickname
-      ? nickname.toLowerCase() === playlist.creator_nickname.toLowerCase()
-      : !!adminToken;
+  // 보관된 합주방에서 방장 표시는 남은 링크 토큰으로만 판정한다. 방 삭제에만 쓴다.
+  const isAdmin = isArchived
+    ? !!adminToken
+    : !!currentUserId && currentUserId === playlist.creator_user_id;
   const isExpired = playlist.deadline ? new Date(playlist.deadline) < new Date() : false;
-  const canEditSetlist = !loginGate && (setlistEditMode === "everyone" || isAdmin);
+  const canEditSetlist = !isArchived && !loginGate && (setlistEditMode === "everyone" || isAdmin);
 
   useEffect(() => {
-    if (!requiresLogin || !loggedIn) return;
+    if (isArchived || !loggedIn) return;
     registerPlaylistMember(playlist.id).then(setAllowance).catch(() => {
       showAlert("참여자 등록에 실패했습니다. 새로고침 후 다시 시도해주세요.");
     });
-  }, [loggedIn, playlist.id, requiresLogin, showAlert]);
+  }, [isArchived, loggedIn, playlist.id, showAlert]);
 
   // Lazy load setlist items on first mode switch
   const handleModeChange = useCallback(async (mode: ViewMode) => {
@@ -142,27 +135,12 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
 
   const { notifyChange } = usePlaylistRealtime(shareCode, handleRemoteChange);
 
-  // 로그인 합주방은 서버가 계정 기준으로 내 표를 계산한다.
-  // 기존 익명 합주방만 화면에서 고른 닉네임으로 맞춘다.
-  const songsForVoting = useMemo(() => {
-    if (requiresLogin || !nickname) return songs;
-    const target = nickname.toLowerCase();
-    return songs.map((song) => {
-      const myVotes = song.votes.filter((vote) => vote.nickname.toLowerCase() === target);
-      return {
-        ...song,
-        userVote: myVotes[0]?.vote_type ?? null,
-        userVoteCount: myVotes.length,
-      };
-    });
-  }, [songs, requiresLogin, nickname]);
-
   const handleAllowanceChange = useCallback((usedVotes: number, voteLimit: number) => {
     setAllowance((current) => (current ? { ...current, usedVotes, voteLimit } : current));
   }, []);
 
   const { songsWithVotes, pressVote, isVotePending, resetVotes } = usePlaylistVotes({
-    songs: songsForVoting,
+    songs,
     votingMode: playlist.voting_mode,
     shareCode,
     nickname,
@@ -245,17 +223,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
 
   return (
     <>
-      {!requiresLogin && (
-        <NicknameModal
-          onSubmit={handleNickname}
-          defaultNickname={userNickname}
-          existingNicknames={Array.from(new Set(songs.flatMap((s) => [
-            ...s.votes.map((v) => v.nickname),
-            ...(s.added_by ? [s.added_by] : []),
-          ])))}
-        />
-      )}
-
       <div className="min-h-full bg-bg">
         <div className={`max-w-lg mx-auto px-4 py-6 ${bottomPadding}`}>
           <PlaylistHeader
@@ -270,6 +237,21 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
             currentUserNickname={userNickname}
             currentUserAvatarUrl={currentUserAvatarUrl}
           />
+
+          {isArchived && (
+            <div className="mt-3 rounded-lg border border-border bg-surface/60 px-3 py-2 animate-fade-in" role="status">
+              <p className="text-caption leading-relaxed text-text-muted">
+                <span className="font-semibold text-text">보관된 합주방이에요.</span>{" "}
+                지난 투표 결과와 셋리스트는 그대로 볼 수 있지만, 새로 투표하거나 곡을 추가할 수는 없어요.
+              </p>
+              <Link
+                href="/"
+                className="mt-1.5 inline-flex min-h-11 items-center text-caption font-semibold text-primary hover:underline underline-offset-2"
+              >
+                새 합주방 만들기 →
+              </Link>
+            </div>
+          )}
 
           {/* Invitation banner — 차분한 톤으로 (곡 리스트가 첫 시선을 가져가도록) */}
           {loginGate && (
@@ -309,13 +291,13 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
             )}
           </div>
 
-          {navMode !== "setlist" && isAdmin && (requiresLogin || adminToken) && (
+          {navMode !== "setlist" && isAdmin && !isArchived && (
             <div className="mt-3 flex justify-center">
               <VotingSettingsButton
                 playlistId={playlist.id}
                 shareCode={shareCode}
                 adminToken={adminToken}
-                supportsVoteAllocation={requiresLogin}
+                supportsVoteAllocation
                 currentUserId={currentUserId}
                 onAllowanceChange={(mode, usedVotes, voteLimit) => setAllowance({ mode, usedVotes, voteLimit })}
                 onVotesAnonymousChange={(next) => {
@@ -338,9 +320,9 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
           {navMode === "playlist" && (
             <>
               {/* Add song form (hide if expired) */}
-              {!isExpired && (
+              {!isExpired && !isArchived && (
                 <div className="mt-6">
-                  <AddSongForm playlistId={playlist.id} shareCode={shareCode} nickname={nickname} loginGate={loginGate} onAdded={notifyChange} />
+                  <AddSongForm playlistId={playlist.id} shareCode={shareCode} loginGate={loginGate} onAdded={notifyChange} />
                 </div>
               )}
 

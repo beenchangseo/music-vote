@@ -7,12 +7,13 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/supabase/server", () => ({
   createServerSupabaseClient: vi.fn(async () => ({ rpc: mocks.rpc })),
+  createAdminClient: vi.fn(),
 }));
 vi.mock("@/lib/auth", () => ({
   getCurrentUser: vi.fn(async () => ({ id: "user", nickname: "참여자" })),
 }));
-vi.mock("@/lib/playlist-mode", () => ({
-  getPlaylistModeBySong: vi.fn(async () => ({ requiresLogin: true })),
+vi.mock("@/lib/playlist-access", () => ({
+  assertPlaylistWritableBySong: vi.fn(async () => "playlist"),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 
@@ -33,7 +34,7 @@ describe("castVote", () => {
       },
     });
 
-    await expect(castVote("song", "참여자", 1, "share")).resolves.toEqual({
+    await expect(castVote("song", 1, "share")).resolves.toEqual({
       success: false,
       reason: "vote_limit_reached",
     });

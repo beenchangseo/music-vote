@@ -2,8 +2,11 @@
 
 import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
-import { getPlaylistModeById } from "@/lib/playlist-mode";
-import { assertPlaylistAdmin } from "@/lib/playlist-admin";
+import {
+  ARCHIVED_PLAYLIST_MESSAGE,
+  assertPlaylistWritable,
+  isArchivedPlaylist,
+} from "@/lib/playlist-access";
 import { extractVideoId, fetchVideoMetadata } from "@/lib/youtube";
 import {
   isValidKeyRoot,
@@ -18,7 +21,6 @@ export async function addSong(
   playlistId: string,
   youtubeUrl: string,
   shareCode: string,
-  addedBy?: string,
   manualTitle?: string
 ) {
   if (!youtubeUrl || youtubeUrl.length > 500) {
@@ -36,17 +38,12 @@ export async function addSong(
   const artist = metadata?.author_name || null;
   const thumbnailUrl = metadata?.thumbnail_url || `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
 
-  const supabase = await createServerSupabaseClient();
-  const { requiresLogin } = await getPlaylistModeById(playlistId);
+  await assertPlaylistWritable(playlistId);
 
-  let addedByUserId: string | null = null;
-  let resolvedAddedBy: string | null = addedBy || null;
-  if (requiresLogin) {
-    const user = await getCurrentUser();
-    if (!user) throw new Error("로그인이 필요합니다.");
-    addedByUserId = user.id;
-    resolvedAddedBy = user.nickname;
-  }
+  const user = await getCurrentUser();
+  if (!user) throw new Error("로그인이 필요합니다.");
+
+  const supabase = await createServerSupabaseClient();
 
   const { error } = await supabase.from("songs").insert({
     playlist_id: playlistId,
@@ -55,8 +52,8 @@ export async function addSong(
     youtube_url: youtubeUrl,
     youtube_video_id: videoId,
     thumbnail_url: thumbnailUrl,
-    added_by: resolvedAddedBy,
-    added_by_user_id: addedByUserId,
+    added_by: user.nickname,
+    added_by_user_id: user.id,
   });
 
   if (error) throw new Error("곡 추가에 실패했습니다.");
@@ -81,6 +78,8 @@ export async function updateSongMeta(
   shareCode: string,
   data: SongMetaUpdate,
 ) {
+  await assertPlaylistWritable(playlistId);
+
   const supabase = await createServerSupabaseClient();
 
   // Verify song belongs to playlist
@@ -139,7 +138,6 @@ export async function updateSongMeta(
 export async function removeSong(
   songId: string,
   playlistId: string,
-  adminToken: string | null,
   shareCode: string
 ) {
   const admin = createAdminClient();
@@ -155,16 +153,13 @@ export async function removeSong(
     }>();
 
   if (!song) throw new Error("곡을 찾을 수 없습니다.");
+  if (isArchivedPlaylist(song.playlists)) throw new Error(ARCHIVED_PLAYLIST_MESSAGE);
 
-  if (song.playlists.creator_user_id) {
-    const user = await getCurrentUser();
-    if (!user) throw new Error("로그인이 필요합니다.");
-    const isHost = user.id === song.playlists.creator_user_id;
-    const isAdder = user.id === song.added_by_user_id;
-    if (!isHost && !isAdder) throw new Error("이 곡을 삭제할 권한이 없습니다.");
-  } else {
-    await assertPlaylistAdmin(playlistId, adminToken);
-  }
+  const user = await getCurrentUser();
+  if (!user) throw new Error("로그인이 필요합니다.");
+  const isHost = user.id === song.playlists.creator_user_id;
+  const isAdder = user.id === song.added_by_user_id;
+  if (!isHost && !isAdder) throw new Error("이 곡을 삭제할 권한이 없습니다.");
 
   const { error } = await admin
     .from("songs")

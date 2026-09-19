@@ -43,7 +43,7 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
 
     startTransition(async () => {
       try {
-        await addOrUpdateComment(songId, nickname, content.trim(), shareCode);
+        await addOrUpdateComment(songId, content.trim(), shareCode);
         // Refresh
         const data = await getCommentsBySong(songId);
         setComments(data);
@@ -61,7 +61,7 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
 
     startTransition(async () => {
       try {
-        await deleteComment(songId, nickname, shareCode);
+        await deleteComment(songId, shareCode);
         setComments((prev) => prev.filter((c) => c.nickname.toLowerCase() !== nickname.toLowerCase()));
         setContent("");
         setIsEditing(false);
@@ -162,7 +162,7 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
 
         {!nickname && !loginGate && (
           <div className="px-4 py-3 border-t border-border text-center shrink-0">
-            <p className="text-xs text-text-subtle">닉네임을 입력하면 댓글을 작성할 수 있습니다</p>
+            <p className="text-xs text-text-subtle">보관된 합주방이라 댓글을 새로 남길 수 없어요</p>
           </div>
         )}
 

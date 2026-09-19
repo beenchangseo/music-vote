@@ -27,7 +27,7 @@ export default function CommentSection({ songId, comments, nickname, shareCode, 
 
     startTransition(async () => {
       try {
-        await addOrUpdateComment(songId, nickname, content.trim(), shareCode);
+        await addOrUpdateComment(songId, content.trim(), shareCode);
         // Optimistic update
         const now = new Date().toISOString();
         if (myComment) {

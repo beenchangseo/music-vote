@@ -142,7 +142,7 @@ export function usePlaylistVotes({
 
       startTransition(async () => {
         try {
-          const result = await castVote(songId, nickname, direction, shareCode);
+          const result = await castVote(songId, direction, shareCode);
           if (!result.success) {
             clearOverride(songId);
             if (result.reason === "vote_limit_reached") onError(VOTE_LIMIT_REACHED_MESSAGE);

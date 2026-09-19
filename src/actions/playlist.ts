@@ -134,10 +134,12 @@ export async function createPlaylist(
 export async function updateCreatorNickname(
   playlistId: string,
   creatorNickname: string,
-  shareCode: string
+  shareCode: string,
+  adminToken: string | null = null,
 ) {
-  const supabase = await createServerSupabaseClient();
-  const { error } = await supabase
+  await assertPlaylistAdmin(playlistId, adminToken);
+  const admin = createAdminClient();
+  const { error } = await admin
     .from("playlists")
     .update({ creator_nickname: creatorNickname })
     .eq("id", playlistId);
@@ -149,11 +151,13 @@ export async function updateCreatorNickname(
 export async function updateAnnouncementPublic(
   playlistId: string,
   announcement: string,
-  shareCode: string
+  shareCode: string,
+  adminToken: string | null = null,
 ) {
-  const supabase = await createServerSupabaseClient();
+  await assertPlaylistAdmin(playlistId, adminToken);
+  const admin = createAdminClient();
 
-  const { error } = await supabase
+  const { error } = await admin
     .from("playlists")
     .update({ announcement: announcement || null })
     .eq("id", playlistId);
@@ -249,7 +253,8 @@ export async function updateSetlistEditMode(
 }
 
 export async function deletePlaylist(playlistId: string, adminToken: string | null) {
-  await assertPlaylistAdmin(playlistId, adminToken);
+  // 보관된 합주방도 방장이 직접 정리할 수 있어야 한다.
+  await assertPlaylistAdmin(playlistId, adminToken, { allowArchived: true });
   const admin = createAdminClient();
   const { error } = await admin
     .from("playlists")
