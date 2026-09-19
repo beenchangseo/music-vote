@@ -115,6 +115,7 @@ supabase-migration-v12.sql    # 할당 모드 후보곡 중복 투표
 supabase-migration-v13.sql    # 로그인 중복 투표를 막는 legacy 닉네임 제약 분리
 supabase-migration-v14.sql    # votes(song_id) 인덱스 복구 + 통계 집계 뷰
 supabase-migration-v15.sql    # 공개 anon 키 쓰기 경로 차단 + 투표 조회 뷰
+supabase-migration-v16.sql    # 집계 뷰에 playlist_id 추가 (왕복 축소)
 ```
 
 기존 운영 DB는 이미 실행한 마이그레이션을 건너뛸 수 있도록 모두 `IF NOT EXISTS`/`ADD COLUMN IF NOT EXISTS` 패턴 사용.
