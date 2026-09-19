@@ -17,7 +17,7 @@ ship 직전 마지막 점검표. 출시 시점에 한 번 위에서부터 통과
 
 - [ ] Production 프로젝트 ID 확인 (`NEXT_PUBLIC_SUPABASE_URL` 매칭)
 - [ ] `supabase-schema.sql` 실행 (신규 환경만)
-- [ ] 마이그레이션 v2 → … → v14 → v15 → v16 순서대로 실행
+- [ ] 마이그레이션 v2 → … → v15 → v16 → v17 순서대로 실행
 - [ ] RLS 확인 (v15 기준):
       - `playlists` SELECT/INSERT public, **UPDATE 정책 없음**
       - `playlist_admin` 정책 없음 = service_role만
@@ -37,6 +37,8 @@ ship 직전 마지막 점검표. 출시 시점에 한 번 위에서부터 통과
 - [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` (Production only, Preview는 별도 키 권장)
 - [ ] `CRON_SECRET` — `openssl rand -hex 32`로 생성. 미설정 시 cron 인증 자동 통과 (개발 편의), 프로덕션 필수
+- [ ] `YOUTUBE_API_KEY` — Data API v3 키. 없으면 재생시간 자동·검색만 꺼지고 나머지는 동작.
+      `NEXT_PUBLIC_` 접두사 금지 (브라우저에 노출되면 남이 쿼터를 쓴다)
 - [ ] 환경 스코프 (Production / Preview / Development) 분리 확인
 
 ## 4. Vercel 설정
