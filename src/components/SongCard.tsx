@@ -101,6 +101,20 @@ export default function SongCard({
 
   const canRemove = isAdmin || (!!currentUserId && currentUserId === song.added_by_user_id);
 
+  // VoteButtons 는 값을 그리기만 하므로 화면 폭에 따라 두 자리 중 하나에 놓아도 안전하다.
+  const voteButtons = (
+    <VoteButtons
+      score={song.score}
+      userVote={song.userVote}
+      userVoteCount={song.userVoteCount}
+      votingMode={votingMode}
+      onPress={(direction) => onVotePress(song.id, direction)}
+      disabled={isExpired || (!nickname && !loginGate)}
+      pending={votePending}
+      loginGate={loginGate}
+    />
+  );
+
   // Compact (playlist-style) view
   if (viewMode === "compact") {
     return (
@@ -125,7 +139,7 @@ export default function SongCard({
             </button>
           </div>
         )}
-        <div className="flex items-center gap-3 p-3">
+        <div className="flex items-start gap-3 p-3">
           {/* Thumbnail + play */}
           <button
             onClick={onTogglePlay}
@@ -168,7 +182,8 @@ export default function SongCard({
 
           {/* Song info */}
           <div className="min-w-0 flex-1">
-            <h3 className={`font-medium text-sm truncate ${isCurrent ? "text-primary" : "text-text"}`}>{song.title}</h3>
+            {/* 한 줄로 자르면 대여섯 글자에서 끊긴다. 두 줄까지 보여준다. */}
+            <h3 className={`font-medium text-sm leading-snug line-clamp-2 ${isCurrent ? "text-primary" : "text-text"}`}>{song.title}</h3>
             <div className="flex items-center gap-2 mt-0.5">
               {song.artist && (
                 <p className="text-xs text-text-muted truncate min-w-0">{song.artist}</p>
@@ -196,18 +211,6 @@ export default function SongCard({
               )}
             </div>
           </div>
-
-          {/* Vote buttons */}
-          <VoteButtons
-            score={song.score}
-            userVote={song.userVote}
-            userVoteCount={song.userVoteCount}
-            votingMode={votingMode}
-            onPress={(direction) => onVotePress(song.id, direction)}
-            disabled={isExpired || (!nickname && !loginGate)}
-            pending={votePending}
-            loginGate={loginGate}
-          />
 
           {/* More menu (⋮) */}
           <div className="relative shrink-0" ref={showMenu ? menuRef : undefined}>
@@ -268,7 +271,14 @@ export default function SongCard({
             )}
           </div>
         </div>
-        <VoterStrip votes={song.votes} hide={votesAnonymous} />
+        {/*
+          투표를 아랫줄로 내려 제목 폭을 확보한다. 같은 줄에 두면 제목에 80px 밖에 남지 않는다.
+          이미 있는 투표자 줄과 한 줄을 나눠 써서 카드가 더 높아지지 않는다.
+        */}
+        <div className="flex items-center gap-2 border-t border-border px-3 py-1.5">
+          <VoterStrip votes={song.votes} hide={votesAnonymous} />
+          <div className="ml-auto shrink-0">{voteButtons}</div>
+        </div>
         {showComments && (
           <CommentModal
             songId={song.id}
@@ -336,21 +346,12 @@ export default function SongCard({
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className={`font-semibold truncate ${isCurrent ? "text-primary" : "text-text"}`}>{song.title}</h3>
+            <h3 className={`font-semibold leading-snug line-clamp-2 ${isCurrent ? "text-primary" : "text-text"}`}>{song.title}</h3>
             {song.artist && (
               <p className="text-sm text-text-muted truncate mt-0.5">{song.artist}</p>
             )}
           </div>
-          <VoteButtons
-            score={song.score}
-            userVote={song.userVote}
-            userVoteCount={song.userVoteCount}
-            votingMode={votingMode}
-            onPress={(direction) => onVotePress(song.id, direction)}
-            disabled={isExpired || (!nickname && !loginGate)}
-            pending={votePending}
-            loginGate={loginGate}
-          />
+          <div className="shrink-0">{voteButtons}</div>
         </div>
 
         <div className="mt-2 flex items-center gap-2">
@@ -454,7 +455,7 @@ function VoterStrip({
   if (up.length === 0 && down.length === 0) return null;
 
   return (
-    <div className="px-3 py-1.5 border-b border-border flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-text-muted">
+    <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-caption text-text-muted">
       {up.length > 0 && (
         <span className="inline-flex items-center gap-1 min-w-0">
           <svg
