@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
         hostname: "img.youtube.com",
       },
       {
+        // search.list 의 snippet.thumbnails 는 이 호스트로 온다.
+        protocol: "https",
+        hostname: "i.ytimg.com",
+      },
+      {
         protocol: "https",
         hostname: "api.qrserver.com",
       },

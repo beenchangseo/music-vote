@@ -95,3 +95,104 @@ export async function fetchSingleVideoDetails(
   const map = await fetchVideoDetails([videoId]);
   return map.get(videoId) ?? null;
 }
+
+// ============================================================
+// 검색
+// ============================================================
+
+const SEARCH_ENDPOINT = "https://www.googleapis.com/youtube/v3/search";
+const SEARCH_MAX_RESULTS = 8;
+
+export interface SearchResult {
+  videoId: string;
+  title: string;
+  channel: string;
+  thumbnail: string;
+  durationSeconds: number | null;
+}
+
+export type SearchOutcome =
+  | { status: "ok"; results: SearchResult[] }
+  | { status: "no_key" }
+  | { status: "quota_exceeded" }
+  | { status: "failed" };
+
+/** search.list 의 snippet 은 `&amp;` `&#39;` 같은 엔티티를 그대로 준다. */
+export function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCharCode(parseInt(code, 16)));
+}
+
+/**
+ * 곡 이름으로 영상을 찾는다.
+ *
+ * search.list 는 하루 100회 전용 쿼터라 호출 하나가 비싸다. 호출부에서
+ * 반드시 캐시를 거칠 것. 키 입력마다 부르면 안 된다.
+ *
+ * videoEmbeddable=true 로 임베드 불가 영상을 미리 걸러 합주 중에 재생되지
+ * 않는 곡이 후보에 오르지 않게 한다.
+ */
+export async function searchVideos(query: string): Promise<SearchOutcome> {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) return { status: "no_key" };
+
+  const trimmed = query.trim();
+  if (!trimmed) return { status: "ok", results: [] };
+
+  const params = new URLSearchParams({
+    part: "snippet",
+    type: "video",
+    videoEmbeddable: "true",
+    maxResults: String(SEARCH_MAX_RESULTS),
+    q: trimmed,
+    key: apiKey,
+  });
+
+  try {
+    const res = await fetch(`${SEARCH_ENDPOINT}?${params}`);
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      const reason = body?.error?.errors?.[0]?.reason;
+      if (reason === "quotaExceeded" || reason === "dailyLimitExceeded") {
+        return { status: "quota_exceeded" };
+      }
+      return { status: "failed" };
+    }
+
+    const data = await res.json();
+    const items = (data.items ?? []).filter((i: { id?: { videoId?: string } }) => i?.id?.videoId);
+    if (items.length === 0) return { status: "ok", results: [] };
+
+    // 길이는 search.list 가 주지 않는다. videos.list 로 한 번 더 묶어 받는다(1 유닛).
+    const details = await fetchVideoDetails(
+      items.map((i: { id: { videoId: string } }) => i.id.videoId),
+    );
+
+    const results: SearchResult[] = items.map(
+      (item: {
+        id: { videoId: string };
+        snippet: { title: string; channelTitle: string; thumbnails?: Record<string, { url: string }> };
+      }) => {
+        const videoId = item.id.videoId;
+        const thumbs = item.snippet.thumbnails ?? {};
+        return {
+          videoId,
+          title: decodeHtmlEntities(item.snippet.title ?? ""),
+          channel: decodeHtmlEntities(item.snippet.channelTitle ?? ""),
+          thumbnail:
+            thumbs.medium?.url ?? thumbs.default?.url ?? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
+          durationSeconds: details.get(videoId)?.durationSeconds ?? null,
+        };
+      },
+    );
+
+    return { status: "ok", results };
+  } catch {
+    return { status: "failed" };
+  }
+}

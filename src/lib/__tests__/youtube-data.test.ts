@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseIsoDuration } from "../youtube-data";
+import { decodeHtmlEntities, parseIsoDuration } from "../youtube-data";
 
 describe("parseIsoDuration", () => {
   it("reads the common minutes and seconds form", () => {
@@ -33,5 +33,20 @@ describe("parseIsoDuration", () => {
     expect(parseIsoDuration("")).toBeNull();
     expect(parseIsoDuration("4:13")).toBeNull();
     expect(parseIsoDuration("PTM")).toBeNull();
+  });
+});
+
+describe("decodeHtmlEntities", () => {
+  it("restores the entities YouTube returns in titles", () => {
+    expect(decodeHtmlEntities("검정치마 - &#39;EVERYTHING&#39;")).toBe(
+      "검정치마 - 'EVERYTHING'",
+    );
+    expect(decodeHtmlEntities("Rock &amp; Roll")).toBe("Rock & Roll");
+    expect(decodeHtmlEntities("&quot;Hello&quot;")).toBe('"Hello"');
+    expect(decodeHtmlEntities("&lt;MV&gt;")).toBe("<MV>");
+  });
+
+  it("leaves plain text alone", () => {
+    expect(decodeHtmlEntities("왜 그래 (What Happened)")).toBe("왜 그래 (What Happened)");
   });
 });
