@@ -18,7 +18,7 @@
 - **실시간 정렬** — 점수순 자동 정렬 + auto-animate
 - **실시간 반영** — 같은 합주방을 연 화면끼리 broadcast 알림 후 각자 서버에서 재조회
 - **댓글** — 곡당 1인 1댓글 + 카드 표면 카운트 배지
-- **익명/기명 모드 토글** — 방장 admin 권한, 기명 시 voter 닉네임 노출
+- **익명/기명 모드 토글** — 방장 admin 권한, 기명 시에만 voter 닉네임이 조회 뷰에 나타남
 - **투표권 할당** — 방장이 참여자별 투표권(1~99)을 정하고, 같은 후보곡에 반복 투표 가능
 - **다른 버전** — 후보곡마다 참고용 YouTube 링크 + 100자 설명 등록
 
@@ -58,7 +58,7 @@
 | Styling | Tailwind CSS v4 (@theme inline) |
 | Font | Pretendard Variable (CDN dynamic subset) |
 | Database | Supabase Postgres + RLS |
-| Auth | Kakao OAuth (Supabase Auth) — 기존 익명 합주방은 legacy 경로 유지 |
+| Auth | Kakao OAuth (Supabase Auth) — 로그인 이전 합주방은 읽기 전용 보관 |
 | Image | next/image + next/og (Edge) |
 | Analytics | @vercel/analytics + Speed Insights |
 | Cron | Vercel Cron (icn1 region) |
@@ -114,6 +114,7 @@ supabase-migration-v11.sql    # 투표 설정 일괄 저장
 supabase-migration-v12.sql    # 할당 모드 후보곡 중복 투표
 supabase-migration-v13.sql    # 로그인 중복 투표를 막는 legacy 닉네임 제약 분리
 supabase-migration-v14.sql    # votes(song_id) 인덱스 복구 + 통계 집계 뷰
+supabase-migration-v15.sql    # 공개 anon 키 쓰기 경로 차단 + 투표 조회 뷰
 ```
 
 기존 운영 DB는 이미 실행한 마이그레이션을 건너뛸 수 있도록 모두 `IF NOT EXISTS`/`ADD COLUMN IF NOT EXISTS` 패턴 사용.

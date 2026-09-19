@@ -6,10 +6,17 @@ import PlaylistClient from "@/components/PlaylistClient";
 import type { Metadata } from "next";
 import type { Playlist, Song, SongWithScore } from "@/lib/types";
 
-/** votes 조회 결과. user_id 는 내 표를 고르는 데만 쓰고 화면으로 내려보내지 않는다. */
-type VoteRow = {
+/** song_vote_summary 뷰. 점수와 내 표만 담고 다른 사람의 신원은 담지 않는다. */
+type VoteSummaryRow = {
   song_id: string;
-  user_id: string | null;
+  score: number | null;
+  my_vote_count: number | null;
+  my_vote_type: number | null;
+};
+
+/** song_voters 뷰. 기명 합주방에서만 행이 나온다. */
+type VoterRow = {
+  song_id: string;
   nickname: string;
   vote_type: number;
 };
@@ -87,23 +94,39 @@ export default async function PlaylistPage({ params }: PageProps) {
       .single(),
   ]);
 
+  // 익명 모드에서는 누가 어디에 찍었는지를 아예 조회하지 않는다.
+  // 화면에서 가리기만 하면 페이로드에 그대로 남는다.
+  const exposeVoters = shouldExposeVoters(playlist as Playlist);
+
   const songIds = (songs || []).map((s: Song) => s.id);
-  const [votesResult, commentsResult, versionsResult] = songIds.length > 0
+  const [summaryResult, votersResult, commentsResult, versionsResult] = songIds.length > 0
     ? await Promise.all([
         supabase
-          .from("votes")
-          .select("song_id, user_id, nickname, vote_type")
+          .from("song_vote_summary")
+          .select("song_id, score, my_vote_count, my_vote_type")
           .in("song_id", songIds),
+        exposeVoters
+          ? supabase.from("song_voters").select("song_id, nickname, vote_type").in("song_id", songIds)
+          : Promise.resolve({ data: [] as VoterRow[] }),
         supabase.from("comments").select("song_id").in("song_id", songIds),
         supabase.from("song_versions").select("song_id").in("song_id", songIds),
       ])
     : [
-        { data: [] as VoteRow[] },
+        { data: [] as VoteSummaryRow[] },
+        { data: [] as VoterRow[] },
         { data: [] as { song_id: string }[] },
         { data: [] as { song_id: string }[] },
       ];
 
-  const votes = votesResult.data;
+  const summaryMap = new Map<string, VoteSummaryRow>();
+  for (const row of (summaryResult.data || []) as VoteSummaryRow[]) {
+    summaryMap.set(row.song_id, row);
+  }
+  const votersMap: Record<string, VoterRow[]> = {};
+  for (const voter of (votersResult.data || []) as VoterRow[]) {
+    (votersMap[voter.song_id] ??= []).push(voter);
+  }
+
   const commentRows = (commentsResult.data || []) as { song_id: string }[];
   const commentCountMap: Record<string, number> = {};
   for (const c of commentRows) {
@@ -116,29 +139,14 @@ export default async function PlaylistPage({ params }: PageProps) {
 
   const currentUser = await getCurrentUser();
 
-  // 익명 모드에서는 누가 어디에 찍었는지를 화면으로 내려보내지 않는다.
-  // 화면에서 가리기만 하면 페이로드에는 그대로 남는다.
-  // 기존 익명 합주방은 계정이 없어 닉네임으로 내 표를 맞춰야 하므로 그대로 둔다.
-  const exposeVoters = shouldExposeVoters(playlist as Playlist);
-
   const songsWithScores: SongWithScore[] = (songs || []).map((song: Song) => {
-    const songVotes = (votes || []).filter((v: VoteRow) => v.song_id === song.id);
-    const userVotes = currentUser
-      ? songVotes.filter((vote) => vote.user_id === currentUser.id)
-      : [];
-    const score = songVotes.reduce((sum: number, v: VoteRow) => sum + v.vote_type, 0);
+    const summary = summaryMap.get(song.id);
     return {
       ...song,
-      score,
-      votes: exposeVoters
-        ? songVotes.map((v) => ({
-            song_id: v.song_id,
-            nickname: v.nickname,
-            vote_type: v.vote_type,
-          }))
-        : [],
-      userVote: userVotes[0]?.vote_type ?? null,
-      userVoteCount: userVotes.length,
+      score: summary?.score ?? 0,
+      votes: votersMap[song.id] ?? [],
+      userVote: summary?.my_vote_type ?? null,
+      userVoteCount: summary?.my_vote_count ?? 0,
       commentCount: commentCountMap[song.id] ?? 0,
       versionCount: versionCountMap[song.id] ?? 0,
     };
