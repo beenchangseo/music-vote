@@ -42,7 +42,10 @@ ship 직전 마지막 점검표. 출시 시점에 한 번 위에서부터 통과
 ## 4. Vercel 설정
 
 - [ ] `vercel.json` 리전: `icn1` (한국 사용자 레이턴시 최소)
-- [ ] `vercel.json` crons: `/api/cron/auto-confirm-setlist`, `0 * * * *`
+- [ ] `vercel.json` crons: `/api/cron/auto-confirm-setlist`, `0 15 * * *` (KST 자정)
+- [ ] `vercel.json` `git.deploymentEnabled`: `main` 만 `true`
+- [ ] Git 연동 확인: Project Settings → Git 에 `beenchangseo/music-vote` 연결됨
+- [ ] **마이그레이션을 먼저 적용한 뒤** `main` 에 머지 (push = 즉시 프로덕션)
 - [ ] 배포 후 **Crons 탭**에서 매시간 트리거 활성화 확인
 - [ ] **Functions 탭**에서 export route 확인 (`/api/og`, `/api/setlist-image`, `/api/setlist-pdf`)
 - [ ] **Domains**: `plypick.kr` Production 연결, SSL 자동 갱신

@@ -5,5 +5,11 @@
       "path": "/api/cron/auto-confirm-setlist",
       "schedule": "0 15 * * *"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "*": false,
+      "main": true
+    }
+  }
 }

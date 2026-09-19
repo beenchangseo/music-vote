@@ -126,21 +126,36 @@ npm run dev
 http://localhost:3000
 
 ### Deployment
+
+`main` 브랜치에 push 하면 Vercel 이 프로덕션으로 자동 배포한다. 다른 브랜치는 배포하지 않는다.
+
 ```bash
-vercel --prod
+git switch main && git merge --no-ff <branch> && git push origin main
 ```
 
-`vercel.json`에 서울 리전(`icn1`) + 매시간 cron 등록:
+수동 배포가 필요하면 `vercel --prod`.
+
+`vercel.json` 설정:
 ```json
 {
   "regions": ["icn1"],
   "crons": [
-    { "path": "/api/cron/auto-confirm-setlist", "schedule": "0 * * * *" }
-  ]
+    { "path": "/api/cron/auto-confirm-setlist", "schedule": "0 15 * * *" }
+  ],
+  "git": {
+    "deploymentEnabled": { "*": false, "main": true }
+  }
 }
 ```
 
+- `regions` — 서울(`icn1`)
+- `crons` — 매일 15:00 UTC(= KST 자정) 셋리스트 자동 확정
+- `git.deploymentEnabled` — `main` 만 배포. 환경변수가 Production 스코프에만 있어 Preview 배포는 끈다.
+  Preview 를 켜려면 먼저 Preview 스코프 환경변수를 채울 것.
+
 Vercel Dashboard에서 환경변수(`CRON_SECRET`) 설정 후 첫 배포 시 Crons 탭에서 활성화 확인.
+
+**DB 마이그레이션이 있는 배포는 반드시 마이그레이션 먼저.** `main` push 는 즉시 프로덕션이다.
 
 ---
 
