@@ -164,3 +164,41 @@ describe("usePlaylistVotes", () => {
     expect(screen.getByRole("status")).toHaveTextContent("5");
   });
 });
+
+describe("VoteButtons 잠금 상태", () => {
+  afterEach(cleanup);
+
+  it("비로그인이면 잠금 안내가 담긴 레이블을 쓴다", () => {
+    render(
+      <VoteButtons
+        score={3}
+        userVote={null}
+        userVoteCount={0}
+        votingMode="free"
+        onPress={() => undefined}
+        loginGate
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "로그인하고 찬성하기" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "로그인하고 반대하기" })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveAccessibleName(
+      "점수 3점, 투표하려면 로그인이 필요해요",
+    );
+  });
+
+  it("로그인 상태에서는 평소 레이블을 쓴다", () => {
+    render(
+      <VoteButtons
+        score={3}
+        userVote={null}
+        userVoteCount={0}
+        votingMode="free"
+        onPress={() => undefined}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "찬성표 추가" })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveAccessibleName("점수 3점");
+  });
+});
