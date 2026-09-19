@@ -11,6 +11,7 @@ import PlaylistHeader from "./PlaylistHeader";
 import AddSongForm from "./AddSongForm";
 import SongCard from "./SongCard";
 import MiniPlayer from "./MiniPlayer";
+import YouTubePlayer from "./YouTubePlayer";
 import NavigationBar from "./NavigationBar";
 import SetlistView from "./SetlistView";
 import RehearsalView from "./RehearsalView";
@@ -179,12 +180,14 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
 
   const handleTogglePlay = useCallback((songId: string) => {
     if (playerState.currentSongId === songId) {
-      playerActions.playSong("");
-      playerActions.setIsPlaying(false);
+      // 큐를 비우면 플레이어가 언마운트돼 모바일 자동 재생 허용이 풀린다.
+      // 멈출 때도 플레이어는 남겨두고 일시정지만 한다.
+      if (playerState.isPlaying) playerRef.current?.pause();
+      else playerRef.current?.play();
     } else {
       playerActions.playSong(songId);
     }
-  }, [playerState.currentSongId, playerActions]);
+  }, [playerState.currentSongId, playerState.isPlaying, playerActions]);
 
   // Setlist add confirm dialog
   const [setlistConfirmSongId, setSetlistConfirmSongId] = useState<string | null>(null);
@@ -536,10 +539,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                       onTogglePlay={() => handleTogglePlay(song.id)}
                       isExpired={isExpired}
                       isHighlighted={highlightedSongIds.has(song.id)}
-                      playerRef={playerState.currentSongId === song.id ? playerRef : undefined}
-                      onEnded={playerState.currentSongId === song.id ? handleEnded : undefined}
-                      onPlayerPlay={playerState.currentSongId === song.id ? () => playerActions.setIsPlaying(true) : undefined}
-                      onPlayerPause={playerState.currentSongId === song.id ? () => playerActions.setIsPlaying(false) : undefined}
                       onAddToSetlist={canEditSetlist ? handleAddToSetlist : undefined}
                       loginGate={loginGate}
                       currentUserId={currentUserId}
@@ -654,7 +653,16 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
         state={playerState}
         actions={playerActions}
         playerRef={playerRef}
-      />
+      >
+        {/* 영상은 여기 한 번만 마운트한다. 카드 안으로 옮기면 브라우저가 다시 로드한다. */}
+        <YouTubePlayer
+          ref={playerRef}
+          videoId={playerState.currentSong?.youtube_video_id ?? null}
+          onEnded={handleEnded}
+          onPlay={() => playerActions.setIsPlaying(true)}
+          onPause={() => playerActions.setIsPlaying(false)}
+        />
+      </MiniPlayer>
 
       {/* Navigation Bar */}
       <NavigationBar

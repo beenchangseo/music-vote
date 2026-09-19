@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import type { PlayerState, PlayerActions } from "@/hooks/usePlayerQueue";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
@@ -8,10 +9,13 @@ interface MiniPlayerProps {
   state: PlayerState;
   actions: PlayerActions;
   playerRef: React.RefObject<YouTubePlayerHandle | null>;
+  /** 영상. 곡이 바뀌어도 여기 그대로 머문다. 옮기면 브라우저가 다시 로드한다. */
+  children?: React.ReactNode;
 }
 
-export default function MiniPlayer({ state, actions, playerRef }: MiniPlayerProps) {
+export default function MiniPlayer({ state, actions, playerRef, children }: MiniPlayerProps) {
   const { currentSong, isPlaying, repeatMode, shuffleMode } = state;
+  const [videoOpen, setVideoOpen] = useState(false);
 
   if (!currentSong) return null;
 
@@ -25,6 +29,19 @@ export default function MiniPlayer({ state, actions, playerRef }: MiniPlayerProp
 
   return (
     <div className="fixed bottom-[52px] left-0 right-0 z-50 bg-surface/95 backdrop-blur-sm border-t border-border/50 print:hidden">
+      {/*
+        접어도 언마운트하지 않는다. 높이만 0 으로 둔다.
+        영상을 떼었다 붙이면 모바일에서 다음 곡 자동 재생 허용이 풀린다.
+      */}
+      <div
+        className={`mx-auto max-w-lg overflow-hidden transition-[max-height] duration-200 ${
+          videoOpen ? "max-h-[60vh] px-4 pt-3" : "max-h-0"
+        }`}
+        aria-hidden={!videoOpen}
+      >
+        {children}
+      </div>
+
       <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
         {/* Thumbnail */}
         {currentSong.thumbnail_url && (
@@ -49,6 +66,21 @@ export default function MiniPlayer({ state, actions, playerRef }: MiniPlayerProp
 
         {/* Controls */}
         <div className="flex items-center gap-1 shrink-0">
+          {/* 영상 보기 */}
+          <button
+            onClick={() => setVideoOpen((v) => !v)}
+            className={`p-2 rounded-full transition-colors ${
+              videoOpen ? "text-primary" : "text-text-muted hover:text-text"
+            }`}
+            aria-label={videoOpen ? "영상 접기" : "영상 보기"}
+            aria-pressed={videoOpen}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <rect x="2" y="5" width="20" height="14" rx="2" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 9.5l5 2.5-5 2.5z" />
+            </svg>
+          </button>
+
           {/* Shuffle */}
           <button
             onClick={actions.toggleShuffle}
