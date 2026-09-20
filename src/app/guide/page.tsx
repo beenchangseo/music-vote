@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "셋리스트 정하는 방법 - Plypick 사용 가이드",
   description:
-    "Plypick로 밴드 셋리스트를 투표로 정하는 방법을 단계별로 안내해요. 플레이리스트 만들기부터 결과 공유까지.",
+    "Plypick로 밴드 셋리스트를 투표로 정하는 방법을 단계별로 안내해요. 합주방 만들기부터 결과 공유까지.",
 };
 
 export default function GuidePage() {
@@ -26,11 +26,11 @@ export default function GuidePage() {
                 1
               </div>
               <h2 className="text-xl font-semibold text-text">
-                플레이리스트 만들기
+                합주방 만들기
               </h2>
             </div>
             <p>
-              홈 화면에서 플레이리스트 이름을 입력해요.
+              홈 화면에서 합주방 이름을 입력해요.
               밴드 이름, 공연명, 날짜 등을 넣으면 구분하기 쉬워요.
             </p>
             <p className="mt-2 text-text-muted">
@@ -72,7 +72,7 @@ export default function GuidePage() {
               </h2>
             </div>
             <p>
-              플레이리스트를 만들면 공유 링크와 QR 코드가 생성돼요.
+              합주방을 만들면 공유 링크와 QR 코드가 생성돼요.
               카카오톡 단톡방에 링크를 보내면 멤버들이 바로 참여할 수 있어요.
             </p>
             <p className="mt-2 text-text-muted">
@@ -135,7 +135,7 @@ export default function GuidePage() {
               href="/"
               className="inline-block px-6 py-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold transition-all active:scale-95"
             >
-              지금 플레이리스트 만들기
+              지금 합주방 만들기
             </Link>
           </section>
         </div>

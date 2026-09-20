@@ -621,12 +621,12 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
           {/* CTA: Create your own — 페이지 가장 아래 (모든 모드 공통, 곡이 있을 때만) */}
           {songsWithVotes.length > 0 && (
             <div className="mt-10 mb-4 text-center">
-              <p className="text-caption text-text-subtle mb-2">새로운 플레이리스트가 필요하다면</p>
+              <p className="text-caption text-text-subtle mb-2">새로운 합주방가 필요하다면</p>
               <Link
                 href="/"
                 className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:text-primary-hover transition-colors"
               >
-                플레이리스트 만들기
+                합주방 만들기
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                 </svg>

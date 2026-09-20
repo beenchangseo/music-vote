@@ -27,7 +27,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
   return (
     <div
       ref={ref}
-      className={`rounded-2xl ${variantClasses[variant]} ${paddingClasses[padding]} ${className}`}
+      className={`rounded-card ${variantClasses[variant]} ${paddingClasses[padding]} ${className}`}
       {...rest}
     >
       {children}

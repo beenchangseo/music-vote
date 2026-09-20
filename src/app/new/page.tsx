@@ -7,8 +7,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { getMyPlaylists } from "@/actions/playlist";
 
 export const metadata: Metadata = {
-  title: "플레이리스트 만들기 - Plypick",
-  description: "밴드 곡 투표 플레이리스트를 만들어 보세요",
+  title: "합주방 만들기 - Plypick",
+  description: "밴드 곡 투표 합주방를 만들어 보세요",
 };
 
 export default async function NewPlaylistPage() {
@@ -40,12 +40,12 @@ export default async function NewPlaylistPage() {
               </svg>
               홈으로
             </Link>
-            <span className="text-caption text-text-subtle">새 플레이리스트</span>
+            <span className="text-caption text-text-subtle">새 합주방</span>
           </div>
 
           {/* Heading */}
           <h1 className="text-h1 font-bold text-text mb-2">
-            플레이리스트 만들기
+            합주방 만들기
           </h1>
           <p className="text-sm text-text-muted mb-7 leading-relaxed">
             이름만 정하면 끝. 옵션은 나중에 바꿀 수 있어요.
@@ -59,11 +59,11 @@ export default async function NewPlaylistPage() {
           ) : (
             <div className="bg-surface border border-border rounded-2xl p-6 text-center">
               <p className="text-body text-text mb-2 font-semibold">
-                플레이리스트를 만들려면 로그인이 필요해요
+                합주방를 만들려면 로그인이 필요해요
               </p>
               <p className="text-sm text-text-muted mb-5 leading-relaxed">
                 카카오 계정으로 1초만에 시작할 수 있어요.<br />
-                내가 만든 플레이리스트는 어디서든 다시 열 수 있어요.
+                내가 만든 합주방는 어디서든 다시 열 수 있어요.
               </p>
               <LoginButton next="/new" />
             </div>

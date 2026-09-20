@@ -11,7 +11,7 @@ export default function NotFound() {
         <h1 className="text-h1 font-bold mb-2">페이지를 찾을 수 없어요</h1>
         <p className="text-sm text-text-muted leading-relaxed mb-7">
           링크가 만료되었거나 잘못된 주소일 수 있어요.<br />
-          홈에서 플레이리스트를 새로 만들거나 멤버에게 받은 링크를 다시 확인해주세요.
+          홈에서 합주방를 새로 만들거나 멤버에게 받은 링크를 다시 확인해주세요.
         </p>
         <Link
           href="/"

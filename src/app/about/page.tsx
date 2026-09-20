@@ -89,13 +89,13 @@ export default function AboutPage() {
               지금 바로 시작하세요
             </p>
             <p className="text-sm text-text-muted mb-4">
-              무료예요. 카카오 로그인 한 번이면 30초 만에 플레이리스트를 만들 수 있어요.
+              무료예요. 카카오 로그인 한 번이면 30초 만에 합주방을 만들 수 있어요.
             </p>
             <Link
               href="/"
               className="inline-block px-6 py-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold transition-all active:scale-95"
             >
-              플레이리스트 만들기
+              합주방 만들기
             </Link>
           </section>
         </div>

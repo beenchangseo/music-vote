@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Input from "./ui/Input";
 import Image from "next/image";
 import { useDialog } from "./DialogProvider";
 import { addSong } from "@/actions/song";
@@ -119,8 +120,7 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
     <div className="w-full">
       <form onSubmit={handleSubmit}>
         <div className="flex gap-2">
-          <input
-            type="text"
+          <Input
             value={input}
             onChange={(e) => {
               setInput(e.target.value);
@@ -128,7 +128,7 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
             }}
             placeholder="곡 이름으로 찾거나 YouTube 링크를 붙여넣으세요"
             enterKeyHint="search"
-            className="flex-1 px-4 py-3 rounded-xl bg-surface-hover border border-border text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
+            className="flex-1"
           />
           <button
             type="submit"

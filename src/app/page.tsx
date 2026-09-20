@@ -23,18 +23,6 @@ export default async function Home() {
         {/* Animated gradient bg */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900/25 via-bg to-indigo-900/25 animate-gradient pointer-events-none" />
 
-        {/* Floating notes */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-[14%] left-[8%] text-3xl opacity-10 animate-float-slow">
-            &#9835;
-          </div>
-          <div className="absolute top-[22%] right-[10%] text-2xl opacity-10 animate-float-mid">
-            &#9834;
-          </div>
-          <div className="absolute bottom-[18%] left-[14%] text-4xl opacity-[0.06] animate-float-fast">
-            &#9833;
-          </div>
-        </div>
 
         <div className="relative z-10 w-full max-w-md mx-auto">
           {/* 작은 브랜드 마크 */}
@@ -86,12 +74,11 @@ export default async function Home() {
           {/* Social proof strip — 결정 직전 신뢰 (조용한 네온, 펄스 없음) */}
           {(stats.playlists > 0 || stats.songs > 0 || stats.users > 0) && (
             <p className="mt-6 text-center text-caption text-text-muted tabular-nums">
-              <span className="text-neon" aria-hidden>✨</span>{" "}
-              합주 <strong className="text-primary text-neon font-bold">{stats.playlists.toLocaleString()}</strong>
+              합주 <strong className="font-bold text-primary">{stats.playlists.toLocaleString()}</strong>
               <span className="mx-1.5 text-text-subtle/50" aria-hidden>·</span>
-              멤버 <strong className="text-primary text-neon font-bold">{stats.users.toLocaleString()}</strong>
+              멤버 <strong className="font-bold text-primary">{stats.users.toLocaleString()}</strong>
               <span className="mx-1.5 text-text-subtle/50" aria-hidden>·</span>
-              곡 <strong className="text-primary text-neon font-bold">{stats.songs.toLocaleString()}</strong>
+              곡 <strong className="font-bold text-primary">{stats.songs.toLocaleString()}</strong>
             </p>
           )}
 
@@ -206,7 +193,7 @@ export default async function Home() {
         <div className="max-w-md mx-auto">
           <div className="rounded-2xl bg-gradient-to-br from-primary/15 to-indigo-600/10 border border-primary/30 p-6 text-center">
             <p className="text-sm text-text mb-4">
-              지금 첫 플레이리스트, 5분이면 시작.
+              지금 첫 합주방, 5분이면 시작.
             </p>
             <HeroCTA loggedIn={loggedIn} />
           </div>

@@ -30,7 +30,7 @@ export default function HeroCTA({ loggedIn }: HeroCTAProps) {
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="플레이리스트 만들기"
+        title="합주방 만들기"
       >
         <CreatePlaylistForm />
       </Modal>
