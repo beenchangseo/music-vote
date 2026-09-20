@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 // Vercel Cron으로 매시간 트리거. 마감 도달했지만 셋리스트 미확정인
-// 합주방를 setlist_count 기준으로 top-N 자동 확정.
+// 합주방을 setlist_count 기준으로 top-N 자동 확정.
 
 interface ProcessResult {
   shareCode: string;

@@ -58,7 +58,7 @@ export default function SetlistShareButton({ shareCode, title }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-11 w-11 items-center justify-center rounded-lg bg-surface-hover text-text-muted transition-colors hover:text-text"
+        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-transparent text-text-muted transition-all hover:bg-surface-hover hover:text-text active:scale-95"
         aria-label="셋리스트 공유 및 저장"
         title="공유 및 저장"
       >

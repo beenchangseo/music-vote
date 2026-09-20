@@ -10,8 +10,8 @@ import {
   saveVotingSettings,
   type VotingSettings,
 } from "@/actions/member";
-import { resetPlaylistVotes } from "@/actions/playlist";
-import type { VotingMode } from "@/lib/types";
+import { deletePlaylist, resetPlaylistVotes, updateSetlistEditMode } from "@/actions/playlist";
+import type { SetlistEditMode, VotingMode } from "@/lib/types";
 
 interface Props {
   playlistId: string;
@@ -22,9 +22,11 @@ interface Props {
   onAllowanceChange?: (mode: VotingMode, usedVotes: number, voteLimit: number) => void;
   onVotesAnonymousChange?: (votesAnonymous: boolean) => void;
   onVotesReset?: () => void;
+  setlistEditMode: SetlistEditMode;
+  onSetlistEditModeChange: (mode: SetlistEditMode) => void;
 }
 
-export default function VotingSettingsButton({
+export default function RoomSettingsButton({
   playlistId,
   shareCode,
   adminToken,
@@ -33,6 +35,8 @@ export default function VotingSettingsButton({
   onAllowanceChange,
   onVotesAnonymousChange,
   onVotesReset,
+  setlistEditMode,
+  onSetlistEditModeChange,
 }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -42,7 +46,7 @@ export default function VotingSettingsButton({
   const [defaultLimit, setDefaultLimit] = useState(3);
   const [memberLimits, setMemberLimits] = useState<Record<string, string>>({});
   const [isPending, startTransition] = useTransition();
-  const { showAlert, showConfirm } = useDialog();
+  const { showAlert, showConfirm, showDanger } = useDialog();
 
   async function load() {
     setOpen(true);
@@ -81,6 +85,42 @@ export default function VotingSettingsButton({
       if (!ok) return;
     }
     setVotesAnonymous(next);
+  }
+
+  // 셋리스트 편집 권한은 저장 버튼을 거치지 않고 바로 적용된다. 종전 토글과 같은 동작이다.
+  function toggleSetlistEditMode() {
+    const next: SetlistEditMode = setlistEditMode === "everyone" ? "host_only" : "everyone";
+    const previous = setlistEditMode;
+    onSetlistEditModeChange(next);
+    startTransition(async () => {
+      try {
+        await updateSetlistEditMode(playlistId, adminToken, next, shareCode);
+      } catch (error) {
+        onSetlistEditModeChange(previous);
+        showAlert(error instanceof Error ? error.message : "편집 권한 변경에 실패했습니다.");
+      }
+    });
+  }
+
+  async function removeRoom() {
+    const ok = await showDanger(
+      "합주방과 모든 곡·투표·셋리스트가 삭제되며 되돌릴 수 없어요.\n삭제할까요?",
+      "합주방 삭제",
+    );
+    if (!ok) return;
+
+    startTransition(async () => {
+      try {
+        await deletePlaylist(playlistId, adminToken);
+        let stored = JSON.parse(localStorage.getItem("myPlaylists") || "[]");
+        if (!Array.isArray(stored)) stored = [];
+        const updated = stored.filter((item: { id: string }) => item.id !== playlistId);
+        try { localStorage.setItem("myPlaylists", JSON.stringify(updated)); } catch { /* quota */ }
+        router.push("/");
+      } catch {
+        showAlert("삭제에 실패했습니다.");
+      }
+    });
   }
 
   async function resetVotes() {
@@ -179,9 +219,9 @@ export default function VotingSettingsButton({
       <button
         type="button"
         onClick={load}
-        className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-hover text-text-muted transition-colors hover:text-text"
-        aria-label="투표 설정"
-        title="투표 설정"
+        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-transparent text-text-muted transition-all hover:bg-surface-hover hover:text-text active:scale-95"
+        aria-label="방 설정"
+        title="방 설정"
       >
         <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.592c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.197.717.258 1.07.124l1.205-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-.992.826a1.125 1.125 0 00-.4 1.016v.264c-.006.38.137.751.4 1.016l.992.826c.423.35.534.956.26 1.431l-1.296 2.247a1.125 1.125 0 01-1.37.49l-1.205-.456a1.125 1.125 0 00-1.07.124 6.57 6.57 0 01-.22.127 1.125 1.125 0 00-.645.87l-.213 1.281c-.09.542-.56.94-1.11.94h-2.592c-.55 0-1.02-.398-1.11-.94l-.213-1.281a1.125 1.125 0 00-.645-.87 6.52 6.52 0 01-.22-.127 1.125 1.125 0 00-1.07-.124l-1.205.456a1.125 1.125 0 01-1.37-.49l-1.296-2.247a1.125 1.125 0 01.26-1.431l.992-.826a1.125 1.125 0 00.4-1.016v-.264a1.125 1.125 0 00-.4-1.016l-.992-.826a1.125 1.125 0 01-.26-1.431l1.296-2.247a1.125 1.125 0 011.37-.49l1.205.456c.353.134.746.073 1.07-.124.072-.044.146-.087.22-.127.332-.184.582-.496.645-.87l.213-1.281z" />
@@ -189,13 +229,13 @@ export default function VotingSettingsButton({
         </svg>
       </button>
 
-      <Modal open={open} onClose={() => setOpen(false)} title="투표 설정">
+      <Modal open={open} onClose={() => setOpen(false)} title="방 설정">
         {!settings ? (
           <div className="py-10 text-center text-sm text-text-muted">불러오는 중...</div>
         ) : (
           <div className={isPending ? "pointer-events-none opacity-70" : ""}>
             <section>
-              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 공개 범위</p>
+              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 · 공개 범위</p>
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -231,7 +271,7 @@ export default function VotingSettingsButton({
 
             {supportsVoteAllocation && (
               <section className="mt-6 border-t border-border pt-5">
-                <p className="mb-2 text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 방식</p>
+                <p className="mb-2 text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 · 방식</p>
                 <div className="grid grid-cols-2 gap-2">
                   {(["free", "allocated"] as VotingMode[]).map((value) => (
                     <button
@@ -348,6 +388,39 @@ export default function VotingSettingsButton({
             </Button>
 
             <section className="mt-6 border-t border-border pt-5">
+              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">셋리스트 · 편집 권한</p>
+              <button
+                type="button"
+                onClick={toggleSetlistEditMode}
+                disabled={isPending}
+                className="mt-2 flex min-h-11 w-full items-center justify-between gap-3 rounded-control border border-border bg-surface px-3 py-2 text-left transition-colors hover:border-border-strong"
+                aria-pressed={setlistEditMode === "host_only"}
+              >
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-text">방장만 편집</span>
+                  <span className="block text-caption leading-relaxed text-text-muted">
+                    {setlistEditMode === "everyone"
+                      ? "지금은 모두가 추가·수정·순서 변경·삭제할 수 있어요"
+                      : "지금은 방장만 셋리스트를 바꿀 수 있어요"}
+                  </span>
+                </span>
+                <span
+                  className={`relative h-7 w-12 shrink-0 rounded-pill transition-colors ${
+                    setlistEditMode === "host_only" ? "bg-primary" : "bg-border-strong"
+                  }`}
+                  aria-hidden
+                >
+                  <span
+                    className={`absolute top-1 h-5 w-5 rounded-pill bg-white transition-transform ${
+                      setlistEditMode === "host_only" ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </span>
+              </button>
+              <p className="mt-2 text-caption text-text-subtle">저장 버튼 없이 바로 적용돼요.</p>
+            </section>
+
+            <section className="mt-6 border-t border-border pt-5">
               <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 초기화</p>
               <p className="mt-1 text-caption leading-relaxed text-text-muted">
                 모든 참여자의 찬성·반대 투표를 삭제해요. 곡과 참여자 정보는 유지돼요.
@@ -361,6 +434,17 @@ export default function VotingSettingsButton({
                 className="mt-3"
               >
                 {settings.totalVotes > 0 ? `모든 투표 초기화 (${settings.totalVotes}개)` : "초기화할 투표가 없어요"}
+              </Button>
+            </section>
+
+            {/* 되돌릴 수 없는 동작이다. 헤더에서 한 번 눌리던 자리에 두지 않는다. */}
+            <section className="mt-6 border-t border-border pt-5">
+              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">합주방 삭제</p>
+              <p className="mt-1 text-caption leading-relaxed text-text-muted">
+                곡·투표·셋리스트·코멘트가 모두 사라져요. 되돌릴 수 없어요.
+              </p>
+              <Button type="button" variant="danger" fullWidth onClick={removeRoom} className="mt-3">
+                합주방 삭제
               </Button>
             </section>
           </div>

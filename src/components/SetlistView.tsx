@@ -7,29 +7,28 @@ import AddIntervalForm from "./AddIntervalForm";
 import IntervalBlock from "./IntervalBlock";
 import SetlistItemEditModal from "./SetlistItemEditModal";
 import SetlistShareButton from "./SetlistShareButton";
+import ScreenToolbar from "./ui/ScreenToolbar";
 import { useDialog } from "./DialogProvider";
 import { removeSetlistItem, updateSetlistOrder } from "@/actions/setlist";
-import { updateSetlistEditMode } from "@/actions/playlist";
 import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, summarizeSetlist } from "@/lib/setlist-domain";
 import { displayArtist } from "@/lib/song-meta";
-import type { SetlistEditMode, SetlistItem, SongWithScore } from "@/lib/types";
+import type { SetlistItem, SongWithScore } from "@/lib/types";
 
 interface Props {
   setlistItems: SetlistItem[];
   songs: SongWithScore[];
   playlistId: string;
   shareCode: string;
-  isAdmin: boolean;
   adminToken: string | null;
   loading: boolean;
   onItemsChange: (items: SetlistItem[]) => void;
   title: string;
-  editMode: SetlistEditMode;
   canEdit: boolean;
-  onEditModeChange: (mode: SetlistEditMode) => void;
+  /** 방 설정 버튼. 세 화면 툴바의 같은 자리에 온다. */
+  actions?: React.ReactNode;
 }
 
-export default function SetlistView({ setlistItems, songs, playlistId, shareCode, isAdmin, adminToken, loading, onItemsChange, title, editMode, canEdit, onEditModeChange }: Props) {
+export default function SetlistView({ setlistItems, songs, playlistId, shareCode, adminToken, loading, onItemsChange, title, canEdit, actions }: Props) {
   const [isPending, startTransition] = useTransition();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editing, setEditing] = useState<SetlistItem | null>(null);
@@ -85,45 +84,36 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
     });
   }, [adminToken, onItemsChange, playlistId, setlistItems, shareCode, showAlert, showDanger]);
 
-  function togglePermission() {
-    const next: SetlistEditMode = editMode === "everyone" ? "host_only" : "everyone";
-    const previous = editMode;
-    onEditModeChange(next);
-    startTransition(async () => {
-      try {
-        await updateSetlistEditMode(playlistId, adminToken, next, shareCode);
-      } catch (error) {
-        onEditModeChange(previous);
-        showAlert(error instanceof Error ? error.message : "편집 권한 변경에 실패했습니다.");
-      }
-    });
+  if (loading) {
+    return (
+      <div className="mt-6 py-16 text-center text-text-subtle">
+        <span className="inline-block h-8 w-8 animate-spin rounded-pill border-2 border-border-strong border-t-primary" />
+        <p className="mt-3">셋리스트 불러오는 중...</p>
+      </div>
+    );
   }
 
-  if (loading) return <div className="mt-6 py-16 text-center text-text-subtle"><span className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-border-strong border-t-primary" /><p className="mt-3">셋리스트 불러오는 중...</p></div>;
-
   return (
-    <div className="mt-3">
+    <div>
       <h2 className="hidden print:block print:text-2xl print:font-bold">{title}</h2>
-      {isAdmin && (
-        <button type="button" onClick={togglePermission} disabled={isPending} className="mb-4 flex min-h-11 w-full items-center justify-between rounded-xl border border-border bg-surface px-3 text-left print:hidden">
-          <span><strong className="block text-sm text-text">셋리스트 편집 제한</strong><span className="text-caption text-text-muted">{editMode === "everyone" ? "모두 추가·수정·순서 변경·삭제 가능" : "방장만 편집 가능"}</span></span>
-          <span className={`relative h-7 w-12 rounded-full transition-colors ${editMode === "host_only" ? "bg-primary" : "bg-border-strong"}`} aria-hidden><span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${editMode === "host_only" ? "translate-x-6" : "translate-x-1"}`} /></span>
-        </button>
-      )}
 
-      {/* 이 화면에서 가장 중요한 숫자다. 스크롤해도 남긴다. */}
-      <div className="sticky top-0 z-10 -mx-4 mb-3 flex items-end justify-between gap-3 border-b border-border bg-bg/95 px-4 pb-3 backdrop-blur-sm print:hidden">
-        <div className="min-w-0 flex-1">
-          <p className="text-h3 font-bold leading-tight tabular-nums text-text">{formatRuntime(summary.totalRuntime)}</p>
-          <p className="mt-0.5 text-caption text-text-muted tabular-nums">
-            {summary.songCount}곡
+      <ScreenToolbar
+        stat={formatRuntime(summary.totalRuntime)}
+        caption={
+          <>
+            <span>{summary.songCount}곡</span>
             {summary.missingDurationCount > 0 && (
-              <span className="text-warning"> · {summary.missingDurationCount}곡 시간 미입력</span>
+              <span className="text-warning">· {summary.missingDurationCount}곡 시간 미입력</span>
             )}
-          </p>
-        </div>
-        <SetlistShareButton shareCode={shareCode} title={title} />
-      </div>
+          </>
+        }
+        actions={
+          <>
+            <SetlistShareButton shareCode={shareCode} title={title} />
+            {actions}
+          </>
+        }
+      />
 
       {sortedItems.length === 0 ? (
         <div className="py-12 text-center text-text-subtle"><p className="text-lg font-medium">셋리스트가 비어있어요</p><p className="mt-1 text-sm">투표 리스트에서 곡을 추가해보세요.</p></div>

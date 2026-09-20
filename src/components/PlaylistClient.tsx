@@ -24,7 +24,8 @@ import { track } from "@/lib/analytics";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
 import { DEFAULT_FILTER, songMatchesFilter, type FilterState } from "./FilterBar";
 import KakaoShareButton from "./KakaoShareButton";
-import VotingSettingsButton from "./VotingSettingsButton";
+import RoomSettingsButton from "./RoomSettingsButton";
+import ScreenToolbar from "./ui/ScreenToolbar";
 import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import type { ViewMode } from "./NavigationBar";
@@ -264,6 +265,32 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
   // Bottom padding: NavigationBar(52px) + MiniPlayer(~56px if active)
   const bottomPadding = playerState.currentSongId ? "pb-32" : "pb-16";
 
+  /*
+    방 설정은 화면 설정이 아니라 방 설정이다. 투표 공개 범위도, 셋리스트 편집 권한도
+    playlists 행에 붙어 있다. 그래서 진입점을 하나로 두고 세 화면 툴바의 같은 자리에 건다.
+    종전에는 후보곡·합주에 떠 있는 톱니, 셋리스트에 전체 폭 토글 박스로 흩어져 있었다.
+  */
+  const settingsButton = isAdmin && !isArchived ? (
+    <RoomSettingsButton
+      playlistId={playlist.id}
+      shareCode={shareCode}
+      adminToken={adminToken}
+      supportsVoteAllocation
+      currentUserId={currentUserId}
+      setlistEditMode={setlistEditMode}
+      onSetlistEditModeChange={setSetlistEditMode}
+      onAllowanceChange={(mode, usedVotes, voteLimit) => setAllowance({ mode, usedVotes, voteLimit })}
+      onVotesAnonymousChange={(next) => {
+        setVotesAnonymous(next);
+        notifyChange();
+      }}
+      onVotesReset={() => {
+        resetVotes();
+        notifyChange();
+      }}
+    />
+  ) : null;
+
   return (
     <>
       <div className="min-h-full bg-bg">
@@ -273,8 +300,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
             title={playlist.title}
             songCount={songs.length}
             shareCode={shareCode}
-            isAdmin={isAdmin}
-            adminToken={adminToken}
             participantCount={participantCount}
             announcement={playlist.announcement}
             currentUserNickname={userNickname}
@@ -318,34 +343,75 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
             )}
           </div>
 
-          {navMode !== "setlist" && isAdmin && !isArchived && (
-            <div className="mt-3 flex justify-center">
-              <VotingSettingsButton
-                playlistId={playlist.id}
-                shareCode={shareCode}
-                adminToken={adminToken}
-                supportsVoteAllocation
-                currentUserId={currentUserId}
-                onAllowanceChange={(mode, usedVotes, voteLimit) => setAllowance({ mode, usedVotes, voteLimit })}
-                onVotesAnonymousChange={(next) => {
-                  setVotesAnonymous(next);
-                  notifyChange();
-                }}
-                onVotesReset={() => {
-                  resetVotes();
-                  notifyChange();
-                }}
-              />
-            </div>
-          )}
-
-          {navMode !== "setlist" && <VoteAllowanceStatus allowance={allowance} />}
-
           {/* YouTube Player is rendered inline inside SongCard */}
 
           {/* === MODE: PLAYLIST === */}
           {navMode === "playlist" && (
             <>
+              <ScreenToolbar
+                stat={`${songs.length}곡`}
+                caption={<VoteAllowanceStatus allowance={allowance} />}
+                actions={
+                  <>
+                    {songsWithVotes.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleShareResults}
+                        aria-label="투표 결과 복사"
+                        title="투표 결과 복사"
+                        className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-transparent transition-all active:scale-95 ${
+                          resultCopied ? "text-success" : "text-text-muted hover:bg-surface-hover hover:text-text"
+                        }`}
+                      >
+                        {resultCopied ? (
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+                            <path d="M20 6L9 17l-5-5" />
+                          </svg>
+                        ) : (
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+                            <rect x="9" y="9" width="11" height="11" rx="2" />
+                            <path d="M5 15V5a2 2 0 012-2h10" />
+                          </svg>
+                        )}
+                      </button>
+                    )}
+                    {songsWithVotes.length > 0 && (
+                      <div className="-mr-0.5 flex rounded-control bg-surface p-0.5">
+                        <button
+                          onClick={() => setViewMode("compact")}
+                          className={`inline-flex h-11 w-11 items-center justify-center rounded-control transition-colors ${
+                            viewMode === "compact"
+                              ? "bg-surface-elevated text-text shadow-sm"
+                              : "text-text-muted hover:text-text"
+                          }`}
+                          aria-label="리스트 보기"
+                          aria-pressed={viewMode === "compact"}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => setViewMode("card")}
+                          className={`inline-flex h-11 w-11 items-center justify-center rounded-control transition-colors ${
+                            viewMode === "card"
+                              ? "bg-surface-elevated text-text shadow-sm"
+                              : "text-text-muted hover:text-text"
+                          }`}
+                          aria-label="카드 보기"
+                          aria-pressed={viewMode === "card"}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                    {settingsButton}
+                  </>
+                }
+              />
+
               {/* Add song form (hide if expired) */}
               {!isExpired && !isArchived && (
                 <div className="mt-6">
@@ -450,51 +516,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                 </div>
               )}
 
-              {/* View mode toggle + results share */}
-              {songsWithVotes.length > 0 && (
-                <div className="mt-5 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-caption text-text-subtle uppercase tracking-wider font-semibold">
-                      {songs.length}곡
-                    </span>
-                    <button
-                      onClick={handleShareResults}
-                      className="inline-flex min-h-11 items-center text-caption text-text-subtle hover:text-primary transition-colors"
-                    >
-                      {resultCopied ? "복사됨!" : "결과 공유"}
-                    </button>
-                  </div>
-                  <div className="flex rounded-control bg-surface p-0.5">
-                    <button
-                      onClick={() => setViewMode("compact")}
-                      className={`inline-flex h-11 w-11 items-center justify-center rounded-control transition-colors ${
-                        viewMode === "compact"
-                          ? "bg-surface-elevated text-text shadow-sm"
-                          : "text-text-muted hover:text-text"
-                      }`}
-                      aria-label="리스트 보기"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => setViewMode("card")}
-                      className={`inline-flex h-11 w-11 items-center justify-center rounded-control transition-colors ${
-                        viewMode === "card"
-                          ? "bg-surface-elevated text-text shadow-sm"
-                          : "text-text-muted hover:text-text"
-                      }`}
-                      aria-label="카드 보기"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {/* Song list */}
               <div
                 ref={listParent}
@@ -587,7 +608,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
               songs={songsWithVotes}
               playlistId={playlist.id}
               shareCode={shareCode}
-              isAdmin={isAdmin}
               adminToken={adminToken}
               loading={loadingSetlist}
               onItemsChange={(items) => {
@@ -595,9 +615,8 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                 notifyChange();
               }}
               title={playlist.title}
-              editMode={setlistEditMode}
               canEdit={canEditSetlist}
-              onEditModeChange={setSetlistEditMode}
+              actions={settingsButton}
             />
           )}
 
@@ -615,13 +634,14 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                 setComments(next);
                 notifyChange();
               }}
+              actions={settingsButton}
             />
           )}
 
           {/* CTA: Create your own — 페이지 가장 아래 (모든 모드 공통, 곡이 있을 때만) */}
           {songsWithVotes.length > 0 && (
             <div className="mt-10 mb-4 text-center">
-              <p className="text-caption text-text-subtle mb-2">새로운 합주방가 필요하다면</p>
+              <p className="text-caption text-text-subtle mb-2">새로운 합주방이 필요하다면</p>
               <Link
                 href="/"
                 className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:text-primary-hover transition-colors"

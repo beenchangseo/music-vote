@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Card from "./ui/Card";
+import ScreenToolbar from "./ui/ScreenToolbar";
 import Image from "next/image";
 import SongMeta from "./SongMeta";
 import CommentSection from "./CommentSection";
@@ -19,6 +20,8 @@ interface RehearsalViewProps {
   nickname: string;
   loading: boolean;
   onCommentsChange: (comments: Comment[]) => void;
+  /** 방 설정 버튼. 세 화면 툴바의 같은 자리에 온다. */
+  actions?: React.ReactNode;
 }
 
 /**
@@ -37,6 +40,7 @@ export default function RehearsalView({
   nickname,
   loading,
   onCommentsChange,
+  actions,
 }: RehearsalViewProps) {
   const [index, setIndex] = useState(0);
   const [showMeta, setShowMeta] = useState(false);
@@ -97,27 +101,23 @@ export default function RehearsalView({
   const progress = Math.round(((index + 1) / songItems.length) * 100);
 
   return (
-    <div className="mt-4">
+    <div>
       {/* 진행 상황. 합주 시간 관리는 밴드의 실제 문제다. */}
-      <div>
-        <div className="flex items-baseline justify-between text-sm">
-          <span className="font-semibold tabular-nums text-text">
-            {index + 1} / {songItems.length}
-          </span>
-          {remaining > 0 && (
-            <span className="tabular-nums text-text-muted">남은 {formatRuntime(remaining)}</span>
-          )}
-        </div>
+      <ScreenToolbar
+        stat={`${index + 1} / ${songItems.length}`}
+        caption={remaining > 0 ? <span>남은 {formatRuntime(remaining)}</span> : undefined}
+        actions={actions}
+      >
         <div className="mt-2 h-1 overflow-hidden rounded-pill bg-surface-hover">
           <div
             className="h-1 rounded-pill bg-accent-play transition-[width] duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
-      </div>
+      </ScreenToolbar>
 
       {/* 현재 곡 */}
-      <Card className="mt-4">
+      <Card>
         <div className="flex items-start gap-3">
           {currentSong.thumbnail_url && (
             <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-control">

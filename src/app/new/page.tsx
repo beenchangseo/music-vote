@@ -8,7 +8,7 @@ import { getMyPlaylists } from "@/actions/playlist";
 
 export const metadata: Metadata = {
   title: "합주방 만들기 - Plypick",
-  description: "밴드 곡 투표 합주방를 만들어 보세요",
+  description: "밴드 곡 투표 합주방을 만들어 보세요",
 };
 
 export default async function NewPlaylistPage() {
@@ -59,11 +59,11 @@ export default async function NewPlaylistPage() {
           ) : (
             <div className="bg-surface border border-border rounded-2xl p-6 text-center">
               <p className="text-body text-text mb-2 font-semibold">
-                합주방를 만들려면 로그인이 필요해요
+                합주방을 만들려면 로그인이 필요해요
               </p>
               <p className="text-sm text-text-muted mb-5 leading-relaxed">
                 카카오 계정으로 1초만에 시작할 수 있어요.<br />
-                내가 만든 합주방는 어디서든 다시 열 수 있어요.
+                내가 만든 합주방은 어디서든 다시 열 수 있어요.
               </p>
               <LoginButton next="/new" />
             </div>

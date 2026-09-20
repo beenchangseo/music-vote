@@ -29,7 +29,7 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconB
 ) {
   const base = "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control transition-all active:scale-95 disabled:opacity-50";
   const skin = bare
-    ? "border-transparent text-text-muted hover:text-text"
+    ? "border-transparent text-text-muted hover:bg-surface-hover hover:text-text"
     : `border ${toneClasses[tone]}`;
 
   return (

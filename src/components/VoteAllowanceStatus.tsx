@@ -1,32 +1,30 @@
 import { remainingVotes } from "@/lib/vote-domain";
 import type { VoteAllowance } from "@/lib/types";
 
+/**
+ * 남은 투표권. 화면 상단 툴바의 캡션 줄 안에 인라인으로 들어간다.
+ * 종전에는 별도 박스였는데, 세 화면 상단을 같은 툴바로 맞추면서 그 안으로 넣었다.
+ */
 export default function VoteAllowanceStatus({ allowance }: { allowance: VoteAllowance | null }) {
   if (!allowance || allowance.mode !== "allocated") return null;
   const remaining = remainingVotes(allowance) ?? 0;
-  const exhausted = remaining === 0;
+
+  if (remaining === 0) {
+    return (
+      <span role="status" className="flex flex-wrap items-center gap-x-1.5">
+        <strong className="text-warning">투표권을 모두 사용했어요</strong>
+        <span aria-hidden className="text-text-subtle">·</span>
+        <span>기존 표를 취소하면 다시 투표할 수 있어요.</span>
+      </span>
+    );
+  }
 
   return (
-    <div
-      className={`mt-3 rounded-xl border px-3 py-2 text-center text-sm ${
-        exhausted
-          ? "border-warning/30 bg-warning-soft text-text-muted"
-          : "border-primary/25 bg-primary/10 text-text-muted"
-      }`}
-      role="status"
-    >
-      <p>
-        <strong className="text-text">{allowance.voteLimit}표</strong> 중 {allowance.usedVotes}표 사용
-        <span className="mx-1.5 text-text-subtle">·</span>
-        <strong className={exhausted ? "text-warning" : "text-primary"}>{remaining}표 남음</strong>
-      </p>
-      {exhausted && (
-        <p className="mt-1 text-caption leading-relaxed text-text-muted">
-          <strong className="text-warning">투표권을 모두 사용했어요</strong>
-          <span className="mx-1 text-text-subtle">·</span>
-          기존 표를 취소하면 다시 투표할 수 있어요.
-        </p>
-      )}
-    </div>
+    <span role="status">
+      <strong className="text-primary">{remaining}표 남음</strong>
+      <span className="ml-1.5 text-text-subtle">
+        {allowance.voteLimit}표 중 {allowance.usedVotes}표 사용
+      </span>
+    </span>
   );
 }
