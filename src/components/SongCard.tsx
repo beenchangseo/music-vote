@@ -20,6 +20,10 @@ interface SongCardProps {
   isAdmin: boolean;
   adminToken: string | null;
   viewMode: "card" | "compact";
+  /** 1~3위만 번호를 보여준다. 34곡에 전부 달면 번호가 소음이 된다. */
+  rank?: number;
+  /** 최고점 대비 비율(0~1). 박빙인지 압도적인지 숫자만으로는 안 읽힌다. */
+  scoreRatio?: number;
   onVotePress: (songId: string, direction: VoteDirection) => void;
   /** 이 곡의 투표 요청이 서버 응답을 기다리는 중. */
   votePending?: boolean;
@@ -45,6 +49,8 @@ export default function SongCard({
   isAdmin,
   adminToken,
   viewMode,
+  rank,
+  scoreRatio = 0,
   onVotePress,
   votePending = false,
   isPlaying,
@@ -93,6 +99,7 @@ export default function SongCard({
   const canRemove = isAdmin || (!!currentUserId && currentUserId === song.added_by_user_id);
   // YouTube 채널명이 아티스트가 아닌 경우가 많다. 표시할 때만 정제한다.
   const artist = displayArtist(song.artist, song.title);
+  const showRank = typeof rank === "number" && rank <= 3;
 
   // VoteButtons 는 값을 그리기만 하므로 화면 폭에 따라 두 자리 중 하나에 놓아도 안전하다.
   const voteButtons = (
@@ -113,6 +120,27 @@ export default function SongCard({
     return (
       <div className={`bg-surface rounded-xl border transition-all hover:border-border-strong ${showMenu ? "overflow-visible" : "overflow-hidden"} ${isHighlighted ? "border-yellow-500/50 bg-yellow-900/5" : isCurrent ? "border-primary/50" : "border-border"} ${isPending ? "opacity-50" : ""}`}>
         <div className="flex items-start gap-3 p-3">
+          {/* 순위 · 재생 상태. 칸은 항상 잡아둔다 — 번호 유무로 썸네일 줄이 어긋나면 안 된다. */}
+          <div className="flex w-5 shrink-0 items-center justify-center pt-3.5">
+            {isCurrent || showRank ? (
+              isCurrent ? (
+                <span className="flex h-3 items-end gap-0.5" aria-label="재생 중">
+                  {[0, 0.18, 0.36].map((delay) => (
+                    <span
+                      key={delay}
+                      className="w-0.5 rounded-full bg-accent-play animate-eq-bar"
+                      style={{ height: "100%", animationDelay: `${delay}s` }}
+                    />
+                  ))}
+                </span>
+              ) : (
+                <span className="text-caption font-bold tabular-nums text-text-subtle">
+                  {String(rank).padStart(2, "0")}
+                </span>
+              )
+            ) : null}
+          </div>
+
           {/* Thumbnail + play */}
           <button
             onClick={onTogglePlay}
@@ -244,6 +272,14 @@ export default function SongCard({
             )}
           </div>
         </div>
+        {/* 최고점 대비 막대. 5 5 4 4 가 숫자로만 있으면 박빙인지 안 읽힌다. */}
+        <div className="mx-3 h-0.5 overflow-hidden rounded-pill bg-surface-hover">
+          <div
+            className={`h-0.5 rounded-pill transition-[width] duration-300 ${isCurrent ? "bg-accent-play" : "bg-border-strong"}`}
+            style={{ width: `${Math.round(scoreRatio * 100)}%` }}
+          />
+        </div>
+
         {/*
           투표를 아랫줄로 내려 제목 폭을 확보한다. 같은 줄에 두면 제목에 80px 밖에 남지 않는다.
           이미 있는 투표자 줄과 한 줄을 나눠 써서 카드가 더 높아지지 않는다.

@@ -54,3 +54,29 @@ export function formatRuntime(seconds: number): string {
   }
   return `${minutes}:${String(secs).padStart(2, "0")}`;
 }
+
+/**
+ * 각 항목이 시작하는 시각(초). 앞선 항목들의 길이를 누적한다.
+ *
+ * 공연 순서를 짤 때 알고 싶은 건 곡 길이가 아니라 "이 곡 시작할 때 몇 분 지났나"다.
+ * 시간을 모르는 곡은 0으로 세고 이후 누적이 그만큼 어긋난다는 뜻이라,
+ * 화면에서 `N곡 시간 미입력`을 함께 보여줘야 한다.
+ */
+export function cumulativeStarts(
+  items: SetlistItem[],
+  songs: Pick<SongWithScore, "id" | "duration_seconds">[],
+): number[] {
+  const songMap = new Map(songs.map((song) => [song.id, song]));
+  let elapsed = 0;
+
+  return items.map((item) => {
+    const start = elapsed;
+    if (item.item_type === "interval") {
+      elapsed += Math.max(0, item.duration_seconds || 0);
+      return start;
+    }
+    const song = item.song_id ? songMap.get(item.song_id) : null;
+    if (song) elapsed += effectiveSetlistDuration(item, song) ?? 0;
+    return start;
+  });
+}

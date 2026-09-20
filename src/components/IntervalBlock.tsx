@@ -25,35 +25,30 @@ export default function IntervalBlock({ item, index, total, canEdit, onEdit, onM
   const [expanded, setExpanded] = useState(false);
   const canExpand = !!item.description || (item.label?.length || 0) > 30;
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-yellow-700/30 bg-yellow-900/10 p-3 print:border-yellow-300 print:bg-yellow-50">
-      <span className="text-caption text-text-subtle w-5 text-center shrink-0">{index + 1}</span>
-
-      {/* Icon */}
-      <div className="w-10 h-10 rounded-lg bg-yellow-800/30 flex items-center justify-center shrink-0 print:bg-yellow-100">
-        <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-1 print:border-y print:border-yellow-300">
+      {/* 곡은 카드, 인터벌은 곡 사이의 틈. 같은 카드로 그리면 둘이 구별되지 않는다. */}
+      <div className="flex w-full items-center gap-3">
+        <span className="h-px flex-1 border-t border-dashed border-warning/40" aria-hidden />
+        <span className="flex shrink-0 items-center gap-1.5 text-caption text-warning print:text-yellow-700">
+          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className={expanded ? "" : "truncate max-w-[10rem]"}>{item.label || "인터벌"}</span>
+          {item.duration_seconds > 0 && (
+            <span className="tabular-nums text-warning/80">· {formatTime(item.duration_seconds)}</span>
+          )}
+        </span>
+        <span className="h-px flex-1 border-t border-dashed border-warning/40" aria-hidden />
       </div>
 
-      {/* Content */}
-      <div className="min-w-0 flex-1">
-        <p className={`${expanded ? "" : "truncate"} text-sm font-medium text-yellow-200 print:whitespace-normal print:text-yellow-800`}>
-          {item.label || "인터벌"}
+      {item.description && expanded && (
+        <p className="w-full whitespace-pre-wrap text-caption leading-relaxed text-text-muted print:block print:text-yellow-700">
+          {item.description}
         </p>
-        {item.description && (
-          <p className={`${expanded ? "whitespace-pre-wrap" : "line-clamp-2"} mt-0.5 text-caption leading-relaxed text-yellow-300/70 print:block print:whitespace-pre-wrap print:text-yellow-700`}>
-            {item.description}
-          </p>
-        )}
-        {item.duration_seconds > 0 && (
-          <p className="text-caption text-yellow-400/70 print:text-yellow-600">
-            {formatTime(item.duration_seconds)}
-          </p>
-        )}
-      </div>
+      )}
 
       {(canExpand || canEdit) && (
-        <div className="flex basis-full items-center justify-between border-t border-yellow-700/20 pt-2 print:hidden">
+        <div className="flex basis-full items-center justify-between print:hidden">
           {canExpand ? (
             <button type="button" onClick={() => setExpanded((value) => !value)} className="min-h-11 text-caption text-yellow-400">
               {expanded ? "접기" : "펼치기"}

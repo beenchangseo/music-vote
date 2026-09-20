@@ -3,7 +3,9 @@ import {
   applyVotePress,
   canReduceVoteLimit,
   isValidDefaultVoteLimit,
+  assignRanks,
   remainingVotes,
+  scoreRatio,
   shouldExposeVoters,
 } from "../vote-domain";
 
@@ -77,5 +79,35 @@ describe("shouldExposeVoters", () => {
 
   it("shows voter nicknames once the host turns on named voting", () => {
     expect(shouldExposeVoters({ votes_anonymous: false })).toBe(true);
+  });
+});
+
+describe("assignRanks", () => {
+  it("같은 점수는 같은 등수를 받고 다음 등수는 건너뛴다", () => {
+    expect(assignRanks([5, 5, 4, 3, 3, 3, 1])).toEqual([1, 1, 3, 4, 4, 4, 7]);
+  });
+
+  it("동점이 없으면 순서대로 매긴다", () => {
+    expect(assignRanks([9, 7, 4])).toEqual([1, 2, 3]);
+  });
+
+  it("전부 같으면 모두 1등이다", () => {
+    expect(assignRanks([0, 0, 0])).toEqual([1, 1, 1]);
+  });
+
+  it("빈 목록을 견딘다", () => {
+    expect(assignRanks([])).toEqual([]);
+  });
+});
+
+describe("scoreRatio", () => {
+  it("최고점 대비 비율을 돌려준다", () => {
+    expect(scoreRatio(5, 5)).toBe(1);
+    expect(scoreRatio(2, 4)).toBe(0.5);
+  });
+
+  it("음수 점수와 0점 기준을 견딘다", () => {
+    expect(scoreRatio(-3, 5)).toBe(0);
+    expect(scoreRatio(3, 0)).toBe(0);
   });
 });
