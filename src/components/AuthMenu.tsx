@@ -59,7 +59,7 @@ export default function AuthMenu({ nickname, avatarUrl, embedded = false }: Auth
       {open && (
         <div className="absolute right-0 top-11 w-44 rounded-xl border border-border bg-surface shadow-lg animate-fade-in overflow-hidden">
           <div className="px-3 py-2 border-b border-border">
-            <p className="text-xs text-text-subtle">로그인됨</p>
+            <p className="text-caption text-text-subtle">로그인됨</p>
             <p className="text-sm font-medium text-text truncate">{nickname}</p>
           </div>
           <form action="/auth/logout" method="post">

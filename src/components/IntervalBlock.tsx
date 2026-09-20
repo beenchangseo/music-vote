@@ -26,7 +26,7 @@ export default function IntervalBlock({ item, index, total, canEdit, onEdit, onM
   const canExpand = !!item.description || (item.label?.length || 0) > 30;
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-yellow-700/30 bg-yellow-900/10 p-3 print:border-yellow-300 print:bg-yellow-50">
-      <span className="text-xs text-text-subtle w-5 text-center shrink-0">{index + 1}</span>
+      <span className="text-caption text-text-subtle w-5 text-center shrink-0">{index + 1}</span>
 
       {/* Icon */}
       <div className="w-10 h-10 rounded-lg bg-yellow-800/30 flex items-center justify-center shrink-0 print:bg-yellow-100">
@@ -41,12 +41,12 @@ export default function IntervalBlock({ item, index, total, canEdit, onEdit, onM
           {item.label || "인터벌"}
         </p>
         {item.description && (
-          <p className={`${expanded ? "whitespace-pre-wrap" : "line-clamp-2"} mt-0.5 text-xs leading-relaxed text-yellow-300/70 print:block print:whitespace-pre-wrap print:text-yellow-700`}>
+          <p className={`${expanded ? "whitespace-pre-wrap" : "line-clamp-2"} mt-0.5 text-caption leading-relaxed text-yellow-300/70 print:block print:whitespace-pre-wrap print:text-yellow-700`}>
             {item.description}
           </p>
         )}
         {item.duration_seconds > 0 && (
-          <p className="text-xs text-yellow-400/70 print:text-yellow-600">
+          <p className="text-caption text-yellow-400/70 print:text-yellow-600">
             {formatTime(item.duration_seconds)}
           </p>
         )}

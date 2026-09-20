@@ -178,7 +178,7 @@ export default function CreatePlaylistForm() {
                   unoptimized
                 />
               </div>
-              <p className="text-xs text-text-subtle mt-2">
+              <p className="text-caption text-text-subtle mt-2">
                 합주실에서 멤버 화면으로 보여주세요
               </p>
             </div>
@@ -285,11 +285,11 @@ export default function CreatePlaylistForm() {
       /* Options card */
       <div className="mt-4 bg-surface border border-border rounded-2xl overflow-hidden animate-fade-in">
         <div className="px-4 pt-3 pb-2 flex items-center justify-between">
-          <p className="text-xs text-text-subtle uppercase tracking-wider font-semibold">옵션</p>
+          <p className="text-caption text-text-subtle uppercase tracking-wider font-semibold">옵션</p>
           <button
             type="button"
             onClick={() => { setShowOptions(false); setDeadlineDate(""); setDeadlineTime("23:59"); setSetlistCount(0); }}
-            className="text-xs text-text-subtle hover:text-text transition-colors"
+            className="text-caption text-text-subtle hover:text-text transition-colors"
           >
             닫기
           </button>
@@ -305,7 +305,7 @@ export default function CreatePlaylistForm() {
             </div>
             <div className="flex-1 min-w-0">
               <label className="block text-sm text-text font-medium text-left">투표 마감일</label>
-              <p className="text-xs text-text-muted mt-0.5 mb-2 text-left">마감일이 지나면 투표가 종료됩니다</p>
+              <p className="text-caption text-text-muted mt-0.5 mb-2 text-left">마감일이 지나면 투표가 종료됩니다</p>
               <div className="flex gap-2">
                 <input type="date" value={deadlineDate} onChange={(e) => setDeadlineDate(e.target.value)} min={todayStr} className="flex-1 px-3 py-2.5 rounded-xl bg-surface-hover border border-border text-text text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all" style={{ colorScheme: "dark" }} />
                 {deadlineDate && (
@@ -333,7 +333,7 @@ export default function CreatePlaylistForm() {
             </div>
             <div className="flex-1 min-w-0">
               <label className="block text-sm text-text font-medium text-left">셋리스트 곡 수</label>
-              <p className="text-xs text-text-muted mt-0.5 text-left">투표 종료 후 상위 N곡이 셋리스트로 선정됩니다</p>
+              <p className="text-caption text-text-muted mt-0.5 text-left">투표 종료 후 상위 N곡이 셋리스트로 선정됩니다</p>
             </div>
             <div className="flex items-center gap-1 shrink-0">
               <button type="button" onClick={() => setSetlistCount((c) => Math.max(0, c - 1))} disabled={setlistCount <= 0} className="w-11 h-11 flex items-center justify-center rounded-xl bg-surface-hover border border-border text-text-muted hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-30 transition-all active:scale-95" aria-label="곡 수 줄이기">

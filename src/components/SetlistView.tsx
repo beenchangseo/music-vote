@@ -121,9 +121,9 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
             const duration = effectiveSetlistDuration(item, song);
             return (
               <div key={item.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface p-3">
-                <span className="w-5 shrink-0 text-center text-xs text-text-subtle">{index + 1}</span>
+                <span className="w-5 shrink-0 text-center text-caption text-text-subtle">{index + 1}</span>
                 {song.thumbnail_url && <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg"><Image src={song.thumbnail_url} alt="" fill sizes="40px" className="object-cover" /></div>}
-                <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-text">{effectiveSetlistTitle(item, song)}</p><p className="text-xs text-text-muted">{song.artist || "아티스트 미입력"}{duration != null ? ` · ${formatRuntime(duration)}` : " · 시간 미입력"}</p></div>
+                <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-text">{effectiveSetlistTitle(item, song)}</p><p className="text-caption text-text-muted">{song.artist || "아티스트 미입력"}{duration != null ? ` · ${formatRuntime(duration)}` : " · 시간 미입력"}</p></div>
                 {canEdit && <div className="flex basis-full items-center justify-end border-t border-border pt-2 print:hidden">
                   <button onClick={() => setEditing(item)} className="flex min-h-11 min-w-11 items-center justify-center text-text-subtle hover:text-text" aria-label="곡 블록 수정">
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" /></svg>

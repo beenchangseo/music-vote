@@ -192,7 +192,7 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
 
                   <div className="min-w-0 flex-1">
                     <p className="line-clamp-2 text-sm font-medium leading-snug text-text">{item.title}</p>
-                    <p className="mt-0.5 text-xs text-text-muted">
+                    <p className="mt-0.5 text-caption text-text-muted">
                       {item.channel}
                       {length && ` · ${length}`}
                     </p>

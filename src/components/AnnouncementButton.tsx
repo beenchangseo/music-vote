@@ -37,7 +37,7 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
     <>
       <button
         onClick={handleClick}
-        className={`relative p-2.5 rounded-xl border transition-all active:scale-95 ${
+        className={`relative inline-flex h-11 w-11 items-center justify-center rounded-control border transition-all active:scale-95 ${
           announcement
             ? "bg-surface hover:bg-surface-hover border-primary/30 text-primary"
             : "bg-surface hover:bg-surface-hover border-border text-text-subtle"
@@ -72,7 +72,7 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
               className="w-full px-3 py-2 rounded-xl bg-surface-hover border border-border text-text placeholder-text-subtle text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <div className="flex justify-between items-center mt-3">
-              <span className="text-xs text-text-subtle">{text.length}/500</span>
+              <span className="text-caption text-text-subtle">{text.length}/500</span>
               <div className="flex gap-2">
                 <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-text-muted hover:text-text">닫기</button>
                 <button

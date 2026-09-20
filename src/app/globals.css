@@ -29,7 +29,8 @@
   --color-bg: #030712;
   --color-surface: #111827;
   --color-surface-hover: #1f2937;
-  --color-surface-elevated: #1f2937;
+  /* surface-hover 보다 한 단계 밝아야 '떠 있는' 느낌이 난다 */
+  --color-surface-elevated: #2a3441;
   --color-border: #374151;
   --color-border-strong: #4b5563;
 
@@ -55,6 +56,10 @@
   --text-h3: 1.25rem;
   --text-h3--line-height: 1.4;
 
+  /* 16px 과 20px 사이. text-lg 가 이미 25곳에서 이 자리를 메우고 있었다. */
+  --text-h4: 1.125rem;
+  --text-h4--line-height: 1.5;
+
   --text-body: 1rem;
   --text-body--line-height: 1.65;
 
@@ -63,6 +68,15 @@
 
   --text-caption: 0.75rem;
   --text-caption--line-height: 1.5;
+
+  /* Radius — 3단계만. 형태가 역할을 말하게 한다. */
+  --radius-control: 0.625rem; /* 10px — 버튼·입력·칩 */
+  --radius-card: 1rem;        /* 16px — 카드·모달 */
+  --radius-pill: 9999px;      /* 아바타·카운트 뱃지 */
+
+  /* Layout — 하단 고정 요소. 지금까지 매직 넘버로 흩어져 있었다. */
+  --spacing-dock: 3.25rem;    /* 52px — 하단 탭 */
+  --spacing-player: 3.5rem;   /* 56px — 플레이어 바 */
 
   /* Animations */
   --animate-slide-up: slide-up 0.3s ease-out;

@@ -266,7 +266,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
               <LoginButton
                 size="sm"
                 label="로그인"
-                className="inline-flex items-center justify-center gap-1 h-8 px-3 text-caption font-semibold rounded-lg border border-border text-text-muted hover:text-text hover:border-border-strong hover:bg-surface-hover transition-colors shrink-0"
+                className="inline-flex min-h-11 items-center justify-center gap-1 px-3 text-caption font-semibold rounded-control border border-border text-text-muted hover:text-text hover:border-border-strong hover:bg-surface-hover transition-colors shrink-0"
               />
             </div>
           )}
@@ -397,7 +397,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                       셋리스트 확정하기
                     </button>
                   ) : (
-                    <p className="text-xs text-text-muted">생성자가 셋리스트를 확정하면 셋리스트/합주 모드를 사용할 수 있습니다.</p>
+                    <p className="text-caption text-text-muted">생성자가 셋리스트를 확정하면 셋리스트/합주 모드를 사용할 수 있습니다.</p>
                   )}
                 </div>
               )}
@@ -430,21 +430,23 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
               {songsWithVotes.length > 0 && (
                 <div className="mt-5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-text-subtle uppercase tracking-wider font-semibold">
+                    <span className="text-caption text-text-subtle uppercase tracking-wider font-semibold">
                       {songs.length}곡
                     </span>
                     <button
                       onClick={handleShareResults}
-                      className="text-xs text-text-subtle hover:text-primary transition-colors"
+                      className="inline-flex min-h-11 items-center text-caption text-text-subtle hover:text-primary transition-colors"
                     >
                       {resultCopied ? "복사됨!" : "결과 공유"}
                     </button>
                   </div>
-                  <div className="flex bg-surface-hover rounded-lg p-0.5">
+                  <div className="flex rounded-control bg-surface p-0.5">
                     <button
                       onClick={() => setViewMode("compact")}
-                      className={`p-1.5 rounded-md transition-colors ${
-                        viewMode === "compact" ? "bg-surface-hover text-white" : "text-text-muted hover:text-text"
+                      className={`inline-flex h-11 w-11 items-center justify-center rounded-control transition-colors ${
+                        viewMode === "compact"
+                          ? "bg-surface-elevated text-text shadow-sm"
+                          : "text-text-muted hover:text-text"
                       }`}
                       aria-label="리스트 보기"
                     >
@@ -454,8 +456,10 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                     </button>
                     <button
                       onClick={() => setViewMode("card")}
-                      className={`p-1.5 rounded-md transition-colors ${
-                        viewMode === "card" ? "bg-surface-hover text-white" : "text-text-muted hover:text-text"
+                      className={`inline-flex h-11 w-11 items-center justify-center rounded-control transition-colors ${
+                        viewMode === "card"
+                          ? "bg-surface-elevated text-text shadow-sm"
+                          : "text-text-muted hover:text-text"
                       }`}
                       aria-label="카드 보기"
                     >
@@ -594,7 +598,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
               <p className="text-caption text-text-subtle mb-2">새로운 플레이리스트가 필요하다면</p>
               <Link
                 href="/"
-                className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-hover transition-colors"
+                className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:text-primary-hover transition-colors"
               >
                 플레이리스트 만들기
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
@@ -625,7 +629,7 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-text truncate">{setlistConfirmSong.title}</p>
                 {setlistConfirmSong.artist && (
-                  <p className="text-xs text-text-muted truncate">{setlistConfirmSong.artist}</p>
+                  <p className="text-caption text-text-muted truncate">{setlistConfirmSong.artist}</p>
                 )}
               </div>
             </div>

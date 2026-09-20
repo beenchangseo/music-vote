@@ -28,7 +28,7 @@ export default function MiniPlayer({ state, actions, playerRef, children }: Mini
   }
 
   return (
-    <div className="fixed bottom-[52px] left-0 right-0 z-50 bg-surface/95 backdrop-blur-sm border-t border-border/50 print:hidden">
+    <div className="fixed bottom-dock left-0 right-0 z-50 bg-surface/95 backdrop-blur-sm border-t border-border/50 print:hidden">
       {/*
         접어도 언마운트하지 않는다. 높이만 0 으로 둔다.
         영상을 떼었다 붙이면 모바일에서 다음 곡 자동 재생 허용이 풀린다.
@@ -60,7 +60,7 @@ export default function MiniPlayer({ state, actions, playerRef, children }: Mini
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-text truncate">{currentSong.title}</p>
           {currentSong.artist && (
-            <p className="text-xs text-text-muted truncate">{currentSong.artist}</p>
+            <p className="text-caption text-text-muted truncate">{currentSong.artist}</p>
           )}
         </div>
 
@@ -69,7 +69,7 @@ export default function MiniPlayer({ state, actions, playerRef, children }: Mini
           {/* 영상 보기 */}
           <button
             onClick={() => setVideoOpen((v) => !v)}
-            className={`p-2 rounded-full transition-colors ${
+            className={`inline-flex h-11 w-11 items-center justify-center rounded-pill transition-colors ${
               videoOpen ? "text-primary" : "text-text-muted hover:text-text"
             }`}
             aria-label={videoOpen ? "영상 접기" : "영상 보기"}
@@ -84,7 +84,7 @@ export default function MiniPlayer({ state, actions, playerRef, children }: Mini
           {/* Shuffle */}
           <button
             onClick={actions.toggleShuffle}
-            className={`p-2 rounded-full transition-colors ${
+            className={`inline-flex h-11 w-11 items-center justify-center rounded-pill transition-colors ${
               shuffleMode ? "text-primary" : "text-text-muted hover:text-text"
             }`}
             aria-label={shuffleMode ? "셔플 끄기" : "셔플 켜기"}
@@ -97,7 +97,7 @@ export default function MiniPlayer({ state, actions, playerRef, children }: Mini
           {/* Play/Pause */}
           <button
             onClick={handlePlayPause}
-            className="p-2 rounded-full text-white hover:text-primary transition-colors"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-pill text-white hover:text-primary transition-colors"
             aria-label={isPlaying ? "일시정지" : "재생"}
           >
             {isPlaying ? (
@@ -114,7 +114,7 @@ export default function MiniPlayer({ state, actions, playerRef, children }: Mini
           {/* Next */}
           <button
             onClick={actions.playNext}
-            className="p-2 rounded-full text-text-muted hover:text-text transition-colors"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-pill text-text-muted hover:text-text transition-colors"
             aria-label="다음 곡"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -125,7 +125,7 @@ export default function MiniPlayer({ state, actions, playerRef, children }: Mini
           {/* Repeat */}
           <button
             onClick={actions.toggleRepeat}
-            className={`p-2 rounded-full transition-colors ${
+            className={`inline-flex h-11 w-11 items-center justify-center rounded-pill transition-colors ${
               repeatMode === "one" ? "text-primary" : "text-text-muted hover:text-text"
             }`}
             aria-label={repeatMode === "one" ? "반복 끄기" : "한곡 반복"}

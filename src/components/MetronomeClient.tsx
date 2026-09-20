@@ -133,7 +133,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
           </Link>
           <div>
             <h1 className="text-lg font-bold text-text">메트로놈</h1>
-            <p className="text-xs text-text-subtle">{playlistTitle}</p>
+            <p className="text-caption text-text-subtle">{playlistTitle}</p>
           </div>
         </div>
       </div>
@@ -141,7 +141,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
       {/* Metronome body */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 -mt-8">
         {/* Beat indicators */}
-        <p className="text-xs text-text-subtle mb-2">4/4 박자</p>
+        <p className="text-caption text-text-subtle mb-2">4/4 박자</p>
         <div className="flex gap-5 mb-6">
           {[0, 1, 2, 3].map((i) => (
             <div
@@ -228,7 +228,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
               ))}
             </select>
             {selectedSong && (
-              <p className="text-center text-xs text-text-subtle mt-2">
+              <p className="text-center text-caption text-text-subtle mt-2">
                 현재: <span className="text-primary">{selectedSong.title}</span> · {selectedSong.tempo_bpm} BPM
               </p>
             )}
