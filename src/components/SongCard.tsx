@@ -8,6 +8,7 @@ import SongVersionModal from "./SongVersionModal";
 import { useDialog } from "./DialogProvider";
 import { removeSong } from "@/actions/song";
 import type { VoteDirection } from "@/lib/vote-domain";
+import { displayArtist } from "@/lib/song-meta";
 import type { SongWithScore, VotingMode } from "@/lib/types";
 
 interface SongCardProps {
@@ -90,6 +91,8 @@ export default function SongCard({
   }
 
   const canRemove = isAdmin || (!!currentUserId && currentUserId === song.added_by_user_id);
+  // YouTube 채널명이 아티스트가 아닌 경우가 많다. 표시할 때만 정제한다.
+  const artist = displayArtist(song.artist, song.title);
 
   // VoteButtons 는 값을 그리기만 하므로 화면 폭에 따라 두 자리 중 하나에 놓아도 안전하다.
   const voteButtons = (
@@ -155,8 +158,8 @@ export default function SongCard({
             {/* 한 줄로 자르면 대여섯 글자에서 끊긴다. 두 줄까지 보여준다. */}
             <h3 className={`font-medium text-sm leading-snug line-clamp-2 ${isCurrent ? "text-primary" : "text-text"}`}>{song.title}</h3>
             <div className="flex items-center gap-2 mt-0.5">
-              {song.artist && (
-                <p className="text-caption text-text-muted truncate min-w-0">{song.artist}</p>
+              {artist && (
+                <p className="text-caption text-text-muted truncate min-w-0">{artist}</p>
               )}
               {song.commentCount > 0 && (
                 <button
@@ -308,8 +311,8 @@ export default function SongCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h3 className={`font-semibold leading-snug line-clamp-2 ${isCurrent ? "text-primary" : "text-text"}`}>{song.title}</h3>
-            {song.artist && (
-              <p className="text-sm text-text-muted truncate mt-0.5">{song.artist}</p>
+            {artist && (
+              <p className="text-sm text-text-muted truncate mt-0.5">{artist}</p>
             )}
           </div>
           <div className="shrink-0">{voteButtons}</div>
