@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { triggerKakaoLogin } from "@/lib/kakao-login";
 import type { VoteDirection } from "@/lib/vote-domain";
 import type { VotingMode } from "@/lib/types";
@@ -47,12 +48,17 @@ export default function VoteButtons({
       : "반대표 추가";
   const lockedTone = loginGate ? "text-text-subtle" : "";
 
+
+  const [popped, setPopped] = useState<VoteDirection | null>(null);
+
   function handleClick(pressed: VoteDirection) {
     if (loginGate) {
       triggerKakaoLogin();
       return;
     }
     if (disabled || pending) return;
+    setPopped(pressed);
+    setTimeout(() => setPopped(null), 180);
     onPress(pressed);
   }
 
@@ -61,7 +67,7 @@ export default function VoteButtons({
       <button
         onClick={() => handleClick(1)}
         disabled={!loginGate && (disabled || pending)}
-        className={`relative inline-flex h-11 w-11 items-center justify-center rounded-lg transition-all active:scale-90 disabled:opacity-60 ${
+        className={`relative inline-flex h-11 w-11 items-center justify-center rounded-control transition-all active:scale-90 disabled:opacity-60 ${popped === 1 ? "animate-vote-pop" : ""} ${
           loginGate
             ? lockedTone
             : direction === 1
@@ -81,7 +87,7 @@ export default function VoteButtons({
       <span
         role="status"
         aria-label={loginGate ? `점수 ${score}점, 투표하려면 로그인이 필요해요` : `점수 ${score}점`}
-        className={`min-w-[2rem] text-center font-bold text-lg tabular-nums ${
+        className={`min-w-[2rem] text-center font-bold text-base tabular-nums ${
           score > 0
             ? "text-upvote"
             : score < 0
@@ -89,7 +95,8 @@ export default function VoteButtons({
             : "text-text-muted"
         }`}
       >
-        {score}
+        {/* key 가 바뀌면 다시 마운트되면서 교체 애니메이션이 한 번 돈다. */}
+        <span key={score} className="inline-block animate-score-in">{score}</span>
       </span>
 
       {loginGate && (
@@ -109,7 +116,7 @@ export default function VoteButtons({
       <button
         onClick={() => handleClick(-1)}
         disabled={!loginGate && (disabled || pending)}
-        className={`relative inline-flex h-11 w-11 items-center justify-center rounded-lg transition-all active:scale-90 disabled:opacity-60 ${
+        className={`relative inline-flex h-11 w-11 items-center justify-center rounded-control transition-all active:scale-90 disabled:opacity-60 ${popped === -1 ? "animate-vote-pop" : ""} ${
           loginGate
             ? lockedTone
             : direction === -1

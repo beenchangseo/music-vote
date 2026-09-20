@@ -86,3 +86,27 @@ export function isValidDefaultVoteLimit(value: number): boolean {
 export function shouldExposeVoters(playlist: { votes_anonymous: boolean }): boolean {
   return !playlist.votes_anonymous;
 }
+
+/**
+ * 점수순으로 정렬된 목록에 순위를 매긴다.
+ * 같은 점수는 같은 등수이고, 그 다음 등수는 건너뛴다. (5,5,4 → 1,1,3)
+ *
+ * 화면은 1~3위만 번호를 보여준다. 34곡에 전부 번호를 달면 번호가 소음이 된다.
+ */
+export function assignRanks(scores: number[]): number[] {
+  let lastScore: number | null = null;
+  let lastRank = 0;
+  return scores.map((score, index) => {
+    if (score !== lastScore) {
+      lastRank = index + 1;
+      lastScore = score;
+    }
+    return lastRank;
+  });
+}
+
+/** 최고점 대비 비율(0~1). 점수가 숫자로만 있으면 박빙인지 압도적인지 안 읽힌다. */
+export function scoreRatio(score: number, topScore: number): number {
+  if (topScore <= 0) return 0;
+  return Math.max(0, Math.min(1, score / topScore));
+}

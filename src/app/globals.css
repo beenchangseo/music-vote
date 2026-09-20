@@ -21,6 +21,9 @@
   --color-danger: #ef4444;
   --color-danger-soft: #7f1d1d;
 
+  /* 재생 중 전용. primary 와 역할을 나눈다 */
+  --color-accent-play: #22d3ee;
+
   /* Vote colors (legacy aliases for compatibility) */
   --color-upvote: #22c55e;
   --color-downvote: #ef4444;
@@ -87,6 +90,10 @@
   --animate-float-fast: float 3s ease-in-out infinite;
   --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
   --animate-bounce-slow: bounce-slow 2s ease-in-out infinite;
+  --animate-vote-pop: vote-pop 160ms ease-out;
+  --animate-score-in: score-in 140ms ease-out;
+  --animate-rank-flash: rank-flash 200ms ease-out 120ms;
+  --animate-eq-bar: eq 0.8s ease-in-out infinite;
 
   /* 3D */
   --perspective-1000: 1000px;
@@ -203,4 +210,24 @@ body {
   .print\:text-yellow-800 { color: #854d0e !important; }
   .print\:text-yellow-600 { color: #ca8a04 !important; }
   .print\:bg-yellow-100 { background-color: #fef9c3 !important; }
+}
+
+/* 투표를 눌렀을 때. 눌렸다는 사실만 짧게 알린다. */
+@keyframes vote-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* 점수가 바뀌었을 때. 숫자가 갈린 자리를 보여준다. */
+@keyframes score-in {
+  0% { transform: translateY(4px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* 순위가 움직인 뒤. auto-animate 의 이동이 끝나고 켜졌다 꺼진다. */
+@keyframes rank-flash {
+  0% { opacity: 0; }
+  40% { opacity: 1; }
+  100% { opacity: 0; }
 }
