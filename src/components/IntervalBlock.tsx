@@ -55,13 +55,13 @@ export default function IntervalBlock({ item, index, total, canEdit, onEdit, onM
             </button>
           ) : <span />}
           {canEdit && <div className="flex items-center gap-1">
-            <button onClick={onEdit} className="p-2.5 text-text-subtle hover:text-text" aria-label="인터벌 수정">
+            <button onClick={onEdit} className="flex min-h-11 min-w-11 items-center justify-center text-text-subtle hover:text-text" aria-label="인터벌 수정">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" /></svg>
             </button>
-            <button onClick={onMoveUp} disabled={index === 0} className="p-2.5 text-text-subtle hover:text-text disabled:opacity-30 transition-colors" aria-label="위로">
+            <button onClick={onMoveUp} disabled={index === 0} className="flex min-h-11 min-w-11 items-center justify-center text-text-subtle hover:text-text disabled:opacity-30 transition-colors" aria-label="위로">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
             </button>
-            <button onClick={onMoveDown} disabled={index === total - 1} className="p-2.5 text-text-subtle hover:text-text disabled:opacity-30 transition-colors" aria-label="아래로">
+            <button onClick={onMoveDown} disabled={index === total - 1} className="flex min-h-11 min-w-11 items-center justify-center text-text-subtle hover:text-text disabled:opacity-30 transition-colors" aria-label="아래로">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
             </button>
             <button onClick={onRemove} className="min-h-11 min-w-11 text-danger" aria-label="삭제">×</button>

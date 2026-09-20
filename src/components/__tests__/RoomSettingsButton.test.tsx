@@ -60,7 +60,7 @@ describe("RoomSettingsButton", () => {
   it("applies the setlist permission optimistically", async () => {
     const onChange = renderSheet();
     fireEvent.click(screen.getByLabelText("방 설정"));
-    fireEvent.click(await screen.findByText("방장만 편집"));
+    fireEvent.click(await screen.findByRole("button", { name: "방장만 편집" }));
 
     expect(onChange).toHaveBeenCalledWith("host_only");
     await waitFor(() =>
@@ -72,7 +72,7 @@ describe("RoomSettingsButton", () => {
     updateSetlistEditMode.mockRejectedValue(new Error("권한 없음"));
     const onChange = renderSheet();
     fireEvent.click(screen.getByLabelText("방 설정"));
-    fireEvent.click(await screen.findByText("방장만 편집"));
+    fireEvent.click(await screen.findByRole("button", { name: "방장만 편집" }));
 
     await waitFor(() => expect(onChange).toHaveBeenLastCalledWith("everyone"));
     expect(showAlert).toHaveBeenCalledWith("권한 없음");

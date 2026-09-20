@@ -196,13 +196,16 @@ export default function SongCard({
                     e.stopPropagation();
                     setShowComments(true);
                   }}
-                  className="inline-flex items-center gap-0.5 shrink-0 h-5 px-1.5 rounded-md bg-primary/15 text-primary text-[11px] font-semibold hover:bg-primary/25 transition-colors"
+                  className="group/badge -my-3 inline-flex shrink-0 items-center py-3"
                   aria-label={`댓글 ${song.commentCount}개`}
                 >
-                  <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                    <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z" />
-                  </svg>
-                  {song.commentCount}
+                  {/* 배지는 작게 두되 누르는 자리는 44px 이어야 한다 (AGENTS.md). */}
+                  <span className="inline-flex h-5 items-center gap-0.5 rounded-md bg-primary/15 px-1.5 text-[11px] font-semibold text-primary transition-colors group-hover/badge:bg-primary/25">
+                    <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z" />
+                    </svg>
+                    {song.commentCount}
+                  </span>
                 </button>
               )}
               {versionCount > 0 && (

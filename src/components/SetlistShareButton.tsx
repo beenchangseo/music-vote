@@ -58,16 +58,19 @@ export default function SetlistShareButton({ shareCode, title }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-transparent text-text-muted transition-all hover:bg-surface-hover hover:text-text active:scale-95"
-        aria-label="셋리스트 공유 및 저장"
-        title="공유 및 저장"
+        className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-control border border-transparent px-2.5 text-caption font-semibold text-text-muted transition-all hover:bg-surface-hover hover:text-text active:scale-95"
+        aria-label="셋리스트 내보내기"
+        title="링크·이미지·PDF 로 내보내기"
       >
-        <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 2.184-3.907 2.25 2.25 0 0 0-2.184 3.907Zm0-12.814a2.25 2.25 0 1 0 2.184 3.907 2.25 2.25 0 0 0-2.184-3.907Z" />
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+          <path d="M12 3v12" />
+          <path d="M8 7l4-4 4 4" />
+          <path d="M4 15v4a2 2 0 002 2h12a2 2 0 002-2v-4" />
         </svg>
+        내보내기
       </button>
 
-      <Modal open={open} onClose={() => setOpen(false)} title="셋리스트 공유">
+      <Modal open={open} onClose={() => setOpen(false)} title="셋리스트 내보내기">
         <div className="space-y-2">
           <ShareOption
             title="링크 공유"

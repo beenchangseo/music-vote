@@ -103,12 +103,12 @@ export default function CommentSection({ songId, comments, nickname, shareCode, 
                 <span className="text-[10px] text-text-subtle">{content.length}/1000</span>
                 <div className="flex gap-2">
                   {isEditing && (
-                    <button onClick={() => { setIsEditing(false); setContent(myComment?.content || ""); }} className="text-caption text-text-subtle">취소</button>
+                    <button onClick={() => { setIsEditing(false); setContent(myComment?.content || ""); }} className="inline-flex min-h-11 items-center px-2 text-caption text-text-subtle">취소</button>
                   )}
                   <button
                     onClick={handleSubmit}
                     disabled={!content.trim() || isPending}
-                    className="px-3 py-1 rounded-md bg-primary hover:bg-primary-hover text-white text-caption font-medium disabled:opacity-50 transition-colors"
+                    className="inline-flex min-h-11 items-center px-3 rounded-control bg-primary hover:bg-primary-hover text-white text-caption font-medium disabled:opacity-50 transition-colors"
                   >
                     {isPending ? "저장 중..." : myComment ? "수정" : "작성"}
                   </button>

@@ -75,6 +75,50 @@ export default function RoomSettingsButton({
     });
   }
 
+  /** 서버가 들고 있는 참여자별 투표권. 입력 중인 값으로 덮어쓰지 않기 위해 쓴다. */
+  function savedMemberLimits() {
+    return (settings?.members ?? []).map((member) => ({
+      userId: member.user_id,
+      voteLimit: member.vote_limit,
+    }));
+  }
+
+  /**
+   * 토글은 누르는 즉시 저장한다.
+   * 종전에는 모달 한가운데에 `설정 저장` 이 있었는데, 위아래 모두 토글이라
+   * 무엇이 저장 대상인지 읽히지 않았다. 입력칸이 있는 투표권 블록만 자체 저장을 남긴다.
+   */
+  function persist(next: { votesAnonymous?: boolean; mode?: VotingMode }) {
+    const nextAnonymous = next.votesAnonymous ?? votesAnonymous;
+    const nextMode = next.mode ?? mode;
+    const previousAnonymous = votesAnonymous;
+    const previousMode = mode;
+
+    setVotesAnonymous(nextAnonymous);
+    setMode(nextMode);
+
+    startTransition(async () => {
+      try {
+        await saveVotingSettings(
+          playlistId,
+          adminToken,
+          nextAnonymous,
+          nextMode,
+          defaultLimit,
+          savedMemberLimits(),
+          shareCode,
+        );
+        onVotesAnonymousChange?.(nextAnonymous);
+        await refresh();
+        router.refresh();
+      } catch (error) {
+        setVotesAnonymous(previousAnonymous);
+        setMode(previousMode);
+        showAlert(error instanceof Error ? error.message : "투표 설정 변경에 실패했습니다.");
+      }
+    });
+  }
+
   async function changeVoteVisibility(next: boolean) {
     if (next === votesAnonymous) return;
     if (!next) {
@@ -84,12 +128,11 @@ export default function RoomSettingsButton({
       );
       if (!ok) return;
     }
-    setVotesAnonymous(next);
+    persist({ votesAnonymous: next });
   }
 
-  // 셋리스트 편집 권한은 저장 버튼을 거치지 않고 바로 적용된다. 종전 토글과 같은 동작이다.
-  function toggleSetlistEditMode() {
-    const next: SetlistEditMode = setlistEditMode === "everyone" ? "host_only" : "everyone";
+  // 셋리스트 편집 권한도 투표 설정과 같이 누르는 즉시 적용된다.
+  function changeSetlistEditMode(next: SetlistEditMode) {
     const previous = setlistEditMode;
     onSetlistEditModeChange(next);
     startTransition(async () => {
@@ -184,7 +227,6 @@ export default function RoomSettingsButton({
         onVotesAnonymousChange?.(votesAnonymous);
         await refresh();
         router.refresh();
-        setOpen(false);
       } catch (error) {
         showAlert(error instanceof Error ? error.message : "투표 설정 변경에 실패했습니다.");
       }
@@ -278,7 +320,7 @@ export default function RoomSettingsButton({
                       key={value}
                       type="button"
                       disabled={settings.totalVotes > 0 && value !== settings.mode}
-                      onClick={() => setMode(value)}
+                      onClick={() => value !== mode && persist({ mode: value })}
                       className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors disabled:opacity-40 ${
                         mode === value
                           ? "border-primary bg-primary/15 text-primary"
@@ -371,53 +413,44 @@ export default function RoomSettingsButton({
                           </div>
                         );
                       })}
+                      {/* 숫자 입력이라 즉시 적용이 안 된다. 이 블록만 저장을 남긴다. */}
+                      <Button type="button" fullWidth onClick={saveConfiguration} loading={isPending} className="mt-3">
+                        투표권 저장
+                      </Button>
                     </div>
                   </>
                 )}
               </section>
             )}
 
-            <Button
-              type="button"
-              fullWidth
-              onClick={saveConfiguration}
-              loading={isPending}
-              className="mt-6"
-            >
-              설정 저장
-            </Button>
-
             <section className="mt-6 border-t border-border pt-5">
               <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">셋리스트 · 편집 권한</p>
-              <button
-                type="button"
-                onClick={toggleSetlistEditMode}
-                disabled={isPending}
-                className="mt-2 flex min-h-11 w-full items-center justify-between gap-3 rounded-control border border-border bg-surface px-3 py-2 text-left transition-colors hover:border-border-strong"
-                aria-pressed={setlistEditMode === "host_only"}
-              >
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-text">방장만 편집</span>
-                  <span className="block text-caption leading-relaxed text-text-muted">
-                    {setlistEditMode === "everyone"
-                      ? "지금은 모두가 추가·수정·순서 변경·삭제할 수 있어요"
-                      : "지금은 방장만 셋리스트를 바꿀 수 있어요"}
-                  </span>
-                </span>
-                <span
-                  className={`relative h-7 w-12 shrink-0 rounded-pill transition-colors ${
-                    setlistEditMode === "host_only" ? "bg-primary" : "bg-border-strong"
-                  }`}
-                  aria-hidden
-                >
-                  <span
-                    className={`absolute top-1 h-5 w-5 rounded-pill bg-white transition-transform ${
-                      setlistEditMode === "host_only" ? "translate-x-6" : "translate-x-1"
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {([
+                  { value: "everyone" as SetlistEditMode, label: "모두 편집" },
+                  { value: "host_only" as SetlistEditMode, label: "방장만 편집" },
+                ]).map(({ value, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    disabled={isPending}
+                    onClick={() => value !== setlistEditMode && changeSetlistEditMode(value)}
+                    aria-pressed={setlistEditMode === value}
+                    className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors disabled:opacity-40 ${
+                      setlistEditMode === value
+                        ? "border-primary bg-primary/15 text-primary"
+                        : "border-border bg-surface text-text-muted"
                     }`}
-                  />
-                </span>
-              </button>
-              <p className="mt-2 text-caption text-text-subtle">저장 버튼 없이 바로 적용돼요.</p>
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-caption text-text-muted">
+                {setlistEditMode === "everyone"
+                  ? "참여자 누구나 곡을 추가·수정하고 순서를 바꿀 수 있어요."
+                  : "방장만 셋리스트를 바꿀 수 있어요."}
+              </p>
             </section>
 
             <section className="mt-6 border-t border-border pt-5">

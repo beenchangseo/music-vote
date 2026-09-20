@@ -44,7 +44,7 @@ export default function AuthMenu({ nickname, avatarUrl, embedded = false }: Auth
         onClick={() => setOpen((v) => !v)}
         aria-label={`${nickname} 계정 메뉴`}
         aria-expanded={open}
-        className="block w-9 h-9 rounded-full overflow-hidden border border-border bg-surface hover:border-border-strong transition-colors"
+        className="block h-11 w-11 rounded-pill overflow-hidden border border-border bg-surface hover:border-border-strong transition-colors"
       >
         {avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

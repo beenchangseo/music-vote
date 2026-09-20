@@ -53,7 +53,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
   const [viewMode, setViewMode] = useState<"card" | "compact">("compact");
   const [navMode, setNavMode] = useState<ViewMode>("playlist");
   const [adminToken, setAdminToken] = useState<string | null>(null);
-  const [resultCopied, setResultCopied] = useState(false);
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
   const [allowance, setAllowance] = useState<VoteAllowance | null>(null);
   const [votesAnonymous, setVotesAnonymous] = useState(playlist.votes_anonymous);
@@ -225,18 +224,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
     }
   }
 
-  async function handleShareResults() {
-    const lines = songsWithVotes.map((s, i) => `${i + 1}. ${s.title} (${s.score >= 0 ? "+" : ""}${s.score})`);
-    const text = `${playlist.title} 투표 결과:\n${lines.join("\n")}\n\n${window.location.href}`;
-    try {
-      await navigator.clipboard.writeText(text);
-      setResultCopied(true);
-      setTimeout(() => setResultCopied(false), 2000);
-    } catch {
-      prompt("결과를 복사하세요:", text);
-    }
-  }
-
   // 한 줄 메타. 있는 것만 가운뎃점으로 잇는다.
   const metaParts: { key: string; text: string; className: string }[] = [];
   if (loginGate) {
@@ -353,28 +340,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                 caption={<VoteAllowanceStatus allowance={allowance} />}
                 actions={
                   <>
-                    {songsWithVotes.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={handleShareResults}
-                        aria-label="투표 결과 복사"
-                        title="투표 결과 복사"
-                        className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-transparent transition-all active:scale-95 ${
-                          resultCopied ? "text-success" : "text-text-muted hover:bg-surface-hover hover:text-text"
-                        }`}
-                      >
-                        {resultCopied ? (
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-                            <path d="M20 6L9 17l-5-5" />
-                          </svg>
-                        ) : (
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-                            <rect x="9" y="9" width="11" height="11" rx="2" />
-                            <path d="M5 15V5a2 2 0 012-2h10" />
-                          </svg>
-                        )}
-                      </button>
-                    )}
                     {songsWithVotes.length > 0 && (
                       <div className="-mr-0.5 flex rounded-control bg-surface p-0.5">
                         <button

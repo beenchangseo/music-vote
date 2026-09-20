@@ -27,6 +27,8 @@ interface SongMetaProps {
   defaultOpen?: boolean;
   /** chip이 wrap 되도록 하는지. compact 행 안에 들어갈 때 false 권장. */
   wrap?: boolean;
+  /** 접기를 바깥에서 처리할 때. 합주 모드처럼 요약을 바깥이 그리는 경우에 쓴다. */
+  onClose?: () => void;
 }
 
 export default function SongMeta({
@@ -36,6 +38,7 @@ export default function SongMeta({
   editable = true,
   defaultOpen = false,
   wrap = true,
+  onClose,
 }: SongMetaProps) {
   const [open, setOpen] = useState(defaultOpen);
   const [keyRoot, setKeyRoot] = useState<KeyRoot | null>(song.key_root);
@@ -150,7 +153,7 @@ export default function SongMeta({
               <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="ml-auto shrink-0 inline-flex items-center justify-center w-10 h-10 -mr-1 rounded-lg text-text-subtle hover:text-text hover:bg-surface-hover transition-colors"
+                className="ml-auto shrink-0 inline-flex h-11 w-11 items-center justify-center -mr-1 rounded-control text-text-subtle hover:text-text hover:bg-surface-hover transition-colors"
                 aria-label="메타 편집"
               >
                 <PencilIcon />
@@ -161,7 +164,7 @@ export default function SongMeta({
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="w-full text-left text-caption text-text-subtle hover:text-text-muted transition-colors py-1 inline-flex items-center gap-1"
+            className="inline-flex min-h-11 w-full items-center gap-1 text-left text-caption text-text-subtle transition-colors hover:text-text-muted"
           >
             <PlusIcon />
             메타 추가 (키·BPM·난이도…)
@@ -175,7 +178,7 @@ export default function SongMeta({
           <div className="mt-2">
             <Link
               href={`/playlist/${shareCode}/metronome?bpm=${tempoBpm}&songId=${song.id}`}
-              className="inline-flex items-center gap-1 text-caption font-semibold text-primary hover:underline underline-offset-2"
+              className="inline-flex min-h-11 items-center gap-1 text-caption font-semibold text-primary hover:underline underline-offset-2"
             >
               <MetronomeIcon /> 메트로놈 {tempoBpm}
             </Link>
@@ -199,8 +202,8 @@ export default function SongMeta({
           )}
           <button
             type="button"
-            onClick={() => setOpen(false)}
-            className="text-caption text-text-muted hover:text-text inline-flex items-center gap-1"
+            onClick={() => (onClose ? onClose() : setOpen(false))}
+            className="inline-flex min-h-11 items-center gap-1 text-caption text-text-muted hover:text-text"
           >
             <ChevronUpIcon /> 접기
           </button>
@@ -256,7 +259,7 @@ export default function SongMeta({
           onChange={(e) => setKeyMemo(e.target.value)}
           onBlur={handleSaveAll}
           placeholder="자유 메모 (예: 1키 다운, capo 2…)"
-          className="mt-2 w-full h-9 px-3 rounded-lg bg-surface border border-border text-caption text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-primary"
+          className="mt-2 w-full h-11 px-3 rounded-control bg-surface border border-border text-caption text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-primary"
         />
       </Field>
 
@@ -271,7 +274,7 @@ export default function SongMeta({
             placeholder="BPM"
             min={40}
             max={300}
-            className="w-20 h-9 px-2 rounded-lg bg-surface border border-border text-caption text-text text-center focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-20 h-11 px-2 rounded-control bg-surface border border-border text-caption text-text text-center focus:outline-none focus:ring-2 focus:ring-primary"
           />
           <span className="text-caption text-text-subtle">·</span>
           <div className="flex items-center gap-1">
@@ -282,7 +285,7 @@ export default function SongMeta({
               onBlur={handleSaveAll}
               placeholder="분"
               min={0}
-              className="w-14 h-9 px-1 rounded-lg bg-surface border border-border text-caption text-text text-center focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-14 h-11 px-1 rounded-control bg-surface border border-border text-caption text-text text-center focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <span className="text-caption text-text-subtle">:</span>
             <input
@@ -293,13 +296,13 @@ export default function SongMeta({
               placeholder="초"
               min={0}
               max={59}
-              className="w-14 h-9 px-1 rounded-lg bg-surface border border-border text-caption text-text text-center focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-14 h-11 px-1 rounded-control bg-surface border border-border text-caption text-text text-center focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           {hasBpm && (
             <Link
               href={`/playlist/${shareCode}/metronome?bpm=${tempoBpm}&songId=${song.id}`}
-              className="ml-auto inline-flex items-center gap-1 px-2.5 h-9 rounded-lg bg-primary/10 border border-primary/30 text-caption font-semibold text-primary hover:bg-primary/20"
+              className="ml-auto inline-flex items-center gap-1 px-2.5 min-h-11 rounded-control bg-primary/10 border border-primary/30 text-caption font-semibold text-primary hover:bg-primary/20"
             >
               <MetronomeIcon /> 메트로놈
             </Link>
@@ -398,7 +401,7 @@ function KeyChip({
     <button
       type="button"
       onClick={onClick}
-      className={`h-10 min-w-[36px] px-2.5 rounded-lg text-caption font-semibold transition-colors ${
+      className={`h-11 min-w-[44px] px-2.5 rounded-control text-caption font-semibold transition-colors ${
         active
           ? "bg-primary text-white"
           : "bg-surface-hover text-text-muted hover:text-text"

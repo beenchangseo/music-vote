@@ -17,7 +17,7 @@ describe("SetlistShareButton", () => {
       </DialogProvider>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "셋리스트 공유 및 저장" }));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트 내보내기" }));
 
     expect(screen.getByRole("button", { name: /링크 공유/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /이미지로 저장/ })).toBeInTheDocument();

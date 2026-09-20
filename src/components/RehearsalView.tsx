@@ -130,32 +130,41 @@ export default function RehearsalView({
           </div>
         </div>
 
-        {/* 합주실에서 악기 들고 볼 때 필요한 값들 */}
+        {/*
+          합주실에서 악기 들고 볼 때 필요한 값들.
+          비어 있으면 그 자리를 눌러 바로 채운다 — 종전에는 접힌 `키·BPM 적어두기` 를
+          펼치고, 그 안의 `메타 추가` 를 또 눌러야 입력칸이 나왔다. 두 번 접혀 있었다.
+        */}
         <div className="mt-4 grid grid-cols-3 gap-2">
-          <div className="rounded-control bg-surface-hover px-3 py-2">
-            <p className="text-caption text-text-subtle">우리 키</p>
-            <p className="mt-0.5 text-h4 font-bold leading-tight text-text">
-              {formatKey(currentSong.key_root, currentSong.key_mode) || currentSong.key_memo || "—"}
-            </p>
-          </div>
-          <div className="rounded-control bg-surface-hover px-3 py-2">
-            <p className="text-caption text-text-subtle">BPM</p>
-            <p className="mt-0.5 text-h4 font-bold leading-tight tabular-nums text-text">{bpm || "—"}</p>
-          </div>
-          <div className="rounded-control bg-surface-hover px-3 py-2">
-            <p className="text-caption text-text-subtle">길이</p>
-            <p className="mt-0.5 text-h4 font-bold leading-tight tabular-nums text-text">
-              {duration != null ? formatRuntime(duration) : "—"}
-            </p>
-          </div>
+          {[
+            { label: "우리 키", value: formatKey(currentSong.key_root, currentSong.key_mode) || currentSong.key_memo },
+            { label: "BPM", value: bpm ? String(bpm) : null },
+            { label: "길이", value: duration != null ? formatRuntime(duration) : null },
+          ].map(({ label, value }) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => setShowMeta(true)}
+              aria-label={value ? `${label} ${value} 고치기` : `${label} 적어두기`}
+              className={`rounded-control px-3 py-2 text-left transition-colors ${
+                value
+                  ? "bg-surface-hover hover:bg-surface-elevated"
+                  : "border border-dashed border-border-strong hover:border-primary/60 hover:bg-surface-hover"
+              }`}
+            >
+              <p className="text-caption text-text-subtle">{label}</p>
+              <p className={`mt-0.5 text-h4 font-bold leading-tight tabular-nums ${value ? "text-text" : "text-text-subtle"}`}>
+                {value ?? "적기"}
+              </p>
+            </button>
+          ))}
         </div>
 
         {/* 메트로놈. 페이지를 나가면 합주 흐름이 끊긴다. */}
         <button
           type="button"
-          onClick={metronome.toggle}
-          disabled={!bpm}
-          className={`mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control border text-sm font-semibold transition-colors disabled:opacity-40 ${
+          onClick={() => (bpm ? metronome.toggle() : setShowMeta(true))}
+          className={`mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control border text-sm font-semibold transition-colors ${
             metronome.isPlaying
               ? "border-primary bg-primary/15 text-primary"
               : "border-border text-text-muted hover:text-text"
@@ -165,7 +174,7 @@ export default function RehearsalView({
             <path d="M9 3h6l4 18H5z" />
             <path d="M12 17V8" />
           </svg>
-          {!bpm ? "BPM을 적으면 메트로놈을 쓸 수 있어요" : metronome.isPlaying ? `메트로놈 끄기 · ${bpm}` : `메트로놈 · ${bpm}`}
+          {!bpm ? "BPM 적고 메트로놈 켜기" : metronome.isPlaying ? `메트로놈 끄기 · ${bpm}` : `메트로놈 · ${bpm}`}
           {metronome.isPlaying && (
             <span className="ml-1 flex items-center gap-1" aria-hidden>
               {Array.from({ length: metronome.beatsPerBar }, (_, i) => (
@@ -180,21 +189,16 @@ export default function RehearsalView({
           )}
         </button>
 
-        {/* 메타 입력은 접어둔다. 12줄의 `+ 메타 추가` 가 화면을 채우던 자리다. */}
-        <button
-          type="button"
-          onClick={() => setShowMeta((v) => !v)}
-          aria-expanded={showMeta}
-          className="mt-2 inline-flex min-h-11 items-center gap-1 text-caption text-text-subtle transition-colors hover:text-text-muted"
-        >
-          키·BPM 적어두기
-          <svg className={`h-3.5 w-3.5 transition-transform ${showMeta ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </button>
+        {/* 입력칸은 바로 편집 상태로 연다. 접힌 것을 또 펼치게 하지 않는다. */}
         {showMeta && (
-          <div className="animate-fade-in">
-            <SongMeta song={currentSong} playlistId={playlistId} shareCode={shareCode} />
+          <div className="mt-3 overflow-hidden rounded-control border border-border animate-fade-in">
+            <SongMeta
+              song={currentSong}
+              playlistId={playlistId}
+              shareCode={shareCode}
+              defaultOpen
+              onClose={() => setShowMeta(false)}
+            />
           </div>
         )}
       </Card>

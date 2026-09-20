@@ -89,10 +89,20 @@ export async function updateSongMeta(
 ) {
   await assertPlaylistWritable(playlistId);
 
-  const supabase = await createServerSupabaseClient();
+  /*
+    v15 가 `songs_update USING(true)` 를 지우면서 공개 키로는 곡을 못 고치게 됐다.
+    그런데 이 액션은 anon 클라이언트를 그대로 쓰고 있었고, RLS 가 막은 UPDATE 는
+    에러 없이 0행을 돌려주기 때문에 키·BPM·길이 저장이 조용히 실패하고 있었다.
+    권한을 코드에서 확인하고 service_role 로 쓴다 (AGENTS.md 데이터 흐름 규칙).
+    쓰기 자격은 곡 등록과 같게 둔다 — 로그인한 사람이면 합주 메타를 채울 수 있다.
+  */
+  const user = await getCurrentUser();
+  if (!user) throw new Error("로그인이 필요합니다.");
+
+  const admin = createAdminClient();
 
   // Verify song belongs to playlist
-  const { data: song } = await supabase
+  const { data: song } = await admin
     .from("songs")
     .select("id")
     .eq("id", songId)
@@ -133,12 +143,15 @@ export async function updateSongMeta(
 
   if (Object.keys(updateData).length === 0) return { success: true };
 
-  const { error } = await supabase
+  const { data: updated, error } = await admin
     .from("songs")
     .update(updateData)
-    .eq("id", songId);
+    .eq("id", songId)
+    .select("id");
 
   if (error) throw new Error("곡 정보 업데이트에 실패했습니다.");
+  // 0행이면 조용히 성공한 척하지 않는다. v15 회귀가 여기서 묻혔다.
+  if (!updated || updated.length === 0) throw new Error("곡 정보 업데이트에 실패했습니다.");
 
   revalidatePath(`/playlist/${shareCode}`);
   return { success: true };
