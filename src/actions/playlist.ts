@@ -62,7 +62,7 @@ export async function createPlaylist(
   defaultVoteLimit = 3,
 ) {
   if (!title || title.length > 100) {
-    throw new Error("플레이리스트 제목은 1~100자여야 합니다.");
+    throw new Error("합주방 제목은 1~100자여야 합니다.");
   }
 
   const supabase = await createServerSupabaseClient();
@@ -99,7 +99,7 @@ export async function createPlaylist(
       .single();
 
     if (error?.code === "23505") continue; // unique violation, retry
-    if (error) throw new Error("플레이리스트 생성에 실패했습니다.");
+    if (error) throw new Error("합주방 생성에 실패했습니다.");
 
     // Store admin token in separate table (service role only)
     const { error: adminError } = await admin.from("playlist_admin").insert({
@@ -110,7 +110,7 @@ export async function createPlaylist(
     if (adminError) {
       // Rollback: delete the playlist since admin token failed
       await admin.from("playlists").delete().eq("id", data.id);
-      throw new Error("플레이리스트 생성에 실패했습니다.");
+      throw new Error("합주방 생성에 실패했습니다.");
     }
 
     const { error: memberError } = await admin.from("playlist_members").insert({
@@ -122,7 +122,7 @@ export async function createPlaylist(
 
     if (memberError) {
       await admin.from("playlists").delete().eq("id", data.id);
-      throw new Error("플레이리스트 생성에 실패했습니다.");
+      throw new Error("합주방 생성에 실패했습니다.");
     }
 
     return { id: data.id, shareCode: data.share_code, adminToken };
@@ -261,7 +261,7 @@ export async function deletePlaylist(playlistId: string, adminToken: string | nu
     .delete()
     .eq("id", playlistId);
 
-  if (error) throw new Error("플레이리스트 삭제에 실패했습니다.");
+  if (error) throw new Error("합주방 삭제에 실패했습니다.");
 
   revalidatePath("/");
   return { success: true };

@@ -80,7 +80,7 @@ export default function CreatePlaylistForm() {
       const url = `${window.location.origin}/playlist/${result.shareCode}`;
       setCreated({ ...result, title: title.trim(), url });
     } catch {
-      showAlert("플레이리스트 생성에 실패했습니다. 다시 시도해주세요.");
+      showAlert("합주방 생성에 실패했습니다. 다시 시도해주세요.");
       setLoading(false);
     }
   }
@@ -201,7 +201,46 @@ export default function CreatePlaylistForm() {
         className="w-full px-4 py-3 rounded-xl bg-surface border border-border text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
       />
 
-      <div className="mt-4 rounded-2xl border border-border bg-surface p-4">
+      {/* Primary CTA — full-width below input */}
+      <button
+        type="submit"
+        disabled={!title.trim() || loading}
+        className="w-full mt-3 h-12 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98] flex items-center justify-center"
+      >
+        {loading ? (
+          <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+        ) : (
+          "합주방 만들기"
+        )}
+      </button>
+
+      {/* Options toggle — collapsed by default */}
+      {!showOptions ? (
+        <button
+          type="button"
+          onClick={() => setShowOptions(true)}
+          className="w-full mt-3 h-10 rounded-xl text-sm text-text-muted hover:text-text hover:bg-surface transition-colors inline-flex items-center justify-center gap-1.5"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          옵션 추가 (투표 방식 · 마감일 · 셋리스트 곡 수)
+        </button>
+      ) : (
+      /* Options card */
+      <div className="mt-4 bg-surface border border-border rounded-2xl overflow-hidden animate-fade-in">
+        <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+          <p className="text-caption text-text-subtle uppercase tracking-wider font-semibold">옵션</p>
+          <button
+            type="button"
+            onClick={() => { setShowOptions(false); setDeadlineDate(""); setDeadlineTime("23:59"); setSetlistCount(0); }}
+            className="text-caption text-text-subtle hover:text-text transition-colors"
+          >
+            닫기
+          </button>
+        </div>
+
+        <div className="border-t border-border px-4 py-3">
         <p className="text-sm font-semibold text-text">투표 방식</p>
         <p className="mt-1 text-caption text-text-muted">
           방을 만든 뒤에도 투표가 시작되기 전에는 바꿀 수 있어요.
@@ -250,49 +289,10 @@ export default function CreatePlaylistForm() {
                 const value = Number(e.target.value);
                 if (Number.isInteger(value)) setDefaultVoteLimit(Math.min(99, Math.max(1, value)));
               }}
-              className="h-11 w-20 rounded-xl border border-border bg-surface-hover px-3 text-center text-text focus:outline-none focus:ring-2 focus:ring-primary"
+              className="h-11 w-20 rounded-control border border-border bg-surface-hover px-3 text-center text-text focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
         )}
-      </div>
-
-      {/* Primary CTA — full-width below input */}
-      <button
-        type="submit"
-        disabled={!title.trim() || loading}
-        className="w-full mt-3 h-12 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98] flex items-center justify-center"
-      >
-        {loading ? (
-          <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-        ) : (
-          "합주 만들기"
-        )}
-      </button>
-
-      {/* Options toggle — collapsed by default */}
-      {!showOptions ? (
-        <button
-          type="button"
-          onClick={() => setShowOptions(true)}
-          className="w-full mt-3 h-10 rounded-xl text-sm text-text-muted hover:text-text hover:bg-surface transition-colors inline-flex items-center justify-center gap-1.5"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          옵션 추가 (마감일 · 셋리스트 곡 수)
-        </button>
-      ) : (
-      /* Options card */
-      <div className="mt-4 bg-surface border border-border rounded-2xl overflow-hidden animate-fade-in">
-        <div className="px-4 pt-3 pb-2 flex items-center justify-between">
-          <p className="text-caption text-text-subtle uppercase tracking-wider font-semibold">옵션</p>
-          <button
-            type="button"
-            onClick={() => { setShowOptions(false); setDeadlineDate(""); setDeadlineTime("23:59"); setSetlistCount(0); }}
-            className="text-caption text-text-subtle hover:text-text transition-colors"
-          >
-            닫기
-          </button>
         </div>
 
         {/* 투표 마감일 */}

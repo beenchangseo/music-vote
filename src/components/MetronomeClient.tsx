@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState } from "react";
+import { useMetronome } from "@/hooks/useMetronome";
 import Link from "next/link";
 import type { Song } from "@/lib/types";
 
@@ -16,97 +17,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
   const initialSong = initialSongId ? songs.find((s) => s.id === initialSongId) : songs[0];
   const [bpm, setBpm] = useState(initialBpm || initialSong?.tempo_bpm || 120);
   const [selectedSongId, setSelectedSongId] = useState(initialSongId || initialSong?.id || "");
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [beat, setBeat] = useState(0); // 0-3
-
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const nextNoteTimeRef = useRef(0);
-  const beatRef = useRef(0);
-
-  // Lookahead scheduler constants
-  const SCHEDULE_AHEAD = 0.1; // 100ms lookahead
-  const TIMER_INTERVAL = 25; // 25ms pump interval
-
-  const playClick = useCallback((time: number, accent: boolean) => {
-    const ctx = audioCtxRef.current;
-    if (!ctx) return;
-
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.frequency.value = accent ? 1000 : 800;
-    gain.gain.setValueAtTime(0.5, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
-
-    osc.start(time);
-    osc.stop(time + 0.05);
-  }, []);
-
-  const scheduler = useCallback(() => {
-    const ctx = audioCtxRef.current;
-    if (!ctx) return;
-
-    while (nextNoteTimeRef.current < ctx.currentTime + SCHEDULE_AHEAD) {
-      const isAccent = beatRef.current === 0;
-      playClick(nextNoteTimeRef.current, isAccent);
-
-      const currentBeat = beatRef.current;
-      // Schedule UI update at the right time
-      const delay = (nextNoteTimeRef.current - ctx.currentTime) * 1000;
-      setTimeout(() => setBeat(currentBeat), Math.max(0, delay));
-
-      // Advance
-      const secondsPerBeat = 60.0 / bpm;
-      nextNoteTimeRef.current += secondsPerBeat;
-      beatRef.current = (beatRef.current + 1) % 4;
-    }
-  }, [bpm, playClick]);
-
-  const start = useCallback(() => {
-    if (!audioCtxRef.current) {
-      audioCtxRef.current = new AudioContext();
-    }
-    const ctx = audioCtxRef.current;
-    if (ctx.state === "suspended") ctx.resume();
-
-    beatRef.current = 0;
-    nextNoteTimeRef.current = ctx.currentTime;
-    setBeat(0);
-    setIsPlaying(true);
-
-    timerRef.current = setInterval(scheduler, TIMER_INTERVAL);
-  }, [scheduler]);
-
-  const stop = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    setIsPlaying(false);
-    setBeat(0);
-  }, []);
-
-  // Restart scheduler when BPM changes during playback
-  useEffect(() => {
-    if (isPlaying) {
-      if (timerRef.current) clearInterval(timerRef.current);
-      timerRef.current = setInterval(scheduler, TIMER_INTERVAL);
-    }
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [scheduler, isPlaying]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      audioCtxRef.current?.close();
-    };
-  }, []);
+  const { isPlaying, beat, start, stop } = useMetronome(bpm);
 
   function handleSongChange(songId: string) {
     setSelectedSongId(songId);

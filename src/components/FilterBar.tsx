@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Chip from "./ui/Chip";
 import { GENRES, KEY_ROOTS, KEY_MODES, GENRE_LABEL } from "@/lib/song-meta";
 import type { KeyRoot, KeyMode, Genre } from "@/lib/types";
 
@@ -74,28 +75,17 @@ export default function FilterBar({
     <div className="mt-3 pb-1">
       {/* horizontal chip strip — primary controls */}
       <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1 scrollbar-thin">
-        <button
-          type="button"
+        <Chip
           onClick={() => onChange({ ...filter, metaOnly: !filter.metaOnly })}
-          className={`shrink-0 h-11 px-3 rounded-full text-caption font-semibold whitespace-nowrap transition-colors ${
-            filter.metaOnly
-              ? "bg-primary text-white"
-              : "bg-surface border border-border text-text-muted hover:text-text"
-          }`}
-          aria-pressed={filter.metaOnly}
+          selected={filter.metaOnly}
         >
           메타 있음
-        </button>
+        </Chip>
 
-        <button
-          type="button"
+        <Chip
           onClick={() => setExpanded((v) => !v)}
           aria-expanded={expanded}
-          className={`shrink-0 h-11 px-3 rounded-full text-caption font-semibold whitespace-nowrap transition-colors inline-flex items-center gap-1 ${
-            advCount > 0 || expanded
-              ? "bg-primary/15 border border-primary/40 text-primary"
-              : "bg-surface border border-border text-text-muted hover:text-text"
-          }`}
+          selected={advCount > 0 || expanded}
         >
           더보기
           {advCount > 0 && (
@@ -117,7 +107,7 @@ export default function FilterBar({
               d="M19 9l-7 7-7-7"
             />
           </svg>
-        </button>
+        </Chip>
 
         {filtered && (
           <button

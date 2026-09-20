@@ -35,7 +35,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold text-text mb-2">3. 개인정보의 보유 및 파기</h2>
             <p>
-              수집된 닉네임은 플레이리스트 삭제 시 함께 파기돼요.
+              수집된 닉네임은 합주방 삭제 시 함께 파기돼요.
               접속 로그는 보안 목적으로 최대 90일간 보관 후 자동 삭제돼요.
             </p>
           </section>

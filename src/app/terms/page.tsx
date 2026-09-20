@@ -25,7 +25,7 @@ export default function TermsPage() {
             <h2 className="text-lg font-semibold text-text mb-2">제2조 (서비스의 내용)</h2>
             <p>서비스는 다음의 기능을 제공해요.</p>
             <ul className="list-disc list-inside mt-2 space-y-1 text-text-muted">
-              <li>플레이리스트 생성 및 관리</li>
+              <li>합주방 생성 및 관리</li>
               <li>YouTube 곡 추가 및 미리보기</li>
               <li>밴드 구성원 간 곡 투표</li>
               <li>투표 결과 공유</li>
@@ -36,7 +36,7 @@ export default function TermsPage() {
             <h2 className="text-lg font-semibold text-text mb-2">제3조 (이용자의 의무)</h2>
             <ul className="list-disc list-inside space-y-1 text-text-muted">
               <li>타인의 닉네임을 도용하여 투표하지 않아야 해요.</li>
-              <li>서비스를 악용하여 대량의 플레이리스트나 곡을 생성하지 않아야 해요.</li>
+              <li>서비스를 악용하여 대량의 합주방이나 곡을 생성하지 않아야 해요.</li>
               <li>서비스의 정상적인 운영을 방해하는 행위를 하지 않아야 해요.</li>
               <li>관련 법령 및 본 약관의 규정을 준수해야 해요.</li>
             </ul>
