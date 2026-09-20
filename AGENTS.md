@@ -64,6 +64,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - 익명 모드는 화면 가림이 아니라 서버 페이로드에서 투표자를 뺀다(`docs/adr/0011`). `SongWithScore.votes` 는 기명 모드일 때만 채워지고 계정 식별자는 어느 모드에서도 내려보내지 않는다
 - 실시간은 내용 없는 broadcast 알림 + 재조회(`docs/adr/0010`). `postgres_changes` 로 `votes` 를 구독하면 익명 모드가 다시 뚫린다
 - YouTube `search.list` 는 **하루 100회 전용 쿼터**(전체 사용자 합산). 키 입력마다 부르지 말 것 — 명시적 제출에서만, 그리고 `youtube_search_cache` 를 반드시 거칠 것. `videos.list` 는 50개 묶음에 1유닛이라 부담 없다
+- Vercel 환경변수는 `printf '%s' "$VAL" | vercel env add NAME production --force --yes` 로 넣을 것. `echo` 로 넣으면 값 끝에 줄바꿈이 붙는다. `NEXT_PUBLIC_SUPABASE_ANON_KEY` 가 그렇게 들어가 있어서 REST 는 되는데 Realtime 만(키를 URL 쿼리로 보낸다) `HTTP Authentication failed` 로 죽어 있었다
 - `songs` 는 공개 키로 UPDATE 할 수 없다(v15 가 `songs_update` 를 지웠다). 곡 메타 수정은 `createAdminClient()` + 코드 권한 검사로만. RLS 가 막은 UPDATE 는 **에러 없이 0행**을 돌려주므로 쓰기 뒤에 `.select()` 로 행 수를 확인할 것 — 이걸 안 해서 키·BPM 저장이 한동안 조용히 실패했다
 - `votes` 테이블은 공개 키로 직접 읽을 수 없다(`docs/adr/0013`). 투표 조회는 `song_vote_summary`·`song_voters` 뷰로만 한다. 쓰기는 Server Action 의 service_role 이나 SECURITY DEFINER 함수로만
 

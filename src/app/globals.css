@@ -92,7 +92,6 @@
   --animate-bounce-slow: bounce-slow 2s ease-in-out infinite;
   --animate-vote-pop: vote-pop 160ms ease-out;
   --animate-score-in: score-in 140ms ease-out;
-  --animate-rank-flash: rank-flash 200ms ease-out 120ms;
   --animate-eq-bar: eq 0.8s ease-in-out infinite;
 
   /* 3D */
@@ -226,8 +225,3 @@ body {
 }
 
 /* 순위가 움직인 뒤. auto-animate 의 이동이 끝나고 켜졌다 꺼진다. */
-@keyframes rank-flash {
-  0% { opacity: 0; }
-  40% { opacity: 1; }
-  100% { opacity: 0; }
-}

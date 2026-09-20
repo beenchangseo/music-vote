@@ -29,7 +29,7 @@ import ScreenToolbar from "./ui/ScreenToolbar";
 import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import type { ViewMode } from "./NavigationBar";
-import { assignRanks, scoreRatio } from "@/lib/vote-domain";
+import { scoreRatio } from "@/lib/vote-domain";
 import { isArchivedPlaylist } from "@/lib/playlist-archive";
 import type { Playlist, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/lib/types";
 
@@ -162,12 +162,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
   //
   // 번호는 상위 세 행까지만 붙인다. 점수가 5,5,4,4,4,4 처럼 몰리면
   // 등수로만 자를 때 3등이 예닐곱 개가 되어 번호가 소음이 된다.
-  const rankBySong = useMemo(() => {
-    const ranks = assignRanks(songsWithVotes.map((s) => s.score));
-    const map: Record<string, number> = {};
-    songsWithVotes.slice(0, 3).forEach((s, i) => { map[s.id] = ranks[i]; });
-    return map;
-  }, [songsWithVotes]);
 
   const topScore = songsWithVotes[0]?.score ?? 0;
 
@@ -546,7 +540,6 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                       isAdmin={isAdmin}
                       adminToken={adminToken}
                       viewMode={viewMode}
-                      rank={rankBySong[song.id]}
                       scoreRatio={scoreRatio(song.score, topScore)}
                       onVotePress={pressVote}
                       votePending={isVotePending(song.id)}

@@ -21,7 +21,6 @@ interface SongCardProps {
   adminToken: string | null;
   viewMode: "card" | "compact";
   /** 1~3위만 번호를 보여준다. 34곡에 전부 달면 번호가 소음이 된다. */
-  rank?: number;
   /** 최고점 대비 비율(0~1). 박빙인지 압도적인지 숫자만으로는 안 읽힌다. */
   scoreRatio?: number;
   onVotePress: (songId: string, direction: VoteDirection) => void;
@@ -49,7 +48,6 @@ export default function SongCard({
   isAdmin,
   adminToken,
   viewMode,
-  rank,
   scoreRatio = 0,
   onVotePress,
   votePending = false,
@@ -99,7 +97,6 @@ export default function SongCard({
   const canRemove = isAdmin || (!!currentUserId && currentUserId === song.added_by_user_id);
   // YouTube 채널명이 아티스트가 아닌 경우가 많다. 표시할 때만 정제한다.
   const artist = displayArtist(song.artist, song.title);
-  const showRank = typeof rank === "number" && rank <= 3;
 
   // VoteButtons 는 값을 그리기만 하므로 화면 폭에 따라 두 자리 중 하나에 놓아도 안전하다.
   const voteButtons = (
@@ -120,27 +117,6 @@ export default function SongCard({
     return (
       <div className={`bg-surface rounded-xl border transition-all hover:border-border-strong ${showMenu ? "overflow-visible" : "overflow-hidden"} ${isHighlighted ? "border-yellow-500/50 bg-yellow-900/5" : isCurrent ? "border-primary/50" : "border-border"} ${isPending ? "opacity-50" : ""}`}>
         <div className="flex items-start gap-3 p-3">
-          {/* 순위 · 재생 상태. 칸은 항상 잡아둔다 — 번호 유무로 썸네일 줄이 어긋나면 안 된다. */}
-          <div className="flex w-5 shrink-0 items-center justify-center pt-3.5">
-            {isCurrent || showRank ? (
-              isCurrent ? (
-                <span className="flex h-3 items-end gap-0.5" aria-label="재생 중">
-                  {[0, 0.18, 0.36].map((delay) => (
-                    <span
-                      key={delay}
-                      className="w-0.5 rounded-full bg-accent-play animate-eq-bar"
-                      style={{ height: "100%", animationDelay: `${delay}s` }}
-                    />
-                  ))}
-                </span>
-              ) : (
-                <span className="text-caption font-bold tabular-nums text-text-subtle">
-                  {String(rank).padStart(2, "0")}
-                </span>
-              )
-            ) : null}
-          </div>
-
           {/* Thumbnail + play */}
           <button
             onClick={onTogglePlay}
@@ -248,17 +224,6 @@ export default function SongCard({
                 <button onClick={() => { setShowVersions(true); setShowMenu(false); }} className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-text hover:bg-surface-hover">
                   <VersionIcon /> 다른 버전 {versionCount > 0 ? `(${versionCount})` : ""}
                 </button>
-                {onAddToSetlist && (
-                  <button
-                    onClick={() => { onAddToSetlist(song.id); setShowMenu(false); }}
-                    className="w-full px-3 py-2.5 text-left text-sm text-text hover:bg-surface-hover transition-colors flex items-center gap-2"
-                  >
-                    <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    셋리스트에 추가
-                  </button>
-                )}
                 {canRemove && (
                   <button
                     onClick={() => { handleRemove(); setShowMenu(false); }}
@@ -288,6 +253,19 @@ export default function SongCard({
           이미 있는 투표자 줄과 한 줄을 나눠 써서 카드가 더 높아지지 않는다.
         */}
         <div className="flex items-center gap-2 border-t border-border px-3 py-1.5">
+          {/* 셋리스트 추가는 ⋮ 안에 있으면 못 찾는다. 투표 행 왼쪽에 항상 보이게 둔다. */}
+          {onAddToSetlist && (
+            <button
+              type="button"
+              onClick={() => onAddToSetlist(song.id)}
+              className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-control px-2 text-caption font-semibold text-primary transition-colors hover:bg-primary/10"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              셋리스트
+            </button>
+          )}
           <VoterStrip votes={song.votes} hide={votesAnonymous} />
           <div className="ml-auto shrink-0">{voteButtons}</div>
         </div>
@@ -383,7 +361,7 @@ export default function SongCard({
           {onAddToSetlist && (
             <button
               onClick={() => onAddToSetlist(song.id)}
-              className="text-caption text-text-subtle hover:text-primary transition-colors flex items-center gap-1"
+              className="flex min-h-11 items-center gap-1 text-caption text-text-subtle transition-colors hover:text-primary"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
