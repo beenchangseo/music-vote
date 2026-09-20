@@ -72,7 +72,7 @@ export default function RehearsalView({
           <div key={item.id} className="bg-surface rounded-xl border border-border overflow-hidden">
             {/* Song header */}
             <div className="flex items-center gap-3 p-3 border-b border-border">
-              <span className="text-xs text-text-subtle w-5 text-center shrink-0">{index + 1}</span>
+              <span className="text-caption text-text-subtle w-5 text-center shrink-0">{index + 1}</span>
               {song.thumbnail_url && (
                 <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0">
                   <Image src={song.thumbnail_url} alt={song.title} fill sizes="40px" className="object-cover" />
@@ -80,7 +80,7 @@ export default function RehearsalView({
               )}
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-text truncate">{effectiveSetlistTitle(item, song)}</p>
-                {song.artist && <p className="text-xs text-text-muted truncate">{song.artist}</p>}
+                {song.artist && <p className="text-caption text-text-muted truncate">{song.artist}</p>}
               </div>
             </div>
 

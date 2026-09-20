@@ -156,7 +156,7 @@ export default function SongCard({
             <h3 className={`font-medium text-sm leading-snug line-clamp-2 ${isCurrent ? "text-primary" : "text-text"}`}>{song.title}</h3>
             <div className="flex items-center gap-2 mt-0.5">
               {song.artist && (
-                <p className="text-xs text-text-muted truncate min-w-0">{song.artist}</p>
+                <p className="text-caption text-text-muted truncate min-w-0">{song.artist}</p>
               )}
               {song.commentCount > 0 && (
                 <button
@@ -198,7 +198,7 @@ export default function SongCard({
             {showMenu && (
               <div className="absolute right-0 top-8 z-20 w-44 bg-surface-hover border border-border rounded-xl shadow-lg overflow-hidden">
                 {song.added_by && (
-                  <div className="px-3 py-2 text-xs text-text-subtle border-b border-border truncate">
+                  <div className="px-3 py-2 text-caption text-text-subtle border-b border-border truncate">
                     추가: <span className="text-text-muted">{song.added_by}</span>
                   </div>
                 )}
@@ -318,7 +318,7 @@ export default function SongCard({
         <div className="mt-2 flex items-center gap-2">
           <button
             onClick={() => setShowComments(true)}
-            className={`text-xs transition-colors flex items-center gap-1 ${
+            className={`text-caption transition-colors flex items-center gap-1 ${
               song.commentCount > 0
                 ? "text-primary hover:text-primary-hover font-semibold"
                 : "text-text-subtle hover:text-primary"
@@ -334,14 +334,14 @@ export default function SongCard({
               </span>
             )}
           </button>
-          <button onClick={() => setShowVersions(true)} className={`flex min-h-11 items-center gap-1 text-xs transition-colors ${versionCount > 0 ? "font-semibold text-warning" : "text-text-subtle hover:text-warning"}`}>
+          <button onClick={() => setShowVersions(true)} className={`flex min-h-11 items-center gap-1 text-caption transition-colors ${versionCount > 0 ? "font-semibold text-warning" : "text-text-subtle hover:text-warning"}`}>
             <VersionIcon /> 다른 버전
             {versionCount > 0 && <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warning-soft px-1 text-[10px] font-bold">{versionCount}</span>}
           </button>
           {onAddToSetlist && (
             <button
               onClick={() => onAddToSetlist(song.id)}
-              className="text-xs text-text-subtle hover:text-primary transition-colors flex items-center gap-1"
+              className="text-caption text-text-subtle hover:text-primary transition-colors flex items-center gap-1"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -353,7 +353,7 @@ export default function SongCard({
             <button
               onClick={handleRemove}
               disabled={isPending}
-              className="text-xs text-text-subtle hover:text-red-400 transition-colors"
+              className="text-caption text-text-subtle hover:text-red-400 transition-colors"
             >
               곡 삭제
             </button>

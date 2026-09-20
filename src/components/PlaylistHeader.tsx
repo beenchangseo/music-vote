@@ -112,7 +112,7 @@ export default function PlaylistHeader({
         <Link
           href="/"
           aria-label="홈으로"
-          className="p-2.5 rounded-xl bg-surface hover:bg-surface-hover border border-border hover:border-border-strong text-text-muted hover:text-text transition-all active:scale-95"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-control bg-surface hover:bg-surface-hover border border-border hover:border-border-strong text-text-muted hover:text-text transition-all active:scale-95"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12L12 3l9.75 9M4.5 10.5V21h5.25v-6h4.5v6H19.5V10.5" />
@@ -121,7 +121,7 @@ export default function PlaylistHeader({
         {/* KakaoTalk share */}
         <button
           onClick={handleKakaoShare}
-          className="p-2.5 rounded-xl bg-[#FEE500] hover:bg-[#FDD800] border border-[#E5CC00] transition-all active:scale-95"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-control bg-[#FEE500] hover:bg-[#FDD800] border border-[#E5CC00] transition-all active:scale-95"
           aria-label="카카오톡 공유"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#3C1E1E">
@@ -138,7 +138,7 @@ export default function PlaylistHeader({
           <button
             onClick={handleDelete}
             disabled={isPending}
-            className="p-2.5 rounded-xl bg-surface hover:bg-red-900/30 border border-border hover:border-red-800 transition-all active:scale-95 disabled:opacity-50"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-control bg-surface hover:bg-red-900/30 border border-border hover:border-red-800 transition-all active:scale-95 disabled:opacity-50"
             aria-label="삭제"
           >
             <svg className="w-5 h-5 text-text-muted hover:text-red-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

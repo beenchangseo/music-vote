@@ -82,7 +82,7 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
           <h3 className="text-sm font-semibold text-text truncate flex-1">{songTitle}</h3>
-          <span className="text-xs text-text-subtle mx-2">{comments.length}개 댓글</span>
+          <span className="text-caption text-text-subtle mx-2">{comments.length}개 댓글</span>
           <button onClick={onClose} className="p-2.5 text-text-subtle hover:text-text transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -103,7 +103,7 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
               {otherComments.map((c) => (
                 <div key={c.id} className="bg-surface-hover/50 rounded-xl p-3">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-primary/80">{c.nickname}</span>
+                    <span className="text-caption font-medium text-primary/80">{c.nickname}</span>
                     <span className="text-[10px] text-text-subtle">
                       {new Date(c.updated_at).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })}
                     </span>
@@ -116,7 +116,7 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
               {myComment && !isEditing && (
                 <div className="bg-primary/5 border border-primary/20 rounded-xl p-3">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-primary">{nickname} (나)</span>
+                    <span className="text-caption font-medium text-primary">{nickname} (나)</span>
                     <div className="flex items-center gap-2">
                       <button onClick={() => { setIsEditing(true); setContent(myComment.content); }} className="text-[10px] text-text-subtle hover:text-text-muted">수정</button>
                       <button onClick={handleDelete} className="text-[10px] text-text-subtle hover:text-red-400">삭제</button>
@@ -144,14 +144,14 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
               <span className="text-[10px] text-text-subtle">{content.length}/1000</span>
               <div className="flex gap-2">
                 {isEditing && (
-                  <button onClick={() => { setIsEditing(false); setContent(myComment?.content || ""); }} className="px-3 py-1.5 text-xs text-text-subtle hover:text-text-muted">
+                  <button onClick={() => { setIsEditing(false); setContent(myComment?.content || ""); }} className="px-3 py-1.5 text-caption text-text-subtle hover:text-text-muted">
                     취소
                   </button>
                 )}
                 <button
                   onClick={handleSubmit}
                   disabled={!content.trim() || isPending}
-                  className="px-4 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-white text-xs font-semibold disabled:opacity-50 transition-all active:scale-95"
+                  className="px-4 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-white text-caption font-semibold disabled:opacity-50 transition-all active:scale-95"
                 >
                   {isPending ? "저장 중..." : myComment ? "수정" : "작성"}
                 </button>
@@ -162,13 +162,13 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
 
         {!nickname && !loginGate && (
           <div className="px-4 py-3 border-t border-border text-center shrink-0">
-            <p className="text-xs text-text-subtle">보관된 합주방이라 댓글을 새로 남길 수 없어요</p>
+            <p className="text-caption text-text-subtle">보관된 합주방이라 댓글을 새로 남길 수 없어요</p>
           </div>
         )}
 
         {loginGate && (
           <div className="px-4 py-3 border-t border-border text-center shrink-0">
-            <p className="text-xs text-text-subtle mb-2">댓글을 남기려면 로그인이 필요해요</p>
+            <p className="text-caption text-text-subtle mb-2">댓글을 남기려면 로그인이 필요해요</p>
             <LoginButton size="sm" />
           </div>
         )}

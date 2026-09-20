@@ -237,7 +237,7 @@ export default function DeadlinePicker({ value, onChange }: DeadlinePickerProps)
           {/* Day headers */}
           <div className="grid grid-cols-7 mb-1">
             {DAYS.map((d) => (
-              <div key={d} className="text-center text-xs text-text-subtle py-1">
+              <div key={d} className="text-center text-caption text-text-subtle py-1">
                 {d}
               </div>
             ))}
