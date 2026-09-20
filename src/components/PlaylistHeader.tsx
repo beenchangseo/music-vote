@@ -104,8 +104,8 @@ export default function PlaylistHeader({
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="text-2xl font-bold truncate">{title}</h1>
-        <p className="text-text-muted text-sm mt-1">{songCount}곡</p>
+        {/* 곡 수는 아래 리스트 헤더에 이미 있다. 여기서는 빼서 한 줄로 둔다. */}
+        <h1 className="text-h2 font-bold truncate">{title}</h1>
       </div>
       <div className="flex items-center gap-2 shrink-0">
         {/* Home */}

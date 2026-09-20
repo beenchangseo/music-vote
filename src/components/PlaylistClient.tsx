@@ -221,6 +221,31 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
     }
   }
 
+  // 한 줄 메타. 있는 것만 가운뎃점으로 잇는다.
+  const metaParts: { key: string; text: string; className: string }[] = [];
+  if (loginGate) {
+    metaParts.push({
+      key: "invite",
+      text: `${playlist.creator_nickname || "친구"}님이 초대했어요`,
+      className: "text-text",
+    });
+  }
+  if (participantCount > 0) {
+    metaParts.push({ key: "participants", text: `${participantCount}명 참여`, className: "" });
+  }
+  if (playlist.deadline) {
+    metaParts.push({
+      key: "deadline",
+      text: isExpired
+        ? "투표 마감"
+        : `마감 ${new Date(playlist.deadline).toLocaleDateString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}`,
+      className: isExpired ? "text-danger" : "",
+    });
+  }
+  if (nickname) {
+    metaParts.push({ key: "me", text: `${nickname}으로 참여 중`, className: "text-text-subtle" });
+  }
+
   // Bottom padding: NavigationBar(52px) + MiniPlayer(~56px if active)
   const bottomPadding = playerState.currentSongId ? "pb-32" : "pb-16";
 
@@ -256,41 +281,25 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
             </div>
           )}
 
-          {/* Invitation banner — 차분한 톤으로 (곡 리스트가 첫 시선을 가져가도록) */}
-          {loginGate && (
-            <div className="mt-3 flex items-center gap-2 bg-surface/60 border border-border rounded-lg px-3 py-2 animate-fade-in">
-              <p className="flex-1 min-w-0 text-caption text-text-muted leading-tight truncate">
-                <span className="font-semibold text-text">{playlist.creator_nickname || "친구"}</span>
-                님이 초대했어요
-              </p>
+          {/*
+            참여자 수·마감·내 닉네임·로그인이 세 덩어리로 흩어져 있었다.
+            정렬축이 계속 바뀌어 위계가 읽히지 않았으므로 헤더 바로 아래 한 줄로 합친다.
+          */}
+          <div className="mt-2 flex min-w-0 items-center gap-2">
+            <p className="min-w-0 flex-1 truncate text-caption leading-relaxed text-text-muted tabular-nums">
+              {metaParts.map((part, i) => (
+                <span key={part.key}>
+                  {i > 0 && <span className="mx-1.5 text-text-subtle" aria-hidden>·</span>}
+                  <span className={part.className}>{part.text}</span>
+                </span>
+              ))}
+            </p>
+            {loginGate && (
               <LoginButton
                 size="sm"
                 label="로그인"
-                className="inline-flex min-h-11 items-center justify-center gap-1 px-3 text-caption font-semibold rounded-control border border-border text-text-muted hover:text-text hover:border-border-strong hover:bg-surface-hover transition-colors shrink-0"
+                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-control border border-border px-3 text-caption font-semibold text-text-muted transition-colors hover:border-border-strong hover:bg-surface-hover hover:text-text"
               />
-            </div>
-          )}
-
-          {/* Participant count + deadline + current participant */}
-          <div className="mt-3 flex min-w-0 items-center justify-center gap-2 whitespace-nowrap text-sm text-text-muted">
-            {participantCount > 0 && (
-              <span className="shrink-0">{participantCount}명 참여</span>
-            )}
-            {playlist.deadline && (
-              <>
-                {participantCount > 0 && <span className="text-text-subtle">|</span>}
-                <span className={`shrink-0 ${isExpired ? "text-red-400" : "text-text-muted"}`}>
-                  {isExpired ? "투표 마감" : `마감: ${new Date(playlist.deadline).toLocaleDateString("ko-KR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}`}
-                </span>
-              </>
-            )}
-            {nickname && (
-              <>
-                {(participantCount > 0 || playlist.deadline) && <span className="text-text-subtle">|</span>}
-                <span className="min-w-0 truncate text-text-subtle">
-                  <span className="font-medium text-primary">{nickname}</span>(으)로 참여 중
-                </span>
-              </>
             )}
           </div>
 
