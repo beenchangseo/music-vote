@@ -1,9 +1,9 @@
 "use server";
 
-import { nanoid } from "nanoid";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
+import { insertRoom } from "@/lib/room-insert";
 import type { SetlistEditMode, VotingMode } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
@@ -77,61 +77,24 @@ export async function createPlaylist(
   if (!Number.isInteger(defaultVoteLimit) || defaultVoteLimit < 1 || defaultVoteLimit > 99) {
     throw new Error("기본 투표권은 1~99개여야 합니다.");
   }
-  const admin = createAdminClient();
-
-  const maxRetries = 3;
-  for (let i = 0; i < maxRetries; i++) {
-    const shareCode = nanoid(8);
-    const adminToken = nanoid(16);
-
-    // The public insert policy is gone (v18). creator_user_id comes from the
-    // session user above, never from the caller.
-    const { data, error } = await admin
-      .from("playlists")
-      .insert({
-        title,
-        share_code: shareCode,
-        deadline: deadline || null,
-        setlist_count: setlistCount && setlistCount > 0 ? setlistCount : null,
-        creator_nickname: user.nickname,
-        creator_user_id: user.id,
-        voting_mode: votingMode,
-        default_vote_limit: defaultVoteLimit,
-      })
-      .select("id, share_code")
-      .single();
-
-    if (error?.code === "23505") continue; // unique violation, retry
-    if (error) throw new Error("합주방 생성에 실패했습니다.");
-
-    // Store admin token in separate table (service role only)
-    const { error: adminError } = await admin.from("playlist_admin").insert({
-      playlist_id: data.id,
-      admin_token: adminToken,
-    });
-
-    if (adminError) {
-      // Rollback: delete the playlist since admin token failed
-      await admin.from("playlists").delete().eq("id", data.id);
-      throw new Error("합주방 생성에 실패했습니다.");
+  // The insert steps (room → admin token → creator as first member, with
+  // rollback) live in insertRoom so createBandPlaylist uses the same code.
+  const result = await insertRoom({
+    title,
+    deadline,
+    setlistCount,
+    votingMode,
+    defaultVoteLimit,
+    creator: { id: user.id, nickname: user.nickname },
+  });
+  if (!result.ok) {
+    if (result.reason === "share_code_exhausted") {
+      throw new Error("share_code 생성에 실패했습니다. 다시 시도해주세요.");
     }
-
-    const { error: memberError } = await admin.from("playlist_members").insert({
-      playlist_id: data.id,
-      user_id: user.id,
-      display_name: user.nickname,
-      vote_limit: defaultVoteLimit,
-    });
-
-    if (memberError) {
-      await admin.from("playlists").delete().eq("id", data.id);
-      throw new Error("합주방 생성에 실패했습니다.");
-    }
-
-    return { id: data.id, shareCode: data.share_code, adminToken };
+    throw new Error("합주방 생성에 실패했습니다.");
   }
 
-  throw new Error("share_code 생성에 실패했습니다. 다시 시도해주세요.");
+  return { id: result.id, shareCode: result.shareCode, adminToken: result.adminToken };
 }
 
 export async function updateCreatorNickname(
