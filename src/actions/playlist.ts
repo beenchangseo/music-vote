@@ -1,9 +1,10 @@
 "use server";
 
-import { nanoid } from "nanoid";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
+import { insertRoom } from "@/lib/room-insert";
+import { nestedRows } from "@/lib/supabase/nested";
 import type { SetlistEditMode, VotingMode } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
@@ -32,11 +33,22 @@ export interface MyPlaylistDbEntry {
   id: string;
   shareCode: string;
   title: string;
+  createdAt: string;
+  /** 내가 멤버인 밴드의 방이면 그 밴드 이름 (홈 목록의 작은 캡션). 아니면 null. */
+  teamName: string | null;
 }
 
+type MyPlaylistRow = { id: string; share_code: string; title: string; created_at: string };
+type MyTeamRow = { name: string; playlists: MyPlaylistRow | MyPlaylistRow[] | null };
+
+const MY_PLAYLIST_COLUMNS = "id, share_code, title, created_at";
+
 /**
- * 로그인 사용자의 플리 목록 (creator_user_id = auth.uid()).
- * 비로그인 시 빈 배열.
+ * 홈 "내 합주방": 내가 만든 방 ∪ 참여자로 들어간 방 ∪ 내 밴드의 방.
+ * id 로 중복을 없애고 created_at 내림차순. 비로그인 시 빈 배열.
+ *
+ * 세 집합은 FK 중첩 select 로 한 번의 Promise.all 에 읽는다 (eng D5, 왕복 1번).
+ * 한 집합의 조회가 실패해도 나머지 집합은 보여준다 (+ console.error).
  */
 export async function getMyPlaylists(): Promise<MyPlaylistDbEntry[]> {
   // The user comes from the session; playlists itself is read with service_role
@@ -44,16 +56,55 @@ export async function getMyPlaylists(): Promise<MyPlaylistDbEntry[]> {
   const user = await getCurrentUser();
   if (!user) return [];
   const admin = createAdminClient();
-  const { data } = await admin
-    .from("playlists")
-    .select("id, share_code, title, created_at")
-    .eq("creator_user_id", user.id)
-    .order("created_at", { ascending: false });
-  return (data || []).map((p) => ({
-    id: p.id,
-    shareCode: p.share_code,
-    title: p.title,
-  }));
+  const [created, joined, teams] = await Promise.all([
+    admin.from("playlists").select(MY_PLAYLIST_COLUMNS).eq("creator_user_id", user.id),
+    admin.from("playlist_members").select(`playlists(${MY_PLAYLIST_COLUMNS})`).eq("user_id", user.id),
+    admin.from("team_members").select(`teams(name, playlists(${MY_PLAYLIST_COLUMNS}))`).eq("user_id", user.id),
+  ]);
+
+  const sets = { created, joined, teams };
+  for (const [set, result] of Object.entries(sets)) {
+    if (result.error) {
+      console.error(`[playlist.getMyPlaylists] ${set} rooms lookup failed`, {
+        userId: user.id,
+        code: result.error.code,
+      });
+    }
+  }
+
+  const byId = new Map<string, MyPlaylistDbEntry>();
+  const add = (room: MyPlaylistRow, teamName: string | null) => {
+    const existing = byId.get(room.id);
+    if (existing) {
+      if (teamName) existing.teamName = teamName;
+      return;
+    }
+    byId.set(room.id, {
+      id: room.id,
+      shareCode: room.share_code,
+      title: room.title,
+      createdAt: room.created_at,
+      teamName,
+    });
+  };
+
+  if (!created.error) {
+    for (const room of (created.data ?? []) as MyPlaylistRow[]) add(room, null);
+  }
+  if (!joined.error) {
+    for (const row of (joined.data ?? []) as { playlists: MyPlaylistRow | MyPlaylistRow[] | null }[]) {
+      for (const room of nestedRows(row.playlists)) add(room, null);
+    }
+  }
+  if (!teams.error) {
+    for (const row of (teams.data ?? []) as { teams: MyTeamRow | MyTeamRow[] | null }[]) {
+      for (const team of nestedRows(row.teams)) {
+        for (const room of nestedRows(team.playlists)) add(room, team.name);
+      }
+    }
+  }
+
+  return [...byId.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function createPlaylist(
@@ -77,61 +128,24 @@ export async function createPlaylist(
   if (!Number.isInteger(defaultVoteLimit) || defaultVoteLimit < 1 || defaultVoteLimit > 99) {
     throw new Error("기본 투표권은 1~99개여야 합니다.");
   }
-  const admin = createAdminClient();
-
-  const maxRetries = 3;
-  for (let i = 0; i < maxRetries; i++) {
-    const shareCode = nanoid(8);
-    const adminToken = nanoid(16);
-
-    // The public insert policy is gone (v18). creator_user_id comes from the
-    // session user above, never from the caller.
-    const { data, error } = await admin
-      .from("playlists")
-      .insert({
-        title,
-        share_code: shareCode,
-        deadline: deadline || null,
-        setlist_count: setlistCount && setlistCount > 0 ? setlistCount : null,
-        creator_nickname: user.nickname,
-        creator_user_id: user.id,
-        voting_mode: votingMode,
-        default_vote_limit: defaultVoteLimit,
-      })
-      .select("id, share_code")
-      .single();
-
-    if (error?.code === "23505") continue; // unique violation, retry
-    if (error) throw new Error("합주방 생성에 실패했습니다.");
-
-    // Store admin token in separate table (service role only)
-    const { error: adminError } = await admin.from("playlist_admin").insert({
-      playlist_id: data.id,
-      admin_token: adminToken,
-    });
-
-    if (adminError) {
-      // Rollback: delete the playlist since admin token failed
-      await admin.from("playlists").delete().eq("id", data.id);
-      throw new Error("합주방 생성에 실패했습니다.");
+  // The insert steps (room → admin token → creator as first member, with
+  // rollback) live in insertRoom so createBandPlaylist uses the same code.
+  const result = await insertRoom({
+    title,
+    deadline,
+    setlistCount,
+    votingMode,
+    defaultVoteLimit,
+    creator: { id: user.id, nickname: user.nickname },
+  });
+  if (!result.ok) {
+    if (result.reason === "share_code_exhausted") {
+      throw new Error("share_code 생성에 실패했습니다. 다시 시도해주세요.");
     }
-
-    const { error: memberError } = await admin.from("playlist_members").insert({
-      playlist_id: data.id,
-      user_id: user.id,
-      display_name: user.nickname,
-      vote_limit: defaultVoteLimit,
-    });
-
-    if (memberError) {
-      await admin.from("playlists").delete().eq("id", data.id);
-      throw new Error("합주방 생성에 실패했습니다.");
-    }
-
-    return { id: data.id, shareCode: data.share_code, adminToken };
+    throw new Error("합주방 생성에 실패했습니다.");
   }
 
-  throw new Error("share_code 생성에 실패했습니다. 다시 시도해주세요.");
+  return { id: result.id, shareCode: result.shareCode, adminToken: result.adminToken };
 }
 
 export async function updateCreatorNickname(

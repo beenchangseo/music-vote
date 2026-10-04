@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
     "e2e:auth": "node e2e/save-auth.mts",
-    "audit:anon": "node scripts/audit-anon-access.mjs"
+    "audit:anon": "node scripts/audit-anon-access.mjs",
+    "metrics:teams": "node scripts/team-metrics.mjs"
   },
   "dependencies": {
     "@formkit/auto-animate": "^0.9.0",

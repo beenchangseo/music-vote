@@ -16,3 +16,4 @@
 - 새 화면이 투표를 읽어야 하면 테이블이 아니라 뷰를 늘린다. 뷰에 열을 더할 때는 그 열이 익명 모드에서도 공개해도 되는지 먼저 판단한다.
 - `scripts/audit-anon-access.mjs`가 이 계약을 확인한다. 마이그레이션 뒤 한 번 돌려 모두 통과하는지 본다.
 - 통계 뷰 `playlist_stats`·`home_stats`도 `SECURITY DEFINER`여야 한다. `security_invoker = on`이면 `votes` 권한 회수와 함께 집계가 막힌다.
+- 이 결정과 달리 `playlists_insert WITH CHECK (true)`(`supabase-schema.sql`)가 남아 공개 키로 아무 `creator_user_id`의 합주방을 넣을 수 있었다. `supabase-migration-v18.sql`에서 정책을 지우고 INSERT 권한을 회수해 닫았고, `createPlaylist`는 `service_role`로 넣는다.

@@ -118,3 +118,35 @@ export interface SongVersion {
   created_at: string;
   updated_at: string;
 }
+
+/** 코드·DB 의 team = 화면의 "밴드" (ADR 0014). */
+export type TeamRole = "owner" | "member";
+
+/** 방이 밴드에 들어온 경로 (v19 playlists.team_linked_via). */
+export type TeamLinkedVia = "promote" | "band" | "attach";
+
+export interface Team {
+  id: string;
+  name: string;
+  invite_code: string;
+  created_by: string | null;
+  /** KST 달력 날짜 YYYY-MM-DD. */
+  next_show_at: string | null;
+  created_at: string;
+}
+
+export interface TeamMember {
+  team_id: string;
+  user_id: string;
+  display_name: string;
+  role: TeamRole;
+  joined_at: string;
+}
+
+/**
+ * 예상된 실패를 throw 하지 않고 돌려주는 서버 액션의 결과 (castVote 와 같은 모양).
+ * 화면은 reason 코드를 src/lib/team-messages.ts 로 한국어 문구로 바꾼다.
+ */
+export type ActionResult<T extends object = Record<never, never>, R extends string = string> =
+  | ({ success: true } & T)
+  | { success: false; reason: R };
