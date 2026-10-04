@@ -196,24 +196,137 @@ describe("getMyPlaylists", () => {
     expect(state.admin.ops).toEqual([]);
   });
 
-  it("reads only the session user's rooms through the admin client", async () => {
+  const room = (id: string, createdAt: string) => ({
+    id,
+    share_code: `code-${id}`,
+    title: `방 ${id}`,
+    created_at: createdAt,
+  });
+  const entry = (id: string, createdAt: string, teamName: string | null = null) => ({
+    id,
+    shareCode: `code-${id}`,
+    title: `방 ${id}`,
+    createdAt,
+    teamName,
+  });
+
+  /** Responds per set: created (playlists), joined (playlist_members), team (team_members). */
+  function sets(results: { created?: FakeResult; joined?: FakeResult; teams?: FakeResult }) {
+    return (op: FakeOp): FakeResult => {
+      if (op.table === "playlists") return results.created ?? ok([]);
+      if (op.table === "playlist_members") return results.joined ?? ok([]);
+      if (op.table === "team_members") return results.teams ?? ok([]);
+      return ok();
+    };
+  }
+
+  it("reads the three sets for the session user in one round trip through the admin client", async () => {
     state.getCurrentUser.mockResolvedValue(USER);
-    state.admin = createFakeClient((op) =>
-      op.table === "playlists"
-        ? ok([{ id: "pl-1", share_code: "code-1", title: "주말 합주", created_at: "2026-10-01" }])
-        : ok(),
+    state.admin = createFakeClient(sets({ created: ok([room("pl-1", "2026-10-01")]) }));
+
+    await expect(getMyPlaylists()).resolves.toEqual([entry("pl-1", "2026-10-01")]);
+
+    expect(state.admin.ops.map((op) => [op.table, op.action, op.filters])).toEqual([
+      ["playlists", "select", { creator_user_id: USER.id }],
+      ["playlist_members", "select", { user_id: USER.id }],
+      ["team_members", "select", { user_id: USER.id }],
+    ]);
+    // Nested FK selects, not a second query per set (eng D5).
+    expect(state.admin.ops[1].columns).toContain("playlists(");
+    expect(state.admin.ops[2].columns).toContain("teams(name, playlists(");
+    // The session client cannot select playlists after v18.
+    expect(state.session.ops).toEqual([]);
+  });
+
+  it("merges created, joined and band rooms, removes duplicates and sorts newest first", async () => {
+    state.getCurrentUser.mockResolvedValue(USER);
+    state.admin = createFakeClient(
+      sets({
+        created: ok([room("mine", "2026-10-01"), room("shared", "2026-09-01")]),
+        joined: ok([{ playlists: room("joined", "2026-10-03") }, { playlists: room("shared", "2026-09-01") }]),
+        teams: ok([
+          {
+            teams: {
+              name: "일코해제",
+              playlists: [room("band-new", "2026-10-05"), room("shared", "2026-09-01")],
+            },
+          },
+        ]),
+      }),
     );
 
     await expect(getMyPlaylists()).resolves.toEqual([
-      { id: "pl-1", shareCode: "code-1", title: "주말 합주" },
+      entry("band-new", "2026-10-05", "일코해제"),
+      entry("joined", "2026-10-03"),
+      entry("mine", "2026-10-01"),
+      // In several sets: listed once, with the band caption from the team set.
+      entry("shared", "2026-09-01", "일코해제"),
     ]);
-    expect(state.admin.ops).toHaveLength(1);
-    expect(state.admin.ops[0]).toMatchObject({
-      table: "playlists",
-      action: "select",
-      filters: { creator_user_id: USER.id },
-    });
-    // The session client cannot select playlists after v18.
-    expect(state.session.ops).toEqual([]);
+  });
+
+  it.each([
+    ["null (room link gone)", { playlists: null }],
+    ["an object (many-to-one)", { playlists: room("a", "2026-10-02") }],
+    ["an array", { playlists: [room("a", "2026-10-02")] }],
+  ])("flattens a joined room returned as %s", async (_label, row) => {
+    state.getCurrentUser.mockResolvedValue(USER);
+    state.admin = createFakeClient(sets({ joined: ok([row]) }));
+
+    const expected = row.playlists ? [entry("a", "2026-10-02")] : [];
+    await expect(getMyPlaylists()).resolves.toEqual(expected);
+  });
+
+  it.each([
+    ["teams null", { teams: null }],
+    ["teams as an array with rooms as an object", { teams: [{ name: "밴드", playlists: room("t", "2026-10-02") }] }],
+    ["teams as an object with no rooms", { teams: { name: "밴드", playlists: null } }],
+  ])("flattens band rooms returned with %s", async (_label, row) => {
+    state.getCurrentUser.mockResolvedValue(USER);
+    state.admin = createFakeClient(sets({ teams: ok([row]) }));
+
+    const teams = row.teams === null ? [] : Array.isArray(row.teams) ? row.teams : [row.teams];
+    const expected = teams.some((team) => team.playlists) ? [entry("t", "2026-10-02", "밴드")] : [];
+    await expect(getMyPlaylists()).resolves.toEqual(expected);
+  });
+
+  it("keeps the other sets and logs when one query fails", async () => {
+    state.getCurrentUser.mockResolvedValue(USER);
+    state.admin = createFakeClient(
+      sets({
+        created: ok([room("mine", "2026-10-01")]),
+        joined: { data: null, error: { code: "57014", message: "timeout" } },
+        teams: ok([{ teams: { name: "일코해제", playlists: [room("band", "2026-10-02")] } }]),
+      }),
+    );
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await expect(getMyPlaylists()).resolves.toEqual([
+      entry("band", "2026-10-02", "일코해제"),
+      entry("mine", "2026-10-01"),
+    ]);
+    expect(log).toHaveBeenCalledWith(
+      expect.stringContaining("joined"),
+      expect.objectContaining({ userId: USER.id, code: "57014" }),
+    );
+    log.mockRestore();
+  });
+
+  it("after leaving or being removed from a band, only the band set disappears", async () => {
+    state.getCurrentUser.mockResolvedValue(USER);
+    // Before: the room comes from both the joined set and the band set.
+    state.admin = createFakeClient(
+      sets({
+        joined: ok([{ playlists: room("entered", "2026-10-01") }]),
+        teams: ok([{ teams: { name: "일코해제", playlists: [room("entered", "2026-10-01"), room("never-opened", "2026-10-02")] } }]),
+      }),
+    );
+    await expect(getMyPlaylists()).resolves.toEqual([
+      entry("never-opened", "2026-10-02", "일코해제"),
+      entry("entered", "2026-10-01", "일코해제"),
+    ]);
+
+    // After: no team_members row. The room I entered stays (without the band caption).
+    state.admin = createFakeClient(sets({ joined: ok([{ playlists: room("entered", "2026-10-01") }]) }));
+    await expect(getMyPlaylists()).resolves.toEqual([entry("entered", "2026-10-01")]);
   });
 });
