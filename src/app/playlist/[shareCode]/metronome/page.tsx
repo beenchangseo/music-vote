@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import MetronomeClient from "@/components/MetronomeClient";
 import type { Song } from "@/lib/types";
 
@@ -11,9 +11,10 @@ interface PageProps {
 export default async function MetronomePage({ params, searchParams }: PageProps) {
   const { shareCode } = await params;
   const { bpm, songId } = await searchParams;
-  const supabase = await createServerSupabaseClient();
+  // playlists and songs are closed to the public key (v18), so read with service_role.
+  const admin = createAdminClient();
 
-  const { data: playlist } = await supabase
+  const { data: playlist } = await admin
     .from("playlists")
     .select("id, title")
     .eq("share_code", shareCode)
@@ -21,7 +22,7 @@ export default async function MetronomePage({ params, searchParams }: PageProps)
 
   if (!playlist) notFound();
 
-  const { data: songs } = await supabase
+  const { data: songs } = await admin
     .from("songs")
     .select("id, title, artist, tempo_bpm")
     .eq("playlist_id", playlist.id)

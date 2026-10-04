@@ -59,3 +59,8 @@ docs/*
 .env*.local
 .gstack/
 .migration/
+
+# Playwright local pre-deploy gate (e2e/.auth holds saved Kakao login state = live session tokens)
+/e2e/.auth/
+/test-results/
+/playwright-report/
