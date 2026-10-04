@@ -28,6 +28,19 @@ const sizeClasses: Record<Size, string> = {
   icon: "h-11 w-11 rounded-xl",
 };
 
+/**
+ * Button 의 모양만. 버튼처럼 보여야 하는 `<Link>` 가 같은 클래스를 쓰게 한다
+ * (not-found·안내 화면의 "홈으로" 처럼 이동이 목적인 곳).
+ */
+export function buttonClassName({
+  variant = "primary",
+  size = "md",
+  fullWidth = false,
+  className = "",
+}: { variant?: Variant; size?: Size; fullWidth?: boolean; className?: string } = {}) {
+  return `inline-flex items-center justify-center gap-2 font-semibold transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`;
+}
+
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   {
     variant = "primary",
@@ -45,7 +58,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
     <button
       ref={ref}
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 font-semibold transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`}
+      className={buttonClassName({ variant, size, fullWidth, className })}
       {...rest}
     >
       {loading ? (

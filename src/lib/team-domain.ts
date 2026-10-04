@@ -65,6 +65,58 @@ export function showDday(nextShowAt: string | null | undefined, now: Date): Show
   return { state: "none" };
 }
 
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+
+/** 공연 날짜의 월·일·요일. 날짜만 보고 정하므로 시간대와 무관하다. 잘못된 값이면 null. */
+export function showDateParts(date: string): { month: number; day: number; weekday: string } | null {
+  const ms = parseDateOnly(date);
+  if (ms === null) return null;
+  const d = new Date(ms);
+  return { month: d.getUTCMonth() + 1, day: d.getUTCDate(), weekday: WEEKDAYS[d.getUTCDay()] };
+}
+
+/** "10월 16일(금)", 요일을 빼면 "10월 16일". 잘못된 값이면 null. */
+export function formatShowDate(date: string, withWeekday = true): string | null {
+  const parts = showDateParts(date);
+  if (!parts) return null;
+  const base = `${parts.month}월 ${parts.day}일`;
+  return withWeekday ? `${base}(${parts.weekday})` : base;
+}
+
+/** 화면 전용 D-day 문구. 공연 전·당일만 있고, 지난 공연과 날짜 없음은 null (경로 줄·홈 "내 밴드"). */
+export function showDdayLabel(dday: ShowDday): string | null {
+  if (dday.state === "upcoming") return `공연 D-${dday.days}`;
+  if (dday.state === "today") return "공연 D-DAY";
+  return null;
+}
+
+/**
+ * 카톡 카드에 실어도 되는 공연 날짜. 공연 전·당일만 돌려주고 지난 날짜는 null (디자인 25A).
+ * 카드는 며칠 뒤에도 보이므로 D-day 같은 상대 값이 아니라 이 정확한 날짜만 싣는다.
+ */
+export function shareableShowDate(nextShowAt: string | null | undefined, now: Date): string | null {
+  const dday = showDday(nextShowAt, now);
+  return dday.state === "upcoming" || dday.state === "today" ? dday.date : null;
+}
+
+/** band 카드 설명 (디자인 25A). 날짜가 주인공이고, 날짜가 없거나 지났으면 합류 안내. */
+export function bandShareDescription(
+  nextShowAt: string | null | undefined,
+  memberCount: number,
+  now: Date,
+): string {
+  const date = shareableShowDate(nextShowAt, now);
+  return date
+    ? `${formatShowDate(date)} 공연 · 멤버 ${memberCount}명`
+    : `멤버 ${memberCount}명 · 카카오 로그인 한 번이면 합류`;
+}
+
+/** 팀 방 카드 설명 앞의 날짜 접두어 "10월 16일 공연 · ". 실을 날짜가 없으면 빈 문자열. */
+export function roomSharePrefix(nextShowAt: string | null | undefined, now: Date): string {
+  const date = shareableShowDate(nextShowAt, now);
+  return date ? `${formatShowDate(date, false)} 공연 · ` : "";
+}
+
 /**
  * 공연 날짜 입력을 검사한다. 지우기(null)는 호출부에서 따로 허용한다.
  * 오늘(KST)은 고를 수 있고, 그 전 날짜는 거부한다.
