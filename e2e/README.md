@@ -64,19 +64,23 @@ npx playwright test --list                    # 목록만 (아무것도 실행 �
 | `account-a` | `account-a/room-read.spec.ts` | 같은 방의 후보곡·셋리스트·합주 탭이 데이터와 함께 뜸, 투표 버튼(내 표 영역) | 없음¹ |
 | `account-a` | `account-a/room-create.spec.ts` | `/new` 에서 방 만들기 → 방 페이지 도착 | **방 1개** |
 | `account-a` | `account-a/comment.spec.ts` | 고정 방의 곡에 댓글 쓰기 → 고치기 → 지우기 → 새로고침 뒤에도 없음 (DB 로도 확인) | **댓글 1개** |
-| `account-b` | `account-b/session.spec.ts` | 두 번째 계정 로그인 상태가 살아 있음 (밴드 흐름 스펙(T9)이 여기에 붙어요) | 없음 |
+| `account-a` | `account-a/band.spec.ts` | 방 → 방 설정에서 밴드 만들기 → 초대 시트 링크 → account-b 가 `/join` 으로 가입 → 밴드 홈 "새 합주방" → account-b 홈에 밴드·새 방 → 링크 새로 만들기 뒤 옛 `/join` 무효·밴드 주소는 그대로 → account-b 밴드 나가기. account-b 는 같은 테스트 안의 별도 컨텍스트로 쓰고 로그인 상태를 되씁니다 | **방 2개·밴드 1개** |
+| `account-b` | `account-b/session.spec.ts` | 두 번째 계정 로그인 상태가 살아 있음 | 없음 |
+| `account-b` | `account-b/band-guest.spec.ts` | 비멤버가 보는 밴드 화면: `/band/{id}` 멤버 전용 안내, `/new?band=` 거부·없는 밴드, `/join/{code}?join=1` 이 쿠키 없이 가입하지 않음, 죽은 초대 링크, 로그아웃 상태의 로그인 안내 | **밴드 1개** (service_role 로 넣고 지움) |
+
+밴드 스펙 둘은 v19(`teams`) 가 운영 DB 에 없으면 스스로 건너뜁니다. 둘 다 `E2E_ACCOUNT_IDS` 에 두 계정이 모두 있어야 돌아요.
 
 ¹ 로그인한 계정이 방을 열면 앱이 `playlist_members` 에 그 계정을 한 줄 등록합니다(멱등). 테스트 계정이라
 지표에서 빠지는 대상이에요.
 
 ## 운영 DB 와 정리
 
-- 쓰는 스펙이 만드는 방 제목·댓글 내용은 모두 `[e2e]` 로 시작합니다.
+- 쓰는 스펙이 만드는 방 제목·댓글 내용·밴드 이름은 모두 `[e2e]` 로 시작합니다.
 - 스펙은 쓰기 **전에** 정리 대상을 등록하고(`cleanup` fixture), 끝날 때 지웁니다. fixture 정리는 스펙이
   실패하거나 시간 초과여도 돌아요. 정리가 실패하면 스펙도 실패로 보고되고 지워지지 않은 행이 메시지에 나옵니다.
 - 지우는 범위는 **테스트 계정 id AND `[e2e]` 접두어**예요. 진짜 사용자의 데이터나 고정 방은 걸리지 않아요.
 - 실행 도중 강제 종료(Ctrl-C, 크래시)해서 정리를 못 한 경우를 위해, 다음 `npm run test:e2e` 시작 때
-  테스트 계정의 `[e2e]` 방·댓글을 먼저 쓸어냅니다 (`global-setup.ts`).
+  테스트 계정의 `[e2e]` 방·댓글·밴드를 먼저 쓸어냅니다 (`global-setup.ts`).
 - 정리 헬퍼는 `helpers/cleanup.ts`.
 
 ## 로그인 상태 되쓰기

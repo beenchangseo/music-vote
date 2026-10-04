@@ -1,9 +1,47 @@
 import { chmodSync, existsSync, writeFileSync } from "node:fs";
-import { expect, test as base, type Page } from "@playwright/test";
-import { authStatePath, isAccountName, userIdFromState } from "./helpers/accounts";
+import { devices, expect, test as base, type Browser, type BrowserContext, type Page } from "@playwright/test";
+import { authStatePath, isAccountName, userIdFromState, type AccountName } from "./helpers/accounts";
 import { createCleanup, type Cleanup } from "./helpers/cleanup";
 
 export { expect };
+
+/** Writes the refreshed login of `context` back to the account's state file (see `context` below). */
+async function saveRefreshedState(context: BrowserContext, account: AccountName): Promise<void> {
+  if (!existsSync(authStatePath(account))) return;
+  const state = await context.storageState();
+  if (!userIdFromState(state)) {
+    console.warn(`[e2e] ${account}: 세션 쿠키가 없어 저장된 로그인 상태를 덮어쓰지 않았어요 (로그인이 풀렸을 수 있어요)`);
+    return;
+  }
+  const path = authStatePath(account);
+  writeFileSync(path, `${JSON.stringify(state, null, 2)}\n`, { mode: 0o600 });
+  chmodSync(path, 0o600);
+}
+
+/**
+ * Runs `fn` with a page logged in as another test account (two-account band flows).
+ * Never call it for the account the current project already runs as, and never nest two
+ * calls for the same account: two live contexts on one login trip Supabase reuse detection.
+ * The refreshed login is written back before the context closes.
+ */
+export async function withAccountPage<T>(
+  // A context made by hand does not inherit the project's `use`, so baseURL is passed along.
+  { browser, baseURL }: { browser: Browser; baseURL: string | undefined },
+  account: AccountName,
+  fn: (page: Page) => Promise<T>,
+): Promise<T> {
+  const context = await browser.newContext({
+    ...devices["Pixel 7"],
+    baseURL,
+    storageState: authStatePath(account),
+  });
+  try {
+    return await fn(await context.newPage());
+  } finally {
+    await saveRefreshedState(context, account);
+    await context.close();
+  }
+}
 
 /**
  * Skips the surrounding describe (or test) with a visible reason when a
@@ -33,16 +71,8 @@ export const test = base.extend<{ cleanup: Cleanup }>({
   context: async ({ context }, provide, testInfo) => {
     await provide(context);
     const account = testInfo.project.name;
-    if (!isAccountName(account) || !existsSync(authStatePath(account))) return;
-
-    const state = await context.storageState();
-    if (!userIdFromState(state)) {
-      console.warn(`[e2e] ${account}: 세션 쿠키가 없어 저장된 로그인 상태를 덮어쓰지 않았어요 (로그인이 풀렸을 수 있어요)`);
-      return;
-    }
-    const path = authStatePath(account);
-    writeFileSync(path, `${JSON.stringify(state, null, 2)}\n`, { mode: 0o600 });
-    chmodSync(path, 0o600);
+    if (!isAccountName(account)) return;
+    await saveRefreshedState(context, account);
   },
 });
 
