@@ -14,6 +14,22 @@ export interface Playlist {
   default_vote_limit: number;
   setlist_edit_mode: SetlistEditMode;
   created_at: string;
+  /** 방이 속한 밴드 (v19). 팀 없는 방은 null. */
+  team_id?: string | null;
+}
+
+/**
+ * 방 화면에 내리는 밴드 정보 (계획 §3 "팀 방 페이지 데이터" 표).
+ * 초대 코드는 어느 쪽에도 싣지 않는다 (R10). 방 링크는 공개라 그걸로 밴드에 들어올 수 없어야 한다.
+ */
+export interface RoomTeam {
+  /** 경로 줄·"밴드 홈" 링크용. 밴드 멤버에게만, 비멤버는 null. */
+  id: string | null;
+  /** 멤버, 또는 방장인 비멤버("{밴드} 의 방" 표시)에게만. 그 외 null. */
+  name: string | null;
+  /** 공개 값 (band 카드에도 나간다). 방 카드 접두어에 쓴다. */
+  nextShowAt: string | null;
+  isMember: boolean;
 }
 
 export type VotingMode = "free" | "allocated";

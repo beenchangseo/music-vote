@@ -1,11 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
+  bandShareDescription,
   canPromote,
+  formatShowDate,
   isInviteCodeFormat,
   isTeamIdFormat,
   kstDateString,
   previewMemberNames,
+  roomSharePrefix,
+  shareableShowDate,
+  showDateParts,
   showDday,
+  showDdayLabel,
   validateNextShowDate,
   validateTeamName,
 } from "../team-domain";
@@ -163,5 +169,45 @@ describe("teamMessage", () => {
     ["an inherited key", "toString"],
   ])("falls back to the default copy for %s", (_label, input) => {
     expect(teamMessage(input)).toBe(TEAM_FALLBACK_MESSAGE);
+  });
+});
+
+describe("show date formatting (cards and screens)", () => {
+  it("reads month, day and weekday from the date itself", () => {
+    expect(showDateParts("2026-10-16")).toEqual({ month: 10, day: 16, weekday: "금" });
+    expect(showDateParts("2027-01-01")).toEqual({ month: 1, day: 1, weekday: "금" });
+    expect(showDateParts("2026-02-30")).toBeNull();
+  });
+
+  it("formats the exact date with or without the weekday", () => {
+    expect(formatShowDate("2026-10-16")).toBe("10월 16일(금)");
+    expect(formatShowDate("2026-10-16", false)).toBe("10월 16일");
+    expect(formatShowDate("nope")).toBeNull();
+  });
+
+  it("labels only upcoming and same-day shows (no past dates on screen lines)", () => {
+    expect(showDdayLabel(showDday("2026-10-16", NOON_KST))).toBe("공연 D-12");
+    expect(showDdayLabel(showDday("2026-10-04", NOON_KST))).toBe("공연 D-DAY");
+    expect(showDdayLabel(showDday("2026-10-03", NOON_KST))).toBeNull();
+    expect(showDdayLabel(showDday(null, NOON_KST))).toBeNull();
+  });
+
+  it("puts only today-or-later dates on share cards, never a D-day number", () => {
+    expect(shareableShowDate("2026-10-16", NOON_KST)).toBe("2026-10-16");
+    expect(shareableShowDate("2026-10-04", JUST_AFTER_MIDNIGHT_KST)).toBe("2026-10-04");
+    expect(shareableShowDate("2026-10-03", NOON_KST)).toBeNull();
+    expect(shareableShowDate(null, NOON_KST)).toBeNull();
+
+    const withDate = bandShareDescription("2026-10-16", 4, NOON_KST);
+    expect(withDate).toBe("10월 16일(금) 공연 · 멤버 4명");
+    expect(withDate).not.toMatch(/D-/);
+    expect(bandShareDescription("2026-10-03", 4, NOON_KST)).toBe("멤버 4명 · 카카오 로그인 한 번이면 합류");
+    expect(bandShareDescription(null, 1, NOON_KST)).toBe("멤버 1명 · 카카오 로그인 한 번이면 합류");
+  });
+
+  it("prefixes the room card only while the show is ahead", () => {
+    expect(roomSharePrefix("2026-10-16", NOON_KST)).toBe("10월 16일 공연 · ");
+    expect(roomSharePrefix("2026-10-03", NOON_KST)).toBe("");
+    expect(roomSharePrefix(null, NOON_KST)).toBe("");
   });
 });

@@ -49,13 +49,31 @@ async function deleteTestRooms(
   return error ? [`playlists: ${error.message}`] : [];
 }
 
+// Before supabase-migration-v19.sql the teams table does not exist: nothing to clean, not a failure.
+const MISSING_TABLE = new Set(["42P01", "PGRST205"]);
+
+async function deleteTestTeams(
+  db: SupabaseClient,
+  ownerUserIds: string[],
+  nameMatch: { eq: string } | { prefix: string },
+): Promise<string[]> {
+  const query = db.from("teams").delete().in("created_by", ownerUserIds);
+  const { error } = await ("eq" in nameMatch
+    ? query.eq("name", nameMatch.eq)
+    : query.like("name", `${nameMatch.prefix}%`));
+  if (!error || MISSING_TABLE.has(error.code ?? "")) return [];
+  return [`teams: ${error.message}`];
+}
+
 /**
  * Collects what a spec is about to write and deletes it afterwards.
  * Register BEFORE the write so a failure halfway still gets cleaned up.
  * Playlist deletes cascade to songs, comments, members and the admin token.
+ * Team deletes cascade to team_members and detach any room left in the band.
  */
 export function createCleanup() {
   const rooms: { title: string; creatorUserId: string }[] = [];
+  const teams: { name: string; ownerUserId: string }[] = [];
   const commentOwners = new Set<string>();
 
   return {
@@ -68,14 +86,22 @@ export function createCleanup() {
     comments(userId: string): void {
       commentOwners.add(userId);
     },
+    /** A band this spec will create (teams.created_by = owner). Name must start with E2E_PREFIX. */
+    team(name: string, ownerUserId: string): void {
+      if (!name.startsWith(E2E_PREFIX)) throw new Error(`test band name must start with ${E2E_PREFIX}`);
+      teams.push({ name, ownerUserId });
+    },
     /** Runs every registered delete. Throws (listing what is left) if any of them failed. */
     async run(): Promise<void> {
-      if (rooms.length === 0 && commentOwners.size === 0) return;
+      if (rooms.length === 0 && teams.length === 0 && commentOwners.size === 0) return;
       const db = adminClient();
       const failures: string[] = [];
       if (commentOwners.size > 0) failures.push(...(await deleteTestComments(db, [...commentOwners])));
       for (const room of rooms) {
         failures.push(...(await deleteTestRooms(db, [room.creatorUserId], { eq: room.title })));
+      }
+      for (const team of teams) {
+        failures.push(...(await deleteTestTeams(db, [team.ownerUserId], { eq: team.name })));
       }
       if (failures.length > 0) {
         throw new Error(`E2E cleanup failed, remove the [e2e] rows by hand:\n${failures.join("\n")}`);
@@ -88,7 +114,7 @@ export type Cleanup = ReturnType<typeof createCleanup>;
 
 /**
  * Safety net for runs that were killed before their cleanup could run
- * (Ctrl-C, crash). Deletes every E2E_PREFIX room / comment of the given test accounts.
+ * (Ctrl-C, crash). Deletes every E2E_PREFIX room / comment / band of the given test accounts.
  */
 export async function sweepLeftovers(testUserIds: string[]): Promise<void> {
   if (testUserIds.length === 0) return;
@@ -96,6 +122,7 @@ export async function sweepLeftovers(testUserIds: string[]): Promise<void> {
   const failures = [
     ...(await deleteTestComments(db, testUserIds)),
     ...(await deleteTestRooms(db, testUserIds, { prefix: E2E_PREFIX })),
+    ...(await deleteTestTeams(db, testUserIds, { prefix: E2E_PREFIX })),
   ];
   if (failures.length > 0) throw new Error(failures.join("\n"));
 }

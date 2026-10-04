@@ -141,6 +141,8 @@ describe("createTeamFromPlaylist", () => {
     await expect(createTeamFromPlaylist(ROOM, "  일코해제  ")).resolves.toEqual({
       success: true,
       teamId: TEAM,
+      name: "일코해제",
+      inviteCode: "invite-1",
       memberCount: 3,
     });
 

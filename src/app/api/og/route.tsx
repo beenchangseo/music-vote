@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
+import { formatShowDate } from "@/lib/team-domain";
 
 export const runtime = "edge";
 
@@ -18,10 +19,10 @@ async function loadFont(weight: 700 | 800): Promise<ArrayBuffer> {
   return res.arrayBuffer();
 }
 
-type Variant = "home" | "playlist" | "decided" | "setlist";
+type Variant = "home" | "playlist" | "decided" | "setlist" | "band";
 
 function parseVariant(v: string | null): Variant {
-  if (v === "playlist" || v === "decided" || v === "setlist") return v;
+  if (v === "playlist" || v === "decided" || v === "setlist" || v === "band") return v;
   return "home";
 }
 
@@ -47,6 +48,9 @@ export async function GET(request: NextRequest) {
   const topArtist = searchParams.get("topArtist") || "";
   const topScore = parseInt(searchParams.get("topScore") || "0", 10);
   const setlistCount = parseInt(searchParams.get("setlistCount") || "0", 10);
+  const members = parseInt(searchParams.get("members") || "0", 10) || 0;
+  // Exact show date only (25A). The caller already dropped past dates; a malformed value shows nothing.
+  const showDate = formatShowDate(searchParams.get("date") || "");
 
   const [fontBold, fontExtraBold] = await Promise.all([
     loadFont(700),
@@ -70,6 +74,8 @@ export async function GET(request: NextRequest) {
       setlistCount={setlistCount || songs}
       participants={participants}
     />;
+  } else if (variant === "band") {
+    body = <BandView name={title} showDate={showDate} members={members} />;
   } else if (variant === "playlist") {
     body = <PlaylistView
       title={title}
@@ -455,6 +461,83 @@ function SetlistView({
         {participants > 0 && <Stat label="명 참여" value={participants} />}
         <div style={{ display: "flex", marginLeft: "auto" }}>
           <CTAPill>셋리스트 보기 →</CTAPill>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** band 카드 (/join 초대 링크). 밴드 이름과 정확한 공연 날짜만, D-day 는 싣지 않는다 (25A). */
+function BandView({
+  name,
+  showDate,
+  members,
+}: {
+  name: string;
+  showDate: string | null;
+  members: number;
+}) {
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: 64,
+        paddingTop: 130,
+      }}
+    >
+      <Brand />
+
+      <div
+        style={{
+          display: "flex",
+          alignSelf: "flex-start",
+          padding: "10px 20px",
+          borderRadius: 999,
+          background: C.brandSoft,
+          color: C.brand,
+          fontSize: 22,
+          fontWeight: 700,
+          marginBottom: 28,
+        }}
+      >
+        🎸 밴드 초대
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          fontSize: 76,
+          fontWeight: 800,
+          color: C.text,
+          letterSpacing: "-0.03em",
+          lineHeight: 1.05,
+          marginBottom: 28,
+          maxWidth: "92%",
+        }}
+      >
+        {name}
+      </div>
+
+      {showDate && (
+        <div
+          style={{
+            display: "flex",
+            fontSize: 38,
+            color: C.text,
+            fontWeight: 700,
+          }}
+        >
+          {showDate} 공연
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 32, marginTop: "auto" }}>
+        {members > 0 && <Stat label="명" value={members} />}
+        <div style={{ display: "flex", marginLeft: "auto" }}>
+          <CTAPill>밴드 들어가기 →</CTAPill>
         </div>
       </div>
     </div>

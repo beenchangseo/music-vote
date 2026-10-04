@@ -50,7 +50,8 @@ import type { ActionResult, TeamRole, VotingMode } from "@/lib/types";
 // ============================================================
 
 export type CreateTeamFromPlaylistResult = ActionResult<
-  { teamId: string; memberCount: number },
+  /** `name`·`inviteCode` feed the room's success card and invite sheet (D30A); only the owner gets them. */
+  { teamId: string; name: string; inviteCode: string; memberCount: number },
   | "not_logged_in"
   | "invalid_name"
   | "playlist_not_found"
@@ -374,7 +375,7 @@ export async function createTeamFromPlaylist(
   }
 
   revalidatePath(`/playlist/${room.share_code}`);
-  return { success: true, teamId, memberCount: memberRows.length };
+  return { success: true, teamId, name: teamName, inviteCode: created.code, memberCount: memberRows.length };
 }
 
 // ============================================================

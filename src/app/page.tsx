@@ -4,18 +4,27 @@ import DemoPlayback from "@/components/home/DemoPlayback";
 import DemoSetlist from "@/components/home/DemoSetlist";
 import DemoBand from "@/components/home/DemoBand";
 import MyPlaylists from "@/components/MyPlaylists";
+import MyBands from "@/components/MyBands";
+import LeftBandNotice from "@/components/LeftBandNotice";
 import { getCurrentUser } from "@/lib/auth";
 import { getMyPlaylists, getHomeStats } from "@/actions/playlist";
+import { getMyTeams } from "@/actions/team";
 
 export const revalidate = 600; // 10분마다 통계 갱신
 
-export default async function Home() {
-  const [user, stats] = await Promise.all([
+interface HomeProps {
+  searchParams: Promise<{ left?: string | string[] }>;
+}
+
+export default async function Home({ searchParams }: HomeProps) {
+  const [user, stats, query] = await Promise.all([
     getCurrentUser(),
     getHomeStats().catch(() => ({ playlists: 0, users: 0, songs: 0 })),
+    searchParams,
   ]);
   const loggedIn = !!user;
-  const dbPlaylists = loggedIn ? await getMyPlaylists() : [];
+  // Rooms and bands in one round trip (eng D5).
+  const [dbPlaylists, myTeams] = loggedIn ? await Promise.all([getMyPlaylists(), getMyTeams()]) : [[], []];
   return (
     <main className="min-h-full flex flex-col">
       {/* HERO — 첫 뷰포트, 후킹 우선 */}
@@ -25,6 +34,8 @@ export default async function Home() {
 
 
         <div className="relative z-10 w-full max-w-md mx-auto">
+          {/* 디자인 2회차 6A: once, right after leaving a band. */}
+          <LeftBandNotice left={query.left === "1"} />
           {/* 작은 브랜드 마크 */}
           <div className="flex items-center gap-2 mb-10">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center shadow-lg shadow-primary/30">
@@ -64,7 +75,7 @@ export default async function Home() {
           </div>
 
           {/* CTA */}
-          <HeroCTA loggedIn={loggedIn} />
+          <HeroCTA loggedIn={loggedIn} myTeams={myTeams} />
           {!loggedIn && (
             <p className="mt-3 text-center text-caption text-text-subtle">
               카카오로 3초면 시작 · 멤버도 로그인 한 번이면 참여
@@ -82,7 +93,8 @@ export default async function Home() {
             </p>
           )}
 
-          {/* Returning user shortcut */}
+          {/* Returning user shortcut. Bands sit right above the rooms (4A). */}
+          <MyBands teams={myTeams} />
           <MyPlaylists loggedIn={loggedIn} dbPlaylists={dbPlaylists} />
         </div>
       </section>
@@ -195,7 +207,7 @@ export default async function Home() {
             <p className="text-sm text-text mb-4">
               지금 첫 합주방, 5분이면 시작.
             </p>
-            <HeroCTA loggedIn={loggedIn} />
+            <HeroCTA loggedIn={loggedIn} myTeams={myTeams} />
           </div>
         </div>
       </section>

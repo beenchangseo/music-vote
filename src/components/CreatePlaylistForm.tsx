@@ -5,8 +5,11 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useDialog } from "./DialogProvider";
 import { createPlaylist } from "@/actions/playlist";
+import { attachPlaylistToTeam, createBandPlaylist, type MyTeam } from "@/actions/team";
 import { track } from "@/lib/analytics";
+import { teamMessage } from "@/lib/team-messages";
 import KakaoShareButton from "./KakaoShareButton";
+import Button from "./ui/Button";
 import type { VotingMode } from "@/lib/types";
 
 interface CreatedPlaylist {
@@ -22,8 +25,17 @@ function getTodayString() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-export default function CreatePlaylistForm() {
+interface CreatePlaylistFormProps {
+  /** /new?band={teamId} 로 왔고 그 밴드 멤버일 때. 방은 createBandPlaylist 로 밴드 안에 만든다. */
+  band?: { id: string; name: string; nextShowAt: string | null } | null;
+  /** 밴드 없이 만든 방을 완료 화면에서 넣을 후보 (디자인 리뷰 13A). */
+  myTeams?: MyTeam[];
+}
+
+export default function CreatePlaylistForm({ band = null, myTeams = [] }: CreatePlaylistFormProps) {
   const [title, setTitle] = useState("");
+  // Band path only: createBandPlaylist returns a reason instead of throwing (6A, text under the button).
+  const [formError, setFormError] = useState<string | null>(null);
   const [deadlineDate, setDeadlineDate] = useState("");
   const [deadlineTime, setDeadlineTime] = useState("23:59");
   const [setlistCount, setSetlistCount] = useState(0);
@@ -34,6 +46,9 @@ export default function CreatePlaylistForm() {
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [attachingId, setAttachingId] = useState<string | null>(null);
+  const [attached, setAttached] = useState(false);
+  const [attachError, setAttachError] = useState<string | null>(null);
   const { showAlert } = useDialog();
   const router = useRouter();
 
@@ -52,14 +67,34 @@ export default function CreatePlaylistForm() {
     if (!title.trim() || loading) return;
 
     setLoading(true);
+    setFormError(null);
     try {
-      const result = await createPlaylist(
-        title.trim(),
-        deadlineISO || undefined,
-        setlistCount > 0 ? setlistCount : undefined,
-        votingMode,
-        defaultVoteLimit,
-      );
+      let result: { id: string; shareCode: string; adminToken: string };
+      if (band) {
+        const created = await createBandPlaylist(
+          band.id,
+          title.trim(),
+          deadlineISO || undefined,
+          setlistCount > 0 ? setlistCount : undefined,
+          votingMode,
+          defaultVoteLimit,
+        );
+        if (!created.success) {
+          setFormError(teamMessage(created.reason));
+          setLoading(false);
+          return;
+        }
+        result = created;
+        track("team_playlist_created", { has_next_show: !!band.nextShowAt });
+      } else {
+        result = await createPlaylist(
+          title.trim(),
+          deadlineISO || undefined,
+          setlistCount > 0 ? setlistCount : undefined,
+          votingMode,
+          defaultVoteLimit,
+        );
+      }
 
       track("playlist_created", {
         has_deadline: !!deadlineISO,
@@ -78,9 +113,10 @@ export default function CreatePlaylistForm() {
       try { localStorage.setItem("myPlaylists", JSON.stringify(myPlaylists)); } catch { /* quota */ }
 
       const url = `${window.location.origin}/playlist/${result.shareCode}`;
-      setCreated({ ...result, title: title.trim(), url });
-    } catch {
-      showAlert("합주방 생성에 실패했습니다. 다시 시도해주세요.");
+      setCreated({ id: result.id, shareCode: result.shareCode, adminToken: result.adminToken, title: title.trim(), url });
+    } catch (error) {
+      if (band) setFormError(teamMessage(error));
+      else showAlert("합주방 생성에 실패했습니다. 다시 시도해주세요.");
       setLoading(false);
     }
   }
@@ -101,6 +137,26 @@ export default function CreatePlaylistForm() {
     router.push(`/playlist/${created.shareCode}`);
   }
 
+  /** 13A: a room made without ?band= can join one of my bands right from the completion screen. */
+  async function attachToBand(teamId: string) {
+    if (!created) return;
+    setAttachingId(teamId);
+    setAttachError(null);
+    try {
+      const result = await attachPlaylistToTeam(created.id, teamId);
+      if (!result.success) {
+        setAttachError(teamMessage(result.reason));
+        return;
+      }
+      track("team_created", { source: "attach" });
+      setAttached(true);
+    } catch (error) {
+      setAttachError(teamMessage(error));
+    } finally {
+      setAttachingId(null);
+    }
+  }
+
   // Success screen — QR + URL + go-to-playlist
   if (created) {
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(created.url)}&bgcolor=111827&color=ffffff`;
@@ -119,11 +175,12 @@ export default function CreatePlaylistForm() {
             만들었어요. 단톡방에 바로 공유해보세요.
           </p>
 
-          {/* Primary CTA — Kakao share */}
+          {/* Primary CTA — Kakao share. A band room carries the show date in front (25A). */}
           <KakaoShareButton
             shareCode={created.shareCode}
             variant="playlist"
             title={created.title}
+            showDate={band?.nextShowAt ?? null}
             size="lg"
             visualStyle="primary"
             className="w-full mb-2"
@@ -183,6 +240,39 @@ export default function CreatePlaylistForm() {
               </p>
             </div>
           )}
+
+          {!band && myTeams.length > 0 && (
+            <div className="mt-5 border-t border-border pt-4 text-left">
+              {attached ? (
+                <p role="status" className="text-sm text-success">
+                  밴드에 넣었어요
+                </p>
+              ) : (
+                <>
+                  <p className="text-sm text-text">이 방을 밴드에 넣을까요?</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {myTeams.map((team) => (
+                      <Button
+                        key={team.id}
+                        type="button"
+                        variant="secondary"
+                        loading={attachingId === team.id}
+                        disabled={attachingId !== null}
+                        onClick={() => attachToBand(team.id)}
+                      >
+                        {team.name}에 넣기
+                      </Button>
+                    ))}
+                  </div>
+                  {attachError && (
+                    <p role="alert" className="mt-2 text-sm text-danger">
+                      {attachError}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -213,6 +303,11 @@ export default function CreatePlaylistForm() {
           "합주방 만들기"
         )}
       </button>
+      {formError && (
+        <p role="alert" className="mt-2 text-sm text-danger">
+          {formError}
+        </p>
+      )}
 
       {/* Options toggle — collapsed by default */}
       {!showOptions ? (
