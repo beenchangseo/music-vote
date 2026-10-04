@@ -58,9 +58,11 @@ test.describe("account-a: comment add / edit / delete", () => {
     await openCommentSheet(page);
     await page.getByPlaceholder(/메모를 남겨보세요/).fill(written);
     await page.getByRole("button", { name: "작성", exact: true }).click();
-    await expect(page.getByText(written, { exact: true })).toBeVisible();
+    // The textarea keeps its text after submit, so a visible-text check can pass before the
+    // server action finishes. Wait on the DB instead.
+    await expect.poll(() => storedComments(userId), { timeout: 15_000 }).toEqual([written]);
+    await expect(page.locator("p", { hasText: written })).toBeVisible();
     await expectNoAlert(page);
-    expect(await storedComments(userId)).toEqual([written]);
 
     // Edit: text changes, no error, still one row (no duplicate / 23505)
     await page.getByRole("button", { name: "수정", exact: true }).click();
@@ -70,7 +72,7 @@ test.describe("account-a: comment add / edit / delete", () => {
     await expect(page.getByText(edited, { exact: true })).toBeVisible();
     await expect(page.getByText(written, { exact: true })).toHaveCount(0);
     await expectNoAlert(page);
-    expect(await storedComments(userId)).toEqual([edited]);
+    await expect.poll(() => storedComments(userId), { timeout: 15_000 }).toEqual([edited]);
 
     // Delete: the card's "삭제" first, then the confirm dialog's "삭제" (rendered last in the DOM)
     await page.getByRole("button", { name: "삭제", exact: true }).click();
@@ -85,6 +87,6 @@ test.describe("account-a: comment add / edit / delete", () => {
     await page.waitForLoadState("networkidle"); // the sheet loads its comments with a server action
     await expect(page.getByText(edited, { exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "작성", exact: true })).toBeVisible();
-    expect(await storedComments(userId)).toEqual([]);
+    await expect.poll(() => storedComments(userId), { timeout: 15_000 }).toEqual([]);
   });
 });
