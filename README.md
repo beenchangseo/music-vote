@@ -127,6 +127,7 @@ supabase-migration-v16.sql    # 집계 뷰에 playlist_id 추가 (왕복 축소)
 supabase-migration-v17.sql    # YouTube 검색 결과 캐시
 supabase-migration-v18.sql    # 공개 anon 키 조회 차단 + playlists 직접 생성 차단 (코드 배포 후 실행)
 supabase-migration-v19.sql    # 밴드(teams·team_members) + playlists.team_id·team_linked_via (코드 배포 전 실행)
+supabase-migration-v20.sql    # 앱이 쓰지 않는 공개 키 쓰기 권한 회수 (코드와 독립, 언제든)
 ```
 
 기존 운영 DB는 이미 실행한 마이그레이션을 건너뛸 수 있도록 모두 `IF NOT EXISTS`/`ADD COLUMN IF NOT EXISTS` 패턴 사용.
