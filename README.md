@@ -126,6 +126,7 @@ supabase-migration-v15.sql    # 공개 anon 키 쓰기 경로 차단 + 투표 �
 supabase-migration-v16.sql    # 집계 뷰에 playlist_id 추가 (왕복 축소)
 supabase-migration-v17.sql    # YouTube 검색 결과 캐시
 supabase-migration-v18.sql    # 공개 anon 키 조회 차단 + playlists 직접 생성 차단 (코드 배포 후 실행)
+supabase-migration-v19.sql    # 밴드(teams·team_members) + playlists.team_id·team_linked_via (코드 배포 전 실행)
 ```
 
 기존 운영 DB는 이미 실행한 마이그레이션을 건너뛸 수 있도록 모두 `IF NOT EXISTS`/`ADD COLUMN IF NOT EXISTS` 패턴 사용.
@@ -182,6 +183,8 @@ src/
 │   ├── playlist/[shareCode]/
 │   │   ├── page.tsx                          # 플리 서버 컴포넌트 (스코어·댓글 카운트 join)
 │   │   └── metronome/                        # 메트로놈
+│   ├── band/[teamId]/                        # 밴드 홈 (멤버 전용)
+│   ├── join/[inviteCode]/                    # 밴드 초대 링크
 │   └── api/
 │       ├── og/                               # 4-variant OG 이미지
 │       ├── setlist-image/[shareCode]/        # 1080×1920 포트레이트 PNG
@@ -192,7 +195,8 @@ src/
 │   ├── song.ts                               # 추가·삭제·메타 업데이트
 │   ├── vote.ts                               # 투표 cast/toggle
 │   ├── comment.ts                            # 댓글
-│   └── setlist.ts                            # 셋리스트 항목·순서
+│   ├── setlist.ts                            # 셋리스트 항목·순서
+│   └── team.ts                               # 밴드 만들기·가입·밴드 홈·멤버 관리
 ├── components/
 │   ├── ui/                                   # Primitives
 │   │   ├── Button.tsx, Input.tsx, Card.tsx, Modal.tsx
@@ -214,8 +218,15 @@ src/
 │   ├── song-meta.ts                          # KEY_ROOTS / GENRES + format / validate
 │   ├── analytics.ts                          # 타입 안전 track() wrapper
 │   ├── youtube-data.ts                       # Data API (재생시간·임베드·검색)
+│   ├── team-domain.ts                        # 밴드 순수 로직 (공연 D-day·이름·날짜·초대 코드 검사)
+│   ├── team-messages.ts                      # 밴드 액션 reason 코드 → 한국어 문구
 │   └── types.ts
-└── middleware.ts                             # Rate limiting
+└── proxy.ts                                  # Rate limiting + 세션 갱신 (Next 16 의 middleware)
+
+e2e/                                          # Playwright 로컬 배포 전 게이트 (e2e/README.md)
+scripts/
+├── audit-anon-access.mjs                     # npm run audit:anon — 공개 키 접근 점검
+└── team-metrics.mjs                          # npm run metrics:teams — 밴드 성공 지표 (읽기 전용)
 ```
 
 ---
