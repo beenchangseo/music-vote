@@ -1286,17 +1286,18 @@ T13(초대 링크 새로 만들기)은 초대 링크를 여는 T9 와 반드시 
 Synthesized from this review's findings. Each task derives from a specific
 finding above. Run with Claude Code or Codex; checkbox as you ship.
 
-- [ ] **T1 (P1, human: ~2일 / CC: ~3시간)** — db/rls — 공개 anon 키로 읽히는 6개 테이블(`playlists`·`playlist_members`·`songs`·`comments`·`setlist_items`·`song_versions`) SELECT 를 닫고 서버 읽기·댓글 쓰기를 service_role 로 돌린다
+> **1차 보안 배포 완료 (2026-10-05)**: 코드 `cd475f2`(main) 배포 → 프로덕션 확인 → 운영 Supabase 에 v18 실행 → `npm run audit:anon` 전부 통과(6개 테이블 42501, playlists INSERT 42501, 뷰 5개 열림) → 로컬 게이트 11/11 통과(운영 DB). 세션 `songs` INSERT 는 되고 SELECT 는 42501. 고정 테스트 방 `qDPJnh1d`, account-a 는 운영자 실사용 계정(정리는 `[e2e]` 접두어만).
+- [x] **T1 (P1, human: ~2일 / CC: ~3시간)** — db/rls — 공개 anon 키로 읽히는 6개 테이블(`playlists`·`playlist_members`·`songs`·`comments`·`setlist_items`·`song_versions`) SELECT 를 닫고 서버 읽기·댓글 쓰기를 service_role 로 돌린다
   - Surfaced by: Architecture 이슈1 — 라이브 프로브로 `playlists` 39행(share_code 포함)·`playlist_members` 29행 조회 성공
   - Files: `supabase-migration-v18.sql`, `src/actions/playlist.ts`, `src/app/playlist/[shareCode]/page.tsx`, `src/actions/comment.ts`, `src/actions/setlist.ts`, `src/app/api/`
   - **스펙 리뷰 추가 (2026-10-04)**: v18 에서 `playlists_insert WITH CHECK (true)` 제거, `createPlaylist` insert 를 `createAdminClient()` 로 이전, `song_versions` SELECT 차단, `comment.ts` 조회·수정·삭제를 admin + `user_id = 나` + 행 수 확인으로, `src/app/playlist/[shareCode]/metronome/page.tsx`·`/api/setlist-image` 읽기 이전, `auth.uid()` 뷰는 세션 클라이언트 유지, `getPlaylistByShareCode` 에러 로그
   - **CEO-F3**: `src/app/sitemap.ts` 에서 방 URL 제거, 방 페이지 `generateMetadata` 에 `robots: { index: false }`
   - Verify: `npm run audit:anon` + Playwright 로컬 게이트 (방 만들기·댓글 수정/삭제 포함) + **`createPlaylist` 회귀 액션 테스트 (CRITICAL, eng Section 3: 제목·투표 방식 검증 / 23505 재시도 / 토큰·멤버 insert 실패 시 방 삭제 / admin 클라이언트 사용)** + `comment.ts` 액션 테스트 (수정이 23505 없이 덮어씀 / 남의 댓글 0행 / 삭제 행 수)
-- [ ] **T2 (P1, human: ~1시간 / CC: ~15분)** — scripts — 감사 스크립트를 11개 테이블(§0 목록, `teams`·`team_members` 는 T7 에서)로 확장하고 `npm run audit:anon` 으로 등록한다
+- [x] **T2 (P1, human: ~1시간 / CC: ~15분)** — scripts — 감사 스크립트를 11개 테이블(§0 목록, `teams`·`team_members` 는 T7 에서)로 확장하고 `npm run audit:anon` 으로 등록한다
   - Surfaced by: Code Quality 이슈4 — `scripts/audit-anon-access.mjs:61` 이 이슈1 수정 후 정반대 불변식을 단언
   - Files: `scripts/audit-anon-access.mjs`, `package.json`
   - Verify: `npm run audit:anon` 이 RLS 를 되돌렸을 때 exit 1 / `playlists` insert 프로브가 v18 전에는 `23502` 로 실패하고 뒤에는 `42501` 로 통과 (행은 어느 쪽이든 안 생김)
-- [ ] **T3 (P1, human: ~1일 / CC: ~1시간)** — e2e — Playwright 를 로컬 배포 전 게이트로 도입한다 (CEO-F4, `dec-60acf136`)
+- [x] **T3 (P1, human: ~1일 / CC: ~1시간)** — e2e — Playwright 를 로컬 배포 전 게이트로 도입한다 (CEO-F4, `dec-60acf136`)
   - Surfaced by: Test 이슈7 — E2E 러너 부재. 스펙 리뷰 2회차 — CI·Preview·스테이징 DB 가 없고 로그인이 카카오뿐
   - 실행 환경: `next dev` + 운영 DB. 테스트 전용 카카오 계정 2개의 로그인 상태를 방장이 한 번 저장
     (`e2e/.auth/*.json`, gitignore). 배포 전 `npm run test:e2e`
