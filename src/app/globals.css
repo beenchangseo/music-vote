@@ -24,6 +24,12 @@
   /* 재생 중 전용. primary 와 역할을 나눈다 */
   --color-accent-play: #22d3ee;
 
+  /* 카카오 버튼 전용 (디자인 리뷰 18A). 카카오 노랑은 리터럴 대신 이 토큰만 쓴다 */
+  --color-kakao: #FEE500;
+  --color-kakao-hover: #FDD800;
+  --color-kakao-text: #191919;
+  --color-kakao-border: #E5CC00;
+
   /* Vote colors (legacy aliases for compatibility) */
   --color-upvote: #22c55e;
   --color-downvote: #ef4444;

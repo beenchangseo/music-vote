@@ -92,7 +92,7 @@ export default function PlaylistHeader({
         {/* KakaoTalk share */}
         <button
           onClick={handleKakaoShare}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-control bg-[#FEE500] hover:bg-[#FDD800] border border-[#E5CC00] transition-all active:scale-95"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-control bg-kakao hover:bg-kakao-hover border border-kakao-border transition-all active:scale-95"
           aria-label="카카오톡 공유"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#3C1E1E">
