@@ -25,13 +25,17 @@ import type { YouTubePlayerHandle } from "./YouTubePlayer";
 import { DEFAULT_FILTER, songMatchesFilter, type FilterState } from "./FilterBar";
 import KakaoShareButton from "./KakaoShareButton";
 import RoomSettingsButton from "./RoomSettingsButton";
+import BandPromptCard, { BandCreatedCard } from "./BandPromptCard";
+import BandInviteSheet from "./BandInviteSheet";
+import type { CreatedBand } from "./CreateBandSheet";
 import ScreenToolbar from "./ui/ScreenToolbar";
 import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import type { ViewMode } from "./NavigationBar";
 import { scoreRatio } from "@/lib/vote-domain";
 import { isArchivedPlaylist } from "@/lib/playlist-archive";
-import type { Playlist, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/lib/types";
+import type { MyTeam } from "@/actions/team";
+import type { Playlist, RoomTeam, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/lib/types";
 
 interface PlaylistClientProps {
   playlist: Playlist;
@@ -41,9 +45,26 @@ interface PlaylistClientProps {
   userNickname?: string;
   currentUserId?: string | null;
   currentUserAvatarUrl?: string | null;
+  /** The room's band, trimmed per viewer by the page (R10 payload table). null for rooms without a band. */
+  team?: RoomTeam | null;
+  /** Owner of a room without a band only: bands this room can join (T14). */
+  myTeams?: MyTeam[];
+  /** Owner of a room without a band only: logged-in room members, for the band prompt (F7). */
+  memberCount?: number | null;
 }
 
-export default function PlaylistClient({ playlist, songs, shareCode, participantCount, userNickname, currentUserId, currentUserAvatarUrl }: PlaylistClientProps) {
+export default function PlaylistClient({
+  playlist,
+  songs,
+  shareCode,
+  participantCount,
+  userNickname,
+  currentUserId,
+  currentUserAvatarUrl,
+  team = null,
+  myTeams = [],
+  memberCount = null,
+}: PlaylistClientProps) {
   // 보관된 합주방: 로그인 도입 전 익명 합주방. 지난 기록만 읽는다.
   const isArchived = isArchivedPlaylist(playlist);
   const loggedIn = !!currentUserId;
@@ -57,6 +78,10 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
   const [allowance, setAllowance] = useState<VoteAllowance | null>(null);
   const [votesAnonymous, setVotesAnonymous] = useState(playlist.votes_anonymous);
   const [setlistEditMode, setSetlistEditMode] = useState(playlist.setlist_edit_mode);
+  // Band made from the prompt card (R6). Lives here, not in the card: the action's revalidatePath
+  // re-renders the room with a band, the prompt condition turns false and the card unmounts.
+  const [justCreatedTeam, setJustCreatedTeam] = useState<CreatedBand | null>(null);
+  const [createdInviteOpen, setCreatedInviteOpen] = useState(false);
 
   // Lazy-loaded data for setlist/rehearsal modes
   const [setlistItems, setSetlistItems] = useState<SetlistItem[] | null>(null);
@@ -90,6 +115,9 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
     : !!currentUserId && currentUserId === playlist.creator_user_id;
   const isExpired = playlist.deadline ? new Date(playlist.deadline) < new Date() : false;
   const canEditSetlist = !isArchived && !loginGate && (setlistEditMode === "everyone" || isAdmin);
+  // F7: owner · room without a band · at least two logged-in members. A brand-new room (1 member) has no card.
+  const showBandPrompt =
+    isAdmin && !isArchived && loggedIn && !playlist.team_id && !team && (memberCount ?? 0) >= 2;
 
   useEffect(() => {
     if (isArchived || !loggedIn) return;
@@ -258,6 +286,8 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
       adminToken={adminToken}
       supportsVoteAllocation
       currentUserId={currentUserId}
+      team={team}
+      myTeams={myTeams}
       setlistEditMode={setlistEditMode}
       onSetlistEditModeChange={setSetlistEditMode}
       onAllowanceChange={(mode, usedVotes, voteLimit) => setAllowance({ mode, usedVotes, voteLimit })}
@@ -285,6 +315,8 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
             announcement={playlist.announcement}
             currentUserNickname={userNickname}
             currentUserAvatarUrl={currentUserAvatarUrl}
+            band={team?.isMember && team.id && team.name ? { id: team.id, name: team.name, nextShowAt: team.nextShowAt } : null}
+            showDate={team?.nextShowAt ?? null}
           />
 
           {isArchived && (
@@ -370,6 +402,17 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
                   </>
                 }
               />
+
+              {/* 27A: candidates tab only, under the toolbar and above the songs. */}
+              {justCreatedTeam ? (
+                <BandCreatedCard
+                  band={justCreatedTeam}
+                  onShare={() => setCreatedInviteOpen(true)}
+                  onDismiss={() => setJustCreatedTeam(null)}
+                />
+              ) : showBandPrompt ? (
+                <BandPromptCard playlistId={playlist.id} adminToken={adminToken} onCreated={setJustCreatedTeam} />
+              ) : null}
 
               {/* Add song form (hide if expired) */}
               {!isExpired && !isArchived && (
@@ -654,6 +697,20 @@ export default function PlaylistClient({ playlist, songs, shareCode, participant
             </div>
           </div>
         </div>
+      )}
+
+      {justCreatedTeam && (
+        <BandInviteSheet
+          open={createdInviteOpen}
+          onClose={() => setCreatedInviteOpen(false)}
+          teamId={justCreatedTeam.teamId}
+          name={justCreatedTeam.name}
+          inviteCode={justCreatedTeam.inviteCode}
+          memberCount={justCreatedTeam.memberCount}
+          nextShowAt={null}
+          isOwner
+          onInviteCodeChange={(inviteCode) => setJustCreatedTeam((current) => (current ? { ...current, inviteCode } : current))}
+        />
       )}
 
       {/* Mini Player (positioned above NavigationBar via CSS bottom-[52px]) */}

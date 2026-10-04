@@ -1,17 +1,23 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import Modal from "./ui/Modal";
 import Button from "./ui/Button";
 import { useDialog } from "./DialogProvider";
+import GuitarIcon from "./GuitarIcon";
+import CreateBandSheet from "./CreateBandSheet";
 import {
   getVotingSettings,
   saveVotingSettings,
   type VotingSettings,
 } from "@/actions/member";
 import { deletePlaylist, resetPlaylistVotes, updateSetlistEditMode } from "@/actions/playlist";
-import type { SetlistEditMode, VotingMode } from "@/lib/types";
+import { attachPlaylistToTeam, type MyTeam } from "@/actions/team";
+import { track } from "@/lib/analytics";
+import { teamMessage } from "@/lib/team-messages";
+import type { RoomTeam, SetlistEditMode, VotingMode } from "@/lib/types";
 
 interface Props {
   playlistId: string;
@@ -24,6 +30,10 @@ interface Props {
   onVotesReset?: () => void;
   setlistEditMode: SetlistEditMode;
   onSetlistEditModeChange: (mode: SetlistEditMode) => void;
+  /** The room's band as the page trimmed it for this viewer (R10). */
+  team?: RoomTeam | null;
+  /** Bands this room can be added to (rooms without a band only, T14). */
+  myTeams?: MyTeam[];
 }
 
 export default function RoomSettingsButton({
@@ -37,9 +47,15 @@ export default function RoomSettingsButton({
   onVotesReset,
   setlistEditMode,
   onSetlistEditModeChange,
+  team = null,
+  myTeams = [],
 }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [attachingId, setAttachingId] = useState<string | null>(null);
+  const [attached, setAttached] = useState(false);
+  const [attachError, setAttachError] = useState<string | null>(null);
   const [settings, setSettings] = useState<VotingSettings | null>(null);
   const [mode, setMode] = useState<VotingMode>("free");
   const [votesAnonymous, setVotesAnonymous] = useState(true);
@@ -233,6 +249,31 @@ export default function RoomSettingsButton({
     });
   }
 
+  function openCreateBand() {
+    // One sheet at a time: two open Modals would both answer ESC.
+    setOpen(false);
+    setCreateOpen(true);
+  }
+
+  /** T14 "이 방을 내 밴드에 넣기". The action revalidates the room, which then shows the band link. */
+  async function attachToBand(target: MyTeam) {
+    setAttachingId(target.id);
+    setAttachError(null);
+    try {
+      const result = await attachPlaylistToTeam(playlistId, target.id);
+      if (!result.success) {
+        setAttachError(teamMessage(result.reason));
+        return;
+      }
+      track("team_created", { source: "attach" });
+      setAttached(true);
+    } catch (error) {
+      setAttachError(teamMessage(error));
+    } finally {
+      setAttachingId(null);
+    }
+  }
+
   function changeMember(userId: string, nextLimit: number) {
     if (!Number.isInteger(nextLimit) || nextLimit < 0 || nextLimit > 99) return;
     setMemberLimits((current) => ({ ...current, [userId]: String(nextLimit) }));
@@ -276,6 +317,67 @@ export default function RoomSettingsButton({
           <div className="py-10 text-center text-sm text-text-muted">불러오는 중...</div>
         ) : (
           <div className={isPending ? "pointer-events-none opacity-70" : ""}>
+            <section className="mb-6 border-b border-border pb-5">
+              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">밴드</p>
+              {attached && (
+                <p role="status" className="mt-2 text-sm text-success">
+                  밴드에 넣었어요
+                </p>
+              )}
+              {team ? (
+                team.isMember && team.id ? (
+                  <Link
+                    href={`/band/${team.id}`}
+                    className="mt-2 flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-sm font-semibold text-text transition-colors hover:bg-surface-hover"
+                  >
+                    <GuitarIcon className="h-4 w-4 shrink-0 text-text-muted" />
+                    <span className="min-w-0 flex-1 truncate">{team.name}</span>
+                    <span className="shrink-0 text-text-muted">밴드 홈 ›</span>
+                  </Link>
+                ) : (
+                  // A removed owner keeps the room but no longer sees the band (R10 payload table).
+                  <p className="mt-2 flex items-center gap-2 text-sm text-text-muted">
+                    <GuitarIcon className="h-4 w-4 shrink-0" />
+                    {team.name ? `${team.name}의 방이에요` : "밴드에 들어 있는 방이에요"}
+                  </p>
+                )
+              ) : (
+                <>
+                  <p className="mt-1 text-caption leading-relaxed text-text-muted">
+                    이 방 참여자가 그대로 밴드 멤버가 돼요. 다음 공연 방은 밴드에서 바로 만들어요.
+                  </p>
+                  <Button type="button" variant="secondary" fullWidth onClick={openCreateBand} className="mt-3">
+                    이 멤버로 밴드 만들기
+                  </Button>
+                  {myTeams.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-sm font-medium text-text">이 방을 내 밴드에 넣기</p>
+                      <div className="mt-2 space-y-2">
+                        {myTeams.map((band) => (
+                          <Button
+                            key={band.id}
+                            type="button"
+                            variant="secondary"
+                            fullWidth
+                            loading={attachingId === band.id}
+                            disabled={attachingId !== null}
+                            onClick={() => attachToBand(band)}
+                          >
+                            {band.name}에 넣기
+                          </Button>
+                        ))}
+                      </div>
+                      {attachError && (
+                        <p role="alert" className="mt-2 text-sm text-danger">
+                          {attachError}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+
             <section>
               <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 · 공개 범위</p>
               <div className="mt-2 grid grid-cols-2 gap-2">
@@ -483,6 +585,19 @@ export default function RoomSettingsButton({
           </div>
         )}
       </Modal>
+
+      <CreateBandSheet
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        playlistId={playlistId}
+        adminToken={adminToken}
+        source="settings"
+        onCreated={(band) => {
+          setCreateOpen(false);
+          // Settings entry: go to the new band home with the one-time banner (11A, D30A).
+          router.push(`/band/${band.teamId}?created=1`);
+        }}
+      />
     </>
   );
 }
