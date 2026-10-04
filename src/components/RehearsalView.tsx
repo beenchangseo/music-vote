@@ -1,12 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
+import Button from "./ui/Button";
 import Card from "./ui/Card";
 import ScreenToolbar from "./ui/ScreenToolbar";
 import Image from "next/image";
 import SongMeta from "./SongMeta";
 import CommentSection from "./CommentSection";
-import { useMetronome } from "@/hooks/useMetronome";
+import { useDialog } from "./DialogProvider";
+import { useMetronome, useTapTempo } from "@/hooks/useMetronome";
+import { updateSongMeta } from "@/actions/song";
+import { track } from "@/lib/analytics";
 import { displayArtist, formatKey } from "@/lib/song-meta";
 import { effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime } from "@/lib/setlist-domain";
 import type { SetlistItem, SongWithScore, Comment } from "@/lib/types";
@@ -44,6 +48,10 @@ export default function RehearsalView({
 }: RehearsalViewProps) {
   const [index, setIndex] = useState(0);
   const [showMeta, setShowMeta] = useState(false);
+  // 탭 템포 값. 탭하는 동안과 저장이 끝날 때까지만 서버 값 대신 보인다.
+  const [tapped, setTapped] = useState<{ songId: string; bpm: number; saving: boolean } | null>(null);
+  const [isSavingBpm, startSavingBpm] = useTransition();
+  const { showAlert } = useDialog();
 
   const songMap = useMemo(() => {
     const map: Record<string, SongWithScore> = {};
@@ -74,8 +82,24 @@ export default function RehearsalView({
     return total;
   }, [index, songItems, songMap]);
 
-  const bpm = currentSong?.tempo_bpm ?? 0;
+  const tappedBpm =
+    tapped && tapped.songId === currentSong?.id && (!tapped.saving || isSavingBpm) ? tapped.bpm : null;
+  const bpm = tappedBpm ?? currentSong?.tempo_bpm ?? 0;
   const metronome = useMetronome(bpm || 120);
+
+  // 묶음이 끝나면 한 번 저장한다. 실패하면 전환이 끝나면서 서버 값으로 돌아간다.
+  function saveTappedBpm(songId: string, value: number, tapCount: number) {
+    track("tap_tempo_used", { taps: tapCount });
+    setTapped({ songId, bpm: value, saving: true });
+    if (songMap[songId]?.tempo_bpm === value) return;
+    startSavingBpm(async () => {
+      try {
+        await updateSongMeta(songId, playlistId, shareCode, { tempoBpm: value });
+      } catch {
+        showAlert("BPM 을 저장하지 못했어요. 다시 탭해 주세요.");
+      }
+    });
+  }
 
   if (loading) {
     return (
@@ -160,40 +184,52 @@ export default function RehearsalView({
           ))}
         </div>
 
-        {/* 메트로놈. 페이지를 나가면 합주 흐름이 끊긴다. */}
-        <button
-          type="button"
-          onClick={() => (bpm ? metronome.toggle() : setShowMeta(true))}
-          className={`mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control border text-sm font-semibold transition-colors ${
-            metronome.isPlaying
-              ? "border-primary bg-primary/15 text-primary"
-              : "border-border text-text-muted hover:text-text"
-          }`}
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-            <path d="M9 3h6l4 18H5z" />
-            <path d="M12 17V8" />
-          </svg>
-          {!bpm ? "BPM 적고 메트로놈 켜기" : metronome.isPlaying ? `메트로놈 끄기 · ${bpm}` : `메트로놈 · ${bpm}`}
-          {metronome.isPlaying && (
-            <span className="ml-1 flex items-center gap-1" aria-hidden>
-              {Array.from({ length: metronome.beatsPerBar }, (_, i) => (
-                <span
-                  key={i}
-                  className={`h-1.5 w-1.5 rounded-pill transition-colors ${
-                    metronome.beat === i ? "bg-primary" : "bg-border-strong"
-                  }`}
-                />
-              ))}
-            </span>
-          )}
-        </button>
+        {/* 메트로놈. 페이지를 나가면 합주 흐름이 끊긴다. 탭 템포가 바로 옆에서 BPM 을 채운다. */}
+        <div className="mt-3 flex gap-2">
+          <button
+            type="button"
+            onClick={() => (bpm ? metronome.toggle() : setShowMeta(true))}
+            className={`inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-control border text-sm font-semibold transition-colors ${
+              metronome.isPlaying
+                ? "border-primary bg-primary/15 text-primary"
+                : "border-border text-text-muted hover:text-text"
+            }`}
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+              <path d="M9 3h6l4 18H5z" />
+              <path d="M12 17V8" />
+            </svg>
+            {!bpm ? "BPM 적고 메트로놈 켜기" : metronome.isPlaying ? `메트로놈 끄기 · ${bpm}` : `메트로놈 · ${bpm}`}
+            {metronome.isPlaying && (
+              <span className="ml-1 flex items-center gap-1" aria-hidden>
+                {Array.from({ length: metronome.beatsPerBar }, (_, i) => (
+                  <span
+                    key={i}
+                    className={`h-1.5 w-1.5 rounded-pill transition-colors ${
+                      metronome.beat === i ? "bg-primary" : "bg-border-strong"
+                    }`}
+                  />
+                ))}
+              </span>
+            )}
+          </button>
+          <TapTempoButton
+            key={currentSong.id}
+            onTempo={(value) => setTapped({ songId: currentSong.id, bpm: value, saving: false })}
+            onCommit={(value, tapCount) => saveTappedBpm(currentSong.id, value, tapCount)}
+          />
+        </div>
 
         {/* 입력칸은 바로 편집 상태로 연다. 접힌 것을 또 펼치게 하지 않는다. */}
         {showMeta && (
           <div className="mt-3 overflow-hidden rounded-control border border-border animate-fade-in">
+            {/*
+              입력칸은 열 때의 값을 들고 있다가 blur 에 전부 저장한다. 곡을 넘기거나 탭 템포가
+              저장되면 새 값으로 다시 열어서, 옛 BPM 이 탭 결과를 덮어쓰지 않게 한다.
+            */}
             <SongMeta
-              song={currentSong}
+              key={`${currentSong.id}:${tapped?.songId === currentSong.id && tapped.saving ? tapped.bpm : ""}`}
+              song={tappedBpm !== null ? { ...currentSong, tempo_bpm: tappedBpm } : currentSong}
               playlistId={playlistId}
               shareCode={shareCode}
               defaultOpen
@@ -262,5 +298,40 @@ export default function RehearsalView({
         />
       </Card>
     </div>
+  );
+}
+
+/**
+ * 박자에 맞춰 4번 누르면 BPM 칸이 채워진다.
+ * 곡마다 key 로 새로 마운트해서, 곡을 넘기면 남은 탭은 원래 곡에 저장되고 다음 곡은 빈 상태로 시작한다.
+ */
+function TapTempoButton({
+  onTempo,
+  onCommit,
+}: {
+  onTempo: (bpm: number) => void;
+  onCommit: (bpm: number, tapCount: number) => void;
+}) {
+  const { tap, tapCount, tapsToFill } = useTapTempo(onCommit);
+  return (
+    <Button
+      type="button"
+      variant="secondary"
+      className="shrink-0"
+      onClick={() => {
+        const value = tap();
+        if (value !== null) onTempo(value);
+      }}
+    >
+      탭 템포
+      <span className="flex items-center gap-1" aria-hidden>
+        {Array.from({ length: tapsToFill }, (_, i) => (
+          <span
+            key={i}
+            className={`h-1.5 w-1.5 rounded-pill transition-colors ${i < tapCount ? "bg-primary" : "bg-border-strong"}`}
+          />
+        ))}
+      </span>
+    </Button>
   );
 }

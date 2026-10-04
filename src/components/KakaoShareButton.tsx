@@ -105,7 +105,7 @@ const buildOgUrl = (
 
 const styleMap: Record<NonNullable<KakaoShareButtonProps["visualStyle"]>, string> = {
   primary:
-    "bg-[#FEE500] hover:bg-[#FFE000] text-[#191919] font-semibold",
+    "bg-kakao hover:bg-kakao-hover text-kakao-text font-semibold",
   secondary:
     "bg-surface-hover hover:bg-border-strong text-text font-semibold border border-border",
   subtle:

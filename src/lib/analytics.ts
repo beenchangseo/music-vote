@@ -36,6 +36,9 @@ type EventMap = {
   meta_edited: {
     field: "key" | "key_memo" | "bpm" | "duration" | "difficulty" | "genre";
   };
+  tap_tempo_used: {
+    taps: number;
+  };
   filter_applied: {
     type: "bpm" | "meta_only" | "key" | "difficulty" | "genre";
   };
