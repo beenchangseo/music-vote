@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { notFound } from "next/navigation";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient, createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { shouldExposeVoters } from "@/lib/vote-domain";
 import PlaylistClient from "@/components/PlaylistClient";
@@ -37,12 +37,18 @@ const PLAYLIST_COLUMNS =
  * 요청 하나 안에서만 공유하므로 값이 낡을 일은 없다.
  */
 const getPlaylistByShareCode = cache(async (shareCode: string) => {
-  const supabase = await createServerSupabaseClient();
-  const { data } = await supabase
+  // playlists is closed to the public key (v18), so read it with service_role.
+  const admin = createAdminClient();
+  const { data, error } = await admin
     .from("playlists")
     .select(PLAYLIST_COLUMNS)
     .eq("share_code", shareCode)
     .single();
+  // PGRST116 means no row: a genuine 404. Anything else is a broken read path
+  // and must not hide behind "room not found".
+  if (error && error.code !== "PGRST116") {
+    console.error(`[playlist] 합주방 조회 실패 (shareCode=${shareCode}):`, error.message);
+  }
   return (data as Playlist) ?? null;
 });
 
@@ -63,7 +69,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { shareCode } = await params;
   const playlist = await getPlaylistByShareCode(shareCode);
-  if (!playlist) return { title: "Plypick" };
+  if (!playlist) return { title: "Plypick", robots: { index: false } };
 
   const stats = await getPlaylistStats(playlist.id);
   const songCount = stats?.song_count ?? 0;
@@ -77,6 +83,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: metaTitle,
     description,
+    // Rooms are private links shared in group chats; keep them out of search results.
+    robots: { index: false },
     openGraph: {
       title: metaTitle,
       description,
@@ -93,7 +101,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function PlaylistPage({ params }: PageProps) {
   const { shareCode } = await params;
+  // Views that compute "my vote" from auth.uid() stay on the session client;
+  // the songs table itself is closed to the public key (v18).
   const supabase = await createServerSupabaseClient();
+  const admin = createAdminClient();
 
   // 계정 확인은 합주방 조회와 무관하므로 같이 보낸다.
   const [playlist, currentUser] = await Promise.all([
@@ -109,7 +120,7 @@ export default async function PlaylistPage({ params }: PageProps) {
   // 집계 뷰가 playlist_id 를 들고 있어(v16) 곡 목록을 기다리지 않는다.
   const [songsResult, stats, summaryResult, votersResult, engagementResult] =
     await Promise.all([
-      supabase
+      admin
         .from("songs")
         .select("*")
         .eq("playlist_id", playlist.id)

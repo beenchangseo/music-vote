@@ -1,5 +1,5 @@
 import PDFDocument from "pdfkit";
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -49,20 +49,18 @@ export async function GET(
   { params }: { params: Promise<{ shareCode: string }> },
 ) {
   const { shareCode } = await params;
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } },
-  );
+  // playlists, setlist_items and songs are closed to the public key (v18).
+  // Read with service_role here; the key stays on the server.
+  const admin = createAdminClient();
 
-  const { data: playlist, error: playlistError } = await supabase
+  const { data: playlist, error: playlistError } = await admin
     .from("playlists")
     .select("id, title")
     .eq("share_code", shareCode)
     .single();
   if (playlistError || !playlist) return new Response("Not found", { status: 404 });
 
-  const { data: itemRows, error: itemError } = await supabase
+  const { data: itemRows, error: itemError } = await admin
     .from("setlist_items")
     .select("position, item_type, song_id, label, description, duration_seconds, title_override, duration_override_seconds")
     .eq("playlist_id", playlist.id)
@@ -73,7 +71,7 @@ export async function GET(
   const songIds = items.flatMap((item) => item.item_type === "song" && item.song_id ? [item.song_id] : []);
   let songs: SongRow[] = [];
   if (songIds.length > 0) {
-    const { data, error } = await supabase
+    const { data, error } = await admin
       .from("songs")
       .select("id, title, artist, duration_seconds")
       .in("id", songIds);

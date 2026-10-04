@@ -1,6 +1,6 @@
 "use server";
 
-import { createAdminClient, createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
 import { assertSetlistEditor } from "@/lib/setlist-permissions";
 import { revalidatePath } from "next/cache";
@@ -29,8 +29,9 @@ function validateInterval(item: IntervalInput) {
 }
 
 export async function getSetlistItems(playlistId: string): Promise<SetlistItem[]> {
-  const supabase = await createServerSupabaseClient();
-  const { data } = await supabase
+  // setlist_items is closed to the public key (v18).
+  const admin = createAdminClient();
+  const { data } = await admin
     .from("setlist_items")
     .select("*")
     .eq("playlist_id", playlistId)

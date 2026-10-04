@@ -1,7 +1,7 @@
 "use server";
 
 import { nanoid } from "nanoid";
-import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
 import type { SetlistEditMode, VotingMode } from "@/lib/types";
@@ -39,10 +39,12 @@ export interface MyPlaylistDbEntry {
  * 비로그인 시 빈 배열.
  */
 export async function getMyPlaylists(): Promise<MyPlaylistDbEntry[]> {
+  // The user comes from the session; playlists itself is read with service_role
+  // because the public key can no longer select it (v18).
   const user = await getCurrentUser();
   if (!user) return [];
-  const supabase = await createServerSupabaseClient();
-  const { data } = await supabase
+  const admin = createAdminClient();
+  const { data } = await admin
     .from("playlists")
     .select("id, share_code, title, created_at")
     .eq("creator_user_id", user.id)
@@ -65,7 +67,6 @@ export async function createPlaylist(
     throw new Error("합주방 제목은 1~100자여야 합니다.");
   }
 
-  const supabase = await createServerSupabaseClient();
   const user = await getCurrentUser();
   if (!user) {
     throw new Error("로그인이 필요합니다.");
@@ -83,7 +84,9 @@ export async function createPlaylist(
     const shareCode = nanoid(8);
     const adminToken = nanoid(16);
 
-    const { data, error } = await supabase
+    // The public insert policy is gone (v18). creator_user_id comes from the
+    // session user above, never from the caller.
+    const { data, error } = await admin
       .from("playlists")
       .insert({
         title,

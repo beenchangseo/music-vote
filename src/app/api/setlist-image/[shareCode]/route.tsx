@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/server";
 import { NextRequest } from "next/server";
 
 export const runtime = "edge";
@@ -62,14 +62,12 @@ export async function GET(
 ) {
   const { shareCode } = await ctx.params;
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } },
-  );
+  // playlists, setlist_items and songs are closed to the public key (v18).
+  // Read with service_role here; the key stays on the server.
+  const admin = createAdminClient();
 
   // 1) playlist
-  const { data: playlist } = await supabase
+  const { data: playlist } = await admin
     .from("playlists")
     .select("id, title")
     .eq("share_code", shareCode)
@@ -80,7 +78,7 @@ export async function GET(
   }
 
   // 2) setlist items
-  const { data: items } = await supabase
+  const { data: items } = await admin
     .from("setlist_items")
     .select("position, item_type, song_id, label, description, duration_seconds, title_override, duration_override_seconds")
     .eq("playlist_id", playlist.id)
@@ -95,7 +93,7 @@ export async function GET(
 
   let songs: SongRow[] = [];
   if (songIds.length > 0) {
-    const { data: songRows } = await supabase
+    const { data: songRows } = await admin
       .from("songs")
       .select(
         "id, title, artist, duration_seconds, key_root, key_mode, key_memo, tempo_bpm",
