@@ -453,7 +453,7 @@ function MemberRow({
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-11 z-10 w-36 overflow-hidden rounded-control border border-border bg-surface shadow-lg animate-fade-in"
+              className="absolute right-0 top-11 z-10 w-36 overflow-hidden rounded-control border border-border bg-surface shadow-lg"
             >
               <button
                 type="button"

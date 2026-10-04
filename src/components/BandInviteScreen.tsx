@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Button from "./ui/Button";
+import GuitarIcon from "./GuitarIcon";
 import LoginButton from "./LoginButton";
 import ShowDateTile from "./ShowDateTile";
 import { joinTeam } from "@/actions/team";
@@ -116,9 +117,10 @@ export default function BandInviteScreen({
   return (
     <main className="min-h-full flex flex-col px-4 pt-6 pb-10">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
-        <p className="text-caption text-text-muted">
+        <p className="flex items-center gap-1.5 text-caption text-text-muted">
           <span className="text-base font-bold text-text">Plypick</span>
-          <span className="mx-1.5 text-text-subtle" aria-hidden>·</span>
+          <span className="text-text-subtle" aria-hidden>·</span>
+          <GuitarIcon className="h-4 w-4" />
           밴드 초대
         </p>
 
