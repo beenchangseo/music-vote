@@ -266,6 +266,11 @@ describe("BandHomeClient member management (F1, 24B, R7)", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("링크는 바꿨지만 내보내지 못했어요");
     expect(screen.getByRole("checkbox", { name: /초대 링크도 새로 만들기/ })).not.toBeChecked();
+    // No second sheet stacked on the open dialog; the new link waits in the invite sheet.
+    expect(screen.queryByRole("dialog", { name: "멤버 초대" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "취소" }));
+    fireEvent.click(screen.getByRole("button", { name: "멤버 초대" }));
+    expect(screen.getByText(/\/join\/NEWcode_03$/)).toBeInTheDocument();
   });
 
   it("gives members no remove menu", () => {

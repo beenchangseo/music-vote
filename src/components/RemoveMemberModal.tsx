@@ -11,7 +11,8 @@ interface RemoveMemberModalProps {
   /** 내보낼 멤버. null 이면 닫혀 있다. */
   member: { userId: string; displayName: string } | null;
   onClose: () => void;
-  onRemoved: (userId: string) => void;
+  /** `rotated`: the invite link was replaced in the same request. */
+  onRemoved: (userId: string, rotated: boolean) => void;
   /** 링크가 바뀌었으면 새 초대 코드. 내보내기가 실패해도 이미 바뀐 링크는 알려준다. */
   onInviteRotated: (inviteCode: string) => void;
 }
@@ -66,7 +67,7 @@ function RemoveMemberBody({
       const result = await removeTeamMember(teamId, member.userId, rotate);
       if (result.inviteCode) onInviteRotated(result.inviteCode);
       if (result.success) {
-        onRemoved(member.userId);
+        onRemoved(member.userId, result.inviteCode !== null);
         onClose();
         return;
       }

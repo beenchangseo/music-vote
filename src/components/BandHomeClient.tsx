@@ -281,12 +281,12 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
           teamId={team.id}
           member={removing}
           onClose={() => setRemoving(null)}
-          onRemoved={(userId) => setRemovedIds((ids) => [...ids, userId])}
-          onInviteRotated={(code) => {
-            setRotatedCode(code);
+          onRemoved={(userId, rotated) => {
+            setRemovedIds((ids) => [...ids, userId]);
             // R7: the moment the link changes is the moment to send the new one.
-            setInviteOpen(true);
+            if (rotated) setInviteOpen(true);
           }}
+          onInviteRotated={setRotatedCode}
         />
       )}
     </main>
