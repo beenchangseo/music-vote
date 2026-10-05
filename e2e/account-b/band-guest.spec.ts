@@ -72,7 +72,8 @@ test.describe("account-b: band pages as a non-member", () => {
     await expect(page.getByRole("link", { name: "내 밴드 보기" })).toBeVisible();
 
     // Logged out: log in first, then the same band address.
-    const anon = await browser.newContext({ baseURL });
+    // browser.newContext() inherits the project's storageState, so the logout must be explicit.
+    const anon = await browser.newContext({ baseURL, storageState: { cookies: [], origins: [] } });
     try {
       const anonPage = await anon.newPage();
       await anonPage.goto(`/band/${team!.id}`);

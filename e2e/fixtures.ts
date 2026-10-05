@@ -25,7 +25,8 @@ async function saveRefreshedState(context: BrowserContext, account: AccountName)
  * The refreshed login is written back before the context closes.
  */
 export async function withAccountPage<T>(
-  // A context made by hand does not inherit the project's `use`, so baseURL is passed along.
+  // A context made by hand inherits the project's `use` (storageState included), so the
+  // account's state is always set explicitly; baseURL is passed along to keep that visible.
   { browser, baseURL }: { browser: Browser; baseURL: string | undefined },
   account: AccountName,
   fn: (page: Page) => Promise<T>,
