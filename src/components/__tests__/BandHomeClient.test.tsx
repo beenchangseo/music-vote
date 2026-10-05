@@ -75,6 +75,7 @@ beforeEach(() => {
   push.mockReset();
   showDanger.mockReset().mockResolvedValue(true);
   window.sessionStorage.clear();
+  window.localStorage.clear();
 });
 
 afterEach(() => {
@@ -149,19 +150,38 @@ describe("BandHomeClient primary action (1A)", () => {
     expect(screen.getByRole("link", { name: "새 합주방" })).toHaveAttribute("href", `/new?band=${TEAM}`);
   });
 
-  it("features the running room and sends the round button there", () => {
+  it("does not ask once a second member is in", () => {
+    renderHome(ownerView());
+    expect(screen.queryByText("멤버를 불러야 같이 투표해요")).not.toBeInTheDocument();
+  });
+
+  it("closes the call-members card and keeps it closed for this band in this browser", () => {
+    const lone = ownerView({ members: [ownerView().members[0]] });
+    renderHome(lone);
+    const card = screen.getByText("멤버를 불러야 같이 투표해요").closest("div")!.parentElement!;
+    fireEvent.click(within(card).getByRole("button", { name: "닫기" }));
+    expect(screen.queryByText("멤버를 불러야 같이 투표해요")).not.toBeInTheDocument();
+    expect(window.localStorage.getItem(`plypick:band-invite-card-dismissed:${TEAM}`)).toBe("1");
+
+    cleanup();
+    renderHome(lone);
+    expect(screen.queryByText("멤버를 불러야 같이 투표해요")).not.toBeInTheDocument();
+    // The invite icon in the action row still works.
+    fireEvent.click(screen.getByRole("button", { name: "멤버 초대" }));
+    expect(screen.getByRole("dialog", { name: "멤버 초대" })).toBeInTheDocument();
+  });
+
+  it("features the running room", () => {
     renderHome(view({ rooms: [room({ songCount: 7 })] }));
     const card = screen.getByRole("link", { name: /지금 합주방/ });
     expect(card).toHaveAttribute("href", "/playlist/abc123");
     expect(card).toHaveTextContent("투표 중 · 후보곡 7곡");
-    expect(screen.getByRole("link", { name: "10월 정기 합주 들어가기" })).toHaveAttribute("href", "/playlist/abc123");
     expect(screen.getByRole("link", { name: "새 합주방" })).toHaveAttribute("href", `/new?band=${TEAM}`);
   });
 
-  it("turns the round button into 합주방 만들기 when nothing is running", () => {
+  it("falls back to 새 합주방 when nothing is running", () => {
     renderHome(view({ rooms: [room({ setlistConfirmed: true })] }));
     expect(screen.queryByRole("link", { name: /지금 합주방/ })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "합주방 만들기" })).toHaveAttribute("href", `/new?band=${TEAM}`);
     expect(screen.getByRole("link", { name: "새 합주방" })).toBeInTheDocument();
   });
 });

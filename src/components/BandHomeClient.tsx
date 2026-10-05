@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Card from "./ui/Card";
@@ -16,7 +16,6 @@ import RemoveMemberModal from "./RemoveMemberModal";
 import { LEFT_BAND_STORAGE_KEY } from "./LeftBandNotice";
 import { leaveTeam, type TeamHomeMember, type TeamHomeView, type TeamRoom } from "@/actions/team";
 import { track } from "@/lib/analytics";
-import { assignAvatarColors, bandPalette, type BandPalette } from "@/lib/band-art";
 import { aggregatePlayedSongs, formatShowDate, showDday, type PlayedSong, type ShowDday } from "@/lib/team-domain";
 import { teamMessage } from "@/lib/team-messages";
 
@@ -26,6 +25,13 @@ type MemberView = Extract<TeamHomeView, { access: "member" }>;
 const COLLAPSED_SONGS = 5;
 /** 히어로 아바타 묶음에 보일 최대 인원 (나머지는 +N). */
 const STACKED_AVATARS = 4;
+/** 혼자인 밴드의 "멤버를 불러야" 카드를 닫았는지 (이 브라우저에서만, 밴드마다). */
+const INVITE_CARD_DISMISSED_KEY = (teamId: string) => `plypick:band-invite-card-dismissed:${teamId}`;
+
+function subscribeStorage(callback: () => void) {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
 
 const LEAVE_MESSAGE =
   "홈의 '내 밴드'와 멤버 목록에서 빠져요. 이미 들어간 합주방은 그대로 남아요. 초대 링크가 있으면 다시 들어올 수 있어요.";
@@ -50,7 +56,6 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
   const { showDanger } = useDialog();
   const { team, myRole, rooms } = view;
   const isOwner = myRole === "owner";
-  const palette = bandPalette(team.id);
 
   const [banner, setBanner] = useState<"created" | "joined" | null>(
     created ? "created" : joined ? "joined" : null,
@@ -68,6 +73,19 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
   const [removing, setRemoving] = useState<{ userId: string; displayName: string } | null>(null);
   const [leaveError, setLeaveError] = useState<string | null>(null);
   const [leaving, startLeaving] = useTransition();
+  // Same rule as BandPromptCard: hidden in the server render so a closed card never flashes.
+  const inviteCardStoredClosed = useSyncExternalStore(
+    subscribeStorage,
+    () => {
+      try {
+        return window.localStorage.getItem(INVITE_CARD_DISMISSED_KEY(team.id)) === "1";
+      } catch {
+        return false;
+      }
+    },
+    () => true,
+  );
+  const [inviteCardClosed, setInviteCardClosed] = useState(false);
 
   useEffect(() => {
     if (created || joined) router.replace(`/band/${team.id}`, { scroll: false });
@@ -77,12 +95,20 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
     track("band_home_viewed", { role: myRole });
   }, [myRole]);
 
+  function dismissInviteCard() {
+    setInviteCardClosed(true);
+    try {
+      window.localStorage.setItem(INVITE_CARD_DISMISSED_KEY(team.id), "1");
+    } catch {
+      // Closed for this visit only.
+    }
+  }
+
   const played = useMemo(() => aggregatePlayedSongs(rooms), [rooms]);
-  const avatarColors = assignAvatarColors(members.map((member) => member.displayName));
   const dday = showDday(nextShowAt, new Date());
   // 1A: the latest band room whose setlist is not confirmed yet.
   const activeRoom = rooms[0] && !rooms[0].setlistConfirmed ? rooms[0] : null;
-  const alone = members.length <= 1;
+  const alone = members.length === 1;
   const newRoomHref = `/new?band=${team.id}`;
 
   async function leave() {
@@ -113,7 +139,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
     <main className="min-h-full bg-bg">
       {/* Hero: Spotify Blend-style art in the band's own colors, the name sitting on the fade. */}
       <header className="relative isolate">
-        <BandArt palette={palette} className="absolute inset-x-0 top-0 -z-10 h-[22rem]" />
+        <BandArt className="absolute inset-x-0 top-0 -z-10 h-[22rem]" />
         <div className="mx-auto max-w-md px-4 pt-4">
           <Link
             href="/"
@@ -144,15 +170,14 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
       </header>
 
       <div className="mx-auto max-w-md px-4 pb-16">
-        {/* Action row: Spotify Jam avatars + invite on the left, the big round button on the right. */}
+        {/* Action row: Spotify Jam avatars + invite. */}
         <div className="mt-4 flex items-center gap-1">
           <a href="#band-members" className="flex min-h-11 items-center pr-1" aria-label={`멤버 ${members.length}명`}>
             <span className="flex -space-x-2">
-              {members.slice(0, STACKED_AVATARS).map((member, index) => (
+              {members.slice(0, STACKED_AVATARS).map((member) => (
                 <MemberAvatar
                   key={`${member.displayName}-${member.joinedAt}`}
                   name={member.displayName}
-                  color={avatarColors[index]}
                   className="h-8 w-8 text-sm ring-2 ring-bg"
                 />
               ))}
@@ -166,8 +191,6 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
               <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
             </svg>
           </IconButton>
-          <div className="flex-1" />
-          <PlayButton activeRoom={activeRoom} newRoomHref={newRoomHref} />
         </div>
 
         {banner && (
@@ -199,31 +222,35 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
           </Card>
         )}
 
-        {/* 1A: a band of one needs members before anything else. */}
-        {alone && (
-          <Card variant="elevated" className="mt-5">
-            <p className="text-body font-semibold text-text">멤버를 불러야 같이 투표해요</p>
-            <p className="mt-1 text-sm text-text-muted">단톡방에 초대 링크를 보내면 바로 들어와요</p>
+        {/* 1A: a band of one needs members before anything else. Closable; the invite icon stays. */}
+        {alone && !inviteCardStoredClosed && !inviteCardClosed && (
+          <Card variant="elevated" className="mt-5 motion-safe:animate-fade-in">
+            <div className="flex items-start gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-body font-semibold text-text">멤버를 불러야 같이 투표해요</p>
+                <p className="mt-1 text-sm text-text-muted">단톡방에 초대 링크를 보내면 바로 들어와요</p>
+              </div>
+              <CloseButton onClick={dismissInviteCard} />
+            </div>
             <KakaoInviteButton onClick={() => setInviteOpen(true)} className="mt-4 w-full">
               카톡으로 멤버 부르기
             </KakaoInviteButton>
           </Card>
         )}
 
-        {activeRoom && <NowRoomCard room={activeRoom} palette={palette} />}
+        {activeRoom && <NowRoomCard room={activeRoom} />}
 
-        <RoomsShelf rooms={rooms} palette={palette} newRoomHref={newRoomHref} />
+        <RoomsShelf rooms={rooms} newRoomHref={newRoomHref} />
 
-        <PlayedSongs songs={played} palette={palette} />
+        <PlayedSongs songs={played} />
 
         <section id="band-members" aria-labelledby="band-members-title" className="mt-10 scroll-mt-4">
           <SectionTitle id="band-members-title" title="멤버" count={members.length} />
           <ul className="mt-4 grid grid-cols-4 gap-x-2 gap-y-5">
-            {members.map((member, index) => (
+            {members.map((member) => (
               <MemberTile
                 key={`${member.displayName}-${member.joinedAt}`}
                 member={member}
-                color={avatarColors[index]}
                 canRemove={isOwner && member.role === "member" && !!member.userId}
                 onRemove={() => setRemoving({ userId: member.userId!, displayName: member.displayName })}
               />
@@ -349,28 +376,6 @@ function ShowDateChip({ dday, onOpen }: { dday: ShowDday; onOpen: () => void }) 
   );
 }
 
-/** 큰 둥근 버튼 (Spotify 재생 버튼): 지금 합주방으로, 없으면 새 합주방 만들기. */
-function PlayButton({ activeRoom, newRoomHref }: { activeRoom: TeamRoom | null; newRoomHref: string }) {
-  const className =
-    "inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-pill bg-primary text-white shadow-[0_8px_24px_-6px_rgb(139_92_246/0.7)] transition-all hover:scale-105 hover:bg-primary-hover active:scale-95";
-  if (activeRoom) {
-    return (
-      <Link href={`/playlist/${activeRoom.shareCode}`} aria-label={`${activeRoom.title} 들어가기`} className={className}>
-        <svg className="ml-0.5 h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-          <path d="M8 5.14v13.72a1 1 0 001.5.86l11-6.86a1 1 0 000-1.72l-11-6.86A1 1 0 008 5.14z" />
-        </svg>
-      </Link>
-    );
-  }
-  return (
-    <Link href={newRoomHref} aria-label="합주방 만들기" className={className}>
-      <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-      </svg>
-    </Link>
-  );
-}
-
 function roomStatus(room: TeamRoom): string {
   if (room.setlist.length > 0) return `셋리스트 ${room.setlist.length}곡`;
   if (room.songCount > 0) return `투표 중 · 후보곡 ${room.songCount}곡`;
@@ -378,16 +383,15 @@ function roomStatus(room: TeamRoom): string {
 }
 
 /** 지금 합주방 (YouTube Music 추천 플레이리스트 카드): 커버 + 제목 + 상태 + 흰 재생 버튼. */
-function NowRoomCard({ room, palette }: { room: TeamRoom; palette: BandPalette }) {
+function NowRoomCard({ room }: { room: TeamRoom }) {
   return (
     <section aria-label="지금 합주방" className="mt-6">
       <Link
         href={`/playlist/${room.shareCode}`}
-        className="block overflow-hidden rounded-card bg-surface p-4 ring-1 ring-white/5 transition-transform active:scale-[0.99]"
-        style={{ backgroundImage: `linear-gradient(135deg, ${palette.deep} 0%, transparent 75%)` }}
+        className="block overflow-hidden rounded-card bg-gradient-to-br from-primary-soft/80 via-surface to-surface p-4 ring-1 ring-white/5 transition-transform active:scale-[0.99]"
       >
         <span className="flex items-center gap-4">
-          <RoomCover thumbs={room.coverThumbs} palette={palette} sizes="88px" className="h-22 w-22 shrink-0 shadow-lg" />
+          <RoomCover thumbs={room.coverThumbs} sizes="88px" className="h-22 w-22 shrink-0 shadow-lg" />
           <span className="min-w-0 flex-1">
             <span className="block text-caption font-semibold text-text-muted">지금 합주방</span>
             <span className="mt-0.5 line-clamp-2 block break-keep text-h4 font-bold text-text">{room.title}</span>
@@ -418,7 +422,7 @@ function SectionTitle({ id, title, count }: { id: string; title: string; count: 
 }
 
 /** 합주방 가로 선반 (YouTube Music "새 앨범" 줄): 맨 앞은 새 합주방, 그다음 최근 방부터. */
-function RoomsShelf({ rooms, palette, newRoomHref }: { rooms: TeamRoom[]; palette: BandPalette; newRoomHref: string }) {
+function RoomsShelf({ rooms, newRoomHref }: { rooms: TeamRoom[]; newRoomHref: string }) {
   return (
     <section aria-labelledby="band-rooms" className="mt-10">
       <SectionTitle id="band-rooms" title="합주방" count={rooms.length} />
@@ -436,7 +440,7 @@ function RoomsShelf({ rooms, palette, newRoomHref }: { rooms: TeamRoom[]; palett
         {rooms.map((room) => (
           <li key={room.id} className="w-36 shrink-0 snap-start">
             <Link href={`/playlist/${room.shareCode}`} className="block">
-              <RoomCover thumbs={room.coverThumbs} palette={palette} sizes="144px" className="aspect-square w-full" />
+              <RoomCover thumbs={room.coverThumbs} sizes="144px" className="aspect-square w-full" />
               <span className="mt-2 block truncate text-sm font-semibold text-text">{room.title}</span>
               <span className="block truncate text-caption text-text-muted tabular-nums">
                 {roomDate.format(new Date(room.createdAt))}
@@ -453,7 +457,7 @@ function RoomsShelf({ rooms, palette, newRoomHref }: { rooms: TeamRoom[]; palett
 }
 
 /** E1 우리가 했던 곡 (YouTube Music Quick picks + Spotify Wrapped 의 "N번"). 여러 번 한 곡이 위로 온다. */
-function PlayedSongs({ songs, palette }: { songs: PlayedSong[]; palette: BandPalette }) {
+function PlayedSongs({ songs }: { songs: PlayedSong[] }) {
   const [showAll, setShowAll] = useState(false);
   const visible = showAll ? songs : songs.slice(0, COLLAPSED_SONGS);
   return (
@@ -476,7 +480,7 @@ function PlayedSongs({ songs, palette }: { songs: PlayedSong[]; palette: BandPal
                     {song.artist && <span className="block truncate text-sm text-text-muted">{song.artist}</span>}
                   </span>
                   {song.times > 1 && (
-                    <span className="shrink-0 text-sm font-bold tabular-nums" style={{ color: palette.light }}>
+                    <span className="shrink-0 text-sm font-bold text-primary tabular-nums">
                       {song.times}번
                     </span>
                   )}
@@ -512,12 +516,10 @@ function CloseButton({ onClick }: { onClick: () => void }) {
 /** 멤버 한 칸 (YouTube Music "좋아하는 아티스트" 원). owner 에게는 내보내기 메뉴가 붙는다. */
 function MemberTile({
   member,
-  color,
   canRemove,
   onRemove,
 }: {
   member: TeamHomeMember;
-  color: string;
   canRemove: boolean;
   onRemove: () => void;
 }) {
@@ -530,7 +532,7 @@ function MemberTile({
         if (e.key === "Escape") setMenuOpen(false);
       }}
     >
-      <MemberAvatar name={member.displayName} color={color} className="h-16 w-16 text-h3" />
+      <MemberAvatar name={member.displayName} className="h-16 w-16 text-h3" />
       <span className="w-full min-w-0">
         <span className="block truncate text-sm text-text">{member.displayName}</span>
         {sub && (
