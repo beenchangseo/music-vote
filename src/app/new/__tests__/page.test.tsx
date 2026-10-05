@@ -18,7 +18,7 @@ vi.mock("@/components/MyPlaylists", () => ({ default: () => null }));
 vi.mock("@/components/CreatePlaylistForm", () => ({
   default: (props: unknown) => {
     state.formProps.push(props);
-    return <form aria-label="합주방 만들기 폼" />;
+    return <form aria-label="플레이리스트 만들기 폼" />;
   },
 }));
 vi.mock("@/components/LoginButton", () => ({
@@ -49,7 +49,7 @@ describe("/new?band=", () => {
   it("shows the band label and creates inside the band for a member", async () => {
     state.getMyTeams.mockResolvedValue([{ id: TEAM, name: "일코해제", nextShowAt: "2026-10-16", role: "member", roomCount: 2 }]);
     render(await NewPlaylistPage(props(TEAM)));
-    expect(screen.getByText("일코해제의 합주방")).toBeInTheDocument();
+    expect(screen.getByText("일코해제의 플레이리스트")).toBeInTheDocument();
     // 17A: a label, not a control.
     expect(screen.queryByRole("button", { name: /일코해제/ })).not.toBeInTheDocument();
     expect(state.formProps[0]).toMatchObject({ band: { id: TEAM, name: "일코해제", nextShowAt: "2026-10-16" } });
@@ -62,7 +62,7 @@ describe("/new?band=", () => {
     expect(screen.getByText("밴드 멤버만 만들 수 있어요")).toBeInTheDocument();
     // Top bar link + the one under the message.
     expect(screen.getAllByRole("link", { name: "홈으로" })).toHaveLength(2);
-    expect(screen.queryByRole("form", { name: "합주방 만들기 폼" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("form", { name: "플레이리스트 만들기 폼" })).not.toBeInTheDocument();
     expect(screen.queryByText(/초대/)).not.toBeInTheDocument();
   });
 
@@ -70,7 +70,7 @@ describe("/new?band=", () => {
     state.getTeamHome.mockResolvedValue(null);
     render(await NewPlaylistPage(props("not-a-band")));
     expect(screen.getByText("밴드를 찾을 수 없어요")).toBeInTheDocument();
-    expect(screen.queryByRole("form", { name: "합주방 만들기 폼" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("form", { name: "플레이리스트 만들기 폼" })).not.toBeInTheDocument();
   });
 
   it("keeps ?band= through login", async () => {
@@ -85,6 +85,6 @@ describe("/new?band=", () => {
     state.getMyTeams.mockResolvedValue(mine);
     render(await NewPlaylistPage(props()));
     expect(state.formProps[0]).toMatchObject({ band: null, myTeams: mine });
-    expect(screen.queryByText("일코해제의 합주방")).not.toBeInTheDocument();
+    expect(screen.queryByText("일코해제의 플레이리스트")).not.toBeInTheDocument();
   });
 });

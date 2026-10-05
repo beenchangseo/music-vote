@@ -99,7 +99,7 @@ export async function getVotingSettings(
       .eq("songs.playlist_id", playlistId),
   ]);
 
-  if (!playlist) throw new Error("합주방을 찾을 수 없습니다.");
+  if (!playlist) throw new Error("플레이리스트를 찾을 수 없습니다.");
   const usedByUser = new Map<string, number>();
   for (const vote of votes || []) {
     if (!vote.user_id) continue;
@@ -149,9 +149,9 @@ export async function saveVotingSettings(
     .eq("id", playlistId)
     .single();
 
-  if (playlistError || !playlist) throw new Error("합주방을 찾을 수 없습니다.");
+  if (playlistError || !playlist) throw new Error("플레이리스트를 찾을 수 없습니다.");
   if (!playlist.creator_user_id && mode === "allocated") {
-    throw new Error("기존 합주방에서는 자유 투표만 사용할 수 있습니다.");
+    throw new Error("기존 플레이리스트에서는 자유 투표만 사용할 수 있습니다.");
   }
 
   const { error } = await admin.rpc("save_playlist_voting_settings", {

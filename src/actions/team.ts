@@ -250,7 +250,7 @@ async function roomWriteBlock(playlistId: string): Promise<"archived" | "playlis
     return null;
   } catch (error) {
     if (error instanceof Error && error.message === ARCHIVED_PLAYLIST_MESSAGE) return "archived";
-    if (error instanceof Error && error.message === "합주방을 찾을 수 없습니다.") {
+    if (error instanceof Error && error.message === "플레이리스트를 찾을 수 없습니다.") {
       return "playlist_not_found";
     }
     throw error;
@@ -391,7 +391,7 @@ export async function createTeamFromPlaylist(
 // ============================================================
 
 /**
- * 방 설정의 "이 방을 내 밴드에 넣기"와 /new 완료 화면의 "이 방을 밴드에 넣을까요?".
+ * 방 설정의 "이 플레이리스트를 내 밴드에 넣기"와 /new 완료 화면의 "이 플레이리스트를 밴드에 넣을까요?".
  * 방장이면서 그 밴드 멤버여야 한다. 방의 참여자를 밴드 멤버로 넣지는 않는다(가입은 초대 링크로만).
  */
 export async function attachPlaylistToTeam(
@@ -694,7 +694,7 @@ export async function getTeamHome(teamId: string): Promise<TeamHomeView | null> 
 }
 
 /**
- * 홈 "내 밴드"와 방 설정의 "이 방을 내 밴드에 넣기" 후보. 비로그인은 빈 배열.
+ * 홈 "내 밴드"와 방 설정의 "이 플레이리스트를 내 밴드에 넣기" 후보. 비로그인은 빈 배열.
  * 조회가 실패해도 홈을 깨지 않도록 빈 배열 + console.error.
  */
 export async function getMyTeams(): Promise<MyTeam[]> {

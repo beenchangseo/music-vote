@@ -116,7 +116,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
       setCreated({ id: result.id, shareCode: result.shareCode, adminToken: result.adminToken, title: title.trim(), url });
     } catch (error) {
       if (band) setFormError(teamMessage(error));
-      else showAlert("합주방 생성에 실패했습니다. 다시 시도해주세요.");
+      else showAlert("플레이리스트 생성에 실패했습니다. 다시 시도해주세요.");
       setLoading(false);
     }
   }
@@ -249,7 +249,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
                 </p>
               ) : (
                 <>
-                  <p className="text-sm text-text">이 방을 밴드에 넣을까요?</p>
+                  <p className="text-sm text-text">이 플레이리스트를 밴드에 넣을까요?</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {myTeams.map((team) => (
                       <Button
@@ -300,7 +300,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
         {loading ? (
           <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
         ) : (
-          "합주방 만들기"
+          "플레이리스트 만들기"
         )}
       </button>
       {formError && (
@@ -338,7 +338,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
         <div className="border-t border-border px-4 py-3">
         <p className="text-sm font-semibold text-text">투표 방식</p>
         <p className="mt-1 text-caption text-text-muted">
-          방을 만든 뒤에도 투표가 시작되기 전에는 바꿀 수 있어요.
+          플레이리스트를 만든 뒤에도 투표가 시작되기 전에는 바꿀 수 있어요.
         </p>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button

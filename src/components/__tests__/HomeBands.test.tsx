@@ -70,7 +70,7 @@ describe("MyBands (4A)", () => {
     const first = screen.getByRole("link", { name: /일코해제/ });
     expect(first).toHaveAttribute("href", `/band/${TEAM}`);
     expect(first).toHaveTextContent("공연 D-12");
-    expect(first).toHaveTextContent("합주방 3");
+    expect(first).toHaveTextContent("플레이리스트 3");
     // A past show is not shown on the home line.
     expect(screen.getByRole("link", { name: /산울림/ })).not.toHaveTextContent("공연");
   });

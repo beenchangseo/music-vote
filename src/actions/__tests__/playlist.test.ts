@@ -61,8 +61,8 @@ describe("createPlaylist", () => {
   });
 
   it("rejects an empty or over-long title before touching the database", async () => {
-    await expect(createPlaylist("")).rejects.toThrow("합주방 제목은 1~100자여야 합니다.");
-    await expect(createPlaylist("가".repeat(101))).rejects.toThrow("합주방 제목은 1~100자여야 합니다.");
+    await expect(createPlaylist("")).rejects.toThrow("플레이리스트 제목은 1~100자여야 합니다.");
+    await expect(createPlaylist("가".repeat(101))).rejects.toThrow("플레이리스트 제목은 1~100자여야 합니다.");
     expect(state.admin.ops).toEqual([]);
   });
 
@@ -144,7 +144,7 @@ describe("createPlaylist", () => {
       adminResponder({ inserts: [{ data: null, error: { code: "42501", message: "denied" } }] }),
     );
 
-    await expect(createPlaylist("합주")).rejects.toThrow("합주방 생성에 실패했습니다.");
+    await expect(createPlaylist("합주")).rejects.toThrow("플레이리스트 생성에 실패했습니다.");
     expect(opsFor(state.admin.ops, "playlists", "insert")).toHaveLength(1);
   });
 
@@ -161,7 +161,7 @@ describe("createPlaylist", () => {
       adminResponder({ inserts: [ok({ id: "pl-1", share_code: "code-1" })], adminTokenError: true }),
     );
 
-    await expect(createPlaylist("합주")).rejects.toThrow("합주방 생성에 실패했습니다.");
+    await expect(createPlaylist("합주")).rejects.toThrow("플레이리스트 생성에 실패했습니다.");
 
     const deletes = opsFor(state.admin.ops, "playlists", "delete");
     expect(deletes).toHaveLength(1);
@@ -174,7 +174,7 @@ describe("createPlaylist", () => {
       adminResponder({ inserts: [ok({ id: "pl-1", share_code: "code-1" })], memberError: true }),
     );
 
-    await expect(createPlaylist("합주")).rejects.toThrow("합주방 생성에 실패했습니다.");
+    await expect(createPlaylist("합주")).rejects.toThrow("플레이리스트 생성에 실패했습니다.");
 
     const deletes = opsFor(state.admin.ops, "playlists", "delete");
     expect(deletes).toHaveLength(1);

@@ -130,9 +130,9 @@ describe("DialogProvider options", () => {
   });
 
   it("still reads a positional string as the title", () => {
-    open((d) => d.showDanger("합주방과 모든 곡·투표·셋리스트가 삭제돼요.", "합주방 삭제"));
+    open((d) => d.showDanger("플레이리스트와 모든 곡·투표·셋리스트가 삭제돼요.", "플레이리스트 삭제"));
 
-    expect(screen.getByRole("alertdialog", { name: "합주방 삭제" })).toBeInTheDocument();
+    expect(screen.getByRole("alertdialog", { name: "플레이리스트 삭제" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "삭제" })).toBeInTheDocument();
   });
 

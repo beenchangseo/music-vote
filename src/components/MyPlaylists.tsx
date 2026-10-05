@@ -79,7 +79,7 @@ export default function MyPlaylists({ loggedIn = true, dbPlaylists = [] }: MyPla
   return (
     <div className="mt-10 w-full">
       <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-3">
-        내 합주방
+        내 플레이리스트
       </h2>
       <div className="space-y-2">
         {visible.map((pl) => (

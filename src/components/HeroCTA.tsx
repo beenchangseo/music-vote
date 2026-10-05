@@ -9,7 +9,7 @@ import type { MyTeam } from "@/actions/team";
 
 interface HeroCTAProps {
   loggedIn: boolean;
-  /** 완료 화면의 "이 방을 밴드에 넣을까요?" 후보 (디자인 리뷰 13A). */
+  /** 완료 화면의 "이 플레이리스트를 밴드에 넣을까요?" 후보 (디자인 리뷰 13A). */
   myTeams?: MyTeam[];
 }
 
@@ -33,7 +33,7 @@ export default function HeroCTA({ loggedIn, myTeams = [] }: HeroCTAProps) {
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="합주방 만들기"
+        title="플레이리스트 만들기"
       >
         <CreatePlaylistForm myTeams={myTeams} />
       </Modal>

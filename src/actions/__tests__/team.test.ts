@@ -189,7 +189,7 @@ describe("createTeamFromPlaylist", () => {
   });
 
   it("reports a missing room", async () => {
-    state.assertPlaylistWritable.mockRejectedValue(new Error("합주방을 찾을 수 없습니다."));
+    state.assertPlaylistWritable.mockRejectedValue(new Error("플레이리스트를 찾을 수 없습니다."));
     state.admin = createFakeClient(happyPath({ "playlists:select": ok(null) }));
 
     await expect(createTeamFromPlaylist(ROOM, "일코해제")).resolves.toEqual({

@@ -36,7 +36,7 @@ describe("assertPlaylistWritable", () => {
   it("rejects a room that no longer exists", async () => {
     mocks.single.mockResolvedValue({ data: null });
     await expect(assertPlaylistWritable("playlist")).rejects.toThrow(
-      "합주방을 찾을 수 없습니다.",
+      "플레이리스트를 찾을 수 없습니다.",
     );
   });
 });

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { displayArtist } from "../song-meta";
 
-// 프로덕션 합주방에서 실제로 나온 값들이다.
+// 프로덕션 플레이리스트에서 실제로 나온 값들이다.
 describe("displayArtist", () => {
   it("자동 생성 채널의 - Topic 을 떼어낸다", () => {
     expect(displayArtist("YOUNHA - Topic", "Event Horizon (사건의 지평선)")).toBe("YOUNHA");

@@ -95,7 +95,7 @@ describe("BandHomeClient leave row (디자인 2회차 1A·5A·6A·8A)", () => {
     fireEvent.click(screen.getByRole("button", { name: "밴드 나가기" }));
 
     await waitFor(() => expect(push).toHaveBeenCalledWith("/?left=1"));
-    expect(showDanger).toHaveBeenCalledWith(expect.stringContaining("이미 들어간 합주방은 그대로 남아요"), {
+    expect(showDanger).toHaveBeenCalledWith(expect.stringContaining("이미 들어간 플레이리스트는 그대로 남아요"), {
       title: "일코해제에서 나갈까요?",
       confirmLabel: "나가기",
     });
@@ -133,7 +133,7 @@ describe("BandHomeClient banners (11A)", () => {
     renderHome(view({ rooms: [room()] }), { joined: true });
     const banner = screen.getByRole("status");
     expect(banner).toHaveTextContent("일코해제 밴드에 들어왔어요");
-    expect(within(banner).getByRole("link", { name: "지금 합주방 가기" })).toHaveAttribute("href", "/playlist/abc123");
+    expect(within(banner).getByRole("link", { name: "지금 플레이리스트 가기" })).toHaveAttribute("href", "/playlist/abc123");
   });
 
   it("does not touch the address without a banner query", () => {
@@ -147,7 +147,7 @@ describe("BandHomeClient primary action (1A)", () => {
   it("asks a lone owner to call members", () => {
     renderHome(ownerView({ members: [ownerView().members[0]] }));
     expect(screen.getByRole("button", { name: "카톡으로 멤버 부르기" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "새 합주방" })).toHaveAttribute("href", `/new?band=${TEAM}`);
+    expect(screen.getByRole("link", { name: "새 플레이리스트" })).toHaveAttribute("href", `/new?band=${TEAM}`);
   });
 
   it("does not ask once a second member is in", () => {
@@ -173,16 +173,16 @@ describe("BandHomeClient primary action (1A)", () => {
 
   it("features the running room", () => {
     renderHome(view({ rooms: [room({ songCount: 7 })] }));
-    const card = screen.getByRole("link", { name: /지금 합주방/ });
+    const card = screen.getByRole("link", { name: /지금 플레이리스트/ });
     expect(card).toHaveAttribute("href", "/playlist/abc123");
     expect(card).toHaveTextContent("투표 중 · 후보곡 7곡");
-    expect(screen.getByRole("link", { name: "새 합주방" })).toHaveAttribute("href", `/new?band=${TEAM}`);
+    expect(screen.getByRole("link", { name: "새 플레이리스트" })).toHaveAttribute("href", `/new?band=${TEAM}`);
   });
 
-  it("falls back to 새 합주방 when nothing is running", () => {
+  it("falls back to 새 플레이리스트 when nothing is running", () => {
     renderHome(view({ rooms: [room({ setlistConfirmed: true })] }));
-    expect(screen.queryByRole("link", { name: /지금 합주방/ })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "새 합주방" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /지금 플레이리스트/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "새 플레이리스트" })).toBeInTheDocument();
   });
 });
 
@@ -198,7 +198,7 @@ describe("BandHomeClient rooms shelf and played songs (26A, E1)", () => {
   const run = song("s1", "말달리자", "크라잉넛", "v-run");
   const crush = song("s2", "넌 내게 반했어", "노브레인", "v-crush", 1);
 
-  it("shelves a 새 합주방 tile, then every room newest first", () => {
+  it("shelves a 새 플레이리스트 tile, then every room newest first", () => {
     renderHome(
       view({
         rooms: [
@@ -207,7 +207,7 @@ describe("BandHomeClient rooms shelf and played songs (26A, E1)", () => {
         ],
       }),
     );
-    const shelf = screen.getByRole("region", { name: /^합주방\s*2$/ });
+    const shelf = screen.getByRole("region", { name: /^플레이리스트\s*2$/ });
     expect(within(shelf).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
       `/new?band=${TEAM}`,
       "/playlist/abc123",

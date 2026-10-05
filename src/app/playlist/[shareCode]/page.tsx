@@ -79,7 +79,7 @@ const getPlaylistByShareCode = cache(async (shareCode: string) => {
   // PGRST116 means no row: a genuine 404. Anything else is a broken read path
   // and must not hide behind "room not found".
   if (error && error.code !== "PGRST116") {
-    console.error(`[playlist] 합주방 조회 실패 (shareCode=${shareCode}):`, error.message);
+    console.error(`[playlist] 플레이리스트 조회 실패 (shareCode=${shareCode}):`, error.message);
   }
   return (data as Playlist) ?? null;
 });
@@ -150,7 +150,7 @@ export default async function PlaylistPage({ params }: PageProps) {
   const exposeVoters = shouldExposeVoters(playlist);
   const isRoomOwner = !!currentUser && currentUser.id === playlist.creator_user_id;
   const teamId = playlist.team_id ?? null;
-  // "이 방을 내 밴드에 넣기" 후보와 안내 카드(F7) 조건은 방장 · 팀 없는 방에서만 필요하다.
+  // "이 플레이리스트를 내 밴드에 넣기" 후보와 안내 카드(F7) 조건은 방장 · 팀 없는 방에서만 필요하다.
   const wantsBandPrompt = isRoomOwner && !teamId;
 
   // 집계 뷰가 playlist_id 를 들고 있어(v16) 곡 목록을 기다리지 않는다.

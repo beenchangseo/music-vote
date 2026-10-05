@@ -322,14 +322,14 @@ export default function PlaylistClient({
           {isArchived && (
             <div className="mt-3 rounded-lg border border-border bg-surface/60 px-3 py-2 animate-fade-in" role="status">
               <p className="text-caption leading-relaxed text-text-muted">
-                <span className="font-semibold text-text">보관된 합주방이에요.</span>{" "}
+                <span className="font-semibold text-text">보관된 플레이리스트예요.</span>{" "}
                 지난 투표 결과와 셋리스트는 그대로 볼 수 있지만, 새로 투표하거나 곡을 추가할 수는 없어요.
               </p>
               <Link
                 href="/"
                 className="mt-1.5 inline-flex min-h-11 items-center text-caption font-semibold text-primary hover:underline underline-offset-2"
               >
-                새 합주방 만들기 →
+                새 플레이리스트 만들기 →
               </Link>
             </div>
           )}
@@ -642,12 +642,12 @@ export default function PlaylistClient({
           {/* CTA: Create your own — 페이지 가장 아래 (모든 모드 공통, 곡이 있을 때만) */}
           {songsWithVotes.length > 0 && (
             <div className="mt-10 mb-4 text-center">
-              <p className="text-caption text-text-subtle mb-2">새로운 합주방이 필요하다면</p>
+              <p className="text-caption text-text-subtle mb-2">새로운 플레이리스트가 필요하다면</p>
               <Link
                 href="/"
                 className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:text-primary-hover transition-colors"
               >
-                합주방 만들기
+                플레이리스트 만들기
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                 </svg>

@@ -205,7 +205,7 @@ export default async function Home({ searchParams }: HomeProps) {
         <div className="max-w-md mx-auto">
           <div className="rounded-2xl bg-gradient-to-br from-primary/15 to-indigo-600/10 border border-primary/30 p-6 text-center">
             <p className="text-sm text-text mb-4">
-              지금 첫 합주방, 5분이면 시작.
+              지금 첫 플레이리스트, 5분이면 시작.
             </p>
             <HeroCTA loggedIn={loggedIn} myTeams={myTeams} />
           </div>

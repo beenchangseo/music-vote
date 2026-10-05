@@ -32,7 +32,7 @@ export default function MyBands({ teams }: { teams: MyTeam[] }) {
                     <span className="mx-1.5 text-text-subtle" aria-hidden>·</span>
                   </>
                 )}
-                합주방 {team.roomCount}
+                플레이리스트 {team.roomCount}
               </span>
             </Link>
           );

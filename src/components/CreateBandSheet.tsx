@@ -123,11 +123,11 @@ function CreateBandBody({
           <p className="text-sm text-text-muted">참여자를 불러오는 중…</p>
         ) : memberNames.length > 0 ? (
           <>
-            <p className="text-sm font-medium text-text">이 방 참여자 {memberNames.length}명이 멤버가 돼요</p>
+            <p className="text-sm font-medium text-text">이 플레이리스트 참여자 {memberNames.length}명이 멤버가 돼요</p>
             <p className="mt-1 text-caption leading-relaxed text-text-muted">{memberNames.join(", ")}</p>
           </>
         ) : (
-          <p className="text-sm text-text-muted">이 방 참여자가 모두 멤버가 돼요</p>
+          <p className="text-sm text-text-muted">이 플레이리스트 참여자가 모두 멤버가 돼요</p>
         )}
       </div>
 

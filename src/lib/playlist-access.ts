@@ -23,7 +23,7 @@ export async function assertPlaylistWritable(playlistId: string): Promise<void> 
     .eq("id", playlistId)
     .single();
 
-  if (!data) throw new Error("합주방을 찾을 수 없습니다.");
+  if (!data) throw new Error("플레이리스트를 찾을 수 없습니다.");
   if (isArchivedPlaylist(data)) throw new Error(ARCHIVED_PLAYLIST_MESSAGE);
 }
 

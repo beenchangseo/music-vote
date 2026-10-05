@@ -14,7 +14,7 @@ export async function assertSetlistEditor(
     .eq("id", playlistId)
     .single();
 
-  if (!playlist) throw new Error("합주방을 찾을 수 없습니다.");
+  if (!playlist) throw new Error("플레이리스트를 찾을 수 없습니다.");
   // 보관된 합주방은 셋리스트도 읽기 전용이다.
   if (isArchivedPlaylist(playlist)) throw new Error(ARCHIVED_PLAYLIST_MESSAGE);
 
@@ -42,6 +42,6 @@ export async function assertSetlistEditor(
       display_name: user.nickname,
       vote_limit: playlist.default_vote_limit,
     });
-    if (error) throw new Error("합주방 참여자 등록에 실패했습니다.");
+    if (error) throw new Error("플레이리스트 참여자 등록에 실패했습니다.");
   }
 }

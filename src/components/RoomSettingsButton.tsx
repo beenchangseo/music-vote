@@ -163,8 +163,8 @@ export default function RoomSettingsButton({
 
   async function removeRoom() {
     const ok = await showDanger(
-      "합주방과 모든 곡·투표·셋리스트가 삭제되며 되돌릴 수 없어요.\n삭제할까요?",
-      "합주방 삭제",
+      "플레이리스트와 모든 곡·투표·셋리스트가 삭제되며 되돌릴 수 없어요.\n삭제할까요?",
+      "플레이리스트 삭제",
     );
     if (!ok) return;
 
@@ -255,7 +255,7 @@ export default function RoomSettingsButton({
     setCreateOpen(true);
   }
 
-  /** T14 "이 방을 내 밴드에 넣기". The action revalidates the room, which then shows the band link. */
+  /** T14 "이 플레이리스트를 내 밴드에 넣기". The action revalidates the room, which then shows the band link. */
   async function attachToBand(target: MyTeam) {
     setAttachingId(target.id);
     setAttachError(null);
@@ -303,8 +303,8 @@ export default function RoomSettingsButton({
         type="button"
         onClick={load}
         className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-transparent text-text-muted transition-all hover:bg-surface-hover hover:text-text active:scale-95"
-        aria-label="방 설정"
-        title="방 설정"
+        aria-label="플레이리스트 설정"
+        title="플레이리스트 설정"
       >
         <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.592c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.197.717.258 1.07.124l1.205-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-.992.826a1.125 1.125 0 00-.4 1.016v.264c-.006.38.137.751.4 1.016l.992.826c.423.35.534.956.26 1.431l-1.296 2.247a1.125 1.125 0 01-1.37.49l-1.205-.456a1.125 1.125 0 00-1.07.124 6.57 6.57 0 01-.22.127 1.125 1.125 0 00-.645.87l-.213 1.281c-.09.542-.56.94-1.11.94h-2.592c-.55 0-1.02-.398-1.11-.94l-.213-1.281a1.125 1.125 0 00-.645-.87 6.52 6.52 0 01-.22-.127 1.125 1.125 0 00-1.07-.124l-1.205.456a1.125 1.125 0 01-1.37-.49l-1.296-2.247a1.125 1.125 0 01.26-1.431l.992-.826a1.125 1.125 0 00.4-1.016v-.264a1.125 1.125 0 00-.4-1.016l-.992-.826a1.125 1.125 0 01-.26-1.431l1.296-2.247a1.125 1.125 0 011.37-.49l1.205.456c.353.134.746.073 1.07-.124.072-.044.146-.087.22-.127.332-.184.582-.496.645-.87l.213-1.281z" />
@@ -312,7 +312,7 @@ export default function RoomSettingsButton({
         </svg>
       </button>
 
-      <Modal open={open} onClose={() => setOpen(false)} title="방 설정">
+      <Modal open={open} onClose={() => setOpen(false)} title="플레이리스트 설정">
         {!settings ? (
           <div className="py-10 text-center text-sm text-text-muted">불러오는 중...</div>
         ) : (
@@ -338,20 +338,20 @@ export default function RoomSettingsButton({
                   // A removed owner keeps the room but no longer sees the band (R10 payload table).
                   <p className="mt-2 flex items-center gap-2 text-sm text-text-muted">
                     <GuitarIcon className="h-4 w-4 shrink-0" />
-                    {team.name ? `${team.name}의 방이에요` : "밴드에 들어 있는 방이에요"}
+                    {team.name ? `${team.name}의 플레이리스트예요` : "밴드에 들어 있는 플레이리스트예요"}
                   </p>
                 )
               ) : (
                 <>
                   <p className="mt-1 text-caption leading-relaxed text-text-muted">
-                    이 방 참여자가 그대로 밴드 멤버가 돼요. 다음 공연 방은 밴드에서 바로 만들어요.
+                    이 플레이리스트 참여자가 그대로 밴드 멤버가 돼요. 다음 공연 플레이리스트는 밴드에서 바로 만들어요.
                   </p>
                   <Button type="button" variant="secondary" fullWidth onClick={openCreateBand} className="mt-3">
                     이 멤버로 밴드 만들기
                   </Button>
                   {myTeams.length > 0 && (
                     <div className="mt-4">
-                      <p className="text-sm font-medium text-text">이 방을 내 밴드에 넣기</p>
+                      <p className="text-sm font-medium text-text">이 플레이리스트를 내 밴드에 넣기</p>
                       <div className="mt-2 space-y-2">
                         {myTeams.map((band) => (
                           <Button
@@ -574,12 +574,12 @@ export default function RoomSettingsButton({
 
             {/* 되돌릴 수 없는 동작이다. 헤더에서 한 번 눌리던 자리에 두지 않는다. */}
             <section className="mt-6 border-t border-border pt-5">
-              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">합주방 삭제</p>
+              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">플레이리스트 삭제</p>
               <p className="mt-1 text-caption leading-relaxed text-text-muted">
                 곡·투표·셋리스트·코멘트가 모두 사라져요. 되돌릴 수 없어요.
               </p>
               <Button type="button" variant="danger" fullWidth onClick={removeRoom} className="mt-3">
-                합주방 삭제
+                플레이리스트 삭제
               </Button>
             </section>
           </div>

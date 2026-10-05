@@ -10,8 +10,8 @@ import { getMyPlaylists } from "@/actions/playlist";
 import { getMyTeams, getTeamHome } from "@/actions/team";
 
 export const metadata: Metadata = {
-  title: "합주방 만들기 - Plypick",
-  description: "밴드 곡 투표 합주방을 만들어 보세요",
+  title: "플레이리스트 만들기 - Plypick",
+  description: "밴드 곡 투표 플레이리스트를 만들어 보세요",
 };
 
 interface PageProps {
@@ -63,7 +63,7 @@ export default async function NewPlaylistPage({ searchParams }: PageProps) {
               </svg>
               홈으로
             </Link>
-            <span className="text-caption text-text-subtle">새 합주방</span>
+            <span className="text-caption text-text-subtle">새 플레이리스트</span>
           </div>
 
           {bandProblem ? (
@@ -77,7 +77,7 @@ export default async function NewPlaylistPage({ searchParams }: PageProps) {
             <>
               {/* Heading */}
               <h1 className="text-h1 font-bold text-text mb-2">
-                합주방 만들기
+                플레이리스트 만들기
               </h1>
               <p className="text-sm text-text-muted mb-7 leading-relaxed">
                 이름만 정하면 끝. 옵션은 나중에 바꿀 수 있어요.
@@ -89,7 +89,7 @@ export default async function NewPlaylistPage({ searchParams }: PageProps) {
                     // 17A: a static label, not a Chip (no focus, no tap).
                     <span className="mb-3 inline-flex max-w-full items-center gap-1.5 rounded-pill bg-surface-hover px-3 py-1 text-caption text-text-muted">
                       <GuitarIcon className="h-3.5 w-3.5 shrink-0" />
-                      <span className="truncate">{band.name}의 합주방</span>
+                      <span className="truncate">{band.name}의 플레이리스트</span>
                     </span>
                   )}
                   <CreatePlaylistForm band={band} myTeams={myTeams} />
@@ -98,11 +98,11 @@ export default async function NewPlaylistPage({ searchParams }: PageProps) {
               ) : (
                 <div className="bg-surface border border-border rounded-2xl p-6 text-center">
                   <p className="text-body text-text mb-2 font-semibold">
-                    합주방을 만들려면 로그인이 필요해요
+                    플레이리스트를 만들려면 로그인이 필요해요
                   </p>
                   <p className="text-sm text-text-muted mb-5 leading-relaxed">
                     카카오 계정으로 1초만에 시작할 수 있어요.<br />
-                    내가 만든 합주방은 어디서든 다시 열 수 있어요.
+                    내가 만든 플레이리스트는 어디서든 다시 열 수 있어요.
                   </p>
                   {/* Keep ?band= through login, or the room is made outside the band without notice. */}
                   <LoginButton next={bandId ? `/new?band=${encodeURIComponent(bandId)}` : "/new"} />

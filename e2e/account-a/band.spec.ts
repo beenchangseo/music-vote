@@ -35,12 +35,12 @@ test.describe("account-a + account-b: band flow", () => {
     // 1. account-a makes a room.
     await page.goto("/new");
     await page.getByPlaceholder(/어떤 합주예요/).fill(roomTitle);
-    await page.getByRole("button", { name: "합주방 만들기", exact: true }).click();
+    await page.getByRole("button", { name: "플레이리스트 만들기", exact: true }).click();
     await page.getByRole("button", { name: /곡 추가하러 가기/ }).click();
     await page.waitForURL(/\/playlist\/[\w-]+$/);
 
     // 2. Room settings → "이 멤버로 밴드 만들기" → band home with the one-time banner.
-    await page.getByRole("button", { name: "방 설정" }).first().click();
+    await page.getByRole("button", { name: "플레이리스트 설정" }).first().click();
     await page.getByRole("button", { name: "이 멤버로 밴드 만들기" }).click();
     await expect(page.getByLabel("밴드 이름")).toBeFocused();
     await page.getByLabel("밴드 이름").fill(bandName);
@@ -69,11 +69,11 @@ test.describe("account-a + account-b: band flow", () => {
 
     // 5. account-a makes a new room from the band home.
     await page.goto(`/band/${teamId}`);
-    await page.getByRole("link", { name: "새 합주방" }).click();
+    await page.getByRole("link", { name: "새 플레이리스트" }).click();
     await page.waitForURL(new RegExp(`/new\\?band=${teamId}$`));
-    await expect(page.getByText(`${bandName}의 합주방`)).toBeVisible();
+    await expect(page.getByText(`${bandName}의 플레이리스트`)).toBeVisible();
     await page.getByPlaceholder(/어떤 합주예요/).fill(bandRoomTitle);
-    await page.getByRole("button", { name: "합주방 만들기", exact: true }).click();
+    await page.getByRole("button", { name: "플레이리스트 만들기", exact: true }).click();
     await expect(page.getByRole("heading", { name: bandRoomTitle, level: 2 })).toBeVisible();
     await expectNoAlert(page);
 

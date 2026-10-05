@@ -10,6 +10,6 @@ test.describe("account-b: saved login", () => {
   test("/new shows the create form, not the login prompt", async ({ page }) => {
     await page.goto("/new");
     await expect(page.getByPlaceholder(/어떤 합주예요/)).toBeVisible();
-    await expect(page.getByText("합주방을 만들려면 로그인이 필요해요")).toHaveCount(0);
+    await expect(page.getByText("플레이리스트를 만들려면 로그인이 필요해요")).toHaveCount(0);
   });
 });

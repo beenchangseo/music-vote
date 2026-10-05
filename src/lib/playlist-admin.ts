@@ -21,7 +21,7 @@ export async function assertPlaylistAdmin(
     .eq("id", playlistId)
     .single();
 
-  if (!playlist) throw new Error("합주방을 찾을 수 없습니다.");
+  if (!playlist) throw new Error("플레이리스트를 찾을 수 없습니다.");
 
   if (!isArchivedPlaylist(playlist)) {
     const user = await getCurrentUser();

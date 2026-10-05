@@ -162,7 +162,7 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
 
         {!nickname && !loginGate && (
           <div className="px-4 py-3 border-t border-border text-center shrink-0">
-            <p className="text-caption text-text-subtle">보관된 합주방이라 댓글을 새로 남길 수 없어요</p>
+            <p className="text-caption text-text-subtle">보관된 플레이리스트라 댓글을 새로 남길 수 없어요</p>
           </div>
         )}
 

@@ -6,7 +6,7 @@
  * 화면과 서버가 함께 쓰므로 서버 전용 모듈을 import 하지 않는다.
  */
 export const ARCHIVED_PLAYLIST_MESSAGE =
-  "보관된 합주방이에요. 지난 기록은 그대로 볼 수 있지만 새로 쓸 수는 없어요.";
+  "보관된 플레이리스트예요. 지난 기록은 그대로 볼 수 있지만 새로 쓸 수는 없어요.";
 
 export function isArchivedPlaylist(playlist: { creator_user_id: string | null }): boolean {
   return !playlist.creator_user_id;

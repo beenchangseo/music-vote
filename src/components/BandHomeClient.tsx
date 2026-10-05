@@ -34,7 +34,7 @@ function subscribeStorage(callback: () => void) {
 }
 
 const LEAVE_MESSAGE =
-  "홈의 '내 밴드'와 멤버 목록에서 빠져요. 이미 들어간 합주방은 그대로 남아요. 초대 링크가 있으면 다시 들어올 수 있어요.";
+  "홈의 '내 밴드'와 멤버 목록에서 빠져요. 이미 들어간 플레이리스트는 그대로 남아요. 초대 링크가 있으면 다시 들어올 수 있어요.";
 
 const roomDate = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", timeZone: "Asia/Seoul" });
 
@@ -161,7 +161,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
             </h1>
             <p className="mt-2 text-sm text-text-muted tabular-nums">
               멤버 {members.length}명<Dot />
-              합주방 {rooms.length}개<Dot />
+              플레이리스트 {rooms.length}개<Dot />
               했던 곡 {played.length}곡
             </p>
             <ShowDateChip dday={dday} onOpen={() => setDateOpen(true)} />
@@ -214,7 +214,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
                   href={`/playlist/${activeRoom.shareCode}`}
                   className={buttonClassName({ variant: "secondary", size: "md", className: "mt-3" })}
                 >
-                  지금 합주방 가기
+                  지금 플레이리스트 가기
                 </Link>
               )}
             </div>
@@ -385,7 +385,7 @@ function roomStatus(room: TeamRoom): string {
 /** 지금 합주방 (YouTube Music 추천 플레이리스트 카드): 커버 + 제목 + 상태 + 흰 재생 버튼. */
 function NowRoomCard({ room }: { room: TeamRoom }) {
   return (
-    <section aria-label="지금 합주방" className="mt-6">
+    <section aria-label="지금 플레이리스트" className="mt-6">
       <Link
         href={`/playlist/${room.shareCode}`}
         className="block overflow-hidden rounded-card bg-gradient-to-br from-primary-soft/80 via-surface to-surface p-4 ring-1 ring-white/5 transition-transform active:scale-[0.99]"
@@ -393,7 +393,7 @@ function NowRoomCard({ room }: { room: TeamRoom }) {
         <span className="flex items-center gap-4">
           <RoomCover thumbs={room.coverThumbs} sizes="88px" className="h-22 w-22 shrink-0 shadow-lg" />
           <span className="min-w-0 flex-1">
-            <span className="block text-caption font-semibold text-text-muted">지금 합주방</span>
+            <span className="block text-caption font-semibold text-text-muted">지금 플레이리스트</span>
             <span className="mt-0.5 line-clamp-2 block break-keep text-h4 font-bold text-text">{room.title}</span>
             <span className="mt-1 block text-sm text-text-muted tabular-nums">{roomStatus(room)}</span>
           </span>
@@ -425,7 +425,7 @@ function SectionTitle({ id, title, count }: { id: string; title: string; count: 
 function RoomsShelf({ rooms, newRoomHref }: { rooms: TeamRoom[]; newRoomHref: string }) {
   return (
     <section aria-labelledby="band-rooms" className="mt-10">
-      <SectionTitle id="band-rooms" title="합주방" count={rooms.length} />
+      <SectionTitle id="band-rooms" title="플레이리스트" count={rooms.length} />
       <ul className="-mx-4 mt-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <li className="w-36 shrink-0 snap-start">
           <Link href={newRoomHref} className="group block">
@@ -434,7 +434,7 @@ function RoomsShelf({ rooms, newRoomHref }: { rooms: TeamRoom[]; newRoomHref: st
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
             </span>
-            <span className="mt-2 block text-sm font-semibold text-text">새 합주방</span>
+            <span className="mt-2 block text-sm font-semibold text-text">새 플레이리스트</span>
           </Link>
         </li>
         {rooms.map((room) => (
@@ -451,7 +451,7 @@ function RoomsShelf({ rooms, newRoomHref }: { rooms: TeamRoom[]; newRoomHref: st
           </li>
         ))}
       </ul>
-      {rooms.length === 0 && <p className="mt-1 text-caption text-text-muted">새 합주방을 만들면 여기에 모여요</p>}
+      {rooms.length === 0 && <p className="mt-1 text-caption text-text-muted">새 플레이리스트를 만들면 여기에 모여요</p>}
     </section>
   );
 }

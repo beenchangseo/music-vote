@@ -65,7 +65,7 @@ export default function BandPromptCard({ playlistId, adminToken, onCreated }: Ba
     <Card variant="outline" className="mb-3 flex items-start gap-3">
       <div className="min-w-0 flex-1">
         <p className="text-sm leading-relaxed text-text">
-          이 멤버 그대로 다음 공연도 해요? 밴드로 묶어두면 다음 방은 버튼 한 번이에요
+          이 멤버 그대로 다음 공연도 해요? 밴드로 묶어두면 다음 플레이리스트는 버튼 한 번이에요
         </p>
         <Button size="sm" className="mt-3 min-h-11" onClick={() => setSheetOpen(true)}>
           밴드 이름 정하고 만들기

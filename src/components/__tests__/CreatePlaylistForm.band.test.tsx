@@ -27,7 +27,7 @@ const myTeam = (id: string, name: string) => ({ id, name, nextShowAt: null, role
 
 function submit(title = "11월 합주") {
   fireEvent.change(screen.getByPlaceholderText(/어떤 합주예요/), { target: { value: title } });
-  fireEvent.click(screen.getByRole("button", { name: "합주방 만들기" }));
+  fireEvent.click(screen.getByRole("button", { name: "플레이리스트 만들기" }));
 }
 
 beforeEach(() => {
@@ -47,7 +47,7 @@ describe("CreatePlaylistForm in a band (/new?band=)", () => {
     expect(createPlaylist).not.toHaveBeenCalled();
     expect(track).toHaveBeenCalledWith("team_playlist_created", { has_next_show: true });
     // A room made from the band does not ask to be put into a band.
-    expect(screen.queryByText("이 방을 밴드에 넣을까요?")).not.toBeInTheDocument();
+    expect(screen.queryByText("이 플레이리스트를 밴드에 넣을까요?")).not.toBeInTheDocument();
   });
 
   it("shows the returned reason under the button instead of a generic alert", async () => {
@@ -65,7 +65,7 @@ describe("CreatePlaylistForm completion screen (13A)", () => {
     attachPlaylistToTeam.mockResolvedValue({ success: true, teamId: TEAM });
     render(<CreatePlaylistForm myTeams={[myTeam(TEAM, "일코해제")]} />);
     submit();
-    expect(await screen.findByText("이 방을 밴드에 넣을까요?")).toBeInTheDocument();
+    expect(await screen.findByText("이 플레이리스트를 밴드에 넣을까요?")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "일코해제에 넣기" }));
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("밴드에 넣었어요"));
     expect(attachPlaylistToTeam).toHaveBeenCalledWith("room-1", TEAM);
@@ -79,7 +79,7 @@ describe("CreatePlaylistForm completion screen (13A)", () => {
     render(<CreatePlaylistForm myTeams={[myTeam(TEAM, "일코해제"), myTeam(other, "산울림")]} />);
     submit();
     fireEvent.click(await screen.findByRole("button", { name: "산울림에 넣기" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("이미 다른 밴드에 들어 있는 방이에요");
+    expect(await screen.findByRole("alert")).toHaveTextContent("이미 다른 밴드에 들어 있는 플레이리스트예요");
     expect(screen.getByRole("button", { name: "일코해제에 넣기" })).toBeInTheDocument();
   });
 
@@ -88,6 +88,6 @@ describe("CreatePlaylistForm completion screen (13A)", () => {
     render(<CreatePlaylistForm />);
     submit();
     await screen.findByRole("heading", { name: "11월 합주" });
-    expect(screen.queryByText("이 방을 밴드에 넣을까요?")).not.toBeInTheDocument();
+    expect(screen.queryByText("이 플레이리스트를 밴드에 넣을까요?")).not.toBeInTheDocument();
   });
 });

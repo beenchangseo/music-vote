@@ -17,11 +17,11 @@ test.describe("account-a: create a room", () => {
 
     await page.goto("/new");
     await page.getByPlaceholder(/어떤 합주예요/).fill(title);
-    await page.getByRole("button", { name: "합주방 만들기", exact: true }).click();
+    await page.getByRole("button", { name: "플레이리스트 만들기", exact: true }).click();
 
     // Success screen of CreatePlaylistForm.
     await expect(page.getByRole("heading", { name: title, level: 2 })).toBeVisible();
-    await expectNoAlert(page); // "합주방 생성에 실패했습니다" would be an alert instead
+    await expectNoAlert(page); // "플레이리스트 생성에 실패했습니다" would be an alert instead
     await page.getByRole("button", { name: /곡 추가하러 가기/ }).click();
 
     // Room page: right title, logged-in view, empty room.

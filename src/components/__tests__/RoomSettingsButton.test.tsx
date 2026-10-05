@@ -59,7 +59,7 @@ function renderSheet(onChange = vi.fn(), props: SheetProps = {}) {
 
 async function openSettings(props: SheetProps = {}) {
   renderSheet(vi.fn(), props);
-  fireEvent.click(screen.getByLabelText("방 설정"));
+  fireEvent.click(screen.getByLabelText("플레이리스트 설정"));
   await screen.findByText("투표 · 공개 범위");
 }
 
@@ -80,16 +80,16 @@ describe("RoomSettingsButton", () => {
 
   it("keeps one settings entry that carries both voting and setlist sections", async () => {
     renderSheet();
-    fireEvent.click(screen.getByLabelText("방 설정"));
+    fireEvent.click(screen.getByLabelText("플레이리스트 설정"));
 
     expect(await screen.findByText("투표 · 공개 범위")).toBeInTheDocument();
     expect(screen.getByText("셋리스트 · 편집 권한")).toBeInTheDocument();
-    expect(screen.getByText("합주방 삭제", { selector: "p" })).toBeInTheDocument();
+    expect(screen.getByText("플레이리스트 삭제", { selector: "p" })).toBeInTheDocument();
   });
 
   it("applies the setlist permission optimistically", async () => {
     const onChange = renderSheet();
-    fireEvent.click(screen.getByLabelText("방 설정"));
+    fireEvent.click(screen.getByLabelText("플레이리스트 설정"));
     fireEvent.click(await screen.findByRole("button", { name: "방장만 편집" }));
 
     expect(onChange).toHaveBeenCalledWith("host_only");
@@ -101,7 +101,7 @@ describe("RoomSettingsButton", () => {
   it("rolls the permission back when the server rejects it", async () => {
     updateSetlistEditMode.mockRejectedValue(new Error("권한 없음"));
     const onChange = renderSheet();
-    fireEvent.click(screen.getByLabelText("방 설정"));
+    fireEvent.click(screen.getByLabelText("플레이리스트 설정"));
     fireEvent.click(await screen.findByRole("button", { name: "방장만 편집" }));
 
     await waitFor(() => expect(onChange).toHaveBeenLastCalledWith("everyone"));
@@ -126,14 +126,14 @@ describe("RoomSettingsButton band rows", () => {
 
   it("shows only the band name to an owner who is no longer in the band", async () => {
     await openSettings({ team: { id: null, name: "일코해제", nextShowAt: null, isMember: false } });
-    expect(screen.getByText("일코해제의 방이에요")).toBeInTheDocument();
+    expect(screen.getByText("일코해제의 플레이리스트예요")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /일코해제/ })).not.toBeInTheDocument();
   });
 
   it("offers 'create a band' in a room without one, and no attach row without bands", async () => {
     await openSettings();
     expect(screen.getByRole("button", { name: "이 멤버로 밴드 만들기" })).toBeInTheDocument();
-    expect(screen.queryByText("이 방을 내 밴드에 넣기")).not.toBeInTheDocument();
+    expect(screen.queryByText("이 플레이리스트를 내 밴드에 넣기")).not.toBeInTheDocument();
   });
 
   it("creates the band from settings and lands on its home with the banner", async () => {
@@ -152,7 +152,7 @@ describe("RoomSettingsButton band rows", () => {
     expect(input).toHaveValue("");
     expect(input).toHaveFocus();
     expect(screen.getByRole("button", { name: "밴드 만들기" })).toBeDisabled();
-    expect(await screen.findByText("이 방 참여자 2명이 멤버가 돼요")).toBeInTheDocument();
+    expect(await screen.findByText("이 플레이리스트 참여자 2명이 멤버가 돼요")).toBeInTheDocument();
     expect(sheet).toHaveTextContent("보컬, 기타");
 
     fireEvent.change(input, { target: { value: "일코해제" } });
@@ -168,7 +168,7 @@ describe("RoomSettingsButton band rows", () => {
     fireEvent.click(screen.getByRole("button", { name: "이 멤버로 밴드 만들기" }));
     fireEvent.change(screen.getByLabelText("밴드 이름"), { target: { value: "일코해제" } });
     fireEvent.click(screen.getByRole("button", { name: "밴드 만들기" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("이미 다른 밴드에 들어 있는 방이에요");
+    expect(await screen.findByRole("alert")).toHaveTextContent("이미 다른 밴드에 들어 있는 플레이리스트예요");
     expect(push).not.toHaveBeenCalled();
   });
 

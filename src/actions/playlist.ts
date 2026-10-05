@@ -115,7 +115,7 @@ export async function createPlaylist(
   defaultVoteLimit = 3,
 ) {
   if (!title || title.length > 100) {
-    throw new Error("합주방 제목은 1~100자여야 합니다.");
+    throw new Error("플레이리스트 제목은 1~100자여야 합니다.");
   }
 
   const user = await getCurrentUser();
@@ -142,7 +142,7 @@ export async function createPlaylist(
     if (result.reason === "share_code_exhausted") {
       throw new Error("share_code 생성에 실패했습니다. 다시 시도해주세요.");
     }
-    throw new Error("합주방 생성에 실패했습니다.");
+    throw new Error("플레이리스트 생성에 실패했습니다.");
   }
 
   return { id: result.id, shareCode: result.shareCode, adminToken: result.adminToken };
@@ -278,7 +278,7 @@ export async function deletePlaylist(playlistId: string, adminToken: string | nu
     .delete()
     .eq("id", playlistId);
 
-  if (error) throw new Error("합주방 삭제에 실패했습니다.");
+  if (error) throw new Error("플레이리스트 삭제에 실패했습니다.");
 
   revalidatePath("/");
   return { success: true };
