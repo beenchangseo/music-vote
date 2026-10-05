@@ -25,6 +25,46 @@ export default async function Home({ searchParams }: HomeProps) {
   const loggedIn = !!user;
   // Rooms and bands in one round trip (eng D5).
   const [dbPlaylists, myTeams] = loggedIn ? await Promise.all([getMyPlaylists(), getMyTeams()]) : [[], []];
+
+  // Returning users get their own home (Spotify / YouTube Music home): no landing pitch in the way.
+  if (user) {
+    return (
+      <main className="relative isolate min-h-full">
+        <div aria-hidden className="absolute inset-x-0 top-0 -z-10 h-80 bg-gradient-to-b from-primary-soft/60 to-transparent" />
+        <div className="mx-auto w-full max-w-md px-4 pb-16 pt-6">
+          {/* 디자인 2회차 6A: once, right after leaving a band. */}
+          <LeftBandNotice left={query.left === "1"} />
+          <BrandMark />
+
+          <h1 className="mt-10 break-keep text-h1 font-bold leading-snug text-text">
+            {user.nickname}님,
+            <br />
+            다음 합주곡 정해 볼까요?
+          </h1>
+          <div className="mt-6">
+            <HeroCTA loggedIn myTeams={myTeams} compact />
+          </div>
+
+          {/* Bands sit right above the playlists (4A). */}
+          <MyBands teams={myTeams} />
+          <MyPlaylists loggedIn dbPlaylists={dbPlaylists} />
+          {dbPlaylists.length === 0 && myTeams.length === 0 && (
+            <p className="mt-10 text-sm leading-relaxed text-text-muted">
+              새 플레이리스트를 만들고 단톡방에 링크를 보내면, 멤버들이 곡을 올리고 투표해요.
+            </p>
+          )}
+
+          <nav aria-label="Plypick 안내" className="mt-14 flex flex-wrap gap-x-4 gap-y-1 text-caption text-text-subtle">
+            <a href="/guide" className="inline-flex min-h-11 items-center transition-colors hover:text-text-muted">사용 가이드</a>
+            <a href="/about" className="inline-flex min-h-11 items-center transition-colors hover:text-text-muted">소개</a>
+            <a href="/privacy" className="inline-flex min-h-11 items-center transition-colors hover:text-text-muted">개인정보처리방침</a>
+            <a href="/terms" className="inline-flex min-h-11 items-center transition-colors hover:text-text-muted">이용약관</a>
+          </nav>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-full flex flex-col">
       {/* HERO — 첫 뷰포트, 후킹 우선 */}
@@ -37,24 +77,8 @@ export default async function Home({ searchParams }: HomeProps) {
           {/* 디자인 2회차 6A: once, right after leaving a band. */}
           <LeftBandNotice left={query.left === "1"} />
           {/* 작은 브랜드 마크 */}
-          <div className="flex items-center gap-2 mb-10">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center shadow-lg shadow-primary/30">
-              <svg
-                className="w-4 h-4 text-white"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2.5}
-                viewBox="0 0 24 24"
-                aria-hidden
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z"
-                />
-              </svg>
-            </div>
-            <span className="text-base font-bold text-text">Plypick</span>
+          <div className="mb-10">
+            <BrandMark />
           </div>
 
           {/* Hook */}
@@ -234,5 +258,22 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       </footer>
     </main>
+  );
+}
+
+function BrandMark() {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-indigo-600 shadow-lg shadow-primary/30">
+        <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z"
+          />
+        </svg>
+      </div>
+      <span className="text-base font-bold text-text">Plypick</span>
+    </div>
   );
 }

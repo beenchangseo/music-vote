@@ -62,17 +62,18 @@ export default function VoteButtons({
     onPress(pressed);
   }
 
+  // YouTube Music style: up, score and down in one pill so the three read as one control.
   return (
-    <div className="flex items-center gap-1">
+    <div className="inline-flex items-center rounded-pill bg-surface-hover/80">
       <button
         onClick={() => handleClick(1)}
         disabled={!loginGate && (disabled || pending)}
-        className={`relative inline-flex h-11 w-11 items-center justify-center rounded-control transition-all active:scale-90 disabled:opacity-60 ${popped === 1 ? "animate-vote-pop" : ""} ${
+        className={`relative inline-flex h-11 w-11 items-center justify-center rounded-pill transition-all active:scale-90 disabled:opacity-60 ${popped === 1 ? "animate-vote-pop" : ""} ${
           loginGate
             ? lockedTone
             : direction === 1
-              ? "text-upvote bg-upvote/10"
-              : "text-text-muted hover:text-upvote hover:bg-upvote/5"
+              ? "text-upvote bg-upvote/15"
+              : "text-text-muted hover:text-upvote hover:bg-upvote/10"
         }`}
         aria-label={upLabel}
       >
@@ -87,7 +88,7 @@ export default function VoteButtons({
       <span
         role="status"
         aria-label={loginGate ? `점수 ${score}점, 투표하려면 로그인이 필요해요` : `점수 ${score}점`}
-        className={`min-w-[2rem] text-center font-bold text-base tabular-nums ${
+        className={`min-w-[1.75rem] text-center text-base font-bold tabular-nums ${
           score > 0
             ? "text-upvote"
             : score < 0
@@ -116,12 +117,12 @@ export default function VoteButtons({
       <button
         onClick={() => handleClick(-1)}
         disabled={!loginGate && (disabled || pending)}
-        className={`relative inline-flex h-11 w-11 items-center justify-center rounded-control transition-all active:scale-90 disabled:opacity-60 ${popped === -1 ? "animate-vote-pop" : ""} ${
+        className={`relative inline-flex h-11 w-11 items-center justify-center rounded-pill transition-all active:scale-90 disabled:opacity-60 ${popped === -1 ? "animate-vote-pop" : ""} ${
           loginGate
             ? lockedTone
             : direction === -1
-              ? "text-downvote bg-downvote/10"
-              : "text-text-muted hover:text-downvote hover:bg-downvote/5"
+              ? "text-downvote bg-downvote/15"
+              : "text-text-muted hover:text-downvote hover:bg-downvote/10"
         }`}
         aria-label={downLabel}
       >

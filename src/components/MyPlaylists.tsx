@@ -3,6 +3,7 @@
 import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import GuitarIcon from "./GuitarIcon";
+import { RoomCover } from "./BandArt";
 
 interface SavedPlaylist {
   id: string;
@@ -17,6 +18,8 @@ interface DbPlaylist {
   title: string;
   /** 내 밴드의 방이면 그 밴드 이름 (작은 캡션, 디자인 리뷰 4A). */
   teamName?: string | null;
+  /** 타일 커버 썸네일. 이 기기에만 저장된 옛 방은 없다. */
+  coverThumbs?: string[];
 }
 
 const EMPTY_PLAYLISTS: SavedPlaylist[] = [];
@@ -47,7 +50,8 @@ interface MyPlaylistsProps {
   dbPlaylists?: DbPlaylist[];
 }
 
-const COLLAPSED_COUNT = 3;
+/** 2열 타일 3줄 (Spotify 홈의 최근 항목 격자). */
+const COLLAPSED_COUNT = 6;
 
 export default function MyPlaylists({ loggedIn = true, dbPlaylists = [] }: MyPlaylistsProps) {
   const localPlaylists = useSyncExternalStore(subscribe, getLocalPlaylists, () => EMPTY_PLAYLISTS);
@@ -77,24 +81,28 @@ export default function MyPlaylists({ loggedIn = true, dbPlaylists = [] }: MyPla
   const hiddenCount = merged.length - COLLAPSED_COUNT;
 
   return (
-    <div className="mt-10 w-full">
-      <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-3">
+    <section aria-labelledby="my-playlists" className="mt-10 w-full">
+      <h2 id="my-playlists" className="mb-3 text-h3 font-bold text-text">
         내 플레이리스트
       </h2>
-      <div className="space-y-2">
+      {/* Spotify home recents: two columns, cover flush left, title beside it. */}
+      <div className="grid grid-cols-2 gap-2">
         {visible.map((pl) => (
           <Link
             key={pl.shareCode}
             href={`/playlist/${pl.shareCode}`}
-            className="block w-full px-4 py-3 rounded-xl bg-surface border border-border hover:border-border-strong transition-all text-left"
+            className="flex h-16 min-w-0 items-center gap-2.5 overflow-hidden rounded-control bg-surface pr-2 transition-colors hover:bg-surface-hover"
           >
-            <span className="text-text font-medium">{pl.title}</span>
-            {pl.teamName && (
-              <span className="mt-0.5 flex min-w-0 items-center gap-1 text-caption text-text-muted">
-                <GuitarIcon className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{pl.teamName}</span>
-              </span>
-            )}
+            <RoomCover thumbs={pl.coverThumbs ?? []} sizes="64px" square className="h-16 w-16 shrink-0" />
+            <span className="min-w-0 flex-1">
+              <span className="line-clamp-2 break-keep text-sm font-semibold leading-snug text-text">{pl.title}</span>
+              {pl.teamName && (
+                <span className="mt-0.5 flex min-w-0 items-center gap-1 text-[11px] text-text-muted">
+                  <GuitarIcon className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{pl.teamName}</span>
+                </span>
+              )}
+            </span>
           </Link>
         ))}
       </div>
@@ -102,11 +110,11 @@ export default function MyPlaylists({ loggedIn = true, dbPlaylists = [] }: MyPla
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="mt-2 w-full h-10 rounded-xl text-sm text-text-muted hover:text-text hover:bg-surface transition-colors"
+          className="mt-3 inline-flex min-h-11 items-center rounded-pill border border-border px-4 text-sm font-semibold text-text transition-colors hover:bg-surface-hover"
         >
-          전체 보기 ({merged.length}개) ↓
+          전체 보기 ({merged.length}개)
         </button>
       )}
-    </div>
+    </section>
   );
 }

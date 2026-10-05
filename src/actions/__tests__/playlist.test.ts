@@ -202,12 +202,13 @@ describe("getMyPlaylists", () => {
     title: `방 ${id}`,
     created_at: createdAt,
   });
-  const entry = (id: string, createdAt: string, teamName: string | null = null) => ({
+  const entry = (id: string, createdAt: string, teamName: string | null = null, coverThumbs: string[] = []) => ({
     id,
     shareCode: `code-${id}`,
     title: `방 ${id}`,
     createdAt,
     teamName,
+    coverThumbs,
   });
 
   /** Responds per set: created (playlists), joined (playlist_members), team (team_members). */
@@ -231,7 +232,8 @@ describe("getMyPlaylists", () => {
       ["playlist_members", "select", { user_id: USER.id }],
       ["team_members", "select", { user_id: USER.id }],
     ]);
-    // Nested FK selects, not a second query per set (eng D5).
+    // Nested FK selects, not a second query per set (eng D5). Cover thumbnails ride along.
+    expect(state.admin.ops[0].columns).toContain("songs(thumbnail_url, created_at)");
     expect(state.admin.ops[1].columns).toContain("playlists(");
     expect(state.admin.ops[2].columns).toContain("teams(name, playlists(");
     // The session client cannot select playlists after v18.
@@ -261,6 +263,33 @@ describe("getMyPlaylists", () => {
       entry("mine", "2026-10-01"),
       // In several sets: listed once, with the band caption from the team set.
       entry("shared", "2026-09-01", "일코해제"),
+    ]);
+  });
+
+  it("builds the home tile cover from the newest song pictures, each once, at most four", async () => {
+    state.getCurrentUser.mockResolvedValue(USER);
+    const song = (thumbnail_url: string | null, created_at: string) => ({ thumbnail_url, created_at });
+    state.admin = createFakeClient(
+      sets({
+        created: ok([
+          {
+            ...room("pl-1", "2026-10-01"),
+            songs: [
+              song("t-old", "2026-10-01T01:00:00Z"),
+              song("t-new", "2026-10-01T05:00:00Z"),
+              song(null, "2026-10-01T04:00:00Z"),
+              song("t-mid", "2026-10-01T03:00:00Z"),
+              song("t-new", "2026-10-01T02:00:00Z"),
+              song("t-4", "2026-10-01T02:30:00Z"),
+              song("t-5", "2026-10-01T00:30:00Z"),
+            ],
+          },
+        ]),
+      }),
+    );
+
+    await expect(getMyPlaylists()).resolves.toEqual([
+      entry("pl-1", "2026-10-01", null, ["t-new", "t-mid", "t-4", "t-old"]),
     ]);
   });
 

@@ -129,6 +129,7 @@ export default function PlaylistClient({
   // Lazy load setlist items on first mode switch
   const handleModeChange = useCallback(async (mode: ViewMode) => {
     setNavMode(mode);
+    track("playlist_tab_viewed", { tab: mode === "playlist" ? "candidates" : mode });
     if (mode === "setlist" && setlistItems === null && !loadingSetlist) {
       setLoadingSetlist(true);
       try {
@@ -226,6 +227,35 @@ export default function PlaylistClient({
     }
   }, [playerState.currentSongId, playerState.isPlaying, playerActions]);
 
+  // Header "전체 듣기": resume or pause what is loaded, otherwise start from the top of the list.
+  const handlePlayAll = useCallback(() => {
+    if (playerState.currentSongId) {
+      handleTogglePlay(playerState.currentSongId);
+      return;
+    }
+    const first = filteredSongs[0] ?? songsWithVotes[0];
+    if (!first) return;
+    playerActions.playSong(first.id);
+    try {
+      track("play_all_started", { song_count: songsWithVotes.length });
+    } catch {
+      // Analytics never blocks playback.
+    }
+  }, [playerState.currentSongId, handleTogglePlay, filteredSongs, songsWithVotes, playerActions]);
+
+  // Score rank for the 1~3 badges; filters must not renumber the list.
+  const rankById = useMemo(() => new Map(songsWithVotes.map((song, index) => [song.id, index + 1])), [songsWithVotes]);
+
+  // Cover mosaic: the best-scored songs first, each picture once.
+  const coverThumbs = useMemo(() => {
+    const thumbs: string[] = [];
+    for (const song of songsWithVotes) {
+      if (song.thumbnail_url && !thumbs.includes(song.thumbnail_url)) thumbs.push(song.thumbnail_url);
+      if (thumbs.length === 4) break;
+    }
+    return thumbs;
+  }, [songsWithVotes]);
+
   // Setlist add confirm dialog
   const [setlistConfirmSongId, setSetlistConfirmSongId] = useState<string | null>(null);
   const setlistConfirmSong = setlistConfirmSongId ? songsWithVotes.find((s) => s.id === setlistConfirmSongId) : null;
@@ -317,6 +347,32 @@ export default function PlaylistClient({
             currentUserAvatarUrl={currentUserAvatarUrl}
             band={team?.isMember && team.id && team.name ? { id: team.id, name: team.name, nextShowAt: team.nextShowAt } : null}
             showDate={team?.nextShowAt ?? null}
+            coverThumbs={coverThumbs}
+            onPlayAll={navMode === "playlist" && songsWithVotes.length > 0 ? handlePlayAll : undefined}
+            playing={playerState.isPlaying}
+            meta={
+              /*
+                참여자 수·마감·내 닉네임·로그인이 세 덩어리로 흩어져 있었다.
+                정렬축이 계속 바뀌어 위계가 읽히지 않았으므로 제목 아래 한 줄로 합친다.
+              */
+              <div className="flex min-w-0 items-center gap-2">
+                <p className="min-w-0 flex-1 truncate text-caption leading-relaxed text-text-muted tabular-nums">
+                  {metaParts.map((part, i) => (
+                    <span key={part.key}>
+                      {i > 0 && <span className="mx-1.5 text-text-subtle" aria-hidden>·</span>}
+                      <span className={part.className}>{part.text}</span>
+                    </span>
+                  ))}
+                </p>
+                {loginGate && (
+                  <LoginButton
+                    size="sm"
+                    label="로그인"
+                    className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-pill border border-border px-4 text-caption font-semibold text-text transition-colors hover:border-border-strong hover:bg-surface-hover"
+                  />
+                )}
+              </div>
+            }
           />
 
           {isArchived && (
@@ -334,27 +390,6 @@ export default function PlaylistClient({
             </div>
           )}
 
-          {/*
-            참여자 수·마감·내 닉네임·로그인이 세 덩어리로 흩어져 있었다.
-            정렬축이 계속 바뀌어 위계가 읽히지 않았으므로 헤더 바로 아래 한 줄로 합친다.
-          */}
-          <div className="mt-2 flex min-w-0 items-center gap-2">
-            <p className="min-w-0 flex-1 truncate text-caption leading-relaxed text-text-muted tabular-nums">
-              {metaParts.map((part, i) => (
-                <span key={part.key}>
-                  {i > 0 && <span className="mx-1.5 text-text-subtle" aria-hidden>·</span>}
-                  <span className={part.className}>{part.text}</span>
-                </span>
-              ))}
-            </p>
-            {loginGate && (
-              <LoginButton
-                size="sm"
-                label="로그인"
-                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-control border border-border px-3 text-caption font-semibold text-text-muted transition-colors hover:border-border-strong hover:bg-surface-hover hover:text-text"
-              />
-            )}
-          </div>
 
           {/* YouTube Player is rendered inline inside SongCard */}
 
@@ -367,10 +402,10 @@ export default function PlaylistClient({
                 actions={
                   <>
                     {songsWithVotes.length > 0 && (
-                      <div className="-mr-0.5 flex rounded-control bg-surface p-0.5">
+                      <div className="-mr-0.5 flex rounded-pill bg-surface-hover/80 p-0.5">
                         <button
                           onClick={() => setViewMode("compact")}
-                          className={`inline-flex h-11 w-11 items-center justify-center rounded-control transition-colors ${
+                          className={`inline-flex h-10 w-11 items-center justify-center rounded-pill transition-colors ${
                             viewMode === "compact"
                               ? "bg-surface-elevated text-text shadow-sm"
                               : "text-text-muted hover:text-text"
@@ -384,7 +419,7 @@ export default function PlaylistClient({
                         </button>
                         <button
                           onClick={() => setViewMode("card")}
-                          className={`inline-flex h-11 w-11 items-center justify-center rounded-control transition-colors ${
+                          className={`inline-flex h-10 w-11 items-center justify-center rounded-pill transition-colors ${
                             viewMode === "card"
                               ? "bg-surface-elevated text-text shadow-sm"
                               : "text-text-muted hover:text-text"
@@ -521,7 +556,7 @@ export default function PlaylistClient({
               {/* Song list */}
               <div
                 ref={listParent}
-                className={`mt-3 ${viewMode === "compact" ? "space-y-2" : "space-y-4"}`}
+                className={`mt-3 ${viewMode === "compact" ? "space-y-1" : "space-y-4"}`}
               >
                 {songsWithVotes.length === 0 ? (
                   <div className="mt-2 rounded-2xl border-2 border-dashed border-border bg-surface/40 px-6 py-10 text-center">
@@ -583,6 +618,7 @@ export default function PlaylistClient({
                       isAdmin={isAdmin}
                       adminToken={adminToken}
                       viewMode={viewMode}
+                      rank={rankById.get(song.id)}
                       scoreRatio={scoreRatio(song.score, topScore)}
                       onVotePress={pressVote}
                       votePending={isVotePending(song.id)}

@@ -11,7 +11,7 @@ const tabs: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
     id: "playlist",
     label: "후보곡",
     icon: (
-      <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
         <path d="M9 18V5l10-2v13" />
         <circle cx="6.5" cy="18" r="2.5" />
         <circle cx="16.5" cy="16" r="2.5" />
@@ -22,7 +22,7 @@ const tabs: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
     id: "setlist",
     label: "셋리스트",
     icon: (
-      <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
         <path d="M8 6h12M8 12h12M8 18h12" />
         <path d="M4 6h.01M4 12h.01M4 18h.01" />
       </svg>
@@ -32,7 +32,7 @@ const tabs: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
     id: "rehearsal",
     label: "합주",
     icon: (
-      <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
         <path d="M12 3v12" />
         <circle cx="9" cy="17" r="3" />
         <path d="M12 6l6-2v4l-6 2" />
@@ -46,32 +46,41 @@ interface NavigationBarProps {
   onModeChange: (mode: ViewMode) => void;
 }
 
+/**
+ * 플레이리스트 하단 탭 (음악 앱 탭 막대). 아이콘 위·이름 아래, 지금 탭은 아이콘 뒤 primary 알약.
+ * 높이는 --spacing-dock(52px)에 맞춘다. MiniPlayer 가 bottom-dock 으로 이 위에 붙는다.
+ */
 export default function NavigationBar({ mode, onModeChange }: NavigationBarProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-surface/95 backdrop-blur-sm border-t border-border/50 print:hidden">
-      <div className="max-w-lg mx-auto px-4 py-2">
-        <div className="flex bg-surface-hover rounded-pill p-1">
-          {tabs.map((tab) => {
-            const isActive = mode === tab.id;
-
-            return (
-              <button
-                key={tab.id}
-                onClick={() => onModeChange(tab.id)}
-                aria-current={isActive ? "page" : undefined}
-                className={`flex-1 flex min-h-11 items-center justify-center gap-1.5 px-3 rounded-pill text-caption font-medium transition-all ${
-                  isActive
-                    ? "bg-primary text-white shadow-md"
-                    : "text-text-muted hover:text-text"
+    <nav
+      aria-label="플레이리스트 화면"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-bg/95 backdrop-blur-md print:hidden"
+    >
+      <div className="mx-auto flex h-dock max-w-lg">
+        {tabs.map((tab) => {
+          const isActive = mode === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => onModeChange(tab.id)}
+              aria-current={isActive ? "page" : undefined}
+              className={`flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors ${
+                isActive ? "text-text" : "text-text-muted hover:text-text"
+              }`}
+            >
+              <span
+                className={`inline-flex h-7 w-14 items-center justify-center rounded-pill transition-colors ${
+                  isActive ? "bg-primary/20 text-primary" : ""
                 }`}
               >
                 {tab.icon}
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+              </span>
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
-    </div>
+    </nav>
   );
 }

@@ -1,8 +1,6 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import Button from "./ui/Button";
-import Card from "./ui/Card";
 import ScreenToolbar from "./ui/ScreenToolbar";
 import Image from "next/image";
 import SongMeta from "./SongMeta";
@@ -124,6 +122,25 @@ export default function RehearsalView({
   const songComments = comments.filter((c) => c.song_id === currentSong.id);
   const progress = Math.round(((index + 1) / songItems.length) * 100);
 
+  function go(delta: -1 | 1) {
+    setIndex((i) => Math.min(songItems.length - 1, Math.max(0, i + delta)));
+    track("rehearsal_action", { action: delta === 1 ? "next" : "prev" });
+  }
+
+  function openMeta() {
+    setShowMeta(true);
+    track("rehearsal_action", { action: "meta_open" });
+  }
+
+  function toggleMetronome() {
+    if (!bpm) {
+      openMeta();
+      return;
+    }
+    track("rehearsal_action", { action: metronome.isPlaying ? "metronome_off" : "metronome_on" });
+    metronome.toggle();
+  }
+
   return (
     <div>
       {/* 진행 상황. 합주 시간 관리는 밴드의 실제 문제다. */}
@@ -133,33 +150,28 @@ export default function RehearsalView({
         actions={actions}
       >
         <div className="mt-2 h-1 overflow-hidden rounded-pill bg-surface-hover">
-          <div
-            className="h-1 rounded-pill bg-accent-play transition-[width] duration-300"
-            style={{ width: `${progress}%` }}
-          />
+          <div className="h-1 rounded-pill bg-primary transition-[width] duration-300" style={{ width: `${progress}%` }} />
         </div>
       </ScreenToolbar>
 
-      {/* 현재 곡 */}
-      <Card>
-        <div className="flex items-start gap-3">
+      {/* 지금 곡 (YouTube Music 재생 화면): 큰 커버, 제목, 키·BPM·길이 칩. */}
+      <section aria-label="지금 곡" className="pt-2 text-center">
+        <div className="relative mx-auto h-44 w-44 overflow-hidden rounded-card bg-surface-elevated shadow-xl shadow-black/40">
           {currentSong.thumbnail_url && (
-            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-control">
-              <Image src={currentSong.thumbnail_url} alt="" fill sizes="56px" className="object-cover" />
-            </div>
+            <Image src={currentSong.thumbnail_url} alt="" fill sizes="176px" className="object-cover" />
           )}
-          <div className="min-w-0 flex-1">
-            <h2 className="text-h4 font-bold leading-snug text-text">{effectiveSetlistTitle(current, currentSong)}</h2>
-            {artist && <p className="mt-1 text-sm text-text-muted">{artist}</p>}
-          </div>
         </div>
+        <h2 className="mt-5 line-clamp-2 break-keep text-h3 font-bold leading-snug text-text">
+          {effectiveSetlistTitle(current, currentSong)}
+        </h2>
+        {artist && <p className="mt-1 text-sm text-text-muted">{artist}</p>}
 
         {/*
           합주실에서 악기 들고 볼 때 필요한 값들.
           비어 있으면 그 자리를 눌러 바로 채운다 — 종전에는 접힌 `키·BPM 적어두기` 를
           펼치고, 그 안의 `메타 추가` 를 또 눌러야 입력칸이 나왔다. 두 번 접혀 있었다.
         */}
-        <div className="mt-4 grid grid-cols-3 gap-2">
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
           {[
             { label: "우리 키", value: formatKey(currentSong.key_root, currentSong.key_mode) || currentSong.key_memo },
             { label: "BPM", value: bpm ? String(bpm) : null },
@@ -168,31 +180,29 @@ export default function RehearsalView({
             <button
               key={label}
               type="button"
-              onClick={() => setShowMeta(true)}
+              onClick={openMeta}
               aria-label={value ? `${label} ${value} 고치기` : `${label} 적어두기`}
-              className={`rounded-control px-3 py-2 text-left transition-colors ${
+              className={`inline-flex min-h-11 items-center gap-1.5 rounded-pill px-4 text-sm transition-colors ${
                 value
-                  ? "bg-surface-hover hover:bg-surface-elevated"
-                  : "border border-dashed border-border-strong hover:border-primary/60 hover:bg-surface-hover"
+                  ? "bg-surface-hover text-text hover:bg-surface-elevated"
+                  : "border border-dashed border-border-strong text-text-subtle hover:border-primary/60 hover:text-text"
               }`}
             >
-              <p className="text-caption text-text-subtle">{label}</p>
-              <p className={`mt-0.5 text-h4 font-bold leading-tight tabular-nums ${value ? "text-text" : "text-text-subtle"}`}>
-                {value ?? "적기"}
-              </p>
+              <span className="text-caption text-text-muted">{label}</span>
+              <span className="font-bold tabular-nums">{value ?? "적기"}</span>
             </button>
           ))}
         </div>
 
         {/* 메트로놈. 페이지를 나가면 합주 흐름이 끊긴다. 탭 템포가 바로 옆에서 BPM 을 채운다. */}
-        <div className="mt-3 flex gap-2">
+        <div className="mt-3 flex justify-center gap-2">
           <button
             type="button"
-            onClick={() => (bpm ? metronome.toggle() : setShowMeta(true))}
-            className={`inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-control border text-sm font-semibold transition-colors ${
+            onClick={toggleMetronome}
+            className={`inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-pill px-5 text-sm font-semibold transition-colors ${
               metronome.isPlaying
-                ? "border-primary bg-primary/15 text-primary"
-                : "border-border text-text-muted hover:text-text"
+                ? "bg-primary text-white hover:bg-primary-hover"
+                : "border border-border text-text hover:bg-surface-hover"
             }`}
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
@@ -205,9 +215,7 @@ export default function RehearsalView({
                 {Array.from({ length: metronome.beatsPerBar }, (_, i) => (
                   <span
                     key={i}
-                    className={`h-1.5 w-1.5 rounded-pill transition-colors ${
-                      metronome.beat === i ? "bg-primary" : "bg-border-strong"
-                    }`}
+                    className={`h-1.5 w-1.5 rounded-pill transition-colors ${metronome.beat === i ? "bg-white" : "bg-white/35"}`}
                   />
                 ))}
               </span>
@@ -222,7 +230,7 @@ export default function RehearsalView({
 
         {/* 입력칸은 바로 편집 상태로 연다. 접힌 것을 또 펼치게 하지 않는다. */}
         {showMeta && (
-          <div className="mt-3 overflow-hidden rounded-control border border-border animate-fade-in">
+          <div className="mt-4 overflow-hidden rounded-card border border-border text-left animate-fade-in">
             {/*
               입력칸은 열 때의 값을 들고 있다가 blur 에 전부 저장한다. 곡을 넘기거나 탭 템포가
               저장되면 새 값으로 다시 열어서, 옛 BPM 이 탭 결과를 덮어쓰지 않게 한다.
@@ -237,57 +245,61 @@ export default function RehearsalView({
             />
           </div>
         )}
-      </Card>
+      </section>
 
-      {/* 곡 이동 */}
-      <div className="mt-3 flex items-center gap-2">
+      {/* 곡 이동 (재생 화면 컨트롤처럼 크게). */}
+      <div className="mt-6 flex items-center justify-center gap-6">
         <button
           type="button"
-          onClick={() => setIndex((i) => Math.max(0, i - 1))}
+          onClick={() => go(-1)}
           disabled={index === 0}
           aria-label="이전 곡"
-          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-border text-text-muted transition-colors hover:text-text disabled:opacity-30"
+          className="inline-flex h-14 w-14 items-center justify-center rounded-pill bg-surface-hover text-text transition-all hover:bg-surface-elevated active:scale-95 disabled:opacity-30"
         >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-            <path d="M15 5l-7 7 7 7" />
+          <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <path d="M6 5h2v14H6zM20 6.5v11a1 1 0 01-1.53.85l-8.5-5.5a1 1 0 010-1.7l8.5-5.5A1 1 0 0120 6.5z" />
           </svg>
         </button>
-
-        <div className="min-w-0 flex-1">
-          {nextSong && next ? (
-            <button
-              type="button"
-              onClick={() => setIndex((i) => Math.min(songItems.length - 1, i + 1))}
-              className="flex min-h-11 w-full items-center gap-2 rounded-control px-2 text-left"
-            >
-              <span className="shrink-0 text-caption text-text-subtle">다음</span>
-              <span className="min-w-0 flex-1 truncate text-caption text-text-muted">
-                {effectiveSetlistTitle(next, nextSong)}
-              </span>
-            </button>
-          ) : (
-            <p className="px-2 text-center text-caption text-text-subtle">마지막 곡이에요</p>
-          )}
-        </div>
-
         <button
           type="button"
-          onClick={() => setIndex((i) => Math.min(songItems.length - 1, i + 1))}
+          onClick={() => go(1)}
           disabled={index >= songItems.length - 1}
           aria-label="다음 곡"
-          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-border text-text-muted transition-colors hover:text-text disabled:opacity-30"
+          className="inline-flex h-16 w-16 items-center justify-center rounded-pill bg-primary text-white shadow-lg shadow-primary/30 transition-all hover:bg-primary-hover active:scale-95 disabled:bg-surface-hover disabled:text-text-subtle disabled:shadow-none"
         >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-            <path d="M9 5l7 7-7 7" />
+          <svg className="h-7 w-7" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <path d="M16 5h2v14h-2zM4 6.5v11a1 1 0 001.53.85l8.5-5.5a1 1 0 000-1.7l-8.5-5.5A1 1 0 004 6.5z" />
           </svg>
         </button>
       </div>
 
+      {/* 다음 곡 (YouTube Music "다음 트랙"). */}
+      <div className="mt-6">
+        <p className="text-caption font-semibold text-text-subtle">다음</p>
+        {nextSong && next ? (
+          <button
+            type="button"
+            onClick={() => go(1)}
+            className="-mx-2 mt-1 flex min-h-14 w-[calc(100%+1rem)] items-center gap-3 rounded-control px-2 text-left transition-colors hover:bg-surface-hover"
+          >
+            <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-control bg-surface-elevated">
+              {nextSong.thumbnail_url && <Image src={nextSong.thumbnail_url} alt="" fill sizes="44px" className="object-cover" />}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-medium text-text">{effectiveSetlistTitle(next, nextSong)}</span>
+              {displayArtist(nextSong.artist, nextSong.title) && (
+                <span className="block truncate text-caption text-text-muted">{displayArtist(nextSong.artist, nextSong.title)}</span>
+              )}
+            </span>
+          </button>
+        ) : (
+          <p className="mt-1 text-sm text-text-muted">마지막 곡이에요</p>
+        )}
+      </div>
+
       {/* 이 곡의 코멘트만 */}
-      <Card padding="none" className="mt-4 overflow-hidden">
-        <p className="border-b border-border px-3 py-2 text-caption font-semibold text-text-subtle">
-          이 곡 코멘트
-        </p>
+      <section className="mt-6 overflow-hidden rounded-card bg-surface">
+        <p className="px-4 pb-1 pt-3 text-sm font-semibold text-text">이 곡 코멘트</p>
         <CommentSection
           songId={currentSong.id}
           comments={songComments}
@@ -296,7 +308,7 @@ export default function RehearsalView({
           onCommentsChange={onCommentsChange}
           allComments={comments}
         />
-      </Card>
+      </section>
     </div>
   );
 }
@@ -314,10 +326,9 @@ function TapTempoButton({
 }) {
   const { tap, tapCount, tapsToFill } = useTapTempo(onCommit);
   return (
-    <Button
+    <button
       type="button"
-      variant="secondary"
-      className="shrink-0"
+      className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-pill border border-border px-5 text-sm font-semibold text-text transition-colors hover:bg-surface-hover active:scale-95"
       onClick={() => {
         const value = tap();
         if (value !== null) onTempo(value);
@@ -332,6 +343,6 @@ function TapTempoButton({
           />
         ))}
       </span>
-    </Button>
+    </button>
   );
 }

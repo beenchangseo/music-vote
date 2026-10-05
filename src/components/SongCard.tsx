@@ -20,7 +20,8 @@ interface SongCardProps {
   isAdmin: boolean;
   adminToken: string | null;
   viewMode: "card" | "compact";
-  /** 1~3위만 번호를 보여준다. 34곡에 전부 달면 번호가 소음이 된다. */
+  /** 점수 순위 (1부터). 1~3위만 썸네일에 번호를 단다. 34곡에 전부 달면 번호가 소음이 된다. */
+  rank?: number;
   /** 최고점 대비 비율(0~1). 박빙인지 압도적인지 숫자만으로는 안 읽힌다. */
   scoreRatio?: number;
   onVotePress: (songId: string, direction: VoteDirection) => void;
@@ -48,6 +49,7 @@ export default function SongCard({
   isAdmin,
   adminToken,
   viewMode,
+  rank,
   scoreRatio = 0,
   onVotePress,
   votePending = false,
@@ -112,59 +114,64 @@ export default function SongCard({
     />
   );
 
-  // Compact (playlist-style) view
+  // Compact view: a flat Spotify-style row. Title and artist get the full width on top;
+  // voting sits on its own line underneath (a vote pill next to the title leaves it ~80px).
   if (viewMode === "compact") {
+    const showRank = rank != null && rank <= 3 && song.score > 0;
     return (
-      <div className={`bg-surface rounded-xl border transition-all hover:border-border-strong ${showMenu ? "overflow-visible" : "overflow-hidden"} ${isHighlighted ? "border-yellow-500/50 bg-yellow-900/5" : isCurrent ? "border-primary/50" : "border-border"} ${isPending ? "opacity-50" : ""}`}>
-        <div className="flex items-start gap-3 p-3">
-          {/* Thumbnail + play */}
+      <div
+        className={`-mx-2 rounded-card px-2 py-2.5 transition-colors ${
+          isCurrent ? "bg-primary/10" : "hover:bg-surface/60"
+        } ${isHighlighted ? "ring-1 ring-inset ring-warning/40" : ""} ${isPending ? "opacity-50" : ""}`}
+      >
+        <div className="flex items-start gap-3">
+          {/* Thumbnail = play button (Spotify: tap the art to play). */}
           <button
             onClick={onTogglePlay}
-            className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0 group"
+            className="group relative h-14 w-14 shrink-0 overflow-hidden rounded-control bg-surface-elevated"
             aria-label={`${song.title} ${isPlaying ? "일시정지" : "재생"}`}
           >
             {song.thumbnail_url && (
-              <Image
-                src={song.thumbnail_url}
-                alt={song.title}
-                fill
-                sizes="48px"
-                className="object-cover"
-              />
+              <Image src={song.thumbnail_url} alt="" fill sizes="56px" className="object-cover" />
             )}
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/50 transition-colors">
-              {isPlaying ? (
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                </svg>
-              ) : isCurrent ? (
-                <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              )}
-            </div>
-            {/* Playing indicator */}
+            <span
+              className={`absolute inset-0 flex items-center justify-center transition-colors ${
+                isCurrent ? "bg-black/45" : "bg-black/0 group-hover:bg-black/45"
+              }`}
+            >
+              <span className={isCurrent ? "" : "opacity-0 transition-opacity group-hover:opacity-100"}>
+                {isPlaying ? (
+                  <svg className="h-6 w-6 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                  </svg>
+                ) : (
+                  <svg className="ml-0.5 h-6 w-6 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                )}
+              </span>
+            </span>
+            {showRank && (
+              <span className="absolute left-1 top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-black/70 px-1 text-[11px] font-bold tabular-nums text-white">
+                {rank}
+              </span>
+            )}
             {isPlaying && (
-              <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex gap-0.5">
-                <span className="w-0.5 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="w-0.5 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="w-0.5 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-              </div>
+              <span className="absolute bottom-1 left-1/2 flex -translate-x-1/2 gap-0.5" aria-hidden>
+                <span className="h-2 w-0.5 animate-bounce rounded-full bg-primary" style={{ animationDelay: "0ms" }} />
+                <span className="h-3 w-0.5 animate-bounce rounded-full bg-primary" style={{ animationDelay: "150ms" }} />
+                <span className="h-2 w-0.5 animate-bounce rounded-full bg-primary" style={{ animationDelay: "300ms" }} />
+              </span>
             )}
           </button>
 
-          {/* Song info */}
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 pt-0.5">
             {/* 한 줄로 자르면 대여섯 글자에서 끊긴다. 두 줄까지 보여준다. */}
-            <h3 className={`font-medium text-sm leading-snug line-clamp-2 ${isCurrent ? "text-primary" : "text-text"}`}>{song.title}</h3>
-            <div className="flex items-center gap-2 mt-0.5">
-              {artist && (
-                <p className="text-caption text-text-muted truncate min-w-0">{artist}</p>
-              )}
+            <h3 className={`line-clamp-2 text-body font-medium leading-snug ${isCurrent ? "text-primary" : "text-text"}`}>
+              {song.title}
+            </h3>
+            <div className="mt-0.5 flex items-center gap-2">
+              {artist && <p className="min-w-0 truncate text-sm text-text-muted">{artist}</p>}
               {song.commentCount > 0 && (
                 <button
                   type="button"
@@ -177,7 +184,7 @@ export default function SongCard({
                 >
                   {/* 배지는 작게 두되 누르는 자리는 44px 이어야 한다 (AGENTS.md). */}
                   <span className="inline-flex h-5 items-center gap-0.5 rounded-md bg-primary/15 px-1.5 text-[11px] font-semibold text-primary transition-colors group-hover/badge:bg-primary/25">
-                    <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <svg className="h-2.5 w-2.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
                       <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z" />
                     </svg>
                     {song.commentCount}
@@ -185,38 +192,40 @@ export default function SongCard({
                 </button>
               )}
               {versionCount > 0 && (
-                <button type="button" onClick={() => setShowVersions(true)} className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-0.5 rounded-md bg-warning-soft px-1.5 text-[11px] font-semibold text-warning" aria-label={`다른 버전 ${versionCount}개`}>
-                  <VersionIcon /> {versionCount}
+                <button type="button" onClick={() => setShowVersions(true)} className="-my-3 inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-0.5 rounded-md text-[11px] font-semibold text-warning" aria-label={`다른 버전 ${versionCount}개`}>
+                  <span className="inline-flex h-5 items-center gap-0.5 rounded-md bg-warning-soft px-1.5">
+                    <VersionIcon /> {versionCount}
+                  </span>
                 </button>
               )}
             </div>
           </div>
 
-          {/* More menu (⋮) */}
-          <div className="relative shrink-0" ref={showMenu ? menuRef : undefined}>
+          {/* More menu (⋯) */}
+          <div className="relative -mr-2 -mt-1.5 shrink-0" ref={showMenu ? menuRef : undefined}>
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="w-11 h-11 flex items-center justify-center rounded-lg text-text-subtle hover:text-text hover:bg-surface-hover transition-colors"
+              className="flex h-11 w-11 items-center justify-center rounded-pill text-text-subtle transition-colors hover:bg-surface-hover hover:text-text"
               aria-label="더보기"
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <circle cx="12" cy="5" r="1.5" />
-                <circle cx="12" cy="12" r="1.5" />
-                <circle cx="12" cy="19" r="1.5" />
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <circle cx="5" cy="12" r="1.6" />
+                <circle cx="12" cy="12" r="1.6" />
+                <circle cx="19" cy="12" r="1.6" />
               </svg>
             </button>
             {showMenu && (
-              <div className="absolute right-0 top-8 z-20 w-44 bg-surface-hover border border-border rounded-xl shadow-lg overflow-hidden">
+              <div className="absolute right-0 top-10 z-20 w-44 overflow-hidden rounded-xl border border-border bg-surface-elevated shadow-lg">
                 {song.added_by && (
-                  <div className="px-3 py-2 text-caption text-text-subtle border-b border-border truncate">
+                  <div className="truncate border-b border-border px-3 py-2 text-caption text-text-subtle">
                     추가: <span className="text-text-muted">{song.added_by}</span>
                   </div>
                 )}
                 <button
                   onClick={() => { setShowComments(true); setShowMenu(false); }}
-                  className="w-full px-3 py-2.5 text-left text-sm text-text hover:bg-surface-hover transition-colors flex items-center gap-2"
+                  className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-text transition-colors hover:bg-surface-hover"
                 >
-                  <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <svg className="h-4 w-4 text-text-muted" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
                   </svg>
                   댓글
@@ -228,9 +237,9 @@ export default function SongCard({
                   <button
                     onClick={() => { handleRemove(); setShowMenu(false); }}
                     disabled={isPending}
-                    className="w-full px-3 py-2.5 text-left text-sm text-red-400 hover:bg-surface-hover transition-colors flex items-center gap-2"
+                    className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-danger transition-colors hover:bg-surface-hover"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                     곡 삭제
@@ -240,25 +249,16 @@ export default function SongCard({
             )}
           </div>
         </div>
-        {/* 최고점 대비 막대. 5 5 4 4 가 숫자로만 있으면 박빙인지 안 읽힌다. */}
-        <div className="mx-3 h-0.5 overflow-hidden rounded-pill bg-surface-hover">
-          <div
-            className={`h-0.5 rounded-pill transition-[width] duration-300 ${isCurrent ? "bg-accent-play" : "bg-border-strong"}`}
-            style={{ width: `${Math.round(scoreRatio * 100)}%` }}
-          />
-        </div>
 
-        {/*
-          투표를 아랫줄로 내려 제목 폭을 확보한다. 같은 줄에 두면 제목에 80px 밖에 남지 않는다.
-          이미 있는 투표자 줄과 한 줄을 나눠 써서 카드가 더 높아지지 않는다.
-        */}
-        <div className="flex items-center gap-2 border-t border-border px-3 py-1.5">
-          {/* 셋리스트 추가는 ⋮ 안에 있으면 못 찾는다. 투표 행 왼쪽에 항상 보이게 둔다. */}
+        {/* Second line, aligned under the title: setlist add, voters, the vote pill. */}
+        <div className="mt-1 flex items-center gap-2 pl-[68px]">
+          {/* 셋리스트 추가는 ⋯ 안에 있으면 못 찾는다. 투표 줄 왼쪽에 항상 보이게 둔다. */}
           {onAddToSetlist && (
             <button
               type="button"
               onClick={() => onAddToSetlist(song.id)}
-              className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-control px-2 text-caption font-semibold text-primary transition-colors hover:bg-primary/10"
+              aria-label="셋리스트에 넣기"
+              className="inline-flex h-9 shrink-0 items-center gap-1 rounded-pill border border-border px-3 text-caption font-semibold text-text-muted transition-colors hover:border-primary/60 hover:text-primary"
             >
               <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
                 <path d="M12 5v14M5 12h14" />
@@ -268,6 +268,13 @@ export default function SongCard({
           )}
           <VoterStrip votes={song.votes} hide={votesAnonymous} />
           <div className="ml-auto shrink-0">{voteButtons}</div>
+        </div>
+        {/* 최고점 대비 막대. 5 5 4 4 가 숫자로만 있으면 박빙인지 안 읽힌다. */}
+        <div className="ml-[68px] mt-1.5 h-0.5 overflow-hidden rounded-pill bg-surface-hover">
+          <div
+            className={`h-0.5 rounded-pill transition-[width] duration-300 ${isCurrent ? "bg-primary" : "bg-border-strong"}`}
+            style={{ width: `${Math.round(scoreRatio * 100)}%` }}
+          />
         </div>
         {showComments && (
           <CommentModal

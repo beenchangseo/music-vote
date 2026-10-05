@@ -59,6 +59,18 @@ type EventMap = {
   tap_tempo_used: {
     taps: number;
   };
+  /** 플레이리스트 하단 탭 전환. 합주 탭을 실제로 여는지 본다. */
+  playlist_tab_viewed: {
+    tab: "candidates" | "setlist" | "rehearsal";
+  };
+  /** 합주 탭에서 누른 것. 합주 탭의 1순위 기능을 데이터로 정하려고 잰다 (2026-10-05). 탭 템포는 tap_tempo_used. */
+  rehearsal_action: {
+    action: "next" | "prev" | "metronome_on" | "metronome_off" | "meta_open";
+  };
+  /** 플레이리스트 헤더 "전체 듣기" (후보곡 1위부터). */
+  play_all_started: {
+    song_count: number;
+  };
   filter_applied: {
     type: "bpm" | "meta_only" | "key" | "difficulty" | "genre";
   };

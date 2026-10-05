@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
 import { insertRoom } from "@/lib/room-insert";
 import { nestedRows } from "@/lib/supabase/nested";
+import { roomCoverThumbs } from "@/lib/team-domain";
 import type { SetlistEditMode, VotingMode } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
@@ -36,12 +37,22 @@ export interface MyPlaylistDbEntry {
   createdAt: string;
   /** 내가 멤버인 밴드의 방이면 그 밴드 이름 (홈 목록의 작은 캡션). 아니면 null. */
   teamName: string | null;
+  /** 홈 타일 커버 모자이크: 최근에 올라온 곡 썸네일 최대 4개. */
+  coverThumbs: string[];
 }
 
-type MyPlaylistRow = { id: string; share_code: string; title: string; created_at: string };
+type MyPlaylistSongRow = { thumbnail_url: string | null; created_at: string };
+type MyPlaylistRow = {
+  id: string;
+  share_code: string;
+  title: string;
+  created_at: string;
+  songs?: MyPlaylistSongRow | MyPlaylistSongRow[] | null;
+};
 type MyTeamRow = { name: string; playlists: MyPlaylistRow | MyPlaylistRow[] | null };
 
-const MY_PLAYLIST_COLUMNS = "id, share_code, title, created_at";
+// Song thumbnails ride along in the same nested select (still one round trip, eng D5).
+const MY_PLAYLIST_COLUMNS = "id, share_code, title, created_at, songs(thumbnail_url, created_at)";
 
 /**
  * 홈 "내 합주방": 내가 만든 방 ∪ 참여자로 들어간 방 ∪ 내 밴드의 방.
@@ -79,12 +90,17 @@ export async function getMyPlaylists(): Promise<MyPlaylistDbEntry[]> {
       if (teamName) existing.teamName = teamName;
       return;
     }
+    const newestFirst = nestedRows(room.songs)
+      .slice()
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .map((song) => ({ thumbnailUrl: song.thumbnail_url }));
     byId.set(room.id, {
       id: room.id,
       shareCode: room.share_code,
       title: room.title,
       createdAt: room.created_at,
       teamName,
+      coverThumbs: roomCoverThumbs([], newestFirst),
     });
   };
 

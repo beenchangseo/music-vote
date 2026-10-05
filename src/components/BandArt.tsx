@@ -33,14 +33,17 @@ function NoteIcon({ className }: { className: string }) {
 export function RoomCover({
   thumbs,
   sizes,
+  square = false,
   className = "",
 }: {
   thumbs: string[];
   /** 커버 한 변의 화면 크기 (next/image sizes). */
   sizes: string;
+  /** 모서리를 깎지 않는다 (둥근 타일 안에 붙는 커버). */
+  square?: boolean;
   className?: string;
 }) {
-  const frame = `relative overflow-hidden rounded-control bg-surface-elevated ${className}`;
+  const frame = `relative overflow-hidden ${square ? "" : "rounded-control"} bg-surface-elevated ${className}`;
 
   if (thumbs.length >= 4) {
     const half = `calc(${sizes} / 2)`;

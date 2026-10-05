@@ -120,20 +120,35 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
     <div className="w-full">
       <form onSubmit={handleSubmit}>
         <div className="flex gap-2">
-          <Input
-            value={input}
-            onChange={(e) => {
-              setInput(e.target.value);
-              setShowManualTitle(false);
-            }}
-            placeholder="곡 이름으로 찾거나 YouTube 링크를 붙여넣으세요"
-            enterKeyHint="search"
-            className="flex-1"
-          />
+          {/* Spotify search bar: magnifier inside a pill. */}
+          <div className="relative flex-1">
+            <svg
+              className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.25}
+              viewBox="0 0 24 24"
+              aria-hidden
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path strokeLinecap="round" d="M20 20l-3.5-3.5" />
+            </svg>
+            <Input
+              pill
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                setShowManualTitle(false);
+              }}
+              placeholder="곡 이름이나 YouTube 링크"
+              aria-label="곡 이름으로 찾거나 YouTube 링크를 붙여넣으세요"
+              enterKeyHint="search"
+            />
+          </div>
           <button
             type="submit"
             disabled={!input.trim() || isPending}
-            className="px-4 py-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 text-sm shrink-0"
+            className="h-11 shrink-0 rounded-pill bg-primary px-5 text-sm font-semibold text-white transition-all hover:bg-primary-hover active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isPending ? (
               <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
