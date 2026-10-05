@@ -1313,60 +1313,62 @@ finding above. Run with Claude Code or Codex; checkbox as you ship.
   - `playwright.config.ts` 와 정리 헬퍼에 `gstack-shortcut(dec-60acf136): 로컬 게이트 7/10, upgrade when Preview 배포·스테이징 Supabase 도입` 마커
   - Files: `playwright.config.ts`, `e2e/`, `e2e/.auth/` (gitignore), `.gitignore`, `package.json`
   - Verify: 홈·후보곡·셋리스트·합주·메트로놈·셋리스트 이미지·셋리스트 PDF·댓글 목록이 데이터와 함께 렌더되고, "내 표"가 보이고, 방 만들기·댓글 수정/삭제가 되는지 로컬 게이트에서 확인
-- [ ] **T4 (P1, human: ~2시간 / CC: ~20분)** — actions — `getMyPlaylists` 가 내가 만든 방 ∪ 멤버로 들어간 방 ∪ 내 팀의 방을 돌려준다
+> **2차 배포(밴드) 완료 (2026-10-05)**: 운영 Supabase 에 v19(팀 스키마)·v20(앱이 안 쓰는 공개 키 쓰기 권한 회수)을 한 트랜잭션으로 실행 → `npm run audit:anon` 전부 통과(teams·team_members 42501 포함), 공개 키 쓰기는 authenticated 의 songs·comments INSERT 만 남음 → 로컬 게이트 13/13 통과(밴드 두 계정 흐름·비멤버 화면 포함, 운영 DB) → `089fa97`(main) 배포 → 프로덕션 확인(홈·방·메트로놈·/join·/band·band OG 카드·셋리스트 이미지·PDF, 에러 로그 0).
+
+- [x] **T4 (P1, human: ~2시간 / CC: ~20분)** — actions — `getMyPlaylists` 가 내가 만든 방 ∪ 멤버로 들어간 방 ∪ 내 팀의 방을 돌려준다
   - Surfaced by: Architecture 이슈3·5 — `src/actions/playlist.ts:48` 이 `creator_user_id` 만 조회. CEO-D2 로 팀 방 집합 추가
   - Files: `src/actions/playlist.ts`, `src/actions/__tests__/playlist.test.ts`
   - Verify: 액션 테스트 (내가 만든 방 / 멤버 방 / 팀 방 / 중복 제거 / 비로그인 빈 배열 / 세 쿼리 중 하나 실패 → 나머지 집합 + `console.error` / 중첩 select 응답(`playlists` 가 null·배열·객체인 경우)을 펼치는 것) + 홈이 `getMyPlaylists`·`getMyTeams` 를 같은 `Promise.all` 로 부름 (eng D5)
 - [x] ~~**T5** — "이 멤버로 새 방" 버튼~~ — **폐기 (CEO-D2).** T8·T9 의 "밴드에서 새 합주방" 이 대체
-- [ ] **T7 (P1, human: ~반나절 / CC: ~30분)** — db — v19 팀 스키마
+- [x] **T7 (P1, human: ~반나절 / CC: ~30분)** — db — v19 팀 스키마
   - Surfaced by: CEO-D2 (B 팀 우선 최소판), eng 이슈 3 (얕은 결합)
   - Files: `supabase-migration-v19.sql`, `README.md` (실행 순서 + 디렉터리 트리: `middleware.ts`→`src/proxy.ts` 정정, `band/`·`team.ts`·`team-domain.ts`·`e2e/`·`team-metrics.mjs` 추가), `src/lib/types.ts` (`Team`·`TeamMember`·`ActionResult<T>`), `scripts/audit-anon-access.mjs` (`teams`·`team_members` 추가)
   - Verify: 마이그레이션 두 번 실행해도 무해 / `npm run audit:anon` 이 두 테이블 차단 확인
   - eng 3회차 R13 (D11 A): v19 에 `playlists.team_linked_via text CHECK (IN ('promote','band','attach'))` 추가. 쓰기는 T8(`createTeamFromPlaylist`·`createBandPlaylist`)·T14(`attachPlaylistToTeam`)가 같은 UPDATE/insert 에서
-- [ ] **T8 (P1, human: ~2일 / CC: ~2시간)** — actions — `src/actions/team.ts`: `createTeamFromPlaylist`·`joinTeam`·`getTeamHome`·`getMyTeams`·`createBandPlaylist`, `playlist.ts` 방 insert 비공개 헬퍼
+- [x] **T8 (P1, human: ~2일 / CC: ~2시간)** — actions — `src/actions/team.ts`: `createTeamFromPlaylist`·`joinTeam`·`getTeamHome`·`getMyTeams`·`createBandPlaylist`, `playlist.ts` 방 insert 비공개 헬퍼
   - Surfaced by: CEO-D2, CEO-D4 (합주방에서 밴드로 올리기)
   - Files: `src/actions/team.ts` (로컬 `withFreshInviteCode`: nanoid(10) + 23505 3회 재시도, 밴드 만들기·링크 교체가 씀 — eng D3), `src/actions/playlist.ts`, `src/actions/__tests__/team.test.ts`, `src/lib/analytics.ts`, `docs/adr/0014-bands-sit-shallow-on-rooms.md` (신규), `docs/adr/0013-anon-key-has-no-write-path.md` (v18 에서 `playlists_insert` 를 닫았다는 한 줄), `AGENTS.md` (팀 테이블은 anon 0, service_role + 코드 권한 검사)
   - 구조 (eng D2): 순수 검사는 `src/lib/team-domain.ts`(+ `__tests__/team-domain.test.ts`)에 둔다 — `showDday`·`validateTeamName`·`validateNextShowDate`·`isInviteCodeFormat`·`canPromote`. `createTeamFromPlaylist` 는 `canPromote` 로 검증한 뒤 쓰기 단계만 한다. `createBandPlaylist` 는 insert 뒤 멤버십을 다시 확인해 아니면 방을 지운다 (Section 4)
   - Verify: 액션 테스트 (방장 아님 / 보관 방 / 이미 팀 있음 / 이름 51자 거부·50자 통과 / `team_members` insert 실패 시 롤백 / 조건부 UPDATE 0행 시 롤백 / 중복 가입 / 비멤버의 팀 방 생성 거부 / 비로그인·비멤버에게 방 목록·4번째부터의 멤버 이름 미노출, 앞 3명은 owner 먼저·가입 순 (디자인 2A) / 없는 코드 / `getMyTeams` 비로그인 빈 배열 / 롤백 delete 실패 시 `console.error` 에 team_id / `createBandPlaylist` 사후 멤버십 확인 실패 → 방 삭제 / 초대 코드 형식이 아니면 조회 안 함)
-- [ ] **T9 (P1, human: ~2일 / CC: ~2시간)** — UI — `/band/[teamId]` 밴드 홈 + `/join/[inviteCode]` 초대 (eng R10), 방 설정 "이 멤버로 밴드 만들기", 홈 "내 밴드", 팀 방 "밴드 홈" 링크, `band` 카톡 카드
+- [x] **T9 (P1, human: ~2일 / CC: ~2시간)** — UI — `/band/[teamId]` 밴드 홈 + `/join/[inviteCode]` 초대 (eng R10), 방 설정 "이 멤버로 밴드 만들기", 홈 "내 밴드", 팀 방 "밴드 홈" 링크, `band` 카톡 카드
   - Surfaced by: CEO-D2, CEO-D4
   - Files: `src/lib/team-domain.ts` (+ `__tests__/team-domain.test.ts`, eng D2. 밴드 홈 비로그인 뷰와 `band` 카드가 `showDday` 를 쓰므로 T8 에서 만든다), `src/app/band/[inviteCode]/page.tsx` (+ `generateMetadata`, `robots: { index: false }`), `src/components/BandHomeClient.tsx`, `src/components/RoomSettingsButton.tsx`, `src/app/page.tsx`, `src/components/MyPlaylists.tsx`, `src/app/playlist/[shareCode]/page.tsx`, `src/components/PlaylistClient.tsx`, `src/components/PlaylistHeader.tsx`, `src/app/new/page.tsx`, `src/components/CreatePlaylistForm.tsx`, `src/components/KakaoShareButton.tsx` (`linkPath` prop), `src/app/api/og/route.tsx` (`band` 분기), `src/lib/analytics.ts` (`kakao_shared.variant` 에 `band`)
   - Verify: `team-domain` 유닛 테스트 (`showDday`: KST 자정 경계 / 당일 "공연 D-DAY" / 1~14일 지남 → "공연 끝" 상태, 15일째 → 없음 (디자인 8A); 이름 0·1·50·51자; 날짜 형식·과거; 초대 코드 형식; `canPromote` 각 거부 사유) + Playwright 로컬 게이트 (밴드 만들기 → 초대 링크 → 두 번째 계정 가입 → 밴드에서 새 방 → 두 번째 계정 홈 목록에 표시 / 비멤버에게 팀 방 "밴드 홈" 링크 미노출 / 비로그인으로 `/new?band=` → 로그인 뒤 밴드 칩 유지 / 무효 코드·비멤버의 `/new?band=` 에 폼이 안 뜸 / 비로그인으로 `/band/{code}` → 로그인 뒤 같은 밴드로 복귀) / 빈 상태(방 0·이력 0·홈 내 밴드 0) / 방 목록 5개 + 더 보기 / **`KakaoShareButton` variant 별 링크 테스트(기존 3종 `/playlist/{code}` 유지, band `/band/{code}`)** / `RoomSettingsButton.test.tsx` 에 밴드 행 케이스 / 터치 영역 ≥44px / 카드 `Kakao.isInitialized()` / 프로덕션 빌드에서 `{ success: false, reason }` 의 한국어 메시지가 보이는지
-- [ ] **T10 (P2, human: ~반나절 / CC: ~30분)** — E1 우리가 했던 곡
+- [x] **T10 (P2, human: ~반나절 / CC: ~30분)** — E1 우리가 했던 곡
   - Surfaced by: CEO-E1
   - Files: `src/actions/team.ts` (`getTeamHome` 이력), `src/components/BandHomeClient.tsx`
   - Verify: 액션 테스트 (셋리스트 빈 방 숨김 / interval 제외 / 삭제된 곡 `song_id NULL` 제외)
-- [ ] **T11 (P2, human: ~반나절 / CC: ~30분)** — E2 다음 공연 D-day
+- [x] **T11 (P2, human: ~반나절 / CC: ~30분)** — E2 다음 공연 D-day
   - Surfaced by: CEO-E2
   - Files: `src/actions/team.ts` (`updateTeamNextShow` 는 여기서만 만든다), `src/components/BandHomeClient.tsx` (날짜 입력), `src/components/PlaylistHeader.tsx` (`handleKakaoShare` 접두어), `src/components/KakaoShareButton.tsx`, `src/app/api/og/route.tsx`. `showDday` 는 T8 의 `team-domain.ts` 에 이미 있다
   - Verify: 액션 테스트 (비멤버 거부 / 형식 오류·과거 날짜 거부 / 지우기 / 행 수 확인) + 방 화면 공유 카드에 접두어
-- [ ] **T12 (P2, human: ~반나절 / CC: ~30분)** — E4 키·BPM 이어받기
+- [x] **T12 (P2, human: ~반나절 / CC: ~30분)** — E4 키·BPM 이어받기
   - Surfaced by: CEO-E4
   - Files: `src/actions/song.ts` (`addSong`), `src/components/AddSongForm.tsx` (폼 아래 문구), `src/actions/__tests__/song.test.ts`
   - Verify: 액션 테스트 (같은 팀 이어받음 / **다른 팀 곡은 절대 안 가져옴** / 팀 없는 방은 조회 안 함 / 네 필드가 모두 null 인 행은 건너뜀 / 가장 최근 행의 네 값을 섞지 않고 복사 / **조회 실패해도 곡은 추가됨** + `console.error`)
-- [ ] **T13 (P1, human: ~반나절 / CC: ~40분)** — 멤버 관리 (CEO-F1)
+- [x] **T13 (P1, human: ~반나절 / CC: ~40분)** — 멤버 관리 (CEO-F1)
   - Surfaced by: 스펙 리뷰 완결성 1·범위 2 → D10 A
   - Files: `src/actions/team.ts` (`removeTeamMember`·`regenerateInviteCode`), `src/components/BandHomeClient.tsx`, `src/actions/__tests__/team.test.ts`
   - Verify: 액션 테스트 (owner 만 / 자기 자신 거부 / 행 수 확인 / 새 코드 뒤 옛 코드로 `getTeamHome` 이 없음 / 내보낸 사람의 `getMyPlaylists` 에서 팀 방 집합만 빠짐 / **"링크도 새로 만들기" 를 켜면 교체가 삭제보다 먼저** / 교체 실패 시 부분 성공 문구)
   - eng 3회차 R7 (D5 A, R10 으로 정리): 두 액션이 성공 시 새 `inviteCode` 를 돌려줌. 추가 Verify: 액션 테스트(새 코드 반환) + 컴포넌트 테스트(성공 뒤 초대 시트 링크가 `/join/{새 코드}`, owner 주소 `/band/{teamId}` 그대로)
   - eng 3회차 R12 (D10 A): `leaveTeam(teamId)` — owner 가 아닌 멤버가 스스로 나감(자기 행만, 행 수 확인, owner 는 거부). **입구 (디자인 2회차 1A)**: 밴드 홈 맨 아래(멤버 목록 다음, 구분선 아래) "밴드 나가기" 텍스트 버튼 한 줄(`text-sm text-text-muted`, 44px). 내 행 ⋮ 는 만들지 않는다. owner 화면에는 이 행을 렌더하지 않는다(디자인 2회차 8A, 서버는 R12 대로 owner 거부) → 위험 확인창 → 홈. **확인창 문구 (디자인 2회차 5A)**: 제목 "{밴드 이름}에서 나갈까요?" / 본문 "홈의 '내 밴드'와 멤버 목록에서 빠져요. 이미 들어간 합주방은 그대로 남아요. 초대 링크가 있으면 다시 들어올 수 있어요." / 버튼 "나가기"(danger) + "취소"(첫 포커스, R11). **나간 뒤 (디자인 2회차 6A)**: 홈 `/?left=1` 로 가고 홈 맨 위에 "{밴드 이름}에서 나왔어요"(`role="status"`, 닫기)를 한 번. 쿼리는 첫 마운트에 지운다(11A 와 같은 규칙). 이름은 이동 직전 `sessionStorage` 에 담고(try/catch) 없으면 "밴드에서 나왔어요". 실패는 "밴드 나가기" 버튼 아래 문구(6A) 추가 Verify: 액션 테스트(owner 거부 / 멤버 자기 행 삭제 / 비멤버 거부 / 0행)
-- [ ] **T14 (P2, human: ~반나절 / CC: ~30분)** — 기존 방을 밴드에 넣기 (CEO-F2)
+- [x] **T14 (P2, human: ~반나절 / CC: ~30분)** — 기존 방을 밴드에 넣기 (CEO-F2)
   - Surfaced by: 스펙 리뷰 완결성 3 → D11 A
   - Files: `src/actions/team.ts` (`attachPlaylistToTeam`), `src/components/RoomSettingsButton.tsx`, `src/actions/__tests__/team.test.ts`
   - eng 3회차 정정 (13A): 완료 화면 한 줄을 위해 `src/app/new/page.tsx` 가 기존 `Promise.all` 에 `getMyTeams()` 를 더해 `CreatePlaylistForm` 에 넘긴다(밴드 칩으로 만든 방에는 안 띄움)
   - Verify: 액션 테스트 (방장 아님 / 밴드 비멤버 / 보관 방 / 이미 다른 밴드 → 조건부 UPDATE 0행 / 정상 → E1 이력에 그 방 셋리스트가 나타남)
-- [ ] **T15 (P2, human: ~반나절 / CC: ~30분)** — 성공 지표 측정 스크립트 (CEO-F5)
+- [x] **T15 (P2, human: ~반나절 / CC: ~30분)** — 성공 지표 측정 스크립트 (CEO-F5)
   - Surfaced by: Section 8 → D15 A
   - Files: `scripts/team-metrics.mjs`, `package.json` (`metrics:teams`)
   - Verify: service_role 읽기 전용(쓰기 호출 없음) / 성공 지표 표의 6개 값을 출력 / 테스트 계정·운영자 밴드 제외, 활동 기간 제한이 적용되는지 고정 데이터로 확인
   - eng 3회차 R13 (D11 A): "밴드에서 만든 새 방" = `team_linked_via = 'band'`, 붙인 방(`'attach'`, 팀 생성 뒤 생성)은 따로 출력. Verify 에 band·attach 분리 고정 데이터 추가
-- [ ] **T16 (P1, human: ~반나절 / CC: ~30분)** — 밴드 만들기 안내 카드 (CEO-F7)
+- [x] **T16 (P1, human: ~반나절 / CC: ~30분)** — 밴드 만들기 안내 카드 (CEO-F7)
   - Surfaced by: Section 11 발견성 — 버밴동이 ⋮ 안 "셋리스트에 추가"를 못 찾고 떠난 실측 → D17 A
   - 자리 (디자인 리뷰 27A): 후보곡 탭에서만, `ScreenToolbar` 아래·곡 목록 위. 만든 뒤 (D30 A): 방에 머물고 카드가 "밴드를 만들었어요 · 카톡으로 알리기 · 밴드 홈" 성공 카드로 한 번 바뀜 + 경로 줄(5A)
   - Files: `src/components/BandPromptCard.tsx`, `src/components/PlaylistClient.tsx` (후보곡 탭 조건부 렌더만, 로직은 카드 안), `src/lib/analytics.ts` (`team_created.source`)
   - Verify: 방장·팀 없음·로그인 멤버 ≥2 일 때만 보임 / 후보곡 탭에만 보이고 셋리스트·합주 탭에는 없음 / 멤버 1명 방·비방장·팀 방에는 안 보임 / 닫은 뒤 새로고침해도 안 보임 / `localStorage` 가 막혀도 렌더 / 카드에서 만들면 URL 이 바뀌지 않고 성공 카드 + 경로 줄이 뜸 / 터치 영역 ≥44px
   - eng 3회차 R6 (D4 A): `createTeamFromPlaylist` 는 `revalidatePath`, 성공 상태 `justCreatedTeam` 은 `PlaylistClient` 에. 추가 Verify: 성공 뒤 팀이 있는 props 로 다시 렌더돼도 성공 카드 유지 / 새로 마운트하면 성공 카드 없음
-- [ ] **T6 (P2, human: ~반나절 / CC: ~40분)** — lib/hooks — 탭 템포를 순수 함수로 분리하고 합주 모드에 붙인다
+- [x] **T6 (P2, human: ~반나절 / CC: ~40분)** — lib/hooks — 탭 템포를 순수 함수로 분리하고 합주 모드에 붙인다
   - Surfaced by: Test 다이어그램 + 외부 보이스 — `key_root` 가 v5 부터 있었는데 133곡 중 1개
   - Files: `src/lib/tap-tempo.ts`, `src/lib/__tests__/tap-tempo.test.ts`, `src/hooks/useMetronome.ts`, `src/components/RehearsalView.tsx`
   - Verify: 유닛 테스트 (4회 균등 / 2회 미만 / 범위 밖 / 이상치)
@@ -1969,13 +1971,13 @@ Target: 같은 문서의 밴드 화면 — 밴드 홈·초대 화면·밴드 만
 
 새 태스크:
 
-- [ ] **T17 (P1, human: ~반나절 / CC: ~30분)** — ui/Modal — `Modal` primitive 에 포커스 관리를 넣는다
+- [x] **T17 (P1, human: ~반나절 / CC: ~30분)** — ui/Modal — `Modal` primitive 에 포커스 관리를 넣는다
   - Surfaced by: Pass 6 — 21A. `Modal.tsx:13-24` 는 ESC·스크롤 잠금만. 새 시트 4개(만들기·초대·내보내기·날짜)가 모두 이 위에 선다
   - Files: `src/components/ui/Modal.tsx`, `src/components/DialogProvider.tsx`, `src/components/ui/__tests__/Modal.test.tsx`, 기존 `Modal` 사용처 5곳(HeroCTA·RoomSettingsButton·SetlistItemEditModal·SetlistShareButton·SongVersionModal) 확인
   - 내용 (eng 3회차 R4, D2 A): `role="dialog"`·`aria-modal`·`aria-label` 은 이미 있다(`Modal.tsx:32-35`). 열릴 때 `initialFocus` 또는 children 안의 첫 포커스 가능 요소(닫기 버튼은 건너뜀, `Modal.tsx:49` 가 children 앞이라), Tab 가두기, 닫으면 연 요소로 복원. **층 규칙**: `DialogProvider` 오버레이(`DialogProvider.tsx:91`)에 `data-dialog-layer` 를 달고, 그게 떠 있으면 `Modal` 의 Tab 가두기·ESC 가 비켜선다. **`DialogProvider` 모달 계약 (eng R11, D9 A)**: `role="alertdialog"`·`aria-modal`·`aria-labelledby`, 확인창 안 Tab 순환, ESC = 취소(확인창만 닫음), 첫 포커스는 `showDanger` → 취소·`showConfirm`/`showAlert` → 확인, 닫으면 복원. **버튼 이름 (디자인 2회차 7A)**: `showDanger(message, { title?, confirmLabel? })` 선택 인자를 더한다(기존 호출 3곳은 기본값 "삭제 확인"/"삭제" 그대로). 밴드 나가기는 `confirmLabel: "나가기"`, 링크 교체는 `"새로 만들기"`. 테스트 1건(라벨 전달·기본값 유지) 모양 변경 없음, 새 의존성 없음
   - Verify: 컴포넌트 테스트(열림 포커스 / `initialFocus` / Tab·Shift+Tab 순환 / ESC 뒤 복원 / **`Modal` 위에 `useDialog` 확인창이 뜨면 Tab 이 확인창 버튼에 닿고 ESC 가 확인창만 닫음**) + 기존 모달 5곳 수동 확인. T9·T11·T13 시트보다 먼저
   - **회귀 계약 (CRITICAL, eng 3회차 R9 D7 A)**: `Modal.test.tsx` 에 기존 동작 4건 — ESC 닫힘 / 배경 클릭 닫힘·안쪽 클릭 안 닫힘 / 열린 동안 스크롤 잠금, 닫거나 언마운트하면 원래 값 / 닫기 버튼으로 닫힘. `DialogProvider` 테스트(역할 / Tab 순환 / ESC 취소 / `showDanger` 는 취소·나머지는 확인에 첫 포커스 / 복원 / `data-dialog-layer` — eng R11). 기존 `RoomSettingsButton.test.tsx`·`SetlistShareButton.test.tsx` 통과. `SetlistItemEditModal` "초기화" 확인창을 키보드로 수동 확인
-- [ ] **T18 (P2, human: ~1시간 / CC: ~10분)** — design tokens — 카카오 색 토큰 4개를 만들고 리터럴을 바꾼다
+- [x] **T18 (P2, human: ~1시간 / CC: ~10분)** — design tokens — 카카오 색 토큰 4개를 만들고 리터럴을 바꾼다
   - Surfaced by: Pass 5 — 18A. hover 가 `#FDD800`·`#FFE000` 으로 갈라져 있음
   - Files: `src/app/globals.css`, `src/components/PlaylistHeader.tsx:95`, `src/components/KakaoShareButton.tsx:108`, `src/components/LoginButton.tsx:48` (eng 3회차 정정: 리터럴이 세 곳)
   - Verify: `grep -rn "FEE500\|FDD800\|FFE000\|191919\|E5CC00" src` 가 `globals.css` 만 / 기존 카톡 버튼 세 곳 모양 그대로
