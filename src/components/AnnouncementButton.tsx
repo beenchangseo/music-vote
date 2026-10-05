@@ -37,8 +37,8 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
     <>
       <button
         onClick={handleClick}
-        className={`relative inline-flex h-11 w-11 items-center justify-center rounded-pill transition-all hover:bg-surface-hover active:scale-95 ${
-          announcement ? "text-primary" : "text-text-muted hover:text-text"
+        className={`relative inline-flex h-12 w-12 items-center justify-center rounded-pill bg-surface-hover transition-all hover:bg-surface-elevated active:scale-95 ${
+          announcement ? "text-primary" : "text-text"
         }`}
         aria-label="공지사항"
         title={announcement ? "공지사항 보기/수정" : "공지사항 작성"}
@@ -48,7 +48,7 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
           <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16h14v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1h.5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5H8a1 1 0 0 1 1 1z" />
         </svg>
         {announcement && (
-          <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border-2 border-bg bg-primary" />
+          <span className="absolute right-0.5 top-0.5 h-3 w-3 rounded-full border-2 border-bg bg-primary" />
         )}
       </button>
 

@@ -7,6 +7,11 @@ export interface YouTubePlayerHandle {
   play(): void;
   pause(): void;
   loadVideoById(videoId: string): void;
+  /** 재생 위치(초). 플레이어가 준비되기 전에는 0. */
+  getCurrentTime(): number;
+  /** 영상 길이(초). 모르면 0. */
+  getDuration(): number;
+  seekTo(seconds: number): void;
 }
 
 interface YouTubePlayerProps {
@@ -110,6 +115,15 @@ const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
           loadedVideoIdRef.current = id;
           playerRef.current.loadVideoById(id);
         }
+      },
+      getCurrentTime() {
+        return ready ? playerRef.current?.getCurrentTime() ?? 0 : 0;
+      },
+      getDuration() {
+        return ready ? playerRef.current?.getDuration() ?? 0 : 0;
+      },
+      seekTo(seconds: number) {
+        if (ready) playerRef.current?.seekTo(seconds, true);
       },
     }), [ready]);
 

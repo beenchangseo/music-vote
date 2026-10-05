@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useImperativeHandle, useState, useTransition, type Ref } from "react";
 import Modal from "./ui/Modal";
 import Button from "./ui/Button";
 import { useDialog } from "./DialogProvider";
@@ -19,7 +19,16 @@ import { track } from "@/lib/analytics";
 import { teamMessage } from "@/lib/team-messages";
 import type { RoomTeam, SetlistEditMode, VotingMode } from "@/lib/types";
 
+/** 헤더 ⋮ 시트처럼 다른 곳에서 설정을 열 때 쓴다. */
+export interface RoomSettingsHandle {
+  open(): void;
+}
+
 interface Props {
+  /** 바깥에서 여는 핸들 (React 19 ref prop). */
+  ref?: Ref<RoomSettingsHandle>;
+  /** true 면 톱니 버튼을 그리지 않는다. 설정은 ref 로만 연다. */
+  hideTrigger?: boolean;
   playlistId: string;
   shareCode: string;
   adminToken: string | null;
@@ -37,6 +46,8 @@ interface Props {
 }
 
 export default function RoomSettingsButton({
+  ref,
+  hideTrigger = false,
   playlistId,
   shareCode,
   adminToken,
@@ -63,6 +74,8 @@ export default function RoomSettingsButton({
   const [memberLimits, setMemberLimits] = useState<Record<string, string>>({});
   const [isPending, startTransition] = useTransition();
   const { showAlert, showConfirm, showDanger } = useDialog();
+
+  useImperativeHandle(ref, () => ({ open: () => void load() }));
 
   async function load() {
     setOpen(true);
@@ -299,7 +312,7 @@ export default function RoomSettingsButton({
 
   return (
     <>
-      <button
+      {!hideTrigger && <button
         type="button"
         onClick={load}
         className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-transparent text-text-muted transition-all hover:bg-surface-hover hover:text-text active:scale-95"
@@ -310,7 +323,7 @@ export default function RoomSettingsButton({
           <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.592c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.197.717.258 1.07.124l1.205-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-.992.826a1.125 1.125 0 00-.4 1.016v.264c-.006.38.137.751.4 1.016l.992.826c.423.35.534.956.26 1.431l-1.296 2.247a1.125 1.125 0 01-1.37.49l-1.205-.456a1.125 1.125 0 00-1.07.124 6.57 6.57 0 01-.22.127 1.125 1.125 0 00-.645.87l-.213 1.281c-.09.542-.56.94-1.11.94h-2.592c-.55 0-1.02-.398-1.11-.94l-.213-1.281a1.125 1.125 0 00-.645-.87 6.52 6.52 0 01-.22-.127 1.125 1.125 0 00-1.07-.124l-1.205.456a1.125 1.125 0 01-1.37-.49l-1.296-2.247a1.125 1.125 0 01.26-1.431l.992-.826a1.125 1.125 0 00.4-1.016v-.264a1.125 1.125 0 00-.4-1.016l-.992-.826a1.125 1.125 0 01-.26-1.431l1.296-2.247a1.125 1.125 0 011.37-.49l1.205.456c.353.134.746.073 1.07-.124.072-.044.146-.087.22-.127.332-.184.582-.496.645-.87l.213-1.281z" />
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-      </button>
+      </button>}
 
       <Modal open={open} onClose={() => setOpen(false)} title="플레이리스트 설정">
         {!settings ? (

@@ -46,7 +46,7 @@ test.describe("account-a: fixed test room screens", () => {
     // "My vote" is only drawn with a CSS class (no aria state), so this reads the class.
     // Opt-in: needs the owner to have voted once with account-a on the fixed room.
     if (process.env.E2E_ACCOUNT_A_HAS_VOTE === "1") {
-      await expect(page.locator('button[class~="bg-upvote/10"], button[class~="bg-downvote/10"]').first()).toBeVisible();
+      await expect(page.locator('button[class~="bg-upvote/15"], button[class~="bg-downvote/15"]').first()).toBeVisible();
     }
 
     await expectNoAlert(page); // e.g. "참여자 등록에 실패했습니다"

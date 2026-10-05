@@ -84,7 +84,7 @@
   --radius-pill: 9999px;      /* 아바타·카운트 뱃지 */
 
   /* Layout — 하단 고정 요소. 지금까지 매직 넘버로 흩어져 있었다. */
-  --spacing-dock: 3.25rem;    /* 52px — 하단 탭 */
+  --spacing-dock: 4rem;       /* 64px — 하단 탭 (알약 세그먼트 44px + 위아래 여백) */
   --spacing-player: 3.5rem;   /* 56px — 플레이어 바 */
 
   /* Animations */

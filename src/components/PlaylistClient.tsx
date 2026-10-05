@@ -10,6 +10,7 @@ import LoginButton from "./LoginButton";
 import PlaylistHeader from "./PlaylistHeader";
 import AddSongForm from "./AddSongForm";
 import SongCard from "./SongCard";
+import VoteButtons from "./VoteButtons";
 import MiniPlayer from "./MiniPlayer";
 import YouTubePlayer from "./YouTubePlayer";
 import NavigationBar from "./NavigationBar";
@@ -24,11 +25,10 @@ import { track } from "@/lib/analytics";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
 import { DEFAULT_FILTER, songMatchesFilter, type FilterState } from "./FilterBar";
 import KakaoShareButton from "./KakaoShareButton";
-import RoomSettingsButton from "./RoomSettingsButton";
+import RoomSettingsButton, { type RoomSettingsHandle } from "./RoomSettingsButton";
 import BandPromptCard, { BandCreatedCard } from "./BandPromptCard";
 import BandInviteSheet from "./BandInviteSheet";
 import type { CreatedBand } from "./CreateBandSheet";
-import ScreenToolbar from "./ui/ScreenToolbar";
 import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import type { ViewMode } from "./NavigationBar";
@@ -246,6 +246,9 @@ export default function PlaylistClient({
   // Score rank for the 1~3 badges; filters must not renumber the list.
   const rankById = useMemo(() => new Map(songsWithVotes.map((song, index) => [song.id, index + 1])), [songsWithVotes]);
 
+  // The header's ⋮ sheet opens the settings modal; the gear no longer sits in each tab's toolbar.
+  const settingsRef = useRef<RoomSettingsHandle>(null);
+
   // Cover mosaic: the best-scored songs first, each picture once.
   const coverThumbs = useMemo(() => {
     const thumbs: string[] = [];
@@ -276,8 +279,10 @@ export default function PlaylistClient({
     }
   }
 
-  // 한 줄 메타. 있는 것만 가운뎃점으로 잇는다.
-  const metaParts: { key: string; text: string; className: string }[] = [];
+  // 한 줄 메타. 있는 것만 가운뎃점으로 잇는다. 곡 수가 맨 앞이다 (후보곡 툴바가 없어졌다).
+  const metaParts: { key: string; text: string; className: string }[] = [
+    { key: "songs", text: `${songs.length}곡`, className: "font-semibold text-text" },
+  ];
   if (loginGate) {
     metaParts.push({
       key: "invite",
@@ -302,15 +307,18 @@ export default function PlaylistClient({
   }
 
   // Bottom padding: NavigationBar(52px) + MiniPlayer(~56px if active)
-  const bottomPadding = playerState.currentSongId ? "pb-32" : "pb-16";
+  const bottomPadding = playerState.currentSongId ? "pb-40" : "pb-20";
 
   /*
     방 설정은 화면 설정이 아니라 방 설정이다. 투표 공개 범위도, 셋리스트 편집 권한도
     playlists 행에 붙어 있다. 그래서 진입점을 하나로 두고 세 화면 툴바의 같은 자리에 건다.
     종전에는 후보곡·합주에 떠 있는 톱니, 셋리스트에 전체 폭 토글 박스로 흩어져 있었다.
   */
-  const settingsButton = isAdmin && !isArchived ? (
+  const canOpenSettings = isAdmin && !isArchived;
+  const settingsButton = canOpenSettings ? (
     <RoomSettingsButton
+      ref={settingsRef}
+      hideTrigger
       playlistId={playlist.id}
       shareCode={shareCode}
       adminToken={adminToken}
@@ -350,13 +358,35 @@ export default function PlaylistClient({
             coverThumbs={coverThumbs}
             onPlayAll={navMode === "playlist" && songsWithVotes.length > 0 ? handlePlayAll : undefined}
             playing={playerState.isPlaying}
+            onOpenSettings={canOpenSettings ? () => settingsRef.current?.open() : undefined}
+            viewToggle={
+              navMode === "playlist" && songsWithVotes.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setViewMode(viewMode === "compact" ? "card" : "compact")}
+                  aria-label={viewMode === "compact" ? "카드 보기" : "리스트 보기"}
+                  className="inline-flex h-12 w-12 items-center justify-center rounded-pill bg-surface-hover text-text transition-all hover:bg-surface-elevated active:scale-95"
+                >
+                  {viewMode === "compact" ? (
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                      <rect x="3.5" y="4.5" width="17" height="10" rx="2" />
+                      <path strokeLinecap="round" d="M3.5 19h17" />
+                    </svg>
+                  ) : (
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
+                  )}
+                </button>
+              ) : undefined
+            }
             meta={
               /*
                 참여자 수·마감·내 닉네임·로그인이 세 덩어리로 흩어져 있었다.
                 정렬축이 계속 바뀌어 위계가 읽히지 않았으므로 제목 아래 한 줄로 합친다.
               */
-              <div className="flex min-w-0 items-center gap-2">
-                <p className="min-w-0 flex-1 truncate text-caption leading-relaxed text-text-muted tabular-nums">
+              <div className="flex flex-wrap items-center justify-center gap-x-2">
+                <p className="min-w-0 text-caption leading-relaxed text-text-muted tabular-nums">
                   {metaParts.map((part, i) => (
                     <span key={part.key}>
                       {i > 0 && <span className="mx-1.5 text-text-subtle" aria-hidden>·</span>}
@@ -396,47 +426,12 @@ export default function PlaylistClient({
           {/* === MODE: PLAYLIST === */}
           {navMode === "playlist" && (
             <>
-              <ScreenToolbar
-                stat={`${songs.length}곡`}
-                caption={<VoteAllowanceStatus allowance={allowance} />}
-                actions={
-                  <>
-                    {songsWithVotes.length > 0 && (
-                      <div className="-mr-0.5 flex rounded-pill bg-surface-hover/80 p-0.5">
-                        <button
-                          onClick={() => setViewMode("compact")}
-                          className={`inline-flex h-10 w-11 items-center justify-center rounded-pill transition-colors ${
-                            viewMode === "compact"
-                              ? "bg-surface-elevated text-text shadow-sm"
-                              : "text-text-muted hover:text-text"
-                          }`}
-                          aria-label="리스트 보기"
-                          aria-pressed={viewMode === "compact"}
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => setViewMode("card")}
-                          className={`inline-flex h-10 w-11 items-center justify-center rounded-pill transition-colors ${
-                            viewMode === "card"
-                              ? "bg-surface-elevated text-text shadow-sm"
-                              : "text-text-muted hover:text-text"
-                          }`}
-                          aria-label="카드 보기"
-                          aria-pressed={viewMode === "card"}
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-                          </svg>
-                        </button>
-                      </div>
-                    )}
-                    {settingsButton}
-                  </>
-                }
-              />
+              {/* Allocated voting: how many votes are left, right above the songs. */}
+              {allowance?.mode === "allocated" && (
+                <div className="mt-5 text-center text-caption text-text-muted tabular-nums">
+                  <VoteAllowanceStatus allowance={allowance} />
+                </div>
+              )}
 
               {/* 27A: candidates tab only, under the toolbar and above the songs. */}
               {justCreatedTeam ? (
@@ -653,7 +648,6 @@ export default function PlaylistClient({
               }}
               title={playlist.title}
               canEdit={canEditSetlist}
-              actions={settingsButton}
             />
           )}
 
@@ -671,7 +665,6 @@ export default function PlaylistClient({
                 setComments(next);
                 notifyChange();
               }}
-              actions={settingsButton}
             />
           )}
 
@@ -692,6 +685,8 @@ export default function PlaylistClient({
           )}
         </div>
       </div>
+
+      {settingsButton}
 
       {/* Setlist add confirm dialog */}
       {setlistConfirmSong && (
@@ -754,6 +749,22 @@ export default function PlaylistClient({
         state={playerState}
         actions={playerActions}
         playerRef={playerRef}
+        queue={songsWithVotes}
+        songActions={
+          // YouTube Music's like/dislike pill = our vote pill, for the song on air.
+          playerState.currentSong ? (
+            <VoteButtons
+              score={playerState.currentSong.score}
+              userVote={playerState.currentSong.userVote}
+              userVoteCount={playerState.currentSong.userVoteCount}
+              votingMode={playlist.voting_mode}
+              onPress={(direction) => pressVote(playerState.currentSong!.id, direction)}
+              disabled={isExpired || isArchived || (!nickname && !loginGate)}
+              pending={isVotePending(playerState.currentSong.id)}
+              loginGate={loginGate}
+            />
+          ) : undefined
+        }
       >
         {/* 영상은 여기 한 번만 마운트한다. 카드 안으로 옮기면 브라우저가 다시 로드한다. */}
         <YouTubePlayer
