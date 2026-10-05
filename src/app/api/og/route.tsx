@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
+import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
 import { formatShowDate } from "@/lib/team-domain";
 
 export const runtime = "edge";
@@ -102,8 +103,8 @@ export async function GET(request: NextRequest) {
       </div>
     ),
     {
-      width: 1200,
-      height: 630,
+      width: OG_IMAGE_WIDTH,
+      height: OG_IMAGE_HEIGHT,
       fonts: [
         { name: "Pretendard", data: fontBold, style: "normal", weight: 700 },
         { name: "Pretendard", data: fontExtraBold, style: "normal", weight: 800 },

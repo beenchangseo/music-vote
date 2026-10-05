@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { track } from "@/lib/analytics";
+import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
 import { bandShareDescription, roomSharePrefix, shareableShowDate } from "@/lib/team-domain";
 
 declare global {
@@ -194,6 +195,8 @@ export default function KakaoShareButton({
             title: c.title,
             description: c.description,
             imageUrl: ogUrl,
+            imageWidth: OG_IMAGE_WIDTH,
+            imageHeight: OG_IMAGE_HEIGHT,
             link: { mobileWebUrl: url, webUrl: url },
           },
           buttons: [

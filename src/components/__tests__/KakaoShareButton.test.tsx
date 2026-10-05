@@ -61,6 +61,8 @@ describe("KakaoShareButton links", () => {
     expect(card.content.description).not.toMatch(/D-/);
     expect(card.buttons[0].title).toBe("밴드 들어가기");
 
+    // Without the size Kakao crops the 1200×630 card to a near-square and cuts the band name.
+    expect(card.content).toMatchObject({ imageWidth: 1200, imageHeight: 630 });
     const og = new URL(card.content.imageUrl).searchParams;
     expect(og.get("variant")).toBe("band");
     expect(og.get("date")).toBe("2026-10-16");

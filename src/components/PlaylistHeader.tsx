@@ -5,6 +5,7 @@ import { useDialog } from "./DialogProvider";
 import AnnouncementButton from "./AnnouncementButton";
 import AuthMenu from "./AuthMenu";
 import GuitarIcon from "./GuitarIcon";
+import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
 import { roomSharePrefix, showDday, showDdayLabel } from "@/lib/team-domain";
 
 declare global {
@@ -66,6 +67,8 @@ export default function PlaylistHeader({
             title: `🎵 ${title}`,
             description,
             imageUrl: `${window.location.origin}/api/og?title=${encodeURIComponent(title)}&songs=${songCount}&participants=${participantCount}`,
+            imageWidth: OG_IMAGE_WIDTH,
+            imageHeight: OG_IMAGE_HEIGHT,
             link: { mobileWebUrl: url, webUrl: url },
           },
           buttons: [
