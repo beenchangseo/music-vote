@@ -3,9 +3,10 @@ import { notFound } from "next/navigation";
 import { createAdminClient, createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { shouldExposeVoters } from "@/lib/vote-domain";
+import { getMyTeams, type MyTeam } from "@/actions/team";
 import PlaylistClient from "@/components/PlaylistClient";
 import type { Metadata } from "next";
-import type { Playlist, Song, SongWithScore } from "@/lib/types";
+import type { Playlist, RoomTeam, Song, SongWithScore } from "@/lib/types";
 
 /** song_vote_summary 뷰. 점수와 내 표만 담고 다른 사람의 신원은 담지 않는다. */
 type VoteSummaryRow = {
@@ -30,7 +31,38 @@ type EngagementRow = {
 };
 
 const PLAYLIST_COLUMNS =
-  "id, title, share_code, deadline, created_at, setlist_count, announcement, setlist_confirmed, creator_nickname, creator_user_id, votes_anonymous, voting_mode, default_vote_limit, setlist_edit_mode";
+  "id, title, share_code, deadline, created_at, setlist_count, announcement, setlist_confirmed, creator_nickname, creator_user_id, votes_anonymous, voting_mode, default_vote_limit, setlist_edit_mode, team_id";
+
+type Admin = ReturnType<typeof createAdminClient>;
+
+/**
+ * 팀 방의 밴드와 내 멤버 여부. teams·team_members 는 공개 키로 못 읽으므로 service_role (v19).
+ * 실패해도 방 화면은 그대로 뜨게 null + console.error.
+ */
+async function loadRoomBand(
+  admin: Admin,
+  teamId: string,
+  userId: string | null,
+): Promise<{ id: string; name: string; nextShowAt: string | null; isMember: boolean } | null> {
+  const [teamRes, memberRes] = await Promise.all([
+    admin.from("teams").select("id, name, next_show_at").eq("id", teamId).maybeSingle(),
+    userId
+      ? admin.from("team_members").select("user_id").eq("team_id", teamId).eq("user_id", userId).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+  const error = teamRes.error ?? memberRes.error;
+  if (error) {
+    console.error(`[playlist] 밴드 조회 실패 (teamId=${teamId}):`, error.code);
+    return null;
+  }
+  if (!teamRes.data) return null;
+  return {
+    id: teamRes.data.id,
+    name: teamRes.data.name,
+    nextShowAt: teamRes.data.next_show_at ?? null,
+    isMember: !!memberRes.data,
+  };
+}
 
 /**
  * generateMetadata 와 페이지가 같은 합주방을 각각 조회하던 것을 한 번으로 묶는다.
@@ -116,9 +148,14 @@ export default async function PlaylistPage({ params }: PageProps) {
 
   // 익명 모드에서는 누가 어디에 찍었는지를 아예 조회하지 않는다.
   const exposeVoters = shouldExposeVoters(playlist);
+  const isRoomOwner = !!currentUser && currentUser.id === playlist.creator_user_id;
+  const teamId = playlist.team_id ?? null;
+  // "이 방을 내 밴드에 넣기" 후보와 안내 카드(F7) 조건은 방장 · 팀 없는 방에서만 필요하다.
+  const wantsBandPrompt = isRoomOwner && !teamId;
 
   // 집계 뷰가 playlist_id 를 들고 있어(v16) 곡 목록을 기다리지 않는다.
-  const [songsResult, stats, summaryResult, votersResult, engagementResult] =
+  // 밴드 조회도 같은 Promise.all 에 넣어 순차 왕복 2번을 유지한다 (eng D4).
+  const [songsResult, stats, summaryResult, votersResult, engagementResult, band, myTeams, memberCountResult] =
     await Promise.all([
       admin
         .from("songs")
@@ -140,7 +177,25 @@ export default async function PlaylistPage({ params }: PageProps) {
         .from("song_engagement_counts")
         .select("song_id, comment_count, version_count")
         .eq("playlist_id", playlist.id),
+      teamId ? loadRoomBand(admin, teamId, currentUser?.id ?? null) : Promise.resolve(null),
+      wantsBandPrompt ? getMyTeams() : Promise.resolve([] as MyTeam[]),
+      // Logged-in members of the room, not voters (playlist_stats.participant_count counts voters, v15:101).
+      wantsBandPrompt
+        ? admin.from("playlist_members").select("user_id", { count: "exact", head: true }).eq("playlist_id", playlist.id)
+        : Promise.resolve(null),
     ]);
+
+  // Payload rules per field: the band link and name only reach members (the name also reaches the
+  // room owner for "{밴드} 의 방"); the invite code never reaches the room screen (R10).
+  const roomTeam: RoomTeam | null = band
+    ? {
+        id: band.isMember ? band.id : null,
+        name: band.isMember || isRoomOwner ? band.name : null,
+        nextShowAt: band.nextShowAt,
+        isMember: band.isMember,
+      }
+    : null;
+  const memberCount = memberCountResult && !memberCountResult.error ? memberCountResult.count ?? 0 : null;
 
   // 뷰가 없으면 점수가 전부 0 으로 보인다. 배포 순서를 틀렸을 때 바로 알아채도록 남긴다.
   if (summaryResult.error) {
@@ -190,6 +245,9 @@ export default async function PlaylistPage({ params }: PageProps) {
       userNickname={currentUser?.nickname}
       currentUserId={currentUser?.id ?? null}
       currentUserAvatarUrl={currentUser?.avatarUrl ?? null}
+      team={roomTeam}
+      myTeams={myTeams}
+      memberCount={memberCount}
     />
   );
 }

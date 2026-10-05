@@ -45,7 +45,7 @@ export default function LoginButton({ next, className, label = "카카오로 시
       disabled={loading}
       className={
         className ||
-        `inline-flex items-center justify-center gap-2 ${sizeCls} rounded-lg bg-[#FEE500] text-[#191919] font-semibold hover:brightness-95 active:brightness-90 disabled:opacity-60 transition`
+        `inline-flex items-center justify-center gap-2 ${sizeCls} rounded-lg bg-kakao text-kakao-text font-semibold hover:brightness-95 active:brightness-90 disabled:opacity-60 transition`
       }
     >
       <svg width="16" height="16" viewBox="0 0 20 20" aria-hidden>

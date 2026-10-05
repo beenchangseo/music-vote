@@ -5,12 +5,15 @@ import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import CreatePlaylistForm from "@/components/CreatePlaylistForm";
 import { triggerKakaoLogin } from "@/lib/kakao-login";
+import type { MyTeam } from "@/actions/team";
 
 interface HeroCTAProps {
   loggedIn: boolean;
+  /** 완료 화면의 "이 방을 밴드에 넣을까요?" 후보 (디자인 리뷰 13A). */
+  myTeams?: MyTeam[];
 }
 
-export default function HeroCTA({ loggedIn }: HeroCTAProps) {
+export default function HeroCTA({ loggedIn, myTeams = [] }: HeroCTAProps) {
   const [open, setOpen] = useState(false);
 
   function handleClick() {
@@ -32,7 +35,7 @@ export default function HeroCTA({ loggedIn }: HeroCTAProps) {
         onClose={() => setOpen(false)}
         title="합주방 만들기"
       >
-        <CreatePlaylistForm />
+        <CreatePlaylistForm myTeams={myTeams} />
       </Modal>
     </>
   );

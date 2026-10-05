@@ -2,7 +2,7 @@ import { expect, skipWhen, test } from "../fixtures";
 import { authProblem } from "../helpers/guards";
 
 // Read-only. Proves the saved second-account login still works (and gets written back).
-// Band-flow specs that need two accounts (T9: invite, join, new room from the band) go here.
+// The two-account band flow lives in account-a/band.spec.ts (account-b runs there in its own context).
 
 test.describe("account-b: saved login", () => {
   skipWhen(authProblem("account-b"));

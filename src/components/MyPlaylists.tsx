@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import GuitarIcon from "./GuitarIcon";
 
 interface SavedPlaylist {
   id: string;
@@ -14,6 +15,8 @@ interface DbPlaylist {
   id: string;
   shareCode: string;
   title: string;
+  /** 내 밴드의 방이면 그 밴드 이름 (작은 캡션, 디자인 리뷰 4A). */
+  teamName?: string | null;
 }
 
 const EMPTY_PLAYLISTS: SavedPlaylist[] = [];
@@ -53,7 +56,7 @@ export default function MyPlaylists({ loggedIn = true, dbPlaylists = [] }: MyPla
   // 병합: DB 기준 우선, shareCode 로 중복 제거, localStorage 잔여(익명 플리)도 표시
   const merged = useMemo(() => {
     const seen = new Set<string>();
-    const out: { id: string; shareCode: string; title: string }[] = [];
+    const out: DbPlaylist[] = [];
     for (const p of dbPlaylists) {
       if (seen.has(p.shareCode)) continue;
       seen.add(p.shareCode);
@@ -86,6 +89,12 @@ export default function MyPlaylists({ loggedIn = true, dbPlaylists = [] }: MyPla
             className="block w-full px-4 py-3 rounded-xl bg-surface border border-border hover:border-border-strong transition-all text-left"
           >
             <span className="text-text font-medium">{pl.title}</span>
+            {pl.teamName && (
+              <span className="mt-0.5 flex min-w-0 items-center gap-1 text-caption text-text-muted">
+                <GuitarIcon className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{pl.teamName}</span>
+              </span>
+            )}
           </Link>
         ))}
       </div>

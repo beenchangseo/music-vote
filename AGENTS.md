@@ -67,6 +67,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Vercel 환경변수는 `printf '%s' "$VAL" | vercel env add NAME production --force --yes` 로 넣을 것. `echo` 로 넣으면 값 끝에 줄바꿈이 붙는다. `NEXT_PUBLIC_SUPABASE_ANON_KEY` 가 그렇게 들어가 있어서 REST 는 되는데 Realtime 만(키를 URL 쿼리로 보낸다) `HTTP Authentication failed` 로 죽어 있었다
 - `songs` 는 공개 키로 UPDATE 할 수 없다(v15 가 `songs_update` 를 지웠다). 곡 메타 수정은 `createAdminClient()` + 코드 권한 검사로만. RLS 가 막은 UPDATE 는 **에러 없이 0행**을 돌려주므로 쓰기 뒤에 `.select()` 로 행 수를 확인할 것 — 이걸 안 해서 키·BPM 저장이 한동안 조용히 실패했다
 - `votes` 테이블은 공개 키로 직접 읽을 수 없다(`docs/adr/0013`). 투표 조회는 `song_vote_summary`·`song_voters` 뷰로만 한다. 쓰기는 Server Action 의 service_role 이나 SECURITY DEFINER 함수로만
+- 팀 테이블(`teams`·`team_members`)은 anon 접근 0, 읽기·쓰기 모두 service_role + 코드 권한 검사(`src/actions/team.ts`, `docs/adr/0014`). 팀 액션은 예상된 실패를 `{ success: false, reason }` 으로 돌려주고 화면은 `src/lib/team-messages.ts` 로 문구를 만든다
 
 ## 한국어 카피 톤
 

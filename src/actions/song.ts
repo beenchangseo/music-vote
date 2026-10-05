@@ -12,8 +12,81 @@ import {
   isValidGenre,
   isValidDifficulty,
 } from "@/lib/song-meta";
+import { nestedRows } from "@/lib/supabase/nested";
 import type { KeyRoot, KeyMode, Genre, Difficulty } from "@/lib/types";
 import { revalidatePath } from "next/cache";
+
+type CarriedSongMeta = {
+  key_memo: string | null;
+  tempo_bpm: number | null;
+  key_root: KeyRoot | null;
+  key_mode: KeyMode | null;
+};
+
+const hasAnyMeta = (row: CarriedSongMeta) =>
+  row.key_memo != null || row.tempo_bpm != null || row.key_root != null || row.key_mode != null;
+
+/**
+ * E4 키·BPM 이어받기. 방이 밴드에 속해 있으면 같은 밴드의 다른 방에서 같은 영상을 찾아,
+ * 네 값(key_memo·tempo_bpm·key_root·key_mode) 가운데 하나라도 있는 가장 최근 행의 네 값을
+ * 섞지 않고 그대로 돌려준다.
+ *
+ * 밴드 밖으로는 절대 찾지 않는다. key_memo("+3키" 같은)는 그 밴드에서만 통하는 상대 표기다.
+ * songs 는 공개 키로 읽을 수 없으므로(v18) service_role 로 읽는다.
+ * 조회가 실패해도 곡 추가를 막지 않는다: null + console.error.
+ */
+async function findTeamSongMeta(playlistId: string, videoId: string): Promise<CarriedSongMeta | null> {
+  try {
+    const admin = createAdminClient();
+    const { data: room, error: roomError } = await admin
+      .from("playlists")
+      .select("team_id")
+      .eq("id", playlistId)
+      .maybeSingle();
+    if (roomError) {
+      console.error("[song.addSong] team lookup failed", { playlistId, code: roomError.code });
+      return null;
+    }
+    const teamId: string | null = room?.team_id ?? null;
+    if (!teamId) return null;
+
+    const { data, error } = await admin
+      .from("songs")
+      .select("key_memo, tempo_bpm, key_root, key_mode, created_at, playlists!inner(team_id)")
+      .eq("youtube_video_id", videoId)
+      .eq("playlists.team_id", teamId)
+      .neq("playlist_id", playlistId)
+      .or("key_memo.not.is.null,tempo_bpm.not.is.null,key_root.not.is.null,key_mode.not.is.null")
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (error) {
+      console.error("[song.addSong] team song meta lookup failed", { playlistId, teamId, code: error.code });
+      return null;
+    }
+
+    type Row = CarriedSongMeta & {
+      playlists: { team_id: string | null } | { team_id: string | null }[] | null;
+    };
+    // The query already filters by band and non-null meta; check again so a
+    // wrong filter can never leak another band's key memo.
+    const match = ((data ?? []) as Row[]).find(
+      (row) => nestedRows(row.playlists)[0]?.team_id === teamId && hasAnyMeta(row),
+    );
+    if (!match) return null;
+    return {
+      key_memo: match.key_memo,
+      tempo_bpm: match.tempo_bpm,
+      key_root: match.key_root,
+      key_mode: match.key_mode,
+    };
+  } catch (error) {
+    console.error("[song.addSong] team song meta lookup threw", {
+      playlistId,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
 
 export async function addSong(
   playlistId: string,
@@ -31,10 +104,11 @@ export async function addSong(
   }
 
   // 제목·썸네일은 oEmbed, 재생시간·임베드 가능 여부는 Data API 가 준다.
-  // 둘 다 실패해도 곡 추가는 진행한다.
-  const [metadata, details] = await Promise.all([
+  // 둘 다 실패해도 곡 추가는 진행한다. 밴드 방이면 키·BPM 이어받기(E4)도 같이 찾는다.
+  const [metadata, details, carriedMeta] = await Promise.all([
     manualTitle ? Promise.resolve(null) : fetchVideoMetadata(videoId),
     fetchSingleVideoDetails(videoId),
+    findTeamSongMeta(playlistId, videoId),
   ]);
 
   const title = metadata?.title || manualTitle || youtubeUrl;
@@ -58,6 +132,7 @@ export async function addSong(
     duration_seconds: details?.durationSeconds ?? null,
     added_by: user.nickname,
     added_by_user_id: user.id,
+    ...(carriedMeta ?? {}),
   });
 
   if (error) throw new Error("곡 추가에 실패했습니다.");
@@ -68,6 +143,8 @@ export async function addSong(
     needsManualTitle: !metadata && !manualTitle,
     // 임베드가 막힌 곡은 합주 중에 재생되지 않는다. 화면에서 알려준다.
     notEmbeddable: details ? !details.embeddable : false,
+    // 같은 밴드에서 적어둔 키·BPM 을 가져왔다 (화면: "지난번에 적어둔 키·BPM 을 가져왔어요").
+    prefilledMeta: carriedMeta !== null,
   };
 }
 
