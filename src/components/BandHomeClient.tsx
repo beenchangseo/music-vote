@@ -1,26 +1,31 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Card from "./ui/Card";
 import IconButton from "./ui/IconButton";
 import { buttonClassName } from "./ui/Button";
 import { useDialog } from "./DialogProvider";
-import ShowDateTile from "./ShowDateTile";
+import GuitarIcon from "./GuitarIcon";
+import { showDateSpokenLabel } from "./ShowDateTile";
+import { BandArt, MemberAvatar, RoomCover, SongThumb } from "./BandArt";
 import BandInviteSheet, { KakaoInviteButton } from "./BandInviteSheet";
 import BandDateSheet from "./BandDateSheet";
 import RemoveMemberModal from "./RemoveMemberModal";
 import { LEFT_BAND_STORAGE_KEY } from "./LeftBandNotice";
 import { leaveTeam, type TeamHomeMember, type TeamHomeView, type TeamRoom } from "@/actions/team";
 import { track } from "@/lib/analytics";
-import { formatShowDate, showDday } from "@/lib/team-domain";
+import { assignAvatarColors, bandPalette, type BandPalette } from "@/lib/band-art";
+import { aggregatePlayedSongs, formatShowDate, showDday, type PlayedSong, type ShowDday } from "@/lib/team-domain";
 import { teamMessage } from "@/lib/team-messages";
 
 type MemberView = Extract<TeamHomeView, { access: "member" }>;
 
-/** 합주방 목록은 최근 5개 + 더 보기 (CEO Section 4, MyPlaylists 와 같은 패턴). */
-const COLLAPSED_ROOMS = 5;
+/** "우리가 했던 곡"은 5곡 + 더 보기 (YouTube Music Quick picks 처럼 짧게). */
+const COLLAPSED_SONGS = 5;
+/** 히어로 아바타 묶음에 보일 최대 인원 (나머지는 +N). */
+const STACKED_AVATARS = 4;
 
 const LEAVE_MESSAGE =
   "홈의 '내 밴드'와 멤버 목록에서 빠져요. 이미 들어간 합주방은 그대로 남아요. 초대 링크가 있으면 다시 들어올 수 있어요.";
@@ -36,14 +41,16 @@ interface BandHomeClientProps {
 }
 
 /**
- * 밴드 홈 멤버 화면 (/band/[teamId]). 위에서부터 툴바(뒤로·초대) / 밴드 이름 + 공연 날짜 타일 /
- * 상태별 주 버튼(1A) / 합주방 한 목록(26A, 펼치면 E1 곡 기록) / 멤버 / 맨 아래 "밴드 나가기"(owner 제외).
+ * 밴드 홈 멤버 화면 (/band/[teamId]). Spotify·YouTube Music 의 아티스트·플레이리스트 화면 문법을 따른다.
+ * 위에서부터 히어로(밴드 색 그림 + 이름 + 공연 날짜) / 액션 줄(멤버 아바타·초대·큰 재생 버튼) /
+ * 지금 합주방 카드 / 합주방 가로 선반 / 우리가 했던 곡 / 멤버 / 맨 아래 "밴드 나가기"(owner 제외).
  */
 export default function BandHomeClient({ view, created, joined }: BandHomeClientProps) {
   const router = useRouter();
   const { showDanger } = useDialog();
   const { team, myRole, rooms } = view;
   const isOwner = myRole === "owner";
+  const palette = bandPalette(team.id);
 
   const [banner, setBanner] = useState<"created" | "joined" | null>(
     created ? "created" : joined ? "joined" : null,
@@ -70,6 +77,8 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
     track("band_home_viewed", { role: myRole });
   }, [myRole]);
 
+  const played = useMemo(() => aggregatePlayedSongs(rooms), [rooms]);
+  const avatarColors = assignAvatarColors(members.map((member) => member.displayName));
   const dday = showDday(nextShowAt, new Date());
   // 1A: the latest band room whose setlist is not confirmed yet.
   const activeRoom = rooms[0] && !rooms[0].setlistConfirmed ? rooms[0] : null;
@@ -102,23 +111,63 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
 
   return (
     <main className="min-h-full bg-bg">
-      <div className="mx-auto max-w-md px-4 py-6 pb-16">
-        {/* Right padding keeps the share icon clear of the fixed account button on phones. */}
-        <div className="flex items-center justify-between pr-12 sm:pr-0">
+      {/* Hero: Spotify Blend-style art in the band's own colors, the name sitting on the fade. */}
+      <header className="relative isolate">
+        <BandArt palette={palette} className="absolute inset-x-0 top-0 -z-10 h-[22rem]" />
+        <div className="mx-auto max-w-md px-4 pt-4">
           <Link
             href="/"
             aria-label="홈으로"
-            className="-ml-2 inline-flex h-11 w-11 items-center justify-center rounded-control text-text-muted transition-colors hover:bg-surface-hover hover:text-text"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-pill bg-black/35 text-white backdrop-blur-sm transition-colors hover:bg-black/50"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
-          <IconButton aria-label="멤버 초대" onClick={() => setInviteOpen(true)}>
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 8.25H7.5a2.25 2.25 0 00-2.25 2.25v9a2.25 2.25 0 002.25 2.25h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25H15M12 15V2.25m0 0l-3 3m3-3l3 3" />
+
+          <div className="pt-28">
+            <p className="flex items-center gap-1.5 text-caption font-semibold text-white/80">
+              <GuitarIcon className="h-4 w-4" />
+              밴드
+            </p>
+            <h1 className="mt-1 line-clamp-2 break-keep text-display font-black text-white [text-shadow:0_2px_16px_rgb(0_0_0/0.35)]">
+              {team.name}
+            </h1>
+            <p className="mt-2 text-sm text-text-muted tabular-nums">
+              멤버 {members.length}명<Dot />
+              합주방 {rooms.length}개<Dot />
+              했던 곡 {played.length}곡
+            </p>
+            <ShowDateChip dday={dday} onOpen={() => setDateOpen(true)} />
+          </div>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-md px-4 pb-16">
+        {/* Action row: Spotify Jam avatars + invite on the left, the big round button on the right. */}
+        <div className="mt-4 flex items-center gap-1">
+          <a href="#band-members" className="flex min-h-11 items-center pr-1" aria-label={`멤버 ${members.length}명`}>
+            <span className="flex -space-x-2">
+              {members.slice(0, STACKED_AVATARS).map((member, index) => (
+                <MemberAvatar
+                  key={`${member.displayName}-${member.joinedAt}`}
+                  name={member.displayName}
+                  color={avatarColors[index]}
+                  className="h-8 w-8 text-sm ring-2 ring-bg"
+                />
+              ))}
+            </span>
+            {members.length > STACKED_AVATARS && (
+              <span className="ml-1.5 text-sm text-text-muted tabular-nums">+{members.length - STACKED_AVATARS}</span>
+            )}
+          </a>
+          <IconButton bare aria-label="멤버 초대" onClick={() => setInviteOpen(true)}>
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
             </svg>
           </IconButton>
+          <div className="flex-1" />
+          <PlayButton activeRoom={activeRoom} newRoomHref={newRoomHref} />
         </div>
 
         {banner && (
@@ -150,97 +199,55 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
           </Card>
         )}
 
-        <h1 className="mt-4 truncate text-h2 font-bold text-text">{team.name}</h1>
+        {/* 1A: a band of one needs members before anything else. */}
+        {alone && (
+          <Card variant="elevated" className="mt-5">
+            <p className="text-body font-semibold text-text">멤버를 불러야 같이 투표해요</p>
+            <p className="mt-1 text-sm text-text-muted">단톡방에 초대 링크를 보내면 바로 들어와요</p>
+            <KakaoInviteButton onClick={() => setInviteOpen(true)} className="mt-4 w-full">
+              카톡으로 멤버 부르기
+            </KakaoInviteButton>
+          </Card>
+        )}
 
-        <div className="mt-3">
-          {dday.state === "upcoming" || dday.state === "today" ? (
-            <ShowDateTile dday={dday} onClick={() => setDateOpen(true)} />
-          ) : dday.state === "ended" ? (
-            <Card variant="elevated">
-              <p className="text-body font-semibold text-text">{formatShowDate(dday.date, false)} 공연 끝 · 수고했어요</p>
-              <button
-                type="button"
-                onClick={() => setDateOpen(true)}
-                className={buttonClassName({ variant: "secondary", size: "md", className: "mt-3" })}
-              >
-                다음 공연 날짜 정하기
-              </button>
-            </Card>
-          ) : (
-            <Card variant="outline" padding="none">
-              <button
-                type="button"
-                onClick={() => setDateOpen(true)}
-                className="flex min-h-14 w-full items-center gap-3 rounded-card px-4 text-sm font-semibold text-text-muted transition-colors hover:bg-surface-hover hover:text-text"
-              >
-                <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                </svg>
-                공연 날짜 정하기
-              </button>
-            </Card>
-          )}
-        </div>
+        {activeRoom && <NowRoomCard room={activeRoom} palette={palette} />}
 
-        {/* 1A: one primary action by state. */}
-        <div className="mt-4 space-y-2">
-          {alone ? (
-            <>
-              <button
-                type="button"
-                onClick={() => setInviteOpen(true)}
-                className={buttonClassName({ size: "lg", fullWidth: true })}
-              >
-                카톡으로 멤버 부르기
-              </button>
-              <Link href={newRoomHref} className={buttonClassName({ variant: "secondary", size: "md", fullWidth: true })}>
-                새 합주방
-              </Link>
-            </>
-          ) : activeRoom ? (
-            <>
-              <Link
-                href={`/playlist/${activeRoom.shareCode}`}
-                className="flex min-h-16 items-center gap-3 rounded-control bg-primary px-4 py-3 text-white transition-all hover:bg-primary-hover active:scale-[0.99]"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block text-caption text-white/80">지금 합주방</span>
-                  <span className="block truncate text-body font-semibold">{activeRoom.title}</span>
-                </span>
-                <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-              <Link href={newRoomHref} className={buttonClassName({ variant: "secondary", size: "md", fullWidth: true })}>
-                새 합주방
-              </Link>
-            </>
-          ) : (
-            <Link href={newRoomHref} className={buttonClassName({ size: "lg", fullWidth: true })}>
-              새 합주방
-            </Link>
-          )}
-        </div>
+        <RoomsShelf rooms={rooms} palette={palette} newRoomHref={newRoomHref} />
 
-        <RoomsSection rooms={rooms} />
+        <PlayedSongs songs={played} palette={palette} />
 
-        <section aria-labelledby="band-members" className="mt-8">
-          <SectionTitle id="band-members" title="멤버" count={members.length} />
-          <ul className="mt-2 divide-y divide-border border-y border-border">
-            {members.map((member) => (
-              <MemberRow
+        <section id="band-members" aria-labelledby="band-members-title" className="mt-10 scroll-mt-4">
+          <SectionTitle id="band-members-title" title="멤버" count={members.length} />
+          <ul className="mt-4 grid grid-cols-4 gap-x-2 gap-y-5">
+            {members.map((member, index) => (
+              <MemberTile
                 key={`${member.displayName}-${member.joinedAt}`}
                 member={member}
+                color={avatarColors[index]}
                 canRemove={isOwner && member.role === "member" && !!member.userId}
                 onRemove={() => setRemoving({ userId: member.userId!, displayName: member.displayName })}
               />
             ))}
+            <li>
+              <button
+                type="button"
+                onClick={() => setInviteOpen(true)}
+                className="flex w-full flex-col items-center gap-2 text-text-muted transition-colors hover:text-text"
+              >
+                <span className="flex h-16 w-16 items-center justify-center rounded-pill border-2 border-dashed border-border-strong">
+                  <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                </span>
+                <span className="text-sm">더 부르기</span>
+              </button>
+            </li>
           </ul>
         </section>
 
         {/* 디자인 2회차 1A·8A: a quiet row at the very bottom, never for the owner. */}
         {!isOwner && (
-          <div className="mt-8 border-t border-border pt-2">
+          <div className="mt-10 border-t border-border pt-2">
             <button
               type="button"
               onClick={leave}
@@ -293,14 +300,202 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
   );
 }
 
-function SectionTitle({ id, title, count, sub }: { id: string; title: string; count: number; sub?: string }) {
+function Dot() {
   return (
-    <div className="flex items-baseline justify-between gap-3">
-      <h2 id={id} className="text-h4 font-semibold text-text">
-        {title} <span className="text-sm font-normal text-text-subtle tabular-nums">{count}</span>
-      </h2>
-      {sub && <p className="text-sm text-text-subtle tabular-nums">{sub}</p>}
-    </div>
+    <span className="mx-1.5 text-text-subtle" aria-hidden>
+      ·
+    </span>
+  );
+}
+
+const chipClass =
+  "inline-flex min-h-11 items-center gap-2 rounded-pill bg-white/10 px-4 text-sm font-semibold text-text backdrop-blur-sm transition-colors hover:bg-white/15";
+
+function CalendarIcon() {
+  return (
+    <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+    </svg>
+  );
+}
+
+/** 공연 날짜: D-day 칩(눌러서 바꾸기) / 지난 공연 인사 + 다음 날짜 / 날짜 정하기. */
+function ShowDateChip({ dday, onOpen }: { dday: ShowDday; onOpen: () => void }) {
+  if (dday.state === "upcoming" || dday.state === "today") {
+    return (
+      <button type="button" onClick={onOpen} aria-label={showDateSpokenLabel(dday)} className={`mt-4 ${chipClass}`}>
+        <CalendarIcon />
+        <span className="tabular-nums">{dday.state === "today" ? "오늘 공연" : `D-${dday.days}`}</span>
+        <span className="font-normal text-text-muted">{formatShowDate(dday.date)} 공연</span>
+      </button>
+    );
+  }
+  if (dday.state === "ended") {
+    return (
+      <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <p className="text-sm text-text">{formatShowDate(dday.date, false)} 공연 끝 · 수고했어요</p>
+        <button type="button" onClick={onOpen} className={chipClass}>
+          <CalendarIcon />
+          다음 공연 날짜 정하기
+        </button>
+      </div>
+    );
+  }
+  return (
+    <button type="button" onClick={onOpen} className={`mt-4 ${chipClass}`}>
+      <CalendarIcon />
+      공연 날짜 정하기
+    </button>
+  );
+}
+
+/** 큰 둥근 버튼 (Spotify 재생 버튼): 지금 합주방으로, 없으면 새 합주방 만들기. */
+function PlayButton({ activeRoom, newRoomHref }: { activeRoom: TeamRoom | null; newRoomHref: string }) {
+  const className =
+    "inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-pill bg-primary text-white shadow-[0_8px_24px_-6px_rgb(139_92_246/0.7)] transition-all hover:scale-105 hover:bg-primary-hover active:scale-95";
+  if (activeRoom) {
+    return (
+      <Link href={`/playlist/${activeRoom.shareCode}`} aria-label={`${activeRoom.title} 들어가기`} className={className}>
+        <svg className="ml-0.5 h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+          <path d="M8 5.14v13.72a1 1 0 001.5.86l11-6.86a1 1 0 000-1.72l-11-6.86A1 1 0 008 5.14z" />
+        </svg>
+      </Link>
+    );
+  }
+  return (
+    <Link href={newRoomHref} aria-label="합주방 만들기" className={className}>
+      <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+    </Link>
+  );
+}
+
+function roomStatus(room: TeamRoom): string {
+  if (room.setlist.length > 0) return `셋리스트 ${room.setlist.length}곡`;
+  if (room.songCount > 0) return `투표 중 · 후보곡 ${room.songCount}곡`;
+  return "투표 중";
+}
+
+/** 지금 합주방 (YouTube Music 추천 플레이리스트 카드): 커버 + 제목 + 상태 + 흰 재생 버튼. */
+function NowRoomCard({ room, palette }: { room: TeamRoom; palette: BandPalette }) {
+  return (
+    <section aria-label="지금 합주방" className="mt-6">
+      <Link
+        href={`/playlist/${room.shareCode}`}
+        className="block overflow-hidden rounded-card bg-surface p-4 ring-1 ring-white/5 transition-transform active:scale-[0.99]"
+        style={{ backgroundImage: `linear-gradient(135deg, ${palette.deep} 0%, transparent 75%)` }}
+      >
+        <span className="flex items-center gap-4">
+          <RoomCover thumbs={room.coverThumbs} palette={palette} sizes="88px" className="h-22 w-22 shrink-0 shadow-lg" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-caption font-semibold text-text-muted">지금 합주방</span>
+            <span className="mt-0.5 line-clamp-2 block break-keep text-h4 font-bold text-text">{room.title}</span>
+            <span className="mt-1 block text-sm text-text-muted tabular-nums">{roomStatus(room)}</span>
+          </span>
+        </span>
+        <span className="mt-4 flex items-center justify-between gap-3">
+          <span className="text-sm font-semibold text-text">
+            {room.setlist.length > 0 ? "셋리스트 보러 가기" : "들어가서 투표하기"}
+          </span>
+          <span aria-hidden className="inline-flex h-10 w-10 items-center justify-center rounded-pill bg-white text-black">
+            <svg className="ml-0.5 h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5.14v13.72a1 1 0 001.5.86l11-6.86a1 1 0 000-1.72l-11-6.86A1 1 0 008 5.14z" />
+            </svg>
+          </span>
+        </span>
+      </Link>
+    </section>
+  );
+}
+
+function SectionTitle({ id, title, count }: { id: string; title: string; count: number }) {
+  return (
+    <h2 id={id} className="text-h3 font-bold text-text">
+      {title} <span className="ml-0.5 text-sm font-medium text-text-subtle tabular-nums">{count}</span>
+    </h2>
+  );
+}
+
+/** 합주방 가로 선반 (YouTube Music "새 앨범" 줄): 맨 앞은 새 합주방, 그다음 최근 방부터. */
+function RoomsShelf({ rooms, palette, newRoomHref }: { rooms: TeamRoom[]; palette: BandPalette; newRoomHref: string }) {
+  return (
+    <section aria-labelledby="band-rooms" className="mt-10">
+      <SectionTitle id="band-rooms" title="합주방" count={rooms.length} />
+      <ul className="-mx-4 mt-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <li className="w-36 shrink-0 snap-start">
+          <Link href={newRoomHref} className="group block">
+            <span className="flex aspect-square w-full items-center justify-center rounded-control border-2 border-dashed border-border-strong text-text-muted transition-colors group-hover:border-text-muted group-hover:text-text">
+              <svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+            </span>
+            <span className="mt-2 block text-sm font-semibold text-text">새 합주방</span>
+          </Link>
+        </li>
+        {rooms.map((room) => (
+          <li key={room.id} className="w-36 shrink-0 snap-start">
+            <Link href={`/playlist/${room.shareCode}`} className="block">
+              <RoomCover thumbs={room.coverThumbs} palette={palette} sizes="144px" className="aspect-square w-full" />
+              <span className="mt-2 block truncate text-sm font-semibold text-text">{room.title}</span>
+              <span className="block truncate text-caption text-text-muted tabular-nums">
+                {roomDate.format(new Date(room.createdAt))}
+                <Dot />
+                {room.setlist.length > 0 ? `셋리스트 ${room.setlist.length}곡` : "투표 중"}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {rooms.length === 0 && <p className="mt-1 text-caption text-text-muted">새 합주방을 만들면 여기에 모여요</p>}
+    </section>
+  );
+}
+
+/** E1 우리가 했던 곡 (YouTube Music Quick picks + Spotify Wrapped 의 "N번"). 여러 번 한 곡이 위로 온다. */
+function PlayedSongs({ songs, palette }: { songs: PlayedSong[]; palette: BandPalette }) {
+  const [showAll, setShowAll] = useState(false);
+  const visible = showAll ? songs : songs.slice(0, COLLAPSED_SONGS);
+  return (
+    <section aria-labelledby="band-played" className="mt-10">
+      <SectionTitle id="band-played" title="우리가 했던 곡" count={songs.length} />
+      {songs.length === 0 ? (
+        <p className="mt-2 text-sm text-text-muted">셋리스트를 짜면 여기에 쌓여요</p>
+      ) : (
+        <>
+          <ol className="mt-3">
+            {visible.map((song) => (
+              <li key={song.key}>
+                <Link
+                  href={`/playlist/${song.latestShareCode}`}
+                  className="-mx-2 flex min-h-16 items-center gap-3 rounded-control px-2 py-2 transition-colors hover:bg-surface-hover"
+                >
+                  <SongThumb src={song.thumbnailUrl} className="h-12 w-12" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-body text-text">{song.title}</span>
+                    {song.artist && <span className="block truncate text-sm text-text-muted">{song.artist}</span>}
+                  </span>
+                  {song.times > 1 && (
+                    <span className="shrink-0 text-sm font-bold tabular-nums" style={{ color: palette.light }}>
+                      {song.times}번
+                    </span>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ol>
+          {!showAll && songs.length > COLLAPSED_SONGS && (
+            <button
+              type="button"
+              onClick={() => setShowAll(true)}
+              className="mt-2 inline-flex min-h-11 items-center rounded-pill border border-border px-4 text-sm font-semibold text-text transition-colors hover:bg-surface-hover"
+            >
+              더 보기 ({songs.length - COLLAPSED_SONGS}곡)
+            </button>
+          )}
+        </>
+      )}
+    </section>
   );
 }
 
@@ -314,146 +509,57 @@ function CloseButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-/** 26A: one list of band rooms. A row with a setlist expands into the songs played (E1). */
-function RoomsSection({ rooms }: { rooms: TeamRoom[] }) {
-  const [showAll, setShowAll] = useState(false);
-  // Only the latest room starts open.
-  const [expanded, setExpanded] = useState<string[]>(() =>
-    rooms[0] && rooms[0].setlist.length > 0 ? [rooms[0].id] : [],
-  );
-  const songTotal = rooms.reduce((sum, room) => sum + room.setlist.length, 0);
-  const visible = showAll ? rooms : rooms.slice(0, COLLAPSED_ROOMS);
-
-  function toggle(id: string) {
-    setExpanded((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
-  }
-
-  return (
-    <section aria-labelledby="band-rooms" className="mt-8">
-      <SectionTitle id="band-rooms" title="합주방" count={rooms.length} sub={`했던 곡 ${songTotal}`} />
-      {rooms.length === 0 ? (
-        <Card variant="outline" className="mt-3 text-center">
-          <p className="text-sm text-text-muted">아직 합주방이 없어요. 새 합주방을 만들면 여기에 모여요</p>
-        </Card>
-      ) : (
-        <>
-          <ul className="mt-2 divide-y divide-border border-y border-border">
-            {visible.map((room) => (
-              <RoomRow
-                key={room.id}
-                room={room}
-                expanded={expanded.includes(room.id)}
-                onToggle={() => toggle(room.id)}
-              />
-            ))}
-          </ul>
-          {songTotal === 0 && <p className="mt-2 text-caption text-text-muted">셋리스트를 짜면 여기에 쌓여요</p>}
-          {!showAll && rooms.length > COLLAPSED_ROOMS && (
-            <button
-              type="button"
-              onClick={() => setShowAll(true)}
-              className="mt-1 inline-flex min-h-11 w-full items-center justify-center text-sm text-text-muted transition-colors hover:text-text"
-            >
-              더 보기 ({rooms.length - COLLAPSED_ROOMS}개)
-            </button>
-          )}
-        </>
-      )}
-    </section>
-  );
-}
-
-function RoomRow({ room, expanded, onToggle }: { room: TeamRoom; expanded: boolean; onToggle: () => void }) {
-  const hasSetlist = room.setlist.length > 0;
-  const listId = `room-songs-${room.id}`;
-  return (
-    <li>
-      <div className="flex min-h-14 items-center gap-2">
-        <Link href={`/playlist/${room.shareCode}`} className="min-w-0 flex-1 py-2">
-          <span className="block truncate text-body text-text">{room.title}</span>
-          <span className="block text-caption text-text-muted tabular-nums">
-            {roomDate.format(new Date(room.createdAt))}
-            <span className="mx-1.5 text-text-subtle" aria-hidden>·</span>
-            {hasSetlist ? `셋리스트 ${room.setlist.length}곡` : "투표 중"}
-          </span>
-        </Link>
-        {hasSetlist && (
-          <IconButton
-            bare
-            aria-label={`${room.title} 곡 기록 ${expanded ? "접기" : "펼치기"}`}
-            aria-expanded={expanded}
-            aria-controls={listId}
-            onClick={onToggle}
-          >
-            <svg
-              className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-              aria-hidden
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          </IconButton>
-        )}
-      </div>
-      {hasSetlist && expanded && (
-        <ol id={listId} className="space-y-1 pb-3">
-          {room.setlist.map((song, index) => (
-            <li key={`${song.songId}-${song.position}`} className="flex min-w-0 items-baseline gap-2 text-sm">
-              <span className="w-5 shrink-0 text-right text-caption text-text-subtle tabular-nums">{index + 1}</span>
-              <span className="truncate text-text">{song.title}</span>
-              {song.artist && <span className="shrink-0 truncate text-caption text-text-muted">{song.artist}</span>}
-            </li>
-          ))}
-        </ol>
-      )}
-    </li>
-  );
-}
-
-function MemberRow({
+/** 멤버 한 칸 (YouTube Music "좋아하는 아티스트" 원). owner 에게는 내보내기 메뉴가 붙는다. */
+function MemberTile({
   member,
+  color,
   canRemove,
   onRemove,
 }: {
   member: TeamHomeMember;
+  color: string;
   canRemove: boolean;
   onRemove: () => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const sub = member.role === "owner" ? "만든 사람" : member.isMe ? "나" : null;
   return (
-    <li className="flex min-h-14 items-center gap-2">
-      <p className="min-w-0 flex-1 truncate text-body text-text">
-        {member.displayName}
-        {member.isMe && <span className="ml-1.5 text-caption text-text-muted">나</span>}
-      </p>
-      {member.role === "owner" && <span className="shrink-0 text-caption text-text-muted">만든 사람</span>}
+    <li
+      className="relative flex flex-col items-center gap-2 text-center"
+      onKeyDown={(e) => {
+        if (e.key === "Escape") setMenuOpen(false);
+      }}
+    >
+      <MemberAvatar name={member.displayName} color={color} className="h-16 w-16 text-h3" />
+      <span className="w-full min-w-0">
+        <span className="block truncate text-sm text-text">{member.displayName}</span>
+        {sub && (
+          <span className="block text-caption text-text-muted">
+            {sub}
+            {member.role === "owner" && member.isMe && " · 나"}
+          </span>
+        )}
+      </span>
       {canRemove && (
-        <div
-          className="relative"
-          onKeyDown={(e) => {
-            if (e.key === "Escape") setMenuOpen(false);
-          }}
-        >
+        <>
           <IconButton
             bare
             aria-label={`${member.displayName} 메뉴`}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
+            className="absolute -right-1 -top-2"
           >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <circle cx="12" cy="5" r="1.75" />
+              <circle cx="5" cy="12" r="1.75" />
               <circle cx="12" cy="12" r="1.75" />
-              <circle cx="12" cy="19" r="1.75" />
+              <circle cx="19" cy="12" r="1.75" />
             </svg>
           </IconButton>
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-11 z-10 w-36 overflow-hidden rounded-control border border-border bg-surface shadow-lg"
+              className="absolute right-0 top-9 z-10 w-36 overflow-hidden rounded-control border border-border bg-surface text-left shadow-lg"
             >
               <button
                 type="button"
@@ -468,7 +574,7 @@ function MemberRow({
               </button>
             </div>
           )}
-        </div>
+        </>
       )}
     </li>
   );

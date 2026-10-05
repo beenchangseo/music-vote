@@ -17,6 +17,7 @@ const showDanger = vi.fn();
 
 vi.mock("@/actions/team", () => actions);
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
+vi.mock("next/image", () => ({ default: () => null }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push, refresh: vi.fn() }) }));
 vi.mock("../DialogProvider", () => ({ useDialog: () => ({ showDanger, showAlert: vi.fn(), showConfirm: vi.fn() }) }));
 
@@ -31,6 +32,8 @@ function room(overrides: Partial<TeamRoom> = {}): TeamRoom {
     createdAt: "2026-10-01T03:00:00Z",
     setlistConfirmed: false,
     setlist: [],
+    songCount: 0,
+    coverThumbs: [],
     ...overrides,
   };
 }
@@ -146,41 +149,71 @@ describe("BandHomeClient primary action (1A)", () => {
     expect(screen.getByRole("link", { name: "새 합주방" })).toHaveAttribute("href", `/new?band=${TEAM}`);
   });
 
-  it("puts the running room first with 새 합주방 as secondary", () => {
-    renderHome(view({ rooms: [room()] }));
-    expect(screen.getByRole("link", { name: /지금 합주방/ })).toHaveAttribute("href", "/playlist/abc123");
+  it("features the running room and sends the round button there", () => {
+    renderHome(view({ rooms: [room({ songCount: 7 })] }));
+    const card = screen.getByRole("link", { name: /지금 합주방/ });
+    expect(card).toHaveAttribute("href", "/playlist/abc123");
+    expect(card).toHaveTextContent("투표 중 · 후보곡 7곡");
+    expect(screen.getByRole("link", { name: "10월 정기 합주 들어가기" })).toHaveAttribute("href", "/playlist/abc123");
     expect(screen.getByRole("link", { name: "새 합주방" })).toHaveAttribute("href", `/new?band=${TEAM}`);
   });
 
-  it("falls back to 새 합주방 when nothing is running", () => {
+  it("turns the round button into 합주방 만들기 when nothing is running", () => {
     renderHome(view({ rooms: [room({ setlistConfirmed: true })] }));
     expect(screen.queryByRole("link", { name: /지금 합주방/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "합주방 만들기" })).toHaveAttribute("href", `/new?band=${TEAM}`);
     expect(screen.getByRole("link", { name: "새 합주방" })).toBeInTheDocument();
   });
 });
 
-describe("BandHomeClient rooms (26A, E1)", () => {
-  const played = [
-    { songId: "s1", title: "말달리자", artist: "크라잉넛", position: 0 },
-    { songId: "s2", title: "넌 내게 반했어", artist: "노브레인", position: 1 },
-  ];
+describe("BandHomeClient rooms shelf and played songs (26A, E1)", () => {
+  const song = (songId: string, title: string, artist: string, videoId: string, position = 0) => ({
+    songId,
+    title,
+    artist,
+    position,
+    videoId,
+    thumbnailUrl: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
+  });
+  const run = song("s1", "말달리자", "크라잉넛", "v-run");
+  const crush = song("s2", "넌 내게 반했어", "노브레인", "v-crush", 1);
 
-  it("lists rooms with counts and opens only the latest setlist", () => {
+  it("shelves a 새 합주방 tile, then every room newest first", () => {
     renderHome(
       view({
         rooms: [
-          room({ id: "r2", title: "10월 합주", setlist: played }),
-          room({ id: "r1", title: "9월 합주", shareCode: "old", setlist: [played[0]], setlistConfirmed: true }),
+          room({ id: "r2", title: "10월 합주", setlist: [run, crush] }),
+          room({ id: "r1", title: "9월 합주", shareCode: "old", setlist: [{ ...run, songId: "s1-old" }], setlistConfirmed: true }),
         ],
       }),
     );
-    expect(screen.getByRole("heading", { name: /합주방\s*2/ })).toBeInTheDocument();
-    expect(screen.getByText("했던 곡 3")).toBeInTheDocument();
-    expect(screen.getByText("넌 내게 반했어")).toBeInTheDocument();
-    const older = screen.getByRole("button", { name: "9월 합주 곡 기록 펼치기" });
-    expect(older).toHaveAttribute("aria-expanded", "false");
-    fireEvent.click(older);
-    expect(screen.getByRole("button", { name: "9월 합주 곡 기록 접기" })).toHaveAttribute("aria-expanded", "true");
+    const shelf = screen.getByRole("region", { name: /^합주방\s*2$/ });
+    expect(within(shelf).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
+      `/new?band=${TEAM}`,
+      "/playlist/abc123",
+      "/playlist/old",
+    ]);
+    expect(within(shelf).getByText(/셋리스트 1곡/)).toBeInTheDocument();
+  });
+
+  it("counts a song once per room, puts the most played first and links its latest room", () => {
+    renderHome(
+      view({
+        rooms: [
+          room({ id: "r2", title: "10월 합주", setlist: [crush, run] }),
+          // Another room's row for the same video: one song, played twice.
+          room({ id: "r1", title: "9월 합주", shareCode: "old", setlist: [{ ...run, songId: "s1-old" }], setlistConfirmed: true }),
+        ],
+      }),
+    );
+    expect(screen.getByText(/했던 곡 2곡/)).toBeInTheDocument();
+    const played = screen.getByRole("region", { name: /우리가 했던 곡\s*2/ });
+    const rows = within(played).getAllByRole("link");
+    expect(rows[0]).toHaveTextContent("말달리자");
+    expect(rows[0]).toHaveTextContent("2번");
+    expect(rows[0]).toHaveAttribute("href", "/playlist/abc123");
+    expect(rows[1]).toHaveTextContent("넌 내게 반했어");
+    expect(rows[1]).not.toHaveTextContent("번");
   });
 
   it("tells members where the history will appear", () => {
@@ -188,12 +221,33 @@ describe("BandHomeClient rooms (26A, E1)", () => {
     expect(screen.getByText("셋리스트를 짜면 여기에 쌓여요")).toBeInTheDocument();
   });
 
-  it("shows five rooms and a 더 보기 for the rest", () => {
-    const rooms = Array.from({ length: 7 }, (_, i) => room({ id: `r${i}`, shareCode: `c${i}`, title: `합주 ${i}` }));
-    renderHome(view({ rooms }));
-    expect(screen.queryByText("합주 6")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "더 보기 (2개)" }));
-    expect(screen.getByText("합주 6")).toBeInTheDocument();
+  it("shows five songs and a 더 보기 for the rest", () => {
+    const setlist = Array.from({ length: 7 }, (_, i) => song(`s${i}`, `곡 ${i}`, "밴드", `v${i}`, i));
+    renderHome(view({ rooms: [room({ setlist })] }));
+    expect(screen.queryByText("곡 6")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "더 보기 (2곡)" }));
+    expect(screen.getByText("곡 6")).toBeInTheDocument();
+  });
+});
+
+describe("BandHomeClient members", () => {
+  it("stacks four avatars in the action row and counts the rest", () => {
+    const members = Array.from({ length: 6 }, (_, i) => ({
+      userId: null,
+      displayName: `멤버${i}`,
+      role: i === 0 ? ("owner" as const) : ("member" as const),
+      joinedAt: `2026-09-0${i + 1}T00:00:00Z`,
+      isMe: i === 1,
+    }));
+    renderHome(view({ members }));
+    expect(screen.getByRole("link", { name: "멤버 6명" })).toHaveTextContent("+2");
+    expect(screen.getByRole("region", { name: /멤버\s*6/ })).toHaveTextContent("만든 사람");
+  });
+
+  it("opens the invite sheet from the 더 부르기 tile", () => {
+    renderHome(view());
+    fireEvent.click(screen.getByRole("button", { name: "더 부르기" }));
+    expect(screen.getByRole("dialog", { name: "멤버 초대" })).toBeInTheDocument();
   });
 });
 

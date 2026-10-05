@@ -38,6 +38,7 @@ import {
   isInviteCodeFormat,
   isTeamIdFormat,
   previewMemberNames,
+  roomCoverThumbs,
   sortMembersForDisplay,
   validateNextShowDate,
   validateTeamName,
@@ -152,6 +153,9 @@ export interface TeamSetlistSong {
   title: string;
   artist: string | null;
   position: number;
+  /** 같은 곡을 여러 방에서 한 번으로 묶는 키 (방마다 song 행이 따로라 songId 로는 못 묶는다). */
+  videoId: string | null;
+  thumbnailUrl: string | null;
 }
 
 export interface TeamRoom {
@@ -162,6 +166,10 @@ export interface TeamRoom {
   setlistConfirmed: boolean;
   /** E1 "우리가 했던 곡": 이 방 셋리스트의 곡만, position 순. 셋리스트가 없으면 빈 배열. */
   setlist: TeamSetlistSong[];
+  /** 후보곡 수 (셋리스트가 아니라 방에 올라온 곡 전체). */
+  songCount: number;
+  /** 방 커버 모자이크용 썸네일 최대 4개. 셋리스트 순서 먼저, 없으면 최근에 올라온 곡. */
+  coverThumbs: string[];
 }
 
 /** 밴드 홈(/band/[teamId]) 데이터. */
@@ -591,27 +599,36 @@ export async function getTeamHome(teamId: string): Promise<TeamHomeView | null> 
   }[];
 
   const setlistByRoom = new Map<string, TeamSetlistSong[]>();
+  const songsByRoom = new Map<string, { thumbnailUrl: string | null }[]>();
   if (rooms.length > 0) {
-    const { data: items, error: itemsError } = await admin
-      .from("setlist_items")
-      .select("playlist_id, position, item_type, song_id, title_override, songs(title, artist)")
-      .in(
-        "playlist_id",
-        rooms.map((room) => room.id),
-      )
-      .eq("item_type", "song")
-      .order("position", { ascending: true });
+    const roomIds = rooms.map((room) => room.id);
+    const [{ data: items, error: itemsError }, { data: roomSongs, error: songsError }] = await Promise.all([
+      admin
+        .from("setlist_items")
+        .select(
+          "playlist_id, position, item_type, song_id, title_override, songs(title, artist, youtube_video_id, thumbnail_url)",
+        )
+        .in("playlist_id", roomIds)
+        .eq("item_type", "song")
+        .order("position", { ascending: true }),
+      admin
+        .from("songs")
+        .select("playlist_id, thumbnail_url")
+        .in("playlist_id", roomIds)
+        .order("created_at", { ascending: false }),
+    ]);
     if (itemsError) {
       logTeamError(action, "setlist lookup failed", { teamId }, itemsError);
       throw new Error("밴드를 불러오지 못했어요.");
     }
+    type SongRef = { title: string; artist: string | null; youtube_video_id: string | null; thumbnail_url: string | null };
     type ItemRow = {
       playlist_id: string;
       position: number;
       item_type: string;
       song_id: string | null;
       title_override: string | null;
-      songs: { title: string; artist: string | null } | { title: string; artist: string | null }[] | null;
+      songs: SongRef | SongRef[] | null;
     };
     for (const item of (items ?? []) as ItemRow[]) {
       // Interval blocks and songs deleted later (song_id SET NULL) are not part of the history.
@@ -623,8 +640,21 @@ export async function getTeamHome(teamId: string): Promise<TeamHomeView | null> 
         title: item.title_override || song.title,
         artist: song.artist ?? null,
         position: item.position,
+        videoId: song.youtube_video_id ?? null,
+        thumbnailUrl: song.thumbnail_url ?? null,
       });
       setlistByRoom.set(item.playlist_id, list);
+    }
+
+    // Covers and counts are decoration: a failed read shows plain covers, not an error page.
+    if (songsError) {
+      logTeamError(action, "room songs lookup failed", { teamId }, songsError);
+    } else {
+      for (const row of (roomSongs ?? []) as { playlist_id: string; thumbnail_url: string | null }[]) {
+        const list = songsByRoom.get(row.playlist_id) ?? [];
+        list.push({ thumbnailUrl: row.thumbnail_url });
+        songsByRoom.set(row.playlist_id, list);
+      }
     }
   }
 
@@ -646,14 +676,20 @@ export async function getTeamHome(teamId: string): Promise<TeamHomeView | null> 
       joinedAt: member.joined_at,
       isMe: member.user_id === me.user_id,
     })),
-    rooms: rooms.map((room) => ({
-      id: room.id,
-      shareCode: room.share_code,
-      title: room.title,
-      createdAt: room.created_at,
-      setlistConfirmed: !!room.setlist_confirmed,
-      setlist: (setlistByRoom.get(room.id) ?? []).sort((a, b) => a.position - b.position),
-    })),
+    rooms: rooms.map((room) => {
+      const setlist = (setlistByRoom.get(room.id) ?? []).sort((a, b) => a.position - b.position);
+      const songs = songsByRoom.get(room.id) ?? [];
+      return {
+        id: room.id,
+        shareCode: room.share_code,
+        title: room.title,
+        createdAt: room.created_at,
+        setlistConfirmed: !!room.setlist_confirmed,
+        setlist,
+        songCount: songs.length,
+        coverThumbs: roomCoverThumbs(setlist, songs),
+      };
+    }),
   };
 }
 

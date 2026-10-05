@@ -195,3 +195,77 @@ export function previewMemberNames(
     .slice(0, limit)
     .map((member) => member.display_name);
 }
+
+// ============================================================
+// 밴드 홈 화면 재료 (방 커버·했던 곡)
+// ============================================================
+
+export const ROOM_COVER_MAX = 4;
+
+/** 방 커버 모자이크 썸네일. 셋리스트 곡 먼저(순서대로), 모자라면 최근에 올라온 곡. 같은 그림은 한 번만. */
+export function roomCoverThumbs(
+  setlist: { thumbnailUrl: string | null }[],
+  recentSongs: { thumbnailUrl: string | null }[],
+): string[] {
+  const thumbs: string[] = [];
+  for (const { thumbnailUrl } of [...setlist, ...recentSongs]) {
+    if (!thumbnailUrl || thumbs.includes(thumbnailUrl)) continue;
+    thumbs.push(thumbnailUrl);
+    if (thumbs.length === ROOM_COVER_MAX) break;
+  }
+  return thumbs;
+}
+
+export interface PlayedSong {
+  key: string;
+  title: string;
+  artist: string | null;
+  thumbnailUrl: string | null;
+  /** 이 곡이 셋리스트에 오른 합주방 수. */
+  times: number;
+  /** 가장 최근에 이 곡을 한 방. 행을 누르면 그 방으로 간다. */
+  latestShareCode: string;
+}
+
+type PlayedRoom = {
+  shareCode: string;
+  setlist: { title: string; artist: string | null; videoId: string | null; thumbnailUrl: string | null }[];
+};
+
+/**
+ * E1 "우리가 했던 곡": 모든 방의 셋리스트를 곡 단위로 묶는다. 방마다 song 행이 따로라 songId 로는
+ * 못 묶고, 같은 유튜브 영상(없으면 제목+아티스트)을 한 곡으로 센다. 많이 한 곡 먼저, 같으면 최근 방 먼저.
+ * `rooms` 는 최근 방이 앞에 오는 순서(getTeamHome 의 created_at 내림차순)여야 한다.
+ */
+export function aggregatePlayedSongs(rooms: PlayedRoom[]): PlayedSong[] {
+  const byKey = new Map<string, { song: PlayedSong; firstRoom: number }>();
+  rooms.forEach((room, roomIndex) => {
+    const seenInRoom = new Set<string>();
+    for (const item of room.setlist) {
+      const key = item.videoId
+        ? `v:${item.videoId}`
+        : `t:${item.title.trim().toLowerCase()}|${(item.artist ?? "").trim().toLowerCase()}`;
+      if (seenInRoom.has(key)) continue;
+      seenInRoom.add(key);
+      const hit = byKey.get(key);
+      if (hit) {
+        hit.song.times += 1;
+        continue;
+      }
+      byKey.set(key, {
+        firstRoom: roomIndex,
+        song: {
+          key,
+          title: item.title,
+          artist: item.artist,
+          thumbnailUrl: item.thumbnailUrl,
+          times: 1,
+          latestShareCode: room.shareCode,
+        },
+      });
+    }
+  });
+  return [...byKey.values()]
+    .sort((a, b) => b.song.times - a.song.times || a.firstRoom - b.firstRoom)
+    .map((entry) => entry.song);
+}

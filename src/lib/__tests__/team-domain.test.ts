@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  aggregatePlayedSongs,
   bandShareDescription,
   canPromote,
   formatShowDate,
@@ -7,6 +8,7 @@ import {
   isTeamIdFormat,
   kstDateString,
   previewMemberNames,
+  roomCoverThumbs,
   roomSharePrefix,
   shareableShowDate,
   showDateParts,
@@ -209,5 +211,55 @@ describe("show date formatting (cards and screens)", () => {
     expect(roomSharePrefix("2026-10-16", NOON_KST)).toBe("10월 16일 공연 · ");
     expect(roomSharePrefix("2026-10-03", NOON_KST)).toBe("");
     expect(roomSharePrefix(null, NOON_KST)).toBe("");
+  });
+});
+
+describe("roomCoverThumbs", () => {
+  const t = (id: string) => ({ thumbnailUrl: id });
+
+  it("takes the setlist order first, then the newest songs, each picture once, at most four", () => {
+    expect(roomCoverThumbs([t("a"), t("b")], [t("c"), t("a"), { thumbnailUrl: null }, t("d"), t("e")])).toEqual([
+      "a",
+      "b",
+      "c",
+      "d",
+    ]);
+  });
+
+  it("is empty for a room without pictures", () => {
+    expect(roomCoverThumbs([], [{ thumbnailUrl: null }])).toEqual([]);
+  });
+});
+
+describe("aggregatePlayedSongs", () => {
+  const item = (title: string, videoId: string | null, artist: string | null = null) => ({
+    title,
+    artist,
+    videoId,
+    thumbnailUrl: videoId ? `thumb-${videoId}` : null,
+  });
+
+  it("merges the same video across rooms and ranks by rooms played, then recency", () => {
+    const songs = aggregatePlayedSongs([
+      { shareCode: "new", setlist: [item("넌 내게 반했어", "v2"), item("말달리자", "v1")] },
+      { shareCode: "mid", setlist: [item("말달리자 (라이브)", "v1"), item("Creep", "v3")] },
+      { shareCode: "old", setlist: [item("Creep", "v3")] },
+    ]);
+    expect(songs.map((s) => [s.title, s.times, s.latestShareCode])).toEqual([
+      ["말달리자", 2, "new"],
+      ["Creep", 2, "mid"],
+      ["넌 내게 반했어", 1, "new"],
+    ]);
+  });
+
+  it("falls back to title + artist without a video and counts a room once", () => {
+    const songs = aggregatePlayedSongs([
+      { shareCode: "a", setlist: [item("Yellow", null, "Coldplay"), item(" yellow ", null, "coldplay")] },
+      { shareCode: "b", setlist: [item("Yellow", null, "Coldplay"), item("Yellow", null, "Other")] },
+    ]);
+    expect(songs.map((s) => [s.title, s.artist, s.times])).toEqual([
+      ["Yellow", "Coldplay", 2],
+      ["Yellow", "Other", 1],
+    ]);
   });
 });

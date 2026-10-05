@@ -499,12 +499,41 @@ describe("getTeamHome", () => {
     { id: "room-old", share_code: "old", title: "10월 공연", created_at: "2026-09-01T00:00:00+00:00", setlist_confirmed: true },
     { id: "room-attached", share_code: "att", title: "예전 방", created_at: "2026-07-01T00:00:00+00:00", setlist_confirmed: null },
   ];
+  const thumb = (id: string) => `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
   const items = [
-    { playlist_id: "room-old", position: 2, item_type: "song", song_id: "s2", title_override: null, songs: { title: "Creep", artist: "Radiohead" } },
-    { playlist_id: "room-old", position: 0, item_type: "song", song_id: "s1", title_override: "오프닝", songs: { title: "Intro", artist: null } },
+    {
+      playlist_id: "room-old",
+      position: 2,
+      item_type: "song",
+      song_id: "s2",
+      title_override: null,
+      songs: { title: "Creep", artist: "Radiohead", youtube_video_id: "v2", thumbnail_url: thumb("v2") },
+    },
+    {
+      playlist_id: "room-old",
+      position: 0,
+      item_type: "song",
+      song_id: "s1",
+      title_override: "오프닝",
+      songs: { title: "Intro", artist: null, youtube_video_id: "v1", thumbnail_url: thumb("v1") },
+    },
     { playlist_id: "room-old", position: 1, item_type: "interval", song_id: null, title_override: null, songs: null },
     { playlist_id: "room-old", position: 3, item_type: "song", song_id: null, title_override: null, songs: null },
-    { playlist_id: "room-attached", position: 0, item_type: "song", song_id: "s9", title_override: null, songs: [{ title: "Yellow", artist: "Coldplay" }] },
+    {
+      playlist_id: "room-attached",
+      position: 0,
+      item_type: "song",
+      song_id: "s9",
+      title_override: null,
+      songs: [{ title: "Yellow", artist: "Coldplay", youtube_video_id: null, thumbnail_url: null }],
+    },
+  ];
+  // Every song in the rooms, newest first (covers and counts).
+  const roomSongs = [
+    { playlist_id: "room-new", thumbnail_url: thumb("n1") },
+    { playlist_id: "room-old", thumbnail_url: thumb("o3") },
+    { playlist_id: "room-old", thumbnail_url: thumb("v2") },
+    { playlist_id: "room-old", thumbnail_url: null },
   ];
 
   function home(overrides: Record<string, Handler> = {}) {
@@ -513,6 +542,7 @@ describe("getTeamHome", () => {
       "team_members:select": ok(members),
       "playlists:select": ok(rooms),
       "setlist_items:select": ok(items),
+      "songs:select": ok(roomSongs),
       ...overrides,
     });
   }
@@ -569,7 +599,16 @@ describe("getTeamHome", () => {
         { userId: null, displayName: "보컬", role: "member", joinedAt: "2026-10-06T00:00:00+00:00", isMe: true },
       ],
       rooms: [
-        { id: "room-new", shareCode: "new", title: "11월 공연", createdAt: "2026-10-20T00:00:00+00:00", setlistConfirmed: false, setlist: [] },
+        {
+          id: "room-new",
+          shareCode: "new",
+          title: "11월 공연",
+          createdAt: "2026-10-20T00:00:00+00:00",
+          setlistConfirmed: false,
+          setlist: [],
+          songCount: 1,
+          coverThumbs: [thumb("n1")],
+        },
         {
           id: "room-old",
           shareCode: "old",
@@ -578,9 +617,12 @@ describe("getTeamHome", () => {
           setlistConfirmed: true,
           // interval and deleted song (song_id NULL) dropped, position order, title override wins
           setlist: [
-            { songId: "s1", title: "오프닝", artist: null, position: 0 },
-            { songId: "s2", title: "Creep", artist: "Radiohead", position: 2 },
+            { songId: "s1", title: "오프닝", artist: null, position: 0, videoId: "v1", thumbnailUrl: thumb("v1") },
+            { songId: "s2", title: "Creep", artist: "Radiohead", position: 2, videoId: "v2", thumbnailUrl: thumb("v2") },
           ],
+          songCount: 3,
+          // setlist order first, then the newest songs; the same picture once
+          coverThumbs: [thumb("v1"), thumb("v2"), thumb("o3")],
         },
         {
           id: "room-attached",
@@ -588,7 +630,9 @@ describe("getTeamHome", () => {
           title: "예전 방",
           createdAt: "2026-07-01T00:00:00+00:00",
           setlistConfirmed: false,
-          setlist: [{ songId: "s9", title: "Yellow", artist: "Coldplay", position: 0 }],
+          setlist: [{ songId: "s9", title: "Yellow", artist: "Coldplay", position: 0, videoId: null, thumbnailUrl: null }],
+          songCount: 0,
+          coverThumbs: [],
         },
       ],
     });
@@ -601,6 +645,22 @@ describe("getTeamHome", () => {
       item_type: "song",
     });
     expect(opsFor("playlists", "select")[0].filters).toEqual({ team_id: TEAM });
+    const songs = opsFor("songs", "select");
+    expect(songs).toHaveLength(1);
+    expect(songs[0].filters).toEqual({ playlist_id: ["room-new", "room-old", "room-attached"] });
+  });
+
+  it("still shows the band when the cover lookup fails (setlist covers only, no counts)", async () => {
+    state.admin = createFakeClient(home({ "songs:select": dbError() }));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const view = await getTeamHome(TEAM);
+    expect(view?.access).toBe("member");
+    if (view?.access !== "member") return;
+    expect(view.rooms.map((room) => [room.songCount, room.coverThumbs])).toEqual([
+      [0, []],
+      [0, [thumb("v1"), thumb("v2")]],
+      [0, []],
+    ]);
   });
 
   it("gives the owner the member user ids for removing someone", async () => {
