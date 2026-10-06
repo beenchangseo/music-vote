@@ -57,7 +57,9 @@ export default function AuthMenu({ nickname, avatarUrl, embedded = false }: Auth
       </button>
 
       {open && (
-        <div className="absolute right-0 top-11 w-44 rounded-xl border border-border bg-surface shadow-lg animate-fade-in overflow-hidden">
+        // z-40: the playlist header renders this menu embedded (outside the fixed z-50 slot), and the
+        // cover below it is positioned, so without a z-index the cover painted over the menu. Below sheets (z-[90]).
+        <div className="absolute right-0 top-11 z-40 w-44 rounded-xl border border-border bg-surface shadow-lg animate-fade-in overflow-hidden">
           <div className="px-3 py-2 border-b border-border">
             <p className="text-caption text-text-subtle">로그인됨</p>
             <p className="text-sm font-medium text-text truncate">{nickname}</p>
