@@ -195,7 +195,7 @@ CEO-D4 를 고를 때의 근거도 같이 본다. 밴드는 이미 같이 투표
 | CEO2-D · 방장 | 밴드 만들기 유도 장치(정할 것 6). 근거: P7 | 플레이리스트 안 카드 유지 + **홈에 닫을 수 있는 카드**: 로그인 멤버 ≥ 2 인 밴드 없는 내 플레이리스트가 있으면 "{플레이리스트} 멤버 그대로 밴드 만들기"(그 플레이리스트에서 올리기, 닫으면 플레이리스트별 기억). 팝업 없음 | — | approved | D4 "홈에 닫을 수 있는 카드 (recommended)" (2026-10-06) |
 | CEO2-E · 방장 | 밴드에 넣는 길의 위치(정할 것 7). 근거: P8 | 설정 안 · 완료 화면 유지 + **밴드 홈에 owner 용 "내 플레이리스트 넣기"**(밴드 없는 내 플레이리스트 목록, 빈 밴드 홈에서는 초대와 함께 앞에) | — | approved | D2 "밴드 홈에서 넣기 (recommended)" (2026-10-06). 플레이리스트 겉 입구는 넣지 않음 |
 | CEO2-F · 방장 | 밴드가 여럿일 때 넣기 UI(정할 것 8). 근거: P9 | 밴드 수만큼 버튼 (그대로) | — | deferred | D3 "TODOS.md 로 미루기 (recommended)" (2026-10-06). 재개: 밴드 2개 이상 속한 외부 계정 ≥ 1 |
-| CEO2-G · 방장 | 빈 밴드 지표(Section 8). 근거: 홈에서 만든 빈 밴드가 멤버 없이 죽는지 볼 수단이 없다 | `team-metrics.mjs` 에 두 줄: 홈에서 만든 밴드 수(외부, promote 플레이리스트 없는 밴드) · 만든 지 7일 지나도 owner 혼자 · 플레이리스트 0 인 밴드 수. DB 변경 없음 | — | approved | D6 "지표 추가 (recommended)" (2026-10-06) |
+| CEO2-G · 방장 | 빈 밴드 지표(Section 8). 근거: 홈에서 만든 빈 밴드가 멤버 없이 죽는지 볼 수단이 없다 | `team-metrics.mjs` 에 두 줄: 홈에서 만든 밴드 수(외부, promote 플레이리스트 없는 밴드) · 만든 지 7일 지나도 owner 혼자 · 플레이리스트 0 인 밴드 수. DB 변경 없음 → **eng O2(D7)로 바뀜**: `teams.created_via` 로 센다(v21) | — | approved | D6 "지표 추가 (recommended)" (2026-10-06) |
 
 ## 답한 결정: CEO2-A (D1, 답 "상태별 홈 + 두 입구 (recommended)")
 Commitment comparison:
@@ -695,11 +695,11 @@ CRITICAL GAP 0 (조용히 실패하면서 막는 장치도 테스트도 없는 �
 Synthesized from this review's findings. Each task derives from a specific
 finding above. Run with Claude Code or Codex; checkbox as you ship.
 
-- [ ] **C1 (P1, human: ~반나절 / CC: ~30분)** — design — 상태별 홈 · 홈 카드 · 밴드 홈 넣기 시트의 화면을 정한다 (`/plan-design-review`)
+- [x] **C1 (P1, human: ~반나절 / CC: ~30분)** — design — 상태별 홈 · 홈 카드 · 밴드 홈 넣기 시트의 화면을 정한다 (`/plan-design-review`)
   - Surfaced by: Section 4 미정 3건, Section 11 미정 4건 + 조회 실패 화면, D1 의 중복 밴드 완화
   - Files: 이 문서 (`docs/plans/2026-10-06-user-flow-map.md`)
   - Verify: 디자인 리뷰 보고서가 미정 항목을 모두 결정으로 닫는다
-- [ ] **C2 (P1, human: ~반나절 / CC: ~30분)** — eng — 구현 계약을 정한다 (`/plan-eng-review`)
+- [x] **C2 (P1, human: ~반나절 / CC: ~30분)** — eng — 구현 계약을 정한다 (`/plan-eng-review`)
   - Surfaced by: Section 1·5 (초대 코드 헬퍼 공유), Section 7 (홈 왕복 수), Section 11 GAP (조회 실패 구분), Section 6 테스트 표
   - Files: to be determined
   - Verify: eng 리뷰 보고서 CLEAR, 테스트 표가 작업 계획에 들어감
@@ -797,7 +797,7 @@ finding above. Run with Claude Code or Codex; checkbox as you ship.
   [이 멤버로 밴드 만들기] 44px + 닫기 44px. 플레이리스트 안 카드와 닫기를 공유하는 것은 의도한 동작이다(한쪽에서 닫으면 둘 다 사라짐)
 - **DR6 홈 카드 위치와 닫힘 저장** — 답 "닫힘을 쿠키로, 버튼 줄 아래 (recommended)". 닫힘 기록을 localStorage 대신 쿠키(플레이리스트 id 목록)에
   저장해 서버가 카드 여부를 정한다. 카드는 버튼 줄 바로 아래에 처음부터 그려 하이드레이션 밀림이 없다. 플레이리스트 안 카드도 같은 쿠키를 쓰고,
-  기존 localStorage 기록은 한 번 읽어 쿠키로 옮긴다(`BandPromptCard.tsx:11,47`)
+  기존 localStorage 기록은 한 번 읽어 쿠키로 옮긴다(`BandPromptCard.tsx:11,47`). 예외(eng O5, D10): 예전 기록이 있는 사람은 배포 뒤 첫 방문에 카드가 한 번 그려졌다 사라진다
 
 Pass 1 재평가: **4 → 8/10**. 남은 것: 상태 A/B 경계 사례(Pass 7)
 
@@ -997,18 +997,816 @@ Plan is design-complete. Run /design-review after implementation for visual QA.
 
 없음.
 
+
+## Eng 리뷰 (2026-10-06, /plan-eng-review)
+
+- 대상(고정): 이 문서 — 흐름 지도 + CEO2 결정(CEO2-A~G) + 디자인 결정(DR1~DR16) + 작업 C1~C5 · DT1~DT6
+- 보고서 파일: 이 문서. 과거 학습 적용: `home-loaders-mask-failure-as-empty`, `playlist-page-two-round-trips`, `server-action-success-reason-result`, `bandpromptcard-hydration-shift`, `root-loading-tsx-wraps-all-routes`, `codex-probe-needs-bash-not-zsh`
+
+### Scope Challenge
+
+**A. 평가**
+
+- 이미 있는 것: `withFreshInviteCode`(`team.ts:227`, 초대 코드 23505 재시도) · `rollbackTeam`(`team.ts:279`) → 빈 밴드 생성은 둘을 부르기만 한다.
+  **사실 정정**: CEO 리뷰 Section 1·5 의 "초대 코드 헬퍼를 공유로 뺀다"는 이미 되어 있다(새 추출 없음).
+  `attachPlaylistToTeam`(권한 · 조건부 UPDATE · `roomWriteBlock`), `createBandPlaylist`, `plypick_join` 표시 쿠키 선례, `getTeamInvite.previewNames`(1명 카톡 카드)
+- 실측: PostgREST 중첩 집계 `playlist_members(count)` 가 한 번의 조회에서 `[{count:N}]` 로 온다(2026-10-06 읽기 전용 probe) → 홈 카드 멤버 수는 왕복 추가 없음.
+  Next 16 `cookies()` 는 async(`node_modules/next/dist/docs/.../cookies.md:6`)
+- 복잡도(추정): 바뀌는 파일 약 22개(+ 테스트 약 10). 새 단위: 액션 `createTeam` · `getAttachablePlaylists`, 컴포넌트 넣기 시트 · 홈 뼈대, 닫힘 쿠키 헬퍼 → B 관문
+- 기능 줄이기 제안: 없음(모두 이번 CEO · 디자인 리뷰에서 개별 승인, 각각 S)
+
+**B. 범위 기록** — feature answers: 제안 없음; structure: A "Original arrangement (recommended)" (D1); accepted scope: CEO2-A~G · DR1~DR16 을 새 파일
+`AttachPlaylistsSheet.tsx` · `HomeSkeleton.tsx` · `src/lib/prompt-dismissals.ts`(서버·클라이언트 공용 일반 모듈) + `team.ts` 의 `createTeam` · `getAttachablePlaylists` 로;
+pending remedies: E1(홈 조회 실패 구분 방식)
+
+**C. 결과**: scope accepted as-is. 정정 1건(헬퍼 공유는 이미 됨), 새 문제 없음
+
+### Section 1: Architecture
+
+```
+  [Server] src/app/page.tsx (홈)
+     ├─ Promise.all: getCurrentUser · getHomeStats · searchParams · cookies()(닫힘 목록, prompt-dismissals.ts)
+     ├─ Promise.all: getMyPlaylists() → { playlists, failed }   (E1)
+     │               getMyTeams()     → { teams, failed }        (E1)
+     │     playlists 행 += team_id · creator_user_id · playlist_members(count)   (중첩 집계, 왕복 추가 없음)
+     ├─ 판정: failed → 상태 B + 목록 오류(DR7) │ ?left=1 → B(DR15) │ 0/0 → A(DR2) │ 그 밖 → B(DR3)
+     ├─ 홈 카드 대상: 밴드 0 · 내가 방장 · 밴드 없음 · 멤버 ≥ 2 · 가장 최근 · 닫힘 쿠키에 없음 (DR4 · DR5 · DR6)
+     └─ <Suspense fallback={<HomeSkeleton/>}> 본문 (DR10)
+  [Client] CreateBandSheet(모드: promote | home)
+     ├─ home: 대상 있으면 "같이 투표한 멤버로 만들기" 목록 → createTeamFromPlaylist (기존)
+     └─        "멤버 없이 새 밴드로 시작" → createTeam(name) (새: withFreshInviteCode + owner 행 + rollbackTeam)
+  [Client] BandHomeClient ── 시작 영역(DR1) ── AttachPlaylistsSheet ── getAttachablePlaylists(teamId)(새) → attachPlaylistToTeam(기존)
+  [Route]  /auth/logout → signOut({ scope: 'local' })   (CEO2-C)
+```
+
+- [P1] (9/10) `src/actions/team.ts:709-711` · `src/actions/playlist.ts:79` — 조회 실패를 빈 결과로 숨김 → **E1 approved (D2)**
+- [P2] (9/10) `src/actions/playlist.ts:55` `MY_PLAYLIST_COLUMNS = "id, share_code, title, created_at, songs(...)"` — 홈 카드(DR4·DR5)·새 밴드 시트 목록(DR3)·
+  참여자 알림(DR11)에 필요한 `team_id` · `creator_user_id` · 로그인 멤버 수가 없다. 승인된 결정의 필요 구현: 컬럼 + `playlist_members(count)` 추가,
+  `MyPlaylistDbEntry` 에 `isMine` · `teamId` · `memberCount`. 별도 승인 불필요
+- [P2] (8/10) DR6 닫힘 쿠키 형식 — `src/lib/prompt-dismissals.ts`: 이름 `plypick_band_prompt_dismissed`, 값은 플레이리스트 UUID 쉼표 목록(최근 50개 유지),
+  `Path=/` · `SameSite=Lax` · `Max-Age` 1년 · httpOnly 아님(클라이언트가 쓴다). 서버는 `await cookies()` 로 읽는다. 기존 `localStorage` 키
+  (`plypick:band-prompt-dismissed:{id}`, `BandPromptCard.tsx:11`)는 첫 마운트 때 쿠키로 옮긴다. 쿠키 위조는 자기 화면만 바꾼다. 승인된 DR6 의 구현 세부
+- [P3] (8/10) `getAttachablePlaylists(teamId)` — 서버가 `creator_user_id = 나 · team_id is null · creator_user_id not null(보관본 제외)` 로 거르고, 호출자가 그
+  밴드 멤버인지 확인한다. 넣기 자체는 기존 `attachPlaylistToTeam` 권한 검사(`team.ts:422-424`)가 지킨다
+- 실패 시나리오: owner 행 insert 실패 → `rollbackTeam` + `write_failed`(고아 팀 없음, 기존 패턴). 쿠키를 못 읽으면 카드가 다시 뜬다(안전한 쪽).
+  넣기 목록 조회 실패 → 시트 안 오류(DR8)
+- 배포: DB 변경 없음, 새 산출물 없음 → **O2(D7)로 바뀜**: v21 `teams.created_via`, 운영 SQL 을 코드보다 먼저
+
+Dispositions: E1 approved (D2). 나머지 3건은 승인된 결정(DR3 · DR4 · DR5 · DR6 · DR8 · DR11)의 필요 구현 — accepted as required work
+
+### Section 2: Code quality
+
+- [P2] (8/10) `src/components/BandHomeClient.tsx` 583줄 — DR1 · DR9 · DR16 · 넣기 타일이 더해지면 약 650줄(추정) → **E2 approved (D3)**: `BandStartArea.tsx` 로 분리.
+  정정: D1 질문의 "Smaller 면 600줄을 넘는다"는 부정확(이미 583줄). D1 의 결정 근거(쿠키 모듈 위치)는 유효
+- [P2] (9/10) `src/components/CreateBandSheet.tsx:21-28` — `playlistId: string` 필수 · `source: "card" | "settings"` → 홈 모드(DR3 · DR14)를 받으려면
+  모드 판별 props(`{ kind: "promote", playlistId, adminToken } | { kind: "home", candidates, participantOnly }`)와 source `home` · `home_card` 가 필요. 승인된 결정의 필요 구현
+- [P3] (8/10) `src/actions/team.ts:295-297` 단계 주석은 `createTeamFromPlaylist` 를 바꾸지 않으므로 그대로 정확. 새 `createTeam` 에는 같은 형식의 짧은 단계 주석
+  (검증 ─▶ teams insert(재시도) ─▶ owner 행 ─▶ 실패면 rollbackTeam)을 붙인다
+- 공유 코드: 홈 카드와 플레이리스트 안 카드는 `BandPromptCard` + `prompt-dismissals.ts` 를 함께 쓴다(D1). 새 추출 제안 없음
+
+Dispositions: E2 approved (D3). 나머지 2건은 필요 구현 — accepted as required work
+
+
+### Section 3: Test review
+
+- 프레임워크(자동 감지, AGENTS.md 에 Testing 절 없음): vitest(`vitest.config.ts`, `npm test`) + Playwright(`playwright.config.ts`, `npm run test:e2e`, 운영 DB · 저장 로그인 · workers 1)
+- 읽은 기존 테스트: `team.test.ts`(createTeamFromPlaylist 13건 · attach · getMyTeams 2건), `playlist.test.ts`(getMyPlaylists 3건), `BandHomeClient.test.tsx`, `PlaylistClient.band.test.tsx`(카드 4건),
+  `CreatePlaylistForm.band.test.tsx`(13A 3건), `team-domain.test.ts:203-207`, `e2e/account-a/band.spec.ts`(방 → 밴드 → 초대 → 가입 → 나가기). 테스트 없는 곳: `auth/logout/route.ts`, `HeroCTA`, `CreateBandSheet`(전용 파일 없음), 홈 `page.tsx`
+- 실측(운영 DB 읽기 전용, 2026-10-06): account-b 는 만든 0 · 참여 0 · 밴드 0 → 상태 A 를 E2E 로 볼 수 있다. account-a 는 만든 9 · 참여 13 · 밴드 1 → 상태 B
+
+```
+CODE PATHS
+[+] src/actions/playlist.ts  getMyPlaylists → { playlists, failed }   (E1)
+  ├── [★★★ TESTED] 비로그인 → 빈 결과, 조회 없음 — playlist.test.ts:192
+  ├── [★★  TESTED] 세 묶음 합치기 · 중복 제거 · 최근순 — :243
+  ├── [GAP]         한 묶음 오류 → failed true, 나머지 묶음은 그대로
+  └── [GAP]         team_id · creator_user_id · playlist_members(count) → isMine · teamId · memberCount (:224 확장)
+[+] src/actions/team.ts  getMyTeams → { teams, failed }   (E1)
+  ├── [★★  TESTED] 비로그인 · 내 멤버십만 — team.test.ts:700,706
+  └── [GAP]         조회 오류 → { teams: [], failed: true }
+[+] createTeam(name)  (새, CEO2-A)
+  ├── [GAP] 비로그인 · 이름 검증(50자 통과 / 51자 invalid_name)
+  ├── [GAP] owner 1명 밴드 + 초대 코드 (충돌 재시도는 공용 withFreshInviteCode — :222 · :229 가 증명)
+  └── [GAP] owner 행 실패 → rollbackTeam + write_failed (고아 팀 없음)
+[+] getAttachablePlaylists(teamId)  (새, DR8)
+  ├── [GAP] 비로그인 · 밴드 멤버 아님 → reason
+  ├── [GAP] 내가 만든 것 · team_id 없음 · 보관본 제외만
+  └── [GAP] 조회 오류 → { success: false }
+[+] src/app/page.tsx  홈 판정
+  ├── [GAP] failed → B + 목록 자리 오류(DR7) │ ?left=1 → B(DR15) │ 서버 0/0 → A(DR2) │ 그 밖 → B(DR3)
+  ├── [GAP] 상태 A 아래 로그인 전 로컬 플레이리스트(DR15a)
+  └── [GAP] 홈 카드: 밴드 0 · 내 것 · 밴드 없음 · 멤버 ≥ 2 · 최근 하나 · 닫힘 아님 → 카드
+            / 최근 것이 닫힘 → 카드 없음(예전 것으로 대체 안 함) / 밴드 있음 → 없음 / 실패 → 없음
+[+] src/lib/prompt-dismissals.ts  (새, DR6)
+  ├── [GAP] 읽기: 빈 값 · 깨진 값 · UUID 아닌 항목은 버림
+  ├── [GAP] 추가: 중복 없음 · 최근 50개만
+  └── [GAP] localStorage 기록 → 쿠키로 한 번 이전
+[+] BandPromptCard  (서버가 닫힘을 넘김)
+  ├── [★★★ TESTED] 닫으면 그 방에서 새로고침 뒤에도 닫힘 — PlaylistClient.band.test.tsx:153 (쿠키 기준으로 확장)
+  └── [★★★ TESTED] 저장 막힘 → 이번 방문만 닫힘 — :162 (유지)
+[+] CreateBandSheet  kind: promote │ home
+  ├── [★★  TESTED] promote (카드 · 설정) — PlaylistClient.band.test.tsx:127 경유 (유지)
+  ├── [GAP] home: 대상 있음 → "같이 투표한 멤버로 만들기" 목록 먼저 / 없음 → 바로 이름 (DR3)
+  ├── [GAP] home: 참여만 한 방 → 한 줄(DR11) · 미리보기 대신 한 줄 · "나중에" 없음(DR14)
+  └── [GAP] track("team_created") source home · home_card
+[+] BandHomeClient + BandStartArea  (새, E2)
+  ├── [GAP] 혼자 · 0개 → 시작 영역 하나, 초대 아이콘 · "더 부르기" 숨김, 곡 0 → "했던 곡" 숨김 (DR1)
+  ├── [GAP] 넣을 것 > 0 → "있던 플레이리스트 넣기" / 0 → "첫 플레이리스트 만들기"(/new?band=)
+  ├── [★★★ TESTED → 의도된 변경] 혼자 카드(1A) — BandHomeClient.test.tsx:147 (픽스처에 플레이리스트 1개를 넣는다)
+  └── [★★  TESTED → 의도된 변경] created 배너(11A) — :124 (혼자 · 0개면 상태 한 줄로)
+[+] AttachPlaylistsSheet  (새, DR8)
+  └── [GAP] 행 넣기 → "넣었어요 ✓" · 시트 유지 / 행 실패 → 사유 + 다시 / 마지막 → "모두 넣었어요" / 목록 오류 / 닫으면 갱신
+[+] CreatePlaylistForm  (DR12)
+  ├── [GAP] 밴드 1 → 토글 켬 → createBandPlaylist / 끔 → createPlaylist / 밴드 0 · 2+ → 토글 없음
+  └── [★★★ TESTED → 의도된 변경, E3] 13A 밴드 1개 + 끔 → 제안 없음 — CreatePlaylistForm.band.test.tsx:63
+[+] HeroCTA            [GAP] 로그인 목적지 "/" (CEO2-A)
+[+] /auth/logout       [GAP] signOut({ scope: "local" }) + 303 → / (CEO2-C)
+[+] bandShareDescription
+  ├── [★★★ TESTED → 의도된 변경] 멤버 1명 — team-domain.test.ts:207 (DR13 문구로)
+  └── [★★★ TESTED] 멤버 2명 이상 — :203-206 (유지)
+[+] scripts/team-metrics.mjs  [GAP] 홈에서 만든 밴드 수 · 7일 지난 혼자 · 0개 밴드 수 (CEO2-G)
+
+USER FLOWS
+[+] 처음 온 방장 (상태 A)
+  ├── [GAP] [→E2E] 로그인 홈 → "어떻게 시작할까요?" 두 선택지 (account-b, 읽기만)
+  └── [GAP]        밴드로 시작하기 → 이름 → 빈 밴드 홈 시작 영역
+[+] 돌아온 방장 (상태 B)
+  ├── [GAP] [→E2E] 새 밴드 → 멤버 없이 → 이름 → 시작 영역 → 첫 플레이리스트 (account-a)
+  ├── [GAP]        홈 카드 → 이 멤버로 밴드 만들기 → 밴드 홈
+  ├── [GAP]        홈 카드 닫기 → 새로고침 뒤에도 없음, 플레이리스트 안 카드도 없음
+  └── [★★★ TESTED] 방 → 밴드 올리기 → 초대 → 가입 → 나가기 — e2e/account-a/band.spec.ts:20 (유지, 혼자 · 1개라 DR1 영향 없음)
+[+] 밴드 홈 넣기
+  ├── [GAP] 있던 플레이리스트 연속 넣기 · 한 행 실패 · 모두 넣음
+  └── [GAP] 넣은 뒤 여전히 혼자 → DR9 문구
+[+] 들어온 멤버
+  ├── [★★  TESTED] 활성 플레이리스트 있음 → "지금 플레이리스트 가기" — BandHomeClient.test.tsx:132
+  └── [GAP]        플레이리스트 0 → 기다릴 것 한 줄 (DR16)
+[+] 오류 상태
+  ├── [GAP] 홈 조회 실패 → 상태 B + "목록을 불러오지 못했어요" (DR7)
+  ├── [GAP] 새 밴드 실패 → 버튼 아래 사유
+  └── [GAP] 넣기 목록 실패 → 시트 안 오류
+[+] 경계 · 동시성
+  ├── [★★★ TESTED] 올리기 두 탭 경쟁 → rollback — team.test.ts:256
+  ├── [GAP] 새 밴드 버튼 두 번 → 액션 한 번 (busy)
+  └── [GAP] 로그아웃 → 다른 기기 세션 유지 (라우트 단위 테스트로만, E2E 불가)
+
+COVERAGE: 13/51 paths tested (25%)  |  Code paths: 10/35 (29%)  |  User flows: 3/16 (19%)
+QUALITY: ★★★:8 ★★:5 ★:0  |  GAPS: 38 (2 E2E, 0 eval)
+```
+
+Legend: ★★★ behavior + edge + error | ★★ happy path | ★ smoke check | [→E2E] = needs integration test | [→EVAL] = needs LLM eval
+
+- LLM/eval 범위: 없음(LLM 호출 · 프롬프트 변경 없음)
+- **REGRESSION (CRITICAL, 승인된 계약 그대로)**:
+  (1) E1 — `/new` 와 플레이리스트 페이지는 `failed` 를 빈 것으로 처리: `new/__tests__/page.test.tsx:83` 에 "failed 면 밴드 없이 폼이 뜬다" 행 추가.
+  (2) DR6 — 닫힘이 새로고침 뒤에도 유지 · 저장 막힘이면 이번 방문만: `PlaylistClient.band.test.tsx:153,162` 를 쿠키 기준으로 유지.
+  (3) DR13 — 2명 이상 문구 그대로: `team-domain.test.ts:203-206` 유지.
+  (4) DR1 — 혼자 · 1개 이상인 밴드의 혼자 카드 · created 배너 그대로: `BandHomeClient.test.tsx:124,147` 은 픽스처만 바꾸고 기존 단언 유지, `band.spec.ts:52` 그대로 통과.
+  (5) 13A 밴드 1개 완료 화면 → **E3 approved (D4)**: 끄고 만들면 제안 없음, 제안 확인은 `:75`(밴드 2개)가 맡음
+- E2E 두 개는 CEO2-A 답의 "검증은 액션 테스트와 E2E 밴드 흐름 확장"과 CEO 리뷰 Section 6 표에서 승인된 증명이다. 새 안전 조건: account-a E2E 는 이번 실행에서 만든 `[e2e]` 플레이리스트만 넣는다.
+  account-a 의 실제 플레이리스트(특히 `n0R9U6KT`)는 넣기 버튼을 누르지 않는다 — 넣으면 실제 플레이리스트의 `team_id` 가 바뀐다
+- 바뀌는 테스트(지우지 않음): `team-domain.test.ts:207`(DR13 문구), `BandHomeClient.test.tsx:124,147`(픽스처), `playlist.test.ts` · `team.test.ts` getMyTeams(반환 모양). 지울 테스트 없음
+
+**추가할 테스트** (값 카드는 테스트 계획 파일에)
+
+| 테스트 파일 | 단언 | 종류 | 근거 |
+|---|---|---|---|
+| `src/actions/__tests__/playlist.test.ts` (확장) | 한 묶음 오류 → `failed: true` · 나머지 묶음 유지 / select 에 새 컬럼 · `isMine` · `teamId` · `memberCount` | unit | E1 · DR4 · DR5 |
+| `src/actions/__tests__/team.test.ts` (확장) | getMyTeams 오류 → `{ teams: [], failed: true }` / createTeam 비로그인 · 51자 · 50자 · owner 1명 + 초대 코드 · owner 행 실패 → rollbackTeam + `write_failed` / getAttachablePlaylists 비로그인 · 멤버 아님 · 필터 · 오류 | unit | E1 · CEO2-A · DR8 |
+| `src/app/__tests__/page.test.tsx` (새) | 판정 4분기 + 상태 A 아래 로컬 목록 + 홈 카드 4규칙(최근 하나 / 닫힌 최근 → 없음 · 대체 안 함 / 밴드 있음 → 없음 / 실패 → 없음) | unit(서버 컴포넌트 렌더, `/new` 페이지 테스트와 같은 방식) | DR2~DR7 · DR15 |
+| `src/app/new/__tests__/page.test.tsx` (확장) | failed → 밴드 없이 폼 | unit | E1 회귀 |
+| `src/lib/__tests__/prompt-dismissals.test.ts` (새) | 파싱 · 추가 · 50개 · localStorage 이전 | unit | DR6 |
+| `src/components/__tests__/PlaylistClient.band.test.tsx` (확장) | `:153` 쿠키 기준 · `:162` 유지 · 기존 localStorage 기록 이전 | unit | DR6 회귀 |
+| `src/components/__tests__/CreateBandSheet.test.tsx` (새) | home 대상 있음/없음 · 참여만 한 줄 · "나중에" 없음 · 미리보기 대신 한 줄 · 실패 사유 · 두 번 눌러도 한 번 · source | unit | DR3 · DR11 · DR14 |
+| `src/components/__tests__/BandStartArea.test.tsx` (새) | 넣을 것 > 0 → 넣기 주 버튼 / 0 → `/new?band=` / 보조 버튼 → 초대 시트 | unit | DR1 · E2 |
+| `src/components/__tests__/BandHomeClient.test.tsx` (확장) | 혼자 · 0개 → 시작 영역 + 숨김 3가지 / `:124` · `:147` 픽스처 / DR9 / DR16 | unit | DR1 · DR9 · DR16 |
+| `src/components/__tests__/AttachPlaylistsSheet.test.tsx` (새) | 행 ✓ · 시트 유지 · 행 실패 + 다시 · 모두 넣었어요 · 목록 오류 · 닫으면 갱신 · `role="status"` | unit | DR8 |
+| `src/components/__tests__/CreatePlaylistForm.band.test.tsx` (확장) | 밴드 1 → 토글 켬 → createBandPlaylist / 끔 → createPlaylist + 제안 없음 / 0 · 2+ → 토글 없음 | unit | DR12 · E3 |
+| `src/components/__tests__/HomeBands.test.tsx` (확장) | HeroCTA 로그인 목적지 "/" | unit | CEO2-A |
+| `src/app/auth/logout/__tests__/route.test.ts` (새) | `signOut({ scope: "local" })` + 303 → `/` | unit | CEO2-C |
+| `src/lib/__tests__/team-domain.test.ts` (확장) | 1명 → "{닉네임}님이 밴드를 만들었어요 · …" · 날짜 있는 1명 / 2명+ 유지 | unit | DR13 |
+| `scripts/__tests__/team-metrics.test.ts` (확장) | 홈에서 만든 밴드 수 · 7일 방치 수 | unit | CEO2-G |
+| `e2e/account-a/band-home.spec.ts` (새) | 홈 → 새 밴드 → 멤버 없이 → `[e2e]` 이름 → 시작 영역(초대 입구 하나) → 주 버튼 확인 · `cleanup.team`. 실제 플레이리스트 넣기 금지 | E2E | CEO2-A · DR1 |
+| `e2e/account-b/home.spec.ts` (새) | 상태 A 제목 · 두 선택지(읽기만). 시작 전 0/0 이 아니면 원인 문구로 실패 | E2E | DR2 |
+
+- 테스트 계획 파일: `~/.gstack/projects/beenchangseo-music-vote/beenchangseo-main-eng-review-test-plan-20261006-190036.md` (Pending Decisions 없음)
+
+Dispositions: E3 approved (D4). 회귀 계약 (1)~(4)는 승인된 결정(E1 · DR6 · DR13 · DR1)의 증명, E2E 두 개는 CEO2-A 답의 증명 — accepted as required work
+
+### Section 4: Performance
+
+- [P2] (9/10) `src/lib/auth.ts:28-32` — `getCurrentUser` 가 캐시 없이 매번 `supabase.auth.getUser()`(Supabase Auth HTTP)를 부른다. 로그인 홈 한 번에 3번: 페이지(`page.tsx:21`) 1번,
+  그 뒤 `getMyPlaylists`(`playlist.ts:67`) · `getMyTeams`(`team.ts:701`) 가 각자 1번. 직렬 순서 = 로그인 확인 → 로그인 확인 → DB. 한 번의 지연은 재지 않음(unknown) → **E4 approved (D5)**: React `cache` 로 감쌈
+- [P3] (8/10) DR8 넣을 것 개수(eng 리뷰에서 확인하기로 한 조회 방식) — `getTeamHome` 에서 `me` 가 owner 일 때만 `playlists` head count(`creator_user_id = 나` · `team_id is null`).
+  플레이리스트가 있으면 2단계 조회(`team.ts:604`)와 병렬이라 왕복이 늘지 않고, 0개 밴드(DR1 시작 영역)에서만 owner 에게 1번 더. 목록은 시트를 열 때 `getAttachablePlaylists`. 인덱스 `idx_playlists_creator_user`(v7:13) 있음
+- [P3] (8/10) 홈 `playlist_members(count)` — 기존 `idx_playlist_members_user`(v7:61) · PK 로 충분, 새 인덱스 없음. 행 수는 계정당 수십 개(account-a 만든 9 · 참여 13)
+- [P3] (7/10) 닫힘 쿠키 최대 50 × 37B ≈ 1.9KB 가 모든 요청 헤더에 실린다. 실제로는 0~3개(카드 대상 방장 5명). 상한 그대로
+- DR10 뼈대 위치: ~~`getCurrentUser` 는 Suspense 밖~~ → **O4 approved (D9)**: 로그인 쿠키 유무로 먼저 가르고, 로그인 확인 + 목록 조회를 뼈대 뒤(Suspense 안)에서. 쿠키 없는 방문자는 랜딩 그대로
+
+Dispositions: E4 approved (D5). 나머지는 승인된 결정(DR6 · DR8 · DR10)의 구현 세부 — accepted as required work
+
+
+### Outside Voice (Codex, gpt-5.6-sol, completed)
+
+- 실행: bash 로 preflight `CODEX_MODE: ready` → `codex exec -s read-only`(계획 본문 30KB 로 자름, 전체 경로 안내). 8건, 권고 "핵심만 남기고 구현 준비 안 됨으로 반려"
+- 확인 결과(코드로 검증):
+
+| # | Codex 지적 | 확인 | 처리 |
+|---|---|---|---|
+| 1 | P0 범위 축소 실패(약 22개 파일, 수요 전 구축) | 사실(파일 수는 #4 반영 시 약 24, 추정) · 판단은 방장 몫 | **O1 approved (D6)**: Include, 핵심 먼저 배포 |
+| 2 | P0 "홈에서 만든 밴드" 지표를 지금 데이터로 못 가름 | 사실: `deletePlaylist`(`playlist.ts:288`)로 promote 플레이리스트를 지우면 promote 밴드가 홈 밴드로 보인다. `teams` 에 출처 열 없음(v19:37). `track("team_created", { source })` 는 Vercel Analytics(`analytics.ts:4`)에만 남는다 | **O2 approved (D7)**: `teams.created_via`, v21, SQL 먼저 |
+| 3 | P0 작업 목록에 백엔드 작업(createTeam · E1 · E4 · getAttachablePlaylists)과 순서가 없다 | 사실: C1~C5 · DT1~DT6 에 없음 | 이 리뷰의 Implementation Tasks(순서 · 병렬화)로 채운다 — 필요 산출물 |
+| 4a | DR5 앞 3명 이름을 나를 데이터가 없다 | 사실: `MY_PLAYLIST_COLUMNS`(`playlist.ts:55`)에 이름 없음. `playlist_members.display_name` 은 있음(v7:56) | 승인된 DR5 의 필요 구현: 내가 만든 묶음에 `playlist_members(display_name, joined_at)` 를 붙이고 `memberCount` 는 그 길이로(집계 대신) |
+| 4b | DR9 넣은 플레이리스트의 참여자 수가 밴드 홈에 없다 | 사실: `TeamRoom`(`team.ts:161`)에 없음 | 승인된 DR9 의 필요 구현: `getTeamHome` 방 조회(`team.ts:567`)에 `playlist_members(count)` → `TeamRoom.participantCount` (왕복 추가 없음) |
+| 4c | DR13 만든 사람 닉네임이 카톡 공유까지 안 간다 | 사실: `BandInviteSheet` props(`:38`)와 `KakaoShareButton.tsx:68` 에 닉네임 없음 | 승인된 DR13 의 필요 구현: `bandShareDescription(nextShowAt, memberCount, now, ownerName)`, 밴드 홈 → `BandInviteSheet` → `KakaoShareButton` 으로 owner 이름 전달, `/join` 은 `getTeamInvite.previewNames[0]`. DT6 파일에 둘 추가 |
+| 5 | P1 `getCurrentUser` 가 Supabase 오류를 버려 인증 장애가 로그아웃 랜딩으로 보인다 | 사실(`auth.ts:28-33`) | **O3 approved (D8)**: Keep, 알려진 한계 |
+| 6 | P1 DR10 뼈대가 로그인 확인을 덮지 못한다 · `getHomeStats` 를 로그인 사람에게도 부른다 | 뼈대: 사실. 통계: 사실이나 병렬이라 지연 없음, 로그인 판정 뒤로 미루면 로그아웃 랜딩에 직렬 1단이 붙어 그대로 둔다 | 뼈대 **O4 approved (D9)**: 쿠키로 먼저 가름 / 통계 그대로 |
+| 7 | P1 localStorage → 쿠키 이전과 "밀림 없음"은 동시에 못 지킨다 | 사실: 서버는 예전 localStorage 닫힘을 볼 수 없어 첫 방문에 한 번 그렸다가 지워야 한다 | **O5 approved (D10)**: 한 번 깜빡임 허용 |
+| 8 | P2 상태 A E2E 가 운영 계정 상태에 기댄다 | 사실. 일회용 계정은 카카오 로그인만 있어 만들 수 없다(`npm run e2e:auth` 수동 저장) | **O6 approved (D11)**: 그대로 + 앞 조건 검사 |
+
+- 외부 검토 뒤 더해진 테스트(승인된 답의 증명): `team.test.ts` createTeam → `created_via: 'home'` · createTeamFromPlaylist → `'promote'`(O2), `team-metrics.test.ts` 홈 밴드 수를 `created_via` 로(O2),
+  홈 page 테스트 "쿠키 없음 → 랜딩 · 뼈대 없음" · "쿠키 있음 + 세션 없음 → 랜딩"(O4), `playlist.test.ts` 내가 만든 묶음의 `playlist_members(display_name, joined_at)` → 앞 3명 이름 · `memberCount`(#4a),
+  `team.test.ts` getTeamHome 방 `participantCount`(#4b), `BandHomeClient.test.tsx` 초대 시트에 owner 이름 전달(#4c), `e2e/account-b/home.spec.ts` 앞 조건 검사(O6)
+- Cross-model: Claude 리뷰(Section 1~4)와 Codex 가 겹친 것 — 홈 조회 · 로딩 경로(E1 · E4 ↔ #5 · #6), 쿠키 닫힘(DR6 구현 ↔ #7). Codex 만: 범위(#1), 지표 출처(#2), 작업 목록 빈칸(#3), 데이터 경로 3건(#4), 상태 A E2E(#8).
+  반대 의견: 범위(#1) — 방장이 Include 선택. 나머지는 Codex 지적을 받아들이거나(#2 · #4 · #6 · #7) 이유를 남기고 유지(#5 · #8)
+
+Dispositions: O1~O6 approved (D6~D11). #3 · #4 는 필요 산출물 · 필요 구현으로 반영. 통계(#6 일부)는 그대로
+
+### Eng 리뷰 산출물
+
+**NOT in scope (eng)**
+
+| 항목 | 처리 | 근거 |
+|---|---|---|
+| 인증 서버 장애를 로그아웃과 구분 | 그대로(알려진 한계) | O3 (D8) |
+| 홈용 `src/app/error.tsx` | 안 만듦 | O3 Keep. DR7 은 화면 안 오류로 처리 |
+| `getHomeStats` 를 로그인 판정 뒤로 | 그대로 | 미루면 로그아웃 랜딩에 직렬 1단이 붙는다(Codex #6) |
+| Vercel Analytics 로 밴드 출처 세기 | 안 함 | O2 (D7) DB 열로 |
+| 인라인 스크립트로 예전 닫힘 미리 숨기기 | 안 함 | O5 (D10) 한 번 깜빡임 허용 |
+| 일회용 E2E 계정 | 못 함 | 카카오 로그인뿐. O6 (D11) |
+| 여러 밴드 넣기 UI | TODOS.md | CEO2-F |
+| 새 인덱스 | 필요 없음 | Section 4 |
+
+**What already exists (재사용)**
+
+- `withFreshInviteCode`(`team.ts:227`) · `rollbackTeam`(`team.ts:279`) → `createTeam` 이 그대로 부른다. 새 추출 없음(Scope Challenge 정정)
+- `attachPlaylistToTeam`(권한 · 조건부 UPDATE · `roomWriteBlock`) → 넣기 시트가 행마다 부른다. `createBandPlaylist` → DR12 토글 · 시작 영역 첫 플레이리스트(`/new?band=`)
+- `getTeamInvite.previewNames` → `/join` 카톡 카드 owner 이름(DR13)
+- `BandPromptCard` · `CreateBandSheet` · `Modal` · `teamMessage` → 모드 · props 를 더해 재사용(새 카드 · 새 시트 없음)
+- `e2e/helpers/cleanup.ts` 의 `[e2e]` + 계정 id 정리 → 새 E2E 두 개도 같은 규칙
+- 인덱스 `idx_playlists_creator_user`(v7) · `idx_playlists_team`(v19) · `idx_playlist_members_user`(v7). Next 16 `data-security.md` 의 `getCurrentUser = cache(...)` 모양(E4)
+
+**최종 구조 (결정 반영)**
+
+```
+  [Server] src/app/page.tsx (홈)
+     ├─ await cookies() ── sb-<ref>-auth-token 없음 ──▶ 랜딩 (getHomeStats 병렬, 지금 그대로)
+     │                    └ 있음 ──▶ <Suspense fallback={<HomeSkeleton/>}>                      (O4)
+     │                                 ├─ getCurrentUser()  React cache, 요청당 1번           (E4)
+     │                                 │     └─ null (세션 끝남 · 인증 장애, O3) ──▶ 랜딩
+     │                                 ├─ Promise.all: getMyPlaylists() → { playlists, failed } (E1)
+     │                                 │               getMyTeams()     → { teams, failed }
+     │                                 │     내가 만든 묶음 += team_id · creator_user_id · playlist_members(display_name, joined_at) (#4a)
+     │                                 ├─ 판정: failed → B + 목록 자리 오류(DR7) │ ?left=1 → B │ 0/0 → A │ 그 밖 → B
+     │                                 └─ 홈 카드: 밴드 0 · 내 것 · 밴드 없음 · 멤버 ≥ 2 · 최근 하나 · 닫힘 쿠키에 없음 (DR4~DR6)
+  [Client] CreateBandSheet { kind: "promote" | "home" }
+     ├─ home + 대상 있음 → "같이 투표한 멤버로 만들기" → createTeamFromPlaylist (created_via 'promote')
+     └─ "멤버 없이 새 밴드로 시작" → createTeam(name)
+            검증 ─▶ teams insert(created_via 'home', 초대 코드 재시도) ─▶ owner 행 ─▶ 실패면 rollbackTeam
+  [Server] getTeamHome ─ 방 += playlist_members(count) (#4b) ─ owner 면 넣을 것 개수(head count, 2단계와 병렬)
+  [Client] BandHomeClient ─ BandStartArea(혼자 · 0개, E2) ─ AttachPlaylistsSheet ─ getAttachablePlaylists(teamId) → attachPlaylistToTeam
+                         └─ BandInviteSheet(ownerName) ─ KakaoShareButton ─ bandShareDescription(…, ownerName)  (#4c, DR13)
+  [Route]  /auth/logout → signOut({ scope: 'local' })                                            (CEO2-C)
+  [DB]     v21: teams.created_via text NOT NULL DEFAULT 'promote' CHECK (created_via IN ('promote','home'))  (O2)
+```
+
+- `DEFAULT 'promote'` 를 쓰는 이유: 기존 행이 채워지고, v21 SQL 과 코드 배포 사이에 옛 코드가 올린 밴드도 'promote' 로 남는다(O2 accepted scope 의 "기존 행 'promote'" 구현)
+
+**Failure modes (새 경로)**
+
+| 경로 | 운영에서 생길 실패 | 테스트 | 오류 처리 | 사용자에게 |
+|---|---|---|---|---|
+| `createTeam` | owner 행 저장 실패 | team.test(rollback) | rollbackTeam + `write_failed` | 버튼 아래 사유 |
+| 두 밴드 액션 | v21 SQL 전에 코드 배포 → 열 없음 | E2E `band.spec.ts`(운영 DB 대상 배포 전 게이트) | 액션 실패 사유 | 문구로 보임. T1 을 먼저 |
+| v21 ~ 코드 배포 사이 | 옛 코드가 만든 밴드의 출처 | — | DEFAULT 'promote' | 해당 없음 |
+| 홈 로더 | 한 묶음 실패 | playlist.test · page.test | failed → DR7 | "목록을 불러오지 못했어요" |
+| 홈 쿠키 판정 | 쿠키는 남고 세션은 끝남 | page.test | 뼈대 → 랜딩 | 잠깐 뼈대 |
+| `getCurrentUser` cache | 같은 요청 안 로그인 상태 변화 | — | auth 콜백 · 로그아웃 라우트는 `getCurrentUser` 를 부르지 않음 | 해당 없음 |
+| 닫힘 쿠키 | 쓰기 막힘 | PlaylistClient.band `:162` | 이번 방문만 닫힘 | 다음 방문에 카드 다시 |
+| 예전 localStorage 닫힘 | 첫 방문 한 번 그려짐 | prompt-dismissals 이전 테스트 | 마운트 때 쿠키로 옮기고 지움 | 한 번 깜빡임(O5) |
+| 넣기 시트 | 한 행 실패 / 목록 실패 | AttachPlaylistsSheet.test | 행 사유 + 다시 / 시트 안 오류 | 보임 |
+| 지표 | 출처 오분류 | team-metrics.test | `created_via` 로 셈 | 해당 없음 |
+
+Critical gap 0 — 테스트도 오류 처리도 없이 조용히 실패하는 경로 없음
+
+**TODOS.md**: 새 항목 없음. 이번 리뷰에서 미룬 것은 없고(O3 · O6 은 "그대로", O2 · O4 · O5 는 이번 범위), 여러 밴드 넣기(CEO2-F)는 이미 TODOS.md 에 있다
+
+**Worktree 병렬화**
+
+| Step | Modules touched | Depends on |
+|---|---|---|
+| T1 v21 · README | `supabase-migration-*`, README | — |
+| T2 로그인 cache · 로그아웃 | `src/lib/`, `src/app/auth/` | — |
+| T4 createTeam | `src/actions/` | T1 |
+| T3 로더 | `src/actions/`, `src/app/new/`, `src/app/playlist/` | T4(같은 `team.ts`) |
+| T7 빈 밴드 시작 영역 | `src/components/` | — |
+| T6 새 밴드 시트 | `src/components/`, `src/lib/` | T4 |
+| T8 지표 | `scripts/` | T1 |
+| T10 문서 | `docs/`, `e2e/` | — |
+| T5 상태별 홈 | `src/app/`, `src/components/` | T2, T3, T6 |
+| T9 E2E | `e2e/` | T5, T6, T7 |
+| T11 홈 카드 · 쿠키 | `src/lib/`, `src/components/`, `src/app/` | T5 |
+| T12 넣기 시트 | `src/actions/`, `src/components/` | T3, T7 |
+| T13 기본 밴드 토글 | `src/components/`, `src/app/new/` | T3 |
+| T14 카톡 문구 | `src/lib/`, `src/components/`, `src/app/api/`, `src/app/join/` | T7 |
+
+- **Parallel lanes (배포 1)**: Lane A: T1 → T4 → T3 → T8 (`src/actions/` · DB · scripts) / Lane B: T2, T10 (auth · 문서) / Lane C: T7 → T6 (`src/components/`, T6 은 T4 시그니처만 기다림)
+- **Parallel lanes (배포 2)**: Lane D: T11 / Lane E: T12 → T14 (둘 다 `BandHomeClient.tsx`) / Lane F: T13
+- **Execution order**: A + B + C 동시 → 합치기 → T5 → T9 → 방장 승인으로 v21 운영 SQL → 배포 1 → D + E + F 동시 → 합치기 → E2E → 배포 2
+- **Conflict flags**: `src/actions/team.ts`(T4 · T3 · T12), `src/components/BandHomeClient.tsx`(T7 · T12 · T14), `src/app/page.tsx`(T5 · T11), `src/app/new/page.tsx`(T3 · T13)
+
+## Implementation Tasks (eng 리뷰)
+Synthesized from this review's findings. Each task derives from a specific
+finding above. Run with Claude Code or Codex; checkbox as you ship.
+
+기존 작업과의 관계: C1 · C2 완료. C3 → T10, C4 → T2, C5 → T8, DT1 → T5, DT2 → T6, DT3 → T11, DT4 → T7 + T12, DT5 → T13, DT6 → T14.
+배포 1 = T1~T10(T1 의 운영 SQL 먼저), 배포 2 = T11~T14 (O1). 노력 비율 가정: 기능 ~30x, 테스트 ~50x, DB · 문서 ~10x
+
+- [ ] **T1 (P1, human: ~1h / CC: ~10min)** — db — `teams.created_via` 를 v21 마이그레이션으로 추가한다
+  - Surfaced by: Outside Voice #2 — O2 (D7)
+  - Files: `supabase-migration-v21.sql`, `README.md`(실행 순서)
+  - Verify: SQL 두 번 실행해도 무해. 운영 적용(방장 승인) 뒤 `created_via` 가 모두 'promote'
+- [ ] **T2 (P1, human: ~1h / CC: ~10min)** — auth — `getCurrentUser` 를 React cache 로 감싸고 로그아웃을 이 기기만 끊게 한다
+  - Surfaced by: Section 4 — E4 (D5); CEO2-C (C4)
+  - Files: `src/lib/auth.ts`, `src/app/auth/logout/route.ts`, `src/app/auth/logout/__tests__/route.test.ts`
+  - Verify: `npm test` — 라우트 테스트 `signOut({ scope: "local" })`, 기존 테스트 통과
+- [ ] **T3 (P1, human: ~4h / CC: ~20min)** — loaders — 홈 로더가 실패를 돌려주고 홈 카드 데이터를 함께 읽게 한다
+  - Surfaced by: Section 1 — E1 (D2), `MY_PLAYLIST_COLUMNS` 필요 구현; Outside Voice #4a
+  - Files: `src/actions/playlist.ts`, `src/actions/team.ts`(getMyTeams), `src/app/page.tsx`, `src/app/new/page.tsx`, `src/app/playlist/[shareCode]/page.tsx` + 테스트
+  - Verify: `npm test` — playlist.test(한 묶음 실패 · 새 필드), team.test(getMyTeams 실패), new page test(failed → 폼)
+- [ ] **T4 (P1, human: ~3h / CC: ~15min)** — team — 플레이리스트 없이 밴드를 만드는 `createTeam` 을 더한다
+  - Surfaced by: CEO2-A; Section 2 단계 주석; O2 (D7)
+  - Files: `src/actions/team.ts`, `src/actions/__tests__/team.test.ts`
+  - Verify: `npm test` — 비로그인 · 50/51자 · owner 1명 + 초대 코드 · owner 행 실패 → rollback · `created_via` 'home' / 'promote'
+- [ ] **T5 (P1, human: ~1d / CC: ~40min)** — home — 상태별 홈과 쿠키로 먼저 가르는 홈 뼈대를 만든다
+  - Surfaced by: DR2 · DR3 · DR7 · DR10 · DR15, O4 (D9), CEO2-A(HeroCTA 로그인 → `/`)
+  - Files: `src/app/page.tsx`, `src/components/HeroCTA.tsx`, `src/components/MyBands.tsx`, `src/components/MyPlaylists.tsx`, `src/components/HomeSkeleton.tsx`(새), `src/app/__tests__/page.test.tsx`(새), `src/components/__tests__/HomeBands.test.tsx`
+  - Verify: `npm test` — 판정 4분기 · 로컬 목록 · 쿠키 두 행 · HeroCTA 목적지
+- [ ] **T6 (P1, human: ~4h / CC: ~30min)** — sheet — 새 밴드 시트에 홈 모드를 더한다
+  - Surfaced by: Section 2 `CreateBandSheet.tsx:21-28`; DR3 · DR11 · DR14; Section 8(CEO) source
+  - Files: `src/components/CreateBandSheet.tsx`, `src/lib/analytics.ts`, `src/components/__tests__/CreateBandSheet.test.tsx`(새)
+  - Verify: `npm test` — 대상 있음/없음 · 참여만 한 줄 · "나중에" 없음 · 두 번 눌러도 한 번 · source
+- [ ] **T7 (P1, human: ~4h / CC: ~30min)** — band home — 빈 밴드 시작 영역을 별도 컴포넌트로 만든다
+  - Surfaced by: Section 2 — E2 (D3); DR1 · DR16
+  - Files: `src/components/BandStartArea.tsx`(새), `src/components/BandHomeClient.tsx` + 테스트
+  - Verify: `npm test` — 혼자 · 0개 → 시작 영역 하나 · 숨김 3가지, `:124` · `:147` 픽스처, DR16
+- [ ] **T8 (P2, human: ~1h / CC: ~10min)** — metrics — 홈에서 만든 밴드와 7일 방치된 빈 밴드를 센다
+  - Surfaced by: CEO2-G; O2 (D7)
+  - Files: `scripts/team-metrics.mjs`, `scripts/__tests__/team-metrics.test.ts`
+  - Verify: `npm test` team-metrics, `npm run metrics:teams` 에 두 줄
+- [ ] **T9 (P1, human: ~3h / CC: ~20min)** — e2e — 홈에서 빈 밴드 만들기와 처음 로그인 홈을 E2E 로 막는다
+  - Surfaced by: Section 3 E2E 2개; O6 (D11)
+  - Files: `e2e/account-a/band-home.spec.ts`(새), `e2e/account-b/home.spec.ts`(새)
+  - Verify: `npm run test:e2e`. account-a 는 `[e2e]` 플레이리스트만 누르고 실제 플레이리스트(`n0R9U6KT` 포함)는 넣지 않는다
+- [ ] **T10 (P2, human: ~30min / CC: ~5min)** — docs — ADR 0014 와 계획 문서에 CEO2-A 를 반영하고 account-b 를 E2E 전용으로 적는다
+  - Surfaced by: CEO 리뷰 Section 10 (C3); O6 (D11)
+  - Files: `docs/adr/0014-bands-sit-shallow-on-rooms.md`, `docs/plans/2026-09-21-teams-and-shared-catalog.md`, `e2e/README.md`
+  - Verify: ADR 에 "홈에서 빈 밴드" 경로, README 에 account-b 한 줄
+- [ ] **T11 (P2, human: ~4h / CC: ~30min)** — card — 닫힘 쿠키와 서버가 정하는 홈 카드를 만든다
+  - Surfaced by: DR4 · DR5 · DR6, Section 1 쿠키 형식, O5 (D10)
+  - Files: `src/lib/prompt-dismissals.ts`(새), `src/components/BandPromptCard.tsx`, `src/components/PlaylistClient.tsx`, `src/app/page.tsx`, `src/app/playlist/[shareCode]/page.tsx` + 테스트
+  - Verify: `npm test` — prompt-dismissals · 홈 카드 4규칙 · `:153` · `:162` · 이전
+- [ ] **T12 (P2, human: ~1d / CC: ~40min)** — attach — 밴드 홈에서 있던 플레이리스트를 넣는 시트를 만든다
+  - Surfaced by: DR8 · DR9, Section 1 `getAttachablePlaylists`, Section 4 개수 조회, Outside Voice #4b
+  - Files: `src/actions/team.ts`, `src/components/AttachPlaylistsSheet.tsx`(새), `src/components/BandStartArea.tsx`, `src/components/BandHomeClient.tsx` + 테스트
+  - Verify: `npm test` — 행 ✓ · 행 실패 · 모두 넣음 · 목록 오류 · 갱신 · `participantCount` · DR9
+- [ ] **T13 (P2, human: ~4h / CC: ~20min)** — create — 밴드 1개면 "{밴드}에 만들기"를 기본으로 켠다
+  - Surfaced by: DR12; Section 3 — E3 (D4)
+  - Files: `src/components/CreatePlaylistForm.tsx`, `src/app/new/page.tsx`, `src/components/__tests__/CreatePlaylistForm.band.test.tsx`
+  - Verify: `npm test` — 밴드 1 켬/끔 · 끄면 완료 화면 제안 없음 · 0 · 2+ 토글 없음
+- [ ] **T14 (P2, human: ~2h / CC: ~15min)** — share — 멤버 1명 밴드의 카톡 카드를 만든 사람 이름으로 바꾼다
+  - Surfaced by: DR13; Outside Voice #4c
+  - Files: `src/lib/team-domain.ts`, `src/components/BandInviteSheet.tsx`, `src/components/KakaoShareButton.tsx`, `src/components/BandHomeClient.tsx`, `src/app/join/[inviteCode]/page.tsx`, `src/app/api/og/route.tsx` + 테스트
+  - Verify: `npm test` team-domain(1명 · 날짜 유무 · 2명+ 그대로), OG 이미지 눈으로 확인
+
+### Unresolved Decisions (eng 리뷰)
+
+없음.
+
+### Completion Summary (eng 리뷰)
+
+```
+  +====================================================================+
+  |            ENG PLAN REVIEW — COMPLETION SUMMARY                    |
+  +====================================================================+
+  | Step 0 (Scope)       | scope accepted as-is (D1 Original), 정정 1   |
+  | Architecture         | 4 issues (E1 승인 + 필요 구현 3)             |
+  | Code Quality         | 3 issues (E2 승인 + 필요 구현 2)             |
+  | Test Review          | diagram produced, 38 gaps (2 E2E), E3 승인   |
+  | Performance          | 5 issues (E4 승인 + 구현 세부 4)             |
+  | NOT in scope         | written (8 items)                           |
+  | What already exists  | written                                     |
+  | TODOS.md updates     | 0 items proposed                            |
+  | Failure modes        | 0 critical gaps flagged                     |
+  | Unresolved decisions | 0                                           |
+  | Outside voice        | codex completed (gpt-5.6-sol), 8 findings → |
+  |                      | O1~O6 결정 + 필요 구현 2(#3 · #4)            |
+  | Parallelization      | 6 lanes: 배포 1 A·B·C 병렬, 배포 2 D·E·F 병렬 |
+  | Lake Score           | N/A (completeness 점수 매긴 질문 없음)       |
+  +====================================================================+
+```
+
+## Decision ledger
+
+### E1: 홈 조회 실패를 빈 결과와 구분하는 방식
+Finding: E1, P1, confidence 9/10, `src/actions/team.ts:709-711` (`logTeamError(...); return [];`) · `src/actions/playlist.ts:79`, reviewer: Claude (eng Section 1)
+Plan baseline: CEO 리뷰 GAP "홈이 조회 실패를 빈 결과와 구분하고, 실패면 상태 A 로 판정하지 않는다" + DR7(실패 → 상태 B 뼈대 + 목록 자리 오류). 구분 방식은 미정
+Runtime evidence: `getMyTeams` 는 실패 때 `[]`, `getMyPlaylists` 는 실패한 묶음을 비운 채 나머지를 돌려준다. 호출부 3곳: `src/app/page.tsx:27`, `src/app/new/page.tsx:25`, `src/app/playlist/[shareCode]/page.tsx:181`
+Comparison grid:
+
+| Choice | Current | A | B | C |
+|---|---|---|---|---|
+| E1 실패 신호 | 없음(빈 결과로 숨김) | 반환값 `{ playlists, failed }` · `{ teams, failed }` | 기존 함수 유지 + 홈 전용 결과 함수 추가 | 실패 시 throw |
+| 호출부 변경 | — | 3곳 모두 실패 처리를 명시(홈: DR7, `/new` · 플레이리스트: 빈 것으로 처리) | 홈 1곳 | 3곳에 try/catch |
+| DR7 · CEO GAP | 미충족 | 충족 | 충족 | 충족 |
+| 테스트 | — | 로더 단위 테스트(실패 → failed true) + 홈 판정 테스트 | 같음 + 래퍼 테스트 | 같음 + 각 호출부 catch 테스트 |
+
+Question D2:
+D2 — E1: 홈이 '조회 실패'와 '정말 없음'을 구분하도록 로더를 어떻게 바꿀까요?
+Project/branch/task: main, eng 리뷰 Section 1. getMyTeams 는 실패하면 빈 목록을 돌려주고(team.ts:709-711), getMyPlaylists 는 실패한 묶음을 비운 채 진행해요(playlist.ts:79). 부르는 곳은 홈 · /new · 플레이리스트 페이지 3곳이에요.
+ELI10: 지금은 DB 가 잠깐 실패해도 '밴드 없음'과 똑같이 보여서, 홈이 밴드가 있는 사람에게 '밴드로 시작하기'를 띄울 수 있어요. 로더가 '실패했다'는 신호를 같이 돌려줘야 홈이 DR7 화면을 띄울 수 있어요.
+Stakes if we pick wrong: 신호를 숨긴 채 두면 DR7 이 불가능하고, 부르는 곳마다 다르게 처리하면 다음 화면에서 같은 버그가 다시 생겨요.
+Recommendation: A because 부르는 곳이 3곳뿐이라 반환값에 실패를 담으면 각자 처리 방식을 명시하게 되고(명시적이 영리함보다 낫다), 함수가 둘로 늘지 않아요.
+Note: options differ in kind, not coverage — no completeness score.
+Net: 반환값을 바꿔 모든 호출부가 실패를 보게 할지, 홈만 따로 볼지, 예외로 던질지예요.
+Header: 실패 신호
+Options:
+A) 반환값에 실패 담기 (recommended)
+getMyPlaylists() → { playlists, failed }, getMyTeams() → { teams, failed } 로 바꾸고 3곳을 고쳐요. 홈은 failed 면 DR7, /new 와 플레이리스트 페이지는 지금처럼 빈 것으로 처리(명시). 노력 human ~반나절 / CC ~20min, 위험 low, 유지 쉬움. ✅ 모든 호출부가 실패를 보게 돼 다음 화면에서 같은 버그가 반복되지 않아요 ✅ 함수가 하나씩이라 어떤 걸 써야 할지 헷갈리지 않아요 ❌ 호출부 3곳과 기존 테스트의 반환값 모양을 함께 고쳐야 해요
+B) 홈 전용 결과 함수 추가
+기존 함수는 그대로 두고 내부를 나눠 홈 전용 { ok, ... } 결과 함수를 하나 더 만들어요. 노력 human ~반나절 / CC ~20min, 위험 low, 유지 보통. ✅ /new 와 플레이리스트 페이지는 손대지 않아요 ✅ 바뀌는 범위가 홈에 갇혀요 ❌ 같은 조회를 하는 함수가 둘이 돼 다음 사람이 실패를 숨기는 쪽을 쓸 수 있어요
+C) 실패 시 예외 던지기
+로더가 실패하면 throw 하고 홈은 try/catch 로 DR7 을 띄워요. 노력 human ~반나절 / CC ~20min, 위험 medium, 유지 보통. ✅ 반환값 모양이 바뀌지 않아요 ✅ 실패를 놓치면 화면이 깨져서 바로 드러나요 ❌ /new 와 플레이리스트 페이지에도 try/catch 를 빠뜨리면 그 화면 전체가 오류 화면으로 바뀌어요
+
+State: approved
+Actual answer: A "반환값에 실패 담기 (recommended)" (D2, 2026-10-06)
+Accepted scope: `getMyPlaylists()` → `{ playlists, failed }`, `getMyTeams()` → `{ teams, failed }`. 호출부 3곳 수정: 홈은 failed 면 DR7(상태 B 뼈대 + 목록 자리 오류),
+`/new` 와 플레이리스트 페이지는 failed 를 빈 것으로 처리(지금 동작 유지, 코드에 명시). 로더 단위 테스트(실패 → failed true) + 홈 판정 테스트 + 기존 테스트의 반환값 모양 갱신
+History: —
+
+### E2: 빈 밴드 시작 영역을 별도 컴포넌트로 뺄지
+Finding: CQ1, P2, confidence 8/10, `src/components/BandHomeClient.tsx` (583줄, `wc -l`), reviewer: Claude (eng Section 2)
+Plan baseline: D1 "Original arrangement" — 새 파일 3개(AttachPlaylistsSheet · HomeSkeleton · prompt-dismissals). 시작 영역 위치는 정하지 않음.
+**정정**: D1 질문의 "Smaller arrangement 면 BandHomeClient 가 600줄을 넘는다"는 부정확했다 — 이미 583줄이라 Original 에서도 DR1 · DR9 · DR16 을 넣으면 약 650줄(추정). D1 의 결정 근거(쿠키 모듈은 "use client" 밖)는 그대로라 D1 은 유효
+Runtime evidence: `BandHomeClient.tsx` 583줄. DR1 시작 영역 · DR9 문구 · DR16 배너 · 넣기 타일이 이 파일에 더해진다
+Comparison grid:
+
+| Choice | Current | A | B |
+|---|---|---|---|
+| E2 시작 영역 위치 | 미정 | 새 파일 `src/components/BandStartArea.tsx`(혼자 · 플레이리스트 0 일 때만 렌더, 주 버튼 · 보조 버튼 · 넣기 입구) | BandHomeClient 안에 그대로 |
+| BandHomeClient 크기 | 583줄 | 약 600줄(추정) | 약 650줄(추정) |
+| 테스트 | — | BandStartArea 단위 테스트 + BandHomeClient 의 숨김 규칙 테스트 | BandHomeClient 테스트에 추가 |
+| D1 범위(새 파일 3개) | 승인 | 새 파일 1개 더(총 4개) | 그대로 |
+
+Question D3:
+D3 — E2: 빈 밴드 시작 영역(DR1)을 별도 컴포넌트로 뺄까요?
+Project/branch/task: main, eng 리뷰 Section 2. BandHomeClient.tsx 는 이미 583줄이고, DR1 시작 영역 · DR9 문구 · DR16 배너 · 넣기 타일이 더해지면 약 650줄(추정)이 돼요. 정정: D1 질문에서 'Smaller arrangement 면 600줄을 넘는다'고 했는데, 지금 이미 583줄이라 Original 에서도 넘어요. D1 의 결정 근거(쿠키 모듈 위치)는 그대로예요.
+ELI10: 한 파일이 너무 길면 다음에 고칠 때 어디를 건드려야 할지 찾기 어렵고 테스트도 무거워져요. 시작 영역은 '혼자 · 플레이리스트 0' 일 때만 나오는 독립된 덩어리라 따로 떼기 좋아요.
+Stakes if we pick wrong: 그대로 두면 밴드 홈 파일이 650줄대가 돼 다음 수정이 느려지고, 너무 잘게 나누면 연결 코드만 늘어요.
+Recommendation: A because 시작 영역은 조건 하나로 통째로 켜지고 꺼지는 덩어리라 떼어도 연결이 단순하고, 따로 테스트할 수 있어요(적당한 크기, 테스트 가능한 경계).
+Note: options differ in kind, not coverage — no completeness score.
+Net: 파일 하나를 더 만들어 밴드 홈을 600줄 근처로 묶어 둘지, 한 파일에 계속 쌓을지예요.
+Header: 시작 영역
+Options:
+A) 별도 컴포넌트로 (recommended)
+src/components/BandStartArea.tsx 를 새로 만들어 혼자 · 플레이리스트 0 일 때만 렌더해요(첫 플레이리스트 주 버튼, 카톡으로 멤버 부르기, 넣기 입구). BandHomeClient 는 조건과 콜백만 넘겨요. 노력 human ~2h / CC ~10min, 위험 low, 유지 쉬움. ✅ 밴드 홈 파일이 약 600줄에 머물러 다음 수정 범위가 좁아요 ✅ 시작 영역의 숨김 · 순서 규칙을 따로 단위 테스트할 수 있어요 ❌ 새 파일이 하나 늘어 D1 의 3개에서 4개가 돼요
+B) BandHomeClient 안에 그대로
+시작 영역을 BandHomeClient 안의 조건부 JSX 로 둬요. 노력 human ~2h / CC ~10min, 위험 low, 유지 보통. ✅ 파일과 import 가 늘지 않아요 ✅ 밴드 홈의 모든 상태를 한 파일에서 볼 수 있어요 ❌ 밴드 홈 파일이 약 650줄이 돼 다음 수정과 테스트가 무거워져요
+
+State: approved
+Actual answer: A "별도 컴포넌트로 (recommended)" (D3, 2026-10-06)
+Accepted scope: 새 파일 `src/components/BandStartArea.tsx` — 혼자 · 플레이리스트 0 일 때만 렌더(첫 플레이리스트 주 버튼, 카톡으로 멤버 부르기, 넣기 입구).
+BandHomeClient 는 조건과 콜백만 넘긴다. BandStartArea 단위 테스트 + BandHomeClient 숨김 규칙 테스트. 새 파일은 D1 의 3개 + 1 = 4개
+History: —
+
+### E3: 밴드 1개인 사람이 "{밴드}에 만들기"를 끄고 만든 뒤 완료 화면
+Finding: T1 (REGRESSION), P2, confidence 9/10, `src/components/__tests__/CreatePlaylistForm.band.test.tsx:63` ("offers my band for a room made without ?band=", 밴드 1개 픽스처), reviewer: Claude (eng Section 3)
+Plan baseline: DR12 — 밴드 1개면 토글 기본 켬, 켜면 밴드 안, 끄면 밴드 밖. "밴드 0개 · 2개 이상은 지금처럼(완료 화면 넣기)". 밴드 1개 + 끔 뒤의 완료 화면은 정하지 않음
+Runtime evidence: 지금 밴드 1개인 사람은 만든 뒤 완료 화면에서 "이 플레이리스트를 밴드에 넣을까요?" + [{밴드}에 넣기]를 본다(13A, `CreatePlaylistForm.tsx:254`). DR12 뒤에는 기본이 밴드 안이라 이 화면은 토글을 끈 사람에게만 남는다
+Comparison grid:
+
+| Choice | Current | A | B |
+|---|---|---|---|
+| 밴드 1개 + 끔 → 완료 화면 | (토글 없음) 넣기 제안 | 제안 없음 | 넣기 제안 그대로 |
+| 13A 테스트 `:63` | 밴드 1개 → 제안 | "끄고 만들면 제안 없음"으로 바꾸고, 제안이 뜨는지는 밴드 2개 테스트(`:75`)가 계속 확인 | 토글 끄기 단계만 더하고 제안 확인 유지 |
+| 같은 질문 두 번 | — | 없음 | 있음(만들기 전에 끔 → 만든 뒤 다시 물음) |
+
+Question D4:
+D4 — E3: 밴드 1개인 사람이 "{밴드}에 만들기"를 끄고 만들면, 완료 화면에서 밴드에 넣을지 다시 물을까요?
+Project/branch/task: main, eng 리뷰 Section 3. 지금은 밴드 1개인 사람이 플레이리스트를 만들면 완료 화면에서 "이 플레이리스트를 밴드에 넣을까요?"를 물어요(13A, 테스트 CreatePlaylistForm.band.test.tsx:63). DR12 로 만들기 전에 토글이 생기는데, 그 토글을 끈 사람의 완료 화면은 정하지 않았어요.
+ELI10: 만들기 전에 "밴드에 만들기"를 일부러 끈 사람에게 만든 직후 "밴드에 넣을까요?"를 또 물으면 같은 질문을 두 번 하는 셈이에요. 반대로 안 물으면, 실수로 끈 사람은 나중에 플레이리스트 설정이나 밴드 홈에서 넣어야 해요.
+Stakes if we pick wrong: 다시 물으면 목적이 겹치는 선택지가 생기고, 안 물으면 실수로 끈 사람이 한 단계 더 가요(설정 · 밴드 홈 넣기는 그대로 있어요).
+Recommendation: A because 사용자가 방금 한 선택을 다시 묻지 않고, 넣는 길은 설정과 밴드 홈(CEO2-E)에 이미 있어요.
+Note: options differ in kind, not coverage — no completeness score.
+Net: 방금 한 선택을 믿을지, 실수를 한 번 더 잡아 줄지예요.
+Header: 완료 화면
+Options:
+A) 다시 묻지 않기 (recommended)
+밴드 1개 + 끔 → 완료 화면에 넣기 제안 없음. 13A :63 테스트를 "끄고 만들면 제안 없음"으로 바꾸고, 제안이 뜨는지는 밴드 2개 이상 테스트(:75)가 계속 확인해요. 노력 human ~30m / CC ~5min. ✅ 만들기 전에 고른 것을 만든 뒤 다시 묻지 않아 완료 화면이 한 가지 일만 해요 ✅ 밴드 0개 · 2개 이상의 완료 화면은 지금 그대로라 바뀌는 범위가 작아요 ❌ 실수로 끈 사람은 설정이나 밴드 홈에서 넣어야 해서 한 단계 늘어요
+B) 지금처럼 다시 묻기
+밴드 1개 + 끔 → 완료 화면 넣기 제안 유지. 13A :63 테스트에 토글 끄기 단계만 더해요. 노력 human ~30m / CC ~5min. ✅ 실수로 끈 사람이 완료 화면에서 바로 밴드에 넣을 수 있어요 ✅ 완료 화면 규칙이 밴드 수와 상관없이 한 가지라 설명하기 쉬워요 ❌ 만들기 전과 후에 같은 질문을 두 번 해 목적이 겹치는 선택지가 생겨요
+
+State: approved
+Actual answer: A "다시 묻지 않기 (recommended)" (D4, 2026-10-06)
+Accepted scope: 밴드 1개 + "{밴드}에 만들기" 끔 → 완료 화면에 넣기 제안 없음. 밴드 0개 · 2개 이상의 완료 화면은 그대로.
+13A `CreatePlaylistForm.band.test.tsx:63` 을 "끄고 만들면 제안 없음"으로 바꾸고, 제안이 뜨는지는 밴드 2개 이상 테스트(`:75`)가 계속 확인
+History: —
+
+### E4: 로그인 확인(getCurrentUser)을 요청 안에서 한 번만
+Finding: PERF1, P2, confidence 9/10, `src/lib/auth.ts:28-32` (캐시 없음), 호출 `src/app/page.tsx:21` → `src/actions/playlist.ts:67` · `src/actions/team.ts:701`, reviewer: Claude (eng Section 4)
+Plan baseline: DR10 홈 뼈대(로딩이 길다는 전제). CEO 리뷰 Section 7 "홈 DB 왕복 수가 지금과 같다". 로그인 확인 횟수는 다루지 않음
+Runtime evidence: 로그인 홈 한 번에 Supabase Auth `getUser` 3번, 직렬 2단(페이지 → 로더 두 개 병렬). Next 16 문서 `node_modules/next/dist/docs/01-app/02-guides/data-security.md:67-80` 이 같은 이름 `getCurrentUser = cache(async () => ...)` 를 예로 든다.
+auth 콜백 · 로그아웃 라우트는 `getCurrentUser` 를 부르지 않는다(`grep`). 호출 하나의 지연은 재지 않음
+Comparison grid:
+
+| Choice | Current | A | B | C |
+|---|---|---|---|---|
+| 홈의 로그인 확인 | 3번, 직렬 2단 | 1번, 직렬 1단 | 3번 그대로 | 3번 그대로 |
+| 바뀌는 파일 | — | `src/lib/auth.ts` (React `cache` 로 감쌈) | 없음 | `TODOS.md` |
+| 영향 범위 | — | `getCurrentUser` 를 부르는 모든 서버 화면 · 액션(같은 요청 안에서만 재사용) | — | — |
+| 테스트 | — | 기존 테스트는 `@/lib/auth` 를 mock → 영향 없음 | — | — |
+
+Question D5:
+D5 — E4: 로그인 확인(getCurrentUser)을 한 요청 안에서 한 번만 하도록 React cache 로 감쌀까요?
+Project/branch/task: main, eng 리뷰 Section 4. 로그인 홈을 한 번 열 때 Supabase 로그인 확인이 3번 불리고, 그중 2번은 앞의 확인이 끝난 뒤에 시작돼요(page.tsx:21 → playlist.ts:67 · team.ts:701). DR10 홈 뼈대가 보이는 시간이 그만큼 길어져요.
+ELI10: 홈을 그릴 때 서버가 "이 사람 로그인했나?"를 세 번 물어보고, 두 번째 질문은 첫 번째 답을 받은 뒤에야 해요. 같은 요청 안에서는 처음 받은 답을 다시 쓰면 기다리는 단계가 하나 줄어요.
+Stakes if we pick wrong: 그대로 두면 로그인 직후 홈 뼈대가 로그인 확인 한 번만큼 더 오래 보여요. React cache 는 요청 하나 안에서만 재사용해서 다른 사람 정보가 섞이지는 않아요.
+Recommendation: A because 공용 파일 한 곳을 감싸는 것으로 직렬 단계가 하나 줄고, Next 16 문서가 같은 함수 이름으로 권하는 방식이에요.
+Note: options differ in kind, not coverage — no completeness score.
+Net: 공용 로그인 함수를 이번에 같이 손볼지, 흐름 계획 범위 안에만 머물지예요.
+Header: 로그인 확인
+Options:
+A) cache 로 감싸기 (recommended)
+src/lib/auth.ts 의 getCurrentUser 를 React cache 로 감싸 같은 요청 안에서 한 번만 Supabase 에 물어요. 홈 · /new · 플레이리스트 페이지가 모두 덕을 봐요. 노력 human ~30m / CC ~5min, 위험 low. ✅ 로그인 홈의 로그인 확인이 3번에서 1번으로 줄고 기다리는 단계가 하나 빠져요 ✅ 요청이 끝나면 버려지는 재사용이라 사람 사이에 섞이지 않고, 기존 테스트는 mock 이라 그대로예요 ❌ 이번 흐름 계획 밖의 공용 파일이라 모든 서버 화면과 액션이 같이 바뀌어요
+B) 그대로 두기
+이번 범위에서는 손대지 않고 TODOS.md 에도 남기지 않아요. ✅ 공용 로그인 함수를 건드리지 않아 변경 범위가 흐름 계획 안에 머물러요 ✅ 지금 잘 돌아가는 모든 화면에 새 변수가 생기지 않아요 ❌ 로그인 직후 홈 뼈대가 로그인 확인 한 번만큼 계속 길게 보여요
+C) TODOS.md 로 미루기
+이번에는 그대로 두고 TODOS.md 에 "홈이 느리다는 말이 나오면 cache 로 감싼다"로 남겨요. ✅ 이번 변경 범위가 흐름 계획 안에 머물면서 할 일은 잊히지 않아요 ✅ 실제로 느린지 재 보고 나서 정할 수 있어요 ❌ 고칠 방법이 이미 한 줄로 분명한데 할 일 목록만 하나 늘어요
+
+State: approved
+Actual answer: A "cache 로 감싸기 (recommended)" (D5, 2026-10-06)
+Accepted scope: `src/lib/auth.ts` 의 `getCurrentUser` 를 React `cache` 로 감싸 같은 요청 안에서 한 번만 Supabase Auth 에 묻는다. 로그인 홈의 로그인 확인 3번 → 1번, 직렬 2단 → 1단.
+홈 · `/new` · 플레이리스트 페이지와 액션 모두 같은 함수를 쓴다. 기존 테스트는 `@/lib/auth` mock 이라 그대로
+History: —
+
+### O1: (Codex #1) 핵심 밖 묶음을 이번 범위에 둘지
+Finding: Codex P0 #1, `docs/plans/2026-10-06-user-flow-map.md:105`(숫자) · Scope Challenge(약 22개 파일 추정), reviewer: Codex gpt-5.6-sol (outside voice)
+Plan baseline: CEO 리뷰 SCOPE REDUCTION 모드에서 CEO2-A~G 승인, 디자인 DR1~DR16 각각 승인, eng D1 "Original arrangement"(약 22개 파일 추정을 보고 승인)
+Runtime evidence: 외부 밴드 0, 홈 카드 대상 방장 5명(흐름 지도 3장). Codex 지적 #4 를 반영하면 바뀌는 파일 약 24(추정)
+Candidate: 핵심 밖 묶음 = 홈 카드(DR4 · DR5 · DR6, 쿠키 이전 포함) · 넣기 시트(DR8 · DR9) · 멤버 중복 한 줄(DR11) · 기본 밴드 토글(DR12) · 1명 카톡 문구(DR13). Current disposition: Include(승인됨).
+핵심(Codex 가 남기자는 것): 로그인 → 홈, 상태 A/B, 새 밴드 + `createTeam`, 빈 밴드 시작 영역(DR1, 넣기 입구 없이), 로그아웃 이 기기만, 지표
+Comparison grid:
+
+| Choice | Current | A Include | B Defer | C Cut | D Hold |
+|---|---|---|---|---|---|
+| 핵심 밖 묶음 | 이번 범위 | 이번 범위 그대로 | TODOS.md, 재개 = 홈에서 만든 밴드 ≥ 2 또는 외부 밴드 ≥ 1 | 계획에서 지움 | 논의 |
+| 바뀌는 파일(추정) | 약 24 | 약 24 | 약 15 | 약 15 | — |
+| 빈 밴드 시작 영역 주 버튼 | 넣기 / 첫 플레이리스트 | 같음 | "첫 플레이리스트 만들기"만 | 같음 B | — |
+| 기존 방장 5명 유도 | 홈 카드 | 홈 카드 | 플레이리스트 안 카드만(지금) | 같음 B | — |
+| 빈 밴드 카톡 초대 카드 | 1명이면 만든 사람 이름 | 같음 | "멤버 1명"(지금) | 같음 B | — |
+
+Question D6:
+D6 — O1(Codex): '핵심 밖 묶음'(홈 카드 · 넣기 시트 · 기본 밴드 토글 · 1명 카톡 문구 · 멤버 중복 한 줄)을 이번 범위에 그대로 둘까요?
+Project/branch/task: main, eng 리뷰 외부 검토. Codex 가 "외부 밴드 0 인데 약 22개 파일은 과하다, 로그인 → 홈 · 새 밴드 · 빈 밴드 만들기 · 지표만 남기라"고 했어요. 이 묶음은 CEO · 디자인 리뷰에서 하나씩 승인한 것이고, 지금 상태는 Include 예요.
+ELI10: 다른 AI 가 "아직 쓰는 밴드가 없으니 핵심만 먼저 만들고 나머지는 쓰는 걸 보고 하자"고 해요. 빼면 일이 약 3분의 1 줄지만, 기존 방장 5명을 밴드로 데려오는 홈 카드와 빈 밴드의 카톡 초대 문구도 같이 빠져요.
+Stakes if we pick wrong: 다 만들면 아무도 안 쓰는 화면을 유지하게 될 수 있고, 다 빼면 홈에서 만든 빈 밴드가 '멤버 1명' 카톡 카드로 퍼지고 기존 방장 5명은 지금처럼 플레이리스트 안 카드만 봐요.
+Recommendation: A because 방장이 각 결정을 파일 수 추정까지 보고 승인했고, 홈 카드와 카톡 문구는 수요를 확인하는 장치 자체예요. 위험은 빼는 대신 작업 순서(핵심 먼저 배포)로 줄여요.
+Note: options differ in kind, not coverage — no completeness score.
+Net: 일을 3분의 1 줄이는 것과, 기존 방장 유도 · 빈 밴드 초대 카드를 첫 배포에 넣는 것을 맞바꿔요.
+Header: 범위
+Options:
+A) Include — 그대로 (recommended)
+승인된 범위 그대로 둬요. 작업 목록은 핵심(로그인 → 홈 · 새 밴드 · 빈 밴드 · 로그아웃 · 지표)을 먼저 배포하고 묶음을 뒤에 배포하도록 순서를 매겨요. 노력 human ~4일 / CC ~4h(추정). ✅ 기존 방장 5명이 홈에서 바로 밴드로 올릴 수 있어 첫 배포부터 수요를 볼 수 있어요 ✅ 빈 밴드 카톡 카드가 '멤버 1명' 대신 만든 사람 이름으로 나가 초대가 덜 썰렁해요 ❌ 외부 밴드가 0인 지금 약 24개 파일을 바꾸고 테스트 17개를 유지해야 해요
+B) Defer — TODOS.md 로
+묶음을 TODOS.md 로 옮기고 재개 조건을 '홈에서 만든 밴드 ≥ 2 또는 외부 밴드 ≥ 1'로 둬요. 빈 밴드 시작 영역 주 버튼은 '첫 플레이리스트 만들기'만. 노력 human ~2.5일 / CC ~2.5h(추정). ✅ 바뀌는 파일이 약 15개로 줄어 첫 배포가 빨라요 ✅ 쓰는 밴드가 생긴 뒤 실제 사용을 보고 묶음을 다시 다듬을 수 있어요 ❌ 기존 방장 5명은 지금처럼 플레이리스트 안 카드만 보고, 빈 밴드 카톡 카드는 '멤버 1명'으로 나가요
+C) Cut — 계획에서 지움
+묶음을 계획과 TODOS.md 에서 모두 지워요. 노력 human ~2.5일 / CC ~2.5h(추정). ✅ 바뀌는 파일이 약 15개로 줄고 기억할 미룬 일도 남지 않아요 ✅ 범위를 다시 열지 않는다는 신호가 분명해요 ❌ 승인했던 디자인 결정 다섯 묶음이 이유 기록 없이 사라져 다시 필요할 때 처음부터 정해야 해요
+D) Hold — 논의
+지금 정하지 않고 이 질문에서 멈춰 이야기해요. 다른 결정은 그대로예요. ✅ 범위를 서둘러 정하지 않고 Codex 의 다른 지적까지 보고 나서 판단할 수 있어요 ✅ 승인된 상태(Include)가 바뀌지 않아요 ❌ 이 질문이 열려 있는 동안 리뷰를 마칠 수 없어요
+
+State: approved
+Actual answer: A "Include — 그대로 (recommended)" (D6, 2026-10-06)
+Accepted scope: 핵심 밖 묶음(DR4 · DR5 · DR6 · DR8 · DR9 · DR11 · DR12 · DR13)은 이번 범위 그대로. 작업 목록은 핵심(로그인 → 홈 · 새 밴드 · 빈 밴드 · 로그아웃 · 지표)을
+먼저 배포하고 묶음을 뒤에 배포하도록 순서를 매긴다
+History: —
+
+### O2: (Codex #2) 밴드를 어디서 만들었는지 DB 에 남길지
+Finding: Codex P0 #2, `supabase-migration-v19.sql:37-46`(teams 에 출처 열 없음) · `src/actions/playlist.ts:288`(`deletePlaylist`) · `scripts/team-metrics.mjs:203`, reviewer: Codex gpt-5.6-sol (outside voice), 확인 Claude
+Plan baseline: CEO2-G 승인 — "홈에서 만든 밴드 수(외부, promote 플레이리스트 없는 밴드) · 7일 지나도 owner 혼자 · 플레이리스트 0 인 밴드 수. DB 변경 없음"
+Runtime evidence: promote 로 만든 밴드도 방장이 원래 플레이리스트를 지우면(`deletePlaylist`) "promote 플레이리스트 없는 밴드"가 되어 홈 밴드로 잘못 센다. `track("team_created", { source })` 는 Vercel Analytics(`src/lib/analytics.ts:4`)로만 가고 지표 스크립트는 DB 만 읽는다.
+지금까지 만든 밴드는 모두 promote 로 만들어졌다(홈 만들기가 없었다) → 지금 채우면 정확하고, 홈 만들기를 배포한 뒤에는 다시 가를 수 없다. "7일 방치" 줄은 출처와 상관없이 셀 수 있다
+Comparison grid:
+
+| Choice | Current | A Apply | B Keep | C Investigate | D Defer |
+|---|---|---|---|---|---|
+| 홈에서 만든 밴드 수 | promote 플레이리스트 없음으로 추정 | `teams.created_via` 로 정확히 | 추정 그대로(지운 경우 틀림, 출력에 한 줄 주의) | Vercel Analytics 의 source 로 셀 수 있는지 먼저 확인 | 이 제안만 미룸, 행은 열린 채 |
+| DB 변경 | 없음 | v21 마이그레이션 1개(열 추가 + 기존 행 'promote' 채움, idempotent) · 운영 SQL 1번(방장 승인) | 없음 | 없음 | 없음 |
+| 배포 순서 | — | SQL 먼저, 그다음 코드(코드가 열에 쓴다) | — | — | — |
+| 테스트 | — | createTeam · createTeamFromPlaylist 가 값을 넣는지 + team-metrics 가 열로 세는지 | team-metrics 추정 테스트 | — | — |
+
+Question D7:
+D7 — O2(Codex): 밴드를 홈에서 만들었는지 플레이리스트에서 올렸는지 teams 테이블에 남길까요?
+Project/branch/task: main, eng 리뷰 외부 검토. CEO2-G 지표는 'promote 플레이리스트가 없는 밴드 = 홈에서 만든 밴드'로 추정하고 DB 는 바꾸지 않기로 했어요. Codex 가 "promote 플레이리스트를 지우면 틀린다"고 했고, 실제로 방장은 deletePlaylist(playlist.ts:288)로 그 플레이리스트를 지울 수 있어요.
+ELI10: 6주 뒤 "홈에서 만든 빈 밴드가 멤버 없이 죽나?"를 보려면 밴드마다 어디서 만들었는지 알아야 해요. 지금은 흔적으로 추정하는데, 원래 플레이리스트를 지우면 흔적이 사라져요. 지금까지의 밴드는 전부 플레이리스트에서 올린 것이라 지금 기록을 시작하면 과거까지 정확해요.
+Stakes if we pick wrong: 기록을 안 남기고 배포하면 나중에는 과거 밴드를 다시 가를 수 없어요. 남기면 운영 DB 에 SQL 을 한 번 돌려야 하고, 코드보다 먼저 돌려야 밴드 만들기가 실패하지 않아요.
+Recommendation: A because 지금은 기존 밴드가 모두 promote 라 채우기가 정확하지만, 홈 만들기를 배포한 뒤에는 이 정확도를 되찾을 방법이 없어요.
+Note: options differ in kind, not coverage — no completeness score.
+Net: 운영 SQL 한 번과 배포 순서 하나를 더하는 대신, 6주 판단에 쓸 숫자를 정확하게 만들어요.
+Header: 밴드 출처
+Options:
+A) Apply — teams.created_via 추가 (recommended)
+v21 마이그레이션으로 teams.created_via('promote' | 'home', 기존 행은 'promote')를 더하고, createTeam 은 'home', createTeamFromPlaylist 는 'promote'를 넣어요. team-metrics 는 이 열로 세요. 운영 SQL 은 코드 배포 전에 방장 승인으로 한 번. 노력 human ~1h / CC ~10min + SQL 1번. ✅ 원래 플레이리스트를 지워도 홈 밴드 수가 틀리지 않아 6주 판단이 정확해요 ✅ 지금 채우면 기존 밴드까지 정확하고, 이 기회는 배포 전에만 있어요 ❌ 운영 DB SQL 을 코드보다 먼저 돌려야 하고 순서를 어기면 밴드 만들기가 실패해요
+B) Keep — 추정 그대로
+CEO2-G 대로 'promote 플레이리스트 없는 밴드'로 추정하고, 지표 출력에 '원래 플레이리스트를 지운 밴드는 홈으로 셀 수 있음' 한 줄을 붙여요. 노력 human ~10m / CC ~2min. ✅ DB 를 바꾸지 않아 배포 순서가 단순하고 운영 SQL 이 필요 없어요 ✅ 원래 플레이리스트를 지우는 일은 드물어 지금 숫자 규모에서는 대개 맞아요 ❌ 한 번 틀리면 어느 밴드가 틀렸는지 알 수 없고 나중에 고칠 수도 없어요
+C) Investigate — Vercel Analytics 먼저 확인
+team_created 이벤트의 source 를 Vercel Analytics 에서 셀 수 있는지(요금제 · 보관 기간) 확인하고 나서 정해요. 노력 human ~30m / CC ~5min. ✅ DB 를 바꾸지 않고도 이미 남는 기록으로 셀 수 있을지 알 수 있어요 ✅ 확인 결과에 따라 A 와 B 중 하나를 근거 있게 고를 수 있어요 ❌ 확인하는 동안 이 결정이 열려 있고, 이벤트는 차단기 · 요금제에 따라 빠질 수 있어요
+D) Defer — 이 제안만 미루기
+지금은 정하지 않고 이 제안을 열어 둬요. CEO2-G 의 추정 방식은 그대로예요. ✅ 다른 리뷰 작업을 막지 않고 나중에 다시 볼 수 있어요 ✅ 승인된 CEO2-G 를 건드리지 않아요 ❌ 홈 만들기를 배포하면 기존 밴드를 정확히 채울 기회가 사라져요
+
+State: approved
+Actual answer: A "Apply — teams.created_via 추가 (recommended)" (D7, 2026-10-06)
+Accepted scope: `supabase-migration-v21.sql`(idempotent): `teams.created_via text` + check('promote' | 'home') + 기존 행 'promote' 채움. `createTeam` 은 'home', `createTeamFromPlaylist` 는 'promote' 를 넣는다.
+`scripts/team-metrics.mjs` 의 "홈에서 만든 밴드 수"는 이 열로 센다. 운영 SQL 은 코드 배포 전에 방장 승인으로 한 번(순서를 어기면 밴드 만들기 실패). README 실행 순서 목록 갱신.
+테스트: 두 액션이 값을 넣는지 + team-metrics 가 열로 세는지. CEO2-G 의 "DB 변경 없음"은 이 답으로 바뀐다
+History: —
+
+### O3: (Codex #5) 인증 확인 실패를 로그아웃과 구분할지
+Finding: Codex P1 #5, `src/lib/auth.ts:28-33`(`getUser()` 의 error 를 버리고 user 가 없으면 null), `src/app/page.tsx:25`, reviewer: Codex gpt-5.6-sol (outside voice), 확인 Claude
+Plan baseline: E1 · DR7 은 목록 조회(DB) 실패만 다룬다. 로그인 확인 실패는 다루지 않음. E4(D5)로 `getCurrentUser` 를 React `cache` 로 감싼다
+Runtime evidence: Supabase Auth 가 네트워크 · 5xx 로 실패하면 `getUser()` 는 `AuthRetryableFetchError` 와 user null 을 돌려주고, 지금 코드는 로그아웃으로 처리해 로그인한 사람에게 랜딩을 보인다.
+`@supabase/auth-js`(supabase-js 2.100.1)에 `isAuthRetryableFetchError` 가 있다. 홈에는 `error.tsx` 가 없어(있는 것은 `src/app/band/[teamId]/error.tsx` · `global-error.tsx`) 던지면 전역 오류 화면으로 간다. `getCurrentUser` 호출 파일 약 16곳
+Comparison grid:
+
+| Choice | Current | A Apply | B Keep | C Investigate | D Defer |
+|---|---|---|---|---|---|
+| 인증 서버 장애 때 홈 | 로그아웃 랜딩 | 홈 오류 화면 + 다시 불러오기 | 로그아웃 랜딩 | 로그에서 실제 발생 여부 확인 뒤 결정 | 열어 둠 |
+| 바뀌는 것 | — | `auth.ts`(재시도 가능 오류면 throw) + 새 `src/app/error.tsx` | 없음 | 없음 | 없음 |
+| 다른 호출부 | — | 액션 약 10곳이 "로그인 필요" 대신 오류를 던짐 | 그대로 | 그대로 | 그대로 |
+
+Question D8:
+D8 — O3(Codex): 로그인 확인이 서버 장애로 실패할 때 '로그아웃'과 구분할까요?
+Project/branch/task: main, eng 리뷰 외부 검토. getCurrentUser(auth.ts:28-33)는 Supabase 오류를 버리고 사용자가 없으면 null 을 돌려줘요. 그래서 인증 서버가 잠깐 실패하면 로그인한 사람에게 로그아웃 랜딩이 보여요. 홈에는 error.tsx 가 없어요.
+ELI10: 인증 서버가 잠깐 안 될 때 지금은 '로그아웃된 사람'처럼 첫 화면을 보여줘요. 구분하려면 그 경우에 오류를 던지고 '다시 불러오기' 화면을 새로 만들어야 하는데, 이 함수는 약 16곳에서 써서 액션들도 같이 바뀌어요.
+Stakes if we pick wrong: 그대로 두면 드문 장애 때 사용자가 로그아웃된 줄 알고 다시 로그인하려 할 수 있고, 바꾸면 이번 흐름 계획 밖의 공용 함수와 액션들의 실패 모양이 함께 바뀌어요.
+Recommendation: B because 인증 서버 장애는 드물고 그때는 사용자 id 를 몰라 목록도 읽을 수 없으며, 구분하려면 공용 함수 16곳의 동작과 새 오류 화면이 필요해서 이번 범위에 비해 커요.
+Note: options differ in kind, not coverage — no completeness score.
+Net: 드문 장애 때의 정확한 화면과, 공용 함수 · 액션 실패 모양을 그대로 두는 것을 맞바꿔요.
+Header: 인증 실패
+Options:
+A) Apply — 장애면 오류 화면
+getCurrentUser 가 재시도 가능한 오류(isAuthRetryableFetchError)면 던지고, 홈용 src/app/error.tsx(다시 불러오기)를 새로 만들어요. 노력 human ~2h / CC ~15min. ✅ 인증 장애 때 로그인한 사람에게 로그아웃 랜딩 대신 '다시 불러오기'가 보여 혼란이 없어요 ✅ 액션도 장애를 '로그인 필요'로 잘못 말하지 않고 실제 오류로 알려요 ❌ 공용 함수 약 16곳의 실패 모양과 새 오류 화면이 이번 흐름 계획 밖에서 늘어요
+B) Keep — 지금처럼 (recommended)
+지금처럼 오류를 로그아웃으로 처리해요. DR7 은 목록 조회 실패에만 써요. 노력 없음. ✅ 공용 함수와 액션 약 16곳의 동작이 그대로라 이번 변경 범위가 흐름 계획 안에 머물러요 ✅ 새 오류 화면 없이 지금 배포 상태를 그대로 유지해요 ❌ 드문 인증 장애 때 로그인한 사람이 로그아웃 랜딩을 보고 다시 로그인하려 할 수 있어요
+C) Investigate — 로그부터
+Vercel 로그에서 getUser 실패가 실제로 있었는지 먼저 보고 정해요. 노력 human ~30m / CC ~5min. ✅ 실제로 일어나는 문제인지 숫자로 보고 고를 수 있어요 ✅ 없으면 B 를, 잦으면 A 를 근거 있게 고를 수 있어요 ❌ 지금 코드는 이 오류를 기록하지 않아 로그에 남은 게 없을 가능성이 커요
+D) Defer — 이 제안만 미루기
+지금은 정하지 않고 이 제안을 열어 둬요. ✅ 다른 리뷰 작업을 막지 않고 나중에 다시 볼 수 있어요 ✅ 지금 동작이 바뀌지 않아요 ❌ 열린 결정으로 남아 리뷰 보고서에 미해결로 표시돼요
+
+State: approved
+Actual answer: B "Keep — 지금처럼 (recommended)" (D8, 2026-10-06)
+Accepted scope: 변경 없음. `getCurrentUser` 는 지금처럼 오류를 로그아웃으로 처리하고, DR7 은 목록 조회 실패에만 쓴다. 인증 장애 때 로그아웃 랜딩이 보이는 것은 알려진 한계로 둔다
+History: 보낸 질문은 Keep 을 첫 선택지로 두고, C 설명의 "A/B" 를 "Apply/Keep" 으로 적었다(내용 같음)
+
+### O4: (Codex #6) 홈 뼈대를 로그인 확인 전에 보일지
+Finding: Codex P1 #6, eng Section 4 "DR10 뼈대 위치: getCurrentUser 는 Suspense 밖", `src/app/page.tsx:20-30`, reviewer: Codex gpt-5.6-sol (outside voice), 확인 Claude
+Plan baseline: DR10 "로그인 직후 홈 로딩 — 홈 전용 뼈대(멈춘 화면 없음)". eng Section 4 는 로그아웃 방문자가 로그인 뼈대를 보지 않도록 로그인 확인을 Suspense 밖에 둠. E4(D5)로 로그인 확인은 1번
+Runtime evidence: 카카오 로그인 → `/auth/callback` → `/` 순서에서, 지금 배치면 `/` 응답의 첫 화면이 로그인 확인(Supabase Auth HTTP 1번)이 끝나야 나간다. 그동안 브라우저는 이전 화면(카카오)을 보여 준다.
+Supabase 로그인 쿠키(`@supabase/ssr` 기본 이름 `sb-<ref>-auth-token`, 조각 `.0` `.1`)는 네트워크 없이 읽을 수 있다. 한 번의 지연은 재지 않음
+Comparison grid:
+
+| Choice | Current(eng 4) | A Apply | B Keep | C Investigate | D Defer |
+|---|---|---|---|---|---|
+| 첫 화면이 나가는 때 | 로그인 확인 뒤 | 바로(쿠키 있으면 뼈대) | 로그인 확인 뒤 | 재 보고 결정 | 열어 둠 |
+| 로그아웃 방문자(쿠키 없음) | 랜딩 | 랜딩(그대로) | 랜딩 | — | — |
+| 쿠키가 남았지만 세션이 끝난 사람 | 랜딩 | 뼈대가 잠깐 → 랜딩 | 랜딩 | — | — |
+| 바뀌는 것 | — | `page.tsx` 에서 쿠키 이름 검사 + 로그인 확인을 Suspense 안으로 | 없음 | 없음 | 없음 |
+
+Question D9:
+D9 — O4(Codex): 로그인 직후 홈 뼈대를 로그인 확인 전에 바로 보일까요?
+Project/branch/task: main, eng 리뷰 외부 검토. DR10 은 '로그인 직후 멈춘 화면 없음'을 위해 홈 뼈대를 두기로 했는데, eng Section 4 배치는 로그인 확인(Supabase Auth 1번)이 끝나야 뼈대가 나가요. Codex 가 "뼈대가 정작 느린 단계를 못 덮는다"고 했어요.
+ELI10: 카카오 로그인에서 돌아오면 서버가 먼저 '누구인지' 확인하고 나서야 화면을 보내기 시작해요. 브라우저에 로그인 쿠키가 있는지만 먼저 보면(네트워크 없이) 뼈대를 바로 보낼 수 있어요. 대신 쿠키는 남았는데 세션이 끝난 사람은 뼈대가 잠깐 보였다가 첫 화면으로 바뀌어요.
+Stakes if we pick wrong: 그대로 두면 로그인 직후 카카오 화면에 멈춘 듯한 시간이 로그인 확인 한 번만큼 남고, 바꾸면 세션이 끝난 일부 사람이 뼈대를 잠깐 봐요.
+Recommendation: A because DR10 이 약속한 '멈춘 화면 없음'을 열 줄 남짓으로 지키고, 처음 온 방문자(쿠키 없음)의 랜딩은 그대로예요.
+Note: options differ in kind, not coverage — no completeness score.
+Net: 로그인 직후 첫 화면을 한 단계 앞당기는 것과, 세션이 끝난 사람의 짧은 뼈대 깜빡임을 맞바꿔요.
+Header: 홈 뼈대
+Options:
+A) Apply — 쿠키로 먼저 가르기 (recommended)
+로그인 쿠키가 있으면 바로 홈 뼈대를 보내고 로그인 확인과 목록 조회를 뼈대 뒤(Suspense 안)에서 해요. 쿠키가 없으면 지금처럼 랜딩. 노력 human ~1h / CC ~10min. ✅ 카카오에서 돌아오자마자 홈 뼈대가 보여 DR10 의 '멈춘 화면 없음'을 지켜요 ✅ 처음 온 방문자는 쿠키가 없어 랜딩이 지금과 똑같아요 ❌ 쿠키는 남았는데 세션이 끝난 사람은 뼈대가 잠깐 보였다가 랜딩으로 바뀌어요
+B) Keep — 로그인 확인 뒤 뼈대
+eng Section 4 그대로 로그인 확인은 Suspense 밖, 목록 조회만 뼈대 뒤에서 해요. E4 로 확인은 1번이에요. 노력 없음. ✅ 로그아웃 방문자와 세션 끝난 사람 모두 뼈대를 전혀 보지 않아요 ✅ 쿠키 이름 같은 Supabase 내부 규칙에 기대지 않아요 ❌ 로그인 직후 로그인 확인 한 번만큼은 이전 화면에 멈춘 듯 보여요
+C) Investigate — 먼저 재기
+배포 뒤 로그인 직후 홈의 첫 바이트 시간을 재고 정해요. 노력 human ~1h / CC ~10min. ✅ 실제로 멈춘 듯 보이는 시간이 얼마인지 보고 고를 수 있어요 ✅ 짧으면 손대지 않아도 된다는 근거가 생겨요 ❌ 재는 동안 이 결정이 열려 있고, 잴 도구를 따로 붙여야 해요
+D) Defer — 이 제안만 미루기
+지금은 정하지 않고 이 제안을 열어 둬요. ✅ 다른 리뷰 작업을 막지 않아요 ✅ 지금 배치(B)가 그대로 구현돼요 ❌ 열린 결정으로 남아 리뷰 보고서에 미해결로 표시돼요
+
+State: approved
+Actual answer: A "Apply — 쿠키로 먼저 가르기 (recommended)" (D9, 2026-10-06)
+Accepted scope: `src/app/page.tsx` 가 먼저 `await cookies()` 로 Supabase 로그인 쿠키(`sb-<ref>-auth-token`, 조각 `.0` 포함) 유무를 본다. 있으면 `<Suspense fallback={<HomeSkeleton/>}>` 안에서
+로그인 확인 + 목록 조회 → 로그인 홈(세션이 끝났으면 랜딩). 없으면 지금처럼 랜딩을 바로. eng Section 4 의 "getCurrentUser 는 Suspense 밖" 배치를 대신한다.
+테스트: 홈 page 테스트에 "쿠키 없음 → 랜딩, 뼈대 없음" · "쿠키 있음 + 세션 없음 → 랜딩" 두 행
+History: —
+
+### O5: (Codex #7) 예전에 닫은 카드(localStorage)를 쿠키로 옮길 때의 깜빡임
+Finding: Codex P1 #7, `src/components/BandPromptCard.tsx:11,38,47` · DR6, reviewer: Codex gpt-5.6-sol (outside voice), 확인 Claude
+Plan baseline: DR6 "닫힘을 쿠키로 저장해 서버가 카드 여부를 정한다 — 하이드레이션 밀림 없음" + "기존 localStorage 기록은 한 번 읽어 쿠키로 옮긴다". 테스트 계획 Edge Case 에 "첫 방문에 한 번 깜빡일 수 있음"을 적어 둠
+Runtime evidence: 서버는 브라우저의 localStorage 를 볼 수 없다. 배포 뒤 첫 방문에서 예전에 닫은 사람은 서버가 카드를 그린 HTML 을 먼저 보고, 스크립트가 돌아 기록을 옮긴 뒤 카드가 사라진다(한 번 밀림).
+DR6 의 두 약속은 이 사람들에게 동시에 지킬 수 없다. 대상: 플레이리스트 안 카드를 볼 수 있는 방장 최대 5명(흐름 지도 3장), 각자 한 번
+Comparison grid:
+
+| Choice | Current(DR6) | A | B | C | D |
+|---|---|---|---|---|---|
+| 예전에 닫은 사람의 첫 방문 | 정하지 않음(충돌) | 카드가 그려졌다가 사라짐(한 번) | 카드가 다시 보이고, 한 번 더 닫으면 쿠키로 기억 | 첫 그림 전에 인라인 스크립트가 숨김 · 쿠키로 옮김 | 열어 둠 |
+| "닫으면 기억"(방장 피드백) | — | 지킴 | 한 번 어김 | 지킴 | — |
+| 바뀌는 것 | — | DR6 문구에 "예전 기록은 첫 방문에 한 번 그렸다 지운다" | 이전 코드 없음 | 인라인 스크립트 + 하이드레이션 경고 처리 | — |
+
+Question D10:
+D10 — O5(Codex): 예전에 카드를 닫은 사람의 첫 방문에 카드가 한 번 깜빡이는 것을 받아들일까요?
+Project/branch/task: main, eng 리뷰 외부 검토. DR6 은 '닫힘을 쿠키로, 서버가 판정해 밀림 없음'과 '예전 localStorage 기록을 쿠키로 옮김'을 함께 약속했어요. Codex 가 "서버는 localStorage 를 못 보니 예전에 닫은 사람에게는 둘을 동시에 못 지킨다"고 했고, 맞아요.
+ELI10: 지금은 닫은 기록이 브라우저 안에만 있어서, 서버가 처음 화면을 만들 때는 그 사람이 닫았는지 몰라요. 그래서 배포 뒤 첫 방문 때 카드가 잠깐 보였다가 사라지거나, 아예 다시 보이거나, 복잡한 장치로 미리 숨겨야 해요. 해당되는 사람은 많아야 방장 5명, 각자 한 번이에요.
+Stakes if we pick wrong: 아무것도 안 정하면 구현할 때 임의로 고르게 되고, 기록을 버리면 '닫으면 기억'을 한 번 어기며, 미리 숨기면 5명 한 번을 위해 코드가 늘어요.
+Recommendation: A because 많아야 5명이 한 번 보는 깜빡임이고, '닫으면 기억'은 지키며 코드는 가장 적어요.
+Note: options differ in kind, not coverage — no completeness score.
+Net: 5명의 한 번 깜빡임과, 기억을 버리거나 코드를 늘리는 것을 맞바꿔요.
+Header: 예전 닫힘
+Options:
+A) 한 번 깜빡임 허용 (recommended)
+예전 기록은 첫 방문에 카드를 그렸다가 스크립트가 쿠키로 옮기고 지워요. DR6 에 이 예외를 한 줄로 적어요. 노력 human ~30m / CC ~5min. ✅ 예전에 닫은 사람도 다시 닫을 필요 없이 기억이 이어져 '닫으면 기억'을 지켜요 ✅ 이전 코드가 몇 줄이고, 첫 방문 뒤로는 서버 판정이라 밀림이 없어요 ❌ 많아야 방장 5명이 배포 뒤 첫 방문에 카드가 잠깐 보였다 사라지는 걸 한 번 봐요
+B) 이전 빼기
+localStorage 기록을 옮기지 않아요. 예전에 닫은 사람은 카드를 다시 보고, 한 번 더 닫으면 그때부터 쿠키로 기억해요. 노력 human ~15m / CC ~3min. ✅ 이전 코드가 없어 구현과 테스트가 가장 단순해요 ✅ 깜빡임이 없고 카드는 처음부터 서버가 정한 대로 보여요 ❌ 이미 닫았던 방장 최대 5명에게 같은 카드를 다시 보여 '닫으면 기억'을 한 번 어겨요
+C) 첫 그림 전에 숨기기
+카드 바로 앞 인라인 스크립트가 localStorage 를 읽어 그리기 전에 숨기고 쿠키로 옮겨요(하이드레이션 경고 처리 포함). 노력 human ~2h / CC ~20min. ✅ 깜빡임도 없고 기억도 이어져 DR6 의 두 약속을 모두 지켜요 ✅ 첫 방문 뒤로는 A 와 같은 쿠키 판정이에요 ❌ 많아야 5명 한 번을 위해 인라인 스크립트와 하이드레이션 예외 코드가 남아요
+D) Defer — 이 제안만 미루기
+지금은 정하지 않고 열어 둬요. ✅ 다른 리뷰 작업을 막지 않아요 ✅ DR6 의 나머지(쿠키 · 서버 판정)는 그대로 구현할 수 있어요 ❌ 구현할 때 세 방식 중 하나를 임의로 고르게 되고 보고서에 미해결로 남아요
+
+State: approved
+Actual answer: A "한 번 깜빡임 허용 (recommended)" (D10, 2026-10-06)
+Accepted scope: DR6 에 예외 한 줄 — 예전 localStorage 닫힘 기록은 배포 뒤 첫 방문에 카드를 그렸다가 클라이언트가 쿠키로 옮기고 지운다(대상 최대 방장 5명, 각자 한 번).
+첫 방문 뒤로는 서버 쿠키 판정이라 밀림 없음. 테스트는 기존 계획(localStorage → 쿠키 이전) 그대로
+History: —
+
+### O6: (Codex #8) 상태 A E2E 가 운영 계정 상태에 기대는 것
+Finding: Codex P2 #8, Section 3 테스트 표 `e2e/account-b/home.spec.ts`, reviewer: Codex gpt-5.6-sol (outside voice), 확인 Claude
+Plan baseline: CEO2-A 답 "검증은 액션 테스트와 E2E 밴드 흐름 확장" · CEO 리뷰 Section 6 표 "E2E: 처음 로그인 홈 (account-b) 읽기만" · eng Section 3 "시작 전 0/0 이 아니면 원인 문구로 실패"
+Runtime evidence: account-b 는 E2E 전용 계정이고 지금 만든 0 · 참여 0 · 밴드 0(읽기 전용 실측). `band.spec.ts` 가 account-b 를 `[e2e]` 밴드 · 방에 넣었다가 정리한다.
+E2E 로그인은 카카오 저장 세션뿐이라(`npm run e2e:auth`, 수동) 실행마다 새 계정을 만들 수 없다. 상태 판정 자체는 홈 page 단위 테스트가 막는다
+Comparison grid:
+
+| Choice | Current | A Keep | B Apply | C Investigate | D Defer |
+|---|---|---|---|---|---|
+| 상태 A 실제 브라우저 확인 | account-b E2E(읽기만) + 앞 조건 검사 | 그대로 | 없음(단위 테스트만) | 다른 고정 방법 찾은 뒤 결정 | 열어 둠 |
+| account-b 에 데이터가 남으면 | 원인 문구로 실패 | 같음(정리 실패 신호도 됨) | 영향 없음 | — | — |
+| E2E 수 | 2 | 2 | 1 | — | — |
+
+Question D11:
+D11 — O6(Codex): 처음 로그인 홈(상태 A)을 E2E 전용 계정 account-b 로 확인하는 테스트를 그대로 둘까요?
+Project/branch/task: main, eng 리뷰 외부 검토. 계획은 account-b(지금 밴드 0 · 플레이리스트 0)로 로그인 홈이 '어떻게 시작할까요?'를 보이는지 읽기만 하는 E2E 를 두고, 시작 전 0/0 이 아니면 원인 문구로 실패하게 했어요. Codex 가 "운영 계정 상태에 기대 불안정하다, 일회용 계정이나 고정 데이터로 하라"고 했어요.
+ELI10: 이 테스트는 account-b 에 밴드나 플레이리스트가 하나라도 생기면 깨져요. 그런데 로그인은 카카오뿐이라 실행마다 새 계정을 만들 수는 없어요. 계정을 E2E 에만 쓰고, 깨질 때 이유를 바로 알려 주면 정리 실패를 알려 주는 신호도 돼요.
+Stakes if we pick wrong: 두면 account-b 를 다른 데 쓰는 순간 이 테스트가 빨개지고, 빼면 실제 브라우저에서 처음 로그인 화면을 확인하는 테스트가 없어져요.
+Recommendation: A because 일회용 계정은 카카오 로그인만 있어 만들 수 없고, account-b 는 E2E 전용이며, 깨질 때 원인 문구가 band.spec 정리 실패까지 알려 줘요.
+Note: options differ in kind, not coverage — no completeness score.
+Net: 실제 브라우저 확인 하나와, 계정 상태에 기대는 불안정함을 맞바꿔요.
+Header: 상태 A E2E
+Options:
+A) Keep — 그대로 + 앞 조건 검사 (recommended)
+account-b 로 읽기만 하는 상태 A E2E 를 두고, 시작 전에 account-b 의 밴드 · 플레이리스트 수를 확인해 0/0 이 아니면 남은 것을 적어 실패해요. 노력 human ~1h / CC ~10min. ✅ 실제 브라우저에서 처음 로그인 화면과 두 선택지를 확인해요 ✅ band.spec 정리가 실패해 account-b 에 데이터가 남으면 그 사실을 바로 알려 줘요 ❌ account-b 를 E2E 밖에서 쓰면 이 테스트가 깨지므로 계정을 E2E 전용으로 지켜야 해요
+B) Apply — E2E 빼고 단위 테스트만
+상태 A 판정은 홈 page 단위 테스트(서버 0/0 → A)로만 막고 account-b E2E 는 만들지 않아요. 노력 human ~0 / CC ~0. ✅ 운영 계정 상태에 기대는 테스트가 없어 E2E 가 안정적이에요 ✅ E2E 가 하나 줄어 배포 전 검사가 짧아져요 ❌ 실제 브라우저와 실제 조회로 처음 로그인 화면을 확인하는 테스트가 없어요
+C) Investigate — 다른 고정 방법 찾기
+실행마다 상태 A 를 보장할 방법(예: 테스트 전용 플래그)을 찾고 나서 정해요. 노력 human ~2h / CC ~20min. ✅ 계정 상태와 무관한 안정적인 E2E 를 만들 수 있을지 알 수 있어요 ✅ 찾으면 A 의 약점을 없앨 수 있어요 ❌ 운영 코드에 테스트 전용 길을 내야 할 수 있어 보안 · 유지 부담이 생겨요
+D) Defer — 이 제안만 미루기
+지금은 정하지 않고 열어 둬요. ✅ 다른 리뷰 작업을 막지 않아요 ✅ 단위 테스트 계획은 그대로예요 ❌ E2E 를 만들지 말지 정해지지 않아 보고서에 미해결로 남아요
+
+State: approved
+Actual answer: A "Keep — 그대로 + 앞 조건 검사 (recommended)" (D11, 2026-10-06)
+Accepted scope: `e2e/account-b/home.spec.ts` 를 그대로 둔다(읽기만). 시작 전 account-b 의 밴드 · 플레이리스트(만든 · 참여) 수를 확인해 0/0 이 아니면 남은 것을 적어 실패한다.
+account-b 는 E2E 전용으로 지킨다(e2e/README 에 한 줄)
+History: —
+
+Approval readiness: PASS — E1(D2) · E2(D3) · E3(D4) · E4(D5) · O1(D6) · O2(D7) · O3(D8) · O4(D9) · O5(D10) · O6(D11) 모두 actual answer 로 승인. 필요 구현(Section 1~4 · Outside #3 · #4)은 승인된 CEO2-A~G · DR1~DR16 에서 나오고, 회귀 계약 (1)~(4)는 E1 · DR6 · DR13 · DR1 을 그대로 잇는다
+
 ## GSTACK REVIEW REPORT
 
 | Review | Trigger | Why | Runs | Status | Findings |
 |--------|---------|-----|------|--------|----------|
 | CEO Review | `/plan-ceo-review` | Scope & strategy | 3 | CLEAR | mode: SCOPE_REDUCTION, 0 critical gaps (2026-10-06, 이 계획) |
-| Outside Review | codex (design 단계 `/plan-design-review`; plan-review 단계 `/plan-ceo-review`) | Independent 2nd opinion | 6 | design: completed · plan-review: unavailable | design 6 findings; 6 resolved (DR1·DR3·DR5·DR7·DR8·DR2); 0 unresolved. plan-review: no completed external review (zsh 에서 gstack 점검 경로가 깨짐) |
-| Eng Review | `/plan-eng-review` | Architecture & tests (required) | 3 | ISSUES OPEN | 8 issues, 0 critical gaps (2026-10-04, 밴드 계획 대상 — 이 계획은 아직 eng 리뷰 없음) |
+| Outside Review | codex (plan-review 단계 `/plan-eng-review`; design 단계 `/plan-design-review`) | Independent 2nd opinion | 7 | plan-review(eng): completed · design: completed | eng 8 findings → O1~O6 결정 + 필요 구현 2(#3 · #4), 0 unresolved; design 6 findings, 6 resolved |
+| Eng Review | `/plan-eng-review` | Architecture & tests (required) | 4 | ISSUES OPEN | 50 issues, 0 critical gaps (구조 4 · 품질 3 · 성능 5 · 테스트 공백 38, 모두 T1~T14 로 매핑. 결정 10개 승인, 2026-10-06, 이 계획) |
 | Design Review | `/plan-design-review` | UI/UX gaps | 3 | CLEAR | score: 3/10 → 8/10, 16 decisions |
 | DX Review | `/plan-devex-review` | Developer experience gaps | 0 | — | — |
 
-- **OUTSIDE COVERAGE:** codex · design · completed (gpt-5.6-sol, 6 findings, 모두 DR 결정으로 해소). codex · plan-review(CEO 리뷰) · unavailable — 원인은 zsh 에서 `gstack-codex-probe` 의 `BASH_SOURCE` 가 비어 모델 해석 경로가 깨진 것, bash 로 돌리면 정상
-- **CROSS-MODEL:** 디자인 단계에서 native Claude 서브에이전트(17건)와 codex(6건)가 함께 완료. 겹친 것: 빈 밴드 홈 중복 초대(하드 리젝트 #7), 상태 B 밴드 입구 경쟁, 홈 카드 대상·닫기 규칙, 상태 A 제목 어긋남, 넣기 시트 상태, 조회 실패 화면. Claude 만: 넣은 뒤 멤버 수 모순, 로그인 직후 로딩, 밴드 있는 방장 카드, 하이드레이션 밀림, 멤버 중복 밴드, 기본 밴드 토글, 카톡 카드 문구, 상태 A 경계, 새 밴드 시트 홈 모드. Codex 만: 없음. 두 모델 사이 반대 의견은 순서(빈 밴드 홈 첫 행동: Codex 초대 먼저 / Claude 플레이리스트 먼저) 하나 — 방장이 플레이리스트 먼저(DR1) 선택
-- **VERDICT:** CEO + DESIGN CLEARED (이 흐름 계획) — eng review required
+- **OUTSIDE COVERAGE:** codex · plan-review(eng 리뷰) · completed (gpt-5.6-sol, 8 findings: O1~O6 방장 결정, #3 · #4 필요 구현). codex · design · completed (gpt-5.6-sol, 6 findings, DR 결정으로 해소). codex · plan-review(CEO 리뷰) · unavailable (zsh 에서 점검 경로가 깨짐, bash 로 돌리면 정상)
+- **CROSS-MODEL:** eng 단계에서 native Claude 리뷰(Section 1~4)와 codex 가 함께 완료. 겹친 것: 홈 조회 · 로딩 경로(E1 · E4 ↔ #5 · #6), 쿠키 닫힘(DR6 구현 ↔ #7). Codex 만: 범위(#1), 밴드 출처 지표(#2), 작업 목록 빈칸(#3), 데이터 경로 3건(#4), 상태 A E2E(#8). 반대 의견: 범위 — Codex 는 핵심만 남기라고 했고 방장은 Include(핵심 먼저 배포) 선택
+- **VERDICT:** CEO + DESIGN CLEARED (이 흐름 계획). Eng 는 결정 10개를 모두 해소했지만 매핑된 작업 50건이 열려 있어 ISSUES OPEN — eng review required (기록 규칙상 표시. 다시 돌릴 리뷰가 아니라 T1~T14 구현이 남은 것)
 
 NO UNRESOLVED DECISIONS
