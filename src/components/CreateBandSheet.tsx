@@ -298,7 +298,8 @@ function NameForm({
         나중에 바꿀 수 없어요. 공연 이름 말고 밴드 이름을 써 주세요
       </p>
 
-      <div className="mt-4 rounded-control border border-border bg-surface px-3 py-2.5">{note}</div>
+      {/* A filled box without a border, like the DR11 note: only the input above has an outline. */}
+      <div className="mt-4 rounded-control bg-surface px-3 py-2.5">{note}</div>
 
       <Button type="submit" size="lg" fullWidth className="mt-5" disabled={!name.trim()} loading={pending}>
         밴드 만들기
