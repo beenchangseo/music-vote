@@ -81,3 +81,15 @@ export const test = base.extend<{ cleanup: Cleanup }>({
 export async function expectNoAlert(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "알림", level: 3 })).toHaveCount(0);
 }
+
+/**
+ * On /new, a person with exactly one band gets "{밴드}에 만들기" switched on (DR12). account-a is the
+ * operator's real account with a real band: switch it off so a test room never lands in that band.
+ */
+export async function keepRoomOutOfBand(page: Page): Promise<void> {
+  const toggle = page.getByRole("switch", { name: /에 만들기$/ });
+  if ((await toggle.count()) > 0 && (await toggle.getAttribute("aria-checked")) === "true") {
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+  }
+}

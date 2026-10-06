@@ -1,4 +1,4 @@
-import { expect, expectNoAlert, skipWhen, test } from "../fixtures";
+import { expect, expectNoAlert, keepRoomOutOfBand, skipWhen, test } from "../fixtures";
 import { E2E_PREFIX, adminProblem } from "../helpers/cleanup";
 import { authProblem, metricsProblem } from "../helpers/guards";
 import { readAccountUserId } from "../helpers/accounts";
@@ -17,6 +17,7 @@ test.describe("account-a: create a room", () => {
 
     await page.goto("/new");
     await page.getByPlaceholder(/어떤 합주예요/).fill(title);
+    await keepRoomOutOfBand(page);
     await page.getByRole("button", { name: "플레이리스트 만들기", exact: true }).click();
 
     // Success screen of CreatePlaylistForm.

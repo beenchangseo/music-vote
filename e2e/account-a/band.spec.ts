@@ -1,4 +1,4 @@
-import { expect, expectNoAlert, skipWhen, test, withAccountPage } from "../fixtures";
+import { expect, expectNoAlert, keepRoomOutOfBand, skipWhen, test, withAccountPage } from "../fixtures";
 import { readAccountUserId } from "../helpers/accounts";
 import { E2E_PREFIX, adminClient, adminProblem } from "../helpers/cleanup";
 import { authProblem, metricsProblem } from "../helpers/guards";
@@ -35,6 +35,8 @@ test.describe("account-a + account-b: band flow", () => {
     // 1. account-a makes a room.
     await page.goto("/new");
     await page.getByPlaceholder(/어떤 합주예요/).fill(roomTitle);
+    // The room must start outside any band to be promoted below.
+    await keepRoomOutOfBand(page);
     await page.getByRole("button", { name: "플레이리스트 만들기", exact: true }).click();
     await page.getByRole("button", { name: /곡 추가하러 가기/ }).click();
     await page.waitForURL(/\/playlist\/[\w-]+$/);

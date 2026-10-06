@@ -59,11 +59,44 @@ describe("CreatePlaylistForm in a band (/new?band=)", () => {
   });
 });
 
+describe("CreatePlaylistForm with exactly one band (DR12, eng E3)", () => {
+  it("makes it in that band by default", async () => {
+    createBandPlaylist.mockResolvedValue({ success: true, ...room });
+    render(<CreatePlaylistForm myTeams={[myTeam(TEAM, "일코해제")]} />);
+    expect(screen.getByRole("switch", { name: "일코해제에 만들기" })).toBeChecked();
+    submit();
+    expect(await screen.findByRole("heading", { name: "11월 합주" })).toBeInTheDocument();
+    expect(createBandPlaylist).toHaveBeenCalledWith(TEAM, "11월 합주", undefined, undefined, "free", 3);
+    expect(createPlaylist).not.toHaveBeenCalled();
+    expect(screen.queryByText("이 플레이리스트를 밴드에 넣을까요?")).not.toBeInTheDocument();
+  });
+
+  it("makes it outside when switched off, and does not ask again on the completion screen", async () => {
+    createPlaylist.mockResolvedValue(room);
+    render(<CreatePlaylistForm myTeams={[myTeam(TEAM, "일코해제")]} />);
+    const toggle = screen.getByRole("switch", { name: "일코해제에 만들기" });
+    fireEvent.click(toggle);
+    expect(toggle).not.toBeChecked();
+    submit();
+    expect(await screen.findByRole("heading", { name: "11월 합주" })).toBeInTheDocument();
+    expect(createPlaylist).toHaveBeenCalled();
+    expect(createBandPlaylist).not.toHaveBeenCalled();
+    expect(screen.queryByText("이 플레이리스트를 밴드에 넣을까요?")).not.toBeInTheDocument();
+  });
+
+  it("has no toggle when the page already names the band (?band=)", () => {
+    render(<CreatePlaylistForm band={BAND} myTeams={[myTeam(TEAM, "일코해제")]} />);
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+  });
+});
+
 describe("CreatePlaylistForm completion screen (13A)", () => {
-  it("offers my band for a room made without ?band=", async () => {
+  it("offers my bands for a room made without ?band= when I am in two or more", async () => {
+    const other = "22222222-2222-4222-8222-222222222222";
     createPlaylist.mockResolvedValue(room);
     attachPlaylistToTeam.mockResolvedValue({ success: true, teamId: TEAM });
-    render(<CreatePlaylistForm myTeams={[myTeam(TEAM, "일코해제")]} />);
+    render(<CreatePlaylistForm myTeams={[myTeam(TEAM, "일코해제"), myTeam(other, "산울림")]} />);
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
     submit();
     expect(await screen.findByText("이 플레이리스트를 밴드에 넣을까요?")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "일코해제에 넣기" }));
@@ -86,6 +119,7 @@ describe("CreatePlaylistForm completion screen (13A)", () => {
   it("says nothing about bands when I have none", async () => {
     createPlaylist.mockResolvedValue(room);
     render(<CreatePlaylistForm />);
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
     submit();
     await screen.findByRole("heading", { name: "11월 합주" });
     expect(screen.queryByText("이 플레이리스트를 밴드에 넣을까요?")).not.toBeInTheDocument();

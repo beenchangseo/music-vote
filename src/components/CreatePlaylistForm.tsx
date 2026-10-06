@@ -9,6 +9,7 @@ import { attachPlaylistToTeam, createBandPlaylist, type MyTeam } from "@/actions
 import { track } from "@/lib/analytics";
 import { teamMessage } from "@/lib/team-messages";
 import KakaoShareButton from "./KakaoShareButton";
+import GuitarIcon from "./GuitarIcon";
 import Button from "./ui/Button";
 import type { VotingMode } from "@/lib/types";
 
@@ -18,6 +19,8 @@ interface CreatedPlaylist {
   adminToken: string;
   title: string;
   url: string;
+  /** 밴드 안에 만들었으면 그 밴드 (?band= 또는 DR12 토글). */
+  band: { id: string; name: string; nextShowAt: string | null } | null;
 }
 
 function getTodayString() {
@@ -28,12 +31,18 @@ function getTodayString() {
 interface CreatePlaylistFormProps {
   /** /new?band={teamId} 로 왔고 그 밴드 멤버일 때. 방은 createBandPlaylist 로 밴드 안에 만든다. */
   band?: { id: string; name: string; nextShowAt: string | null } | null;
-  /** 밴드 없이 만든 방을 완료 화면에서 넣을 후보 (디자인 리뷰 13A). */
+  /**
+   * 내 밴드. 1개면 "{밴드}에 만들기" 토글을 켠 채 보인다(DR12). 2개 이상이면 완료 화면에서 넣을 후보(13A).
+   */
   myTeams?: MyTeam[];
 }
 
 export default function CreatePlaylistForm({ band = null, myTeams = [] }: CreatePlaylistFormProps) {
   const [title, setTitle] = useState("");
+  // DR12: with exactly one band (and no ?band=), make it there by default; turning it off makes it outside.
+  const soleTeam = !band && myTeams.length === 1 ? myTeams[0] : null;
+  const [inSoleTeam, setInSoleTeam] = useState(true);
+  const targetBand = band ?? (soleTeam && inSoleTeam ? soleTeam : null);
   // Band path only: createBandPlaylist returns a reason instead of throwing (6A, text under the button).
   const [formError, setFormError] = useState<string | null>(null);
   const [deadlineDate, setDeadlineDate] = useState("");
@@ -70,9 +79,9 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
     setFormError(null);
     try {
       let result: { id: string; shareCode: string; adminToken: string };
-      if (band) {
+      if (targetBand) {
         const created = await createBandPlaylist(
-          band.id,
+          targetBand.id,
           title.trim(),
           deadlineISO || undefined,
           setlistCount > 0 ? setlistCount : undefined,
@@ -85,7 +94,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
           return;
         }
         result = created;
-        track("team_playlist_created", { has_next_show: !!band.nextShowAt });
+        track("team_playlist_created", { has_next_show: !!targetBand.nextShowAt });
       } else {
         result = await createPlaylist(
           title.trim(),
@@ -113,9 +122,16 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
       try { localStorage.setItem("myPlaylists", JSON.stringify(myPlaylists)); } catch { /* quota */ }
 
       const url = `${window.location.origin}/playlist/${result.shareCode}`;
-      setCreated({ id: result.id, shareCode: result.shareCode, adminToken: result.adminToken, title: title.trim(), url });
+      setCreated({
+        id: result.id,
+        shareCode: result.shareCode,
+        adminToken: result.adminToken,
+        title: title.trim(),
+        url,
+        band: targetBand ? { id: targetBand.id, name: targetBand.name, nextShowAt: targetBand.nextShowAt } : null,
+      });
     } catch (error) {
-      if (band) setFormError(teamMessage(error));
+      if (targetBand) setFormError(teamMessage(error));
       else showAlert("플레이리스트 생성에 실패했습니다. 다시 시도해주세요.");
       setLoading(false);
     }
@@ -180,7 +196,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
             shareCode={created.shareCode}
             variant="playlist"
             title={created.title}
-            showDate={band?.nextShowAt ?? null}
+            showDate={created.band?.nextShowAt ?? null}
             size="lg"
             visualStyle="primary"
             className="w-full mb-2"
@@ -241,7 +257,8 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
             </div>
           )}
 
-          {!band && myTeams.length > 0 && (
+          {/* 13A for two or more bands. With one, the choice was the toggle and is not asked again (eng E3). */}
+          {!created.band && myTeams.length >= 2 && (
             <div className="mt-5 border-t border-border pt-4 text-left">
               {attached ? (
                 <p role="status" className="text-sm text-success">
@@ -290,6 +307,28 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
         maxLength={100}
         className="w-full px-4 py-3 rounded-xl bg-surface border border-border text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
       />
+
+      {/* DR12: the whole 44px row toggles. */}
+      {soleTeam && (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={inSoleTeam}
+          onClick={() => setInSoleTeam((on) => !on)}
+          className="mt-2 flex min-h-11 w-full items-center gap-2.5 rounded-xl px-1 text-left text-sm text-text transition-colors hover:bg-surface"
+        >
+          <GuitarIcon className="h-4 w-4 shrink-0 text-text-muted" />
+          <span className="min-w-0 flex-1 truncate">{soleTeam.name}에 만들기</span>
+          <span
+            aria-hidden
+            className={`relative h-6 w-10 shrink-0 rounded-pill transition-colors ${inSoleTeam ? "bg-primary" : "bg-border-strong"}`}
+          >
+            <span
+              className={`absolute top-0.5 h-5 w-5 rounded-pill bg-white transition-all ${inSoleTeam ? "left-[18px]" : "left-0.5"}`}
+            />
+          </span>
+        </button>
+      )}
 
       {/* Primary CTA — full-width below input */}
       <button
