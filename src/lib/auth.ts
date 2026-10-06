@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { User } from "@supabase/supabase-js";
 
@@ -25,7 +26,9 @@ function extractAvatar(user: User): string | null {
   return meta.avatar_url || meta.picture || null;
 }
 
-export async function getCurrentUser(): Promise<AuthUser | null> {
+// One Supabase Auth call per request: the home page and its loaders all ask (eng E4).
+// React cache is scoped to a single server request, so users never share a result.
+export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -36,4 +39,4 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     nickname: extractNickname(user),
     avatarUrl: extractAvatar(user),
   };
-}
+});
