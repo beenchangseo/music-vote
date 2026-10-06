@@ -123,3 +123,654 @@
 8. **밴드가 여럿일 때 넣기 UI.** 밴드 수만큼 버튼(지금) / 밴드를 고르는 목록 시트 / owner 인 밴드만 보이기
 
 CEO-D4 를 고를 때의 근거도 같이 본다. 밴드는 이미 같이 투표해 본 사람들로 만들어진다. 바이럴 루프는 플레이리스트 링크 공유(E2)다. 빈 밴드는 가치가 보이기 전에 초대 단계가 하나 더 붙는다.
+
+---
+
+## CEO 리뷰 (2026-10-06, /plan-ceo-review)
+
+- 깊이: **strategy-only**. 방장 요청이 흐름과 범위 결정이다. 화면 설계는 다음 `/plan-design-review` 가 맡는다
+- 이번 리뷰는 2026-10-04 CEO 리뷰의 **CEO-D4**("밴드는 합주방에서 올린다, 방 만들기 흐름은 그대로")를 다시 연다.
+  재개 근거: 방장 지시(2026-10-06 "밴드팀을 먼저 만드는 게 순서 아닌가", "유도하는 장치가 필요해 보임")
+- 적용한 과거 학습: `account-vs-band-unit-analysis`(9/10) — 반복 사용은 계정 단위로 센다
+
+### 0A. 전제
+
+- **진짜 문제**: 밴드라는 단위가 제품 겉에 없다. 밴드는 플레이리스트 방장이 설정 두 단계 안에서만 만들 수 있고,
+  로그인 홈·로그인 직후 화면은 밴드를 말하지 않는다(P1~P4·P7·P8). 그래서 2026-10-04 에 그린 10배 그림
+  "밴드가 기본 단위인 Plypick"(이전 CEO 계획 10x Check)에 사용자가 닿는 길이 좁다
+- **목표 결과**: 밴드를 하려는 방장이 찾지 않아도 밴드를 만들 수 있고, 밴드가 있는 사람은 밴드에서 시작한다.
+  한 번 투표하고 끝나는 사람의 길(웨지)은 느려지지 않는다
+- **아무것도 안 할 때 비용**: 밴드 기능이 숨은 채 6주 지표(외부 밴드 ≥ 5)를 맞는다. 지표가 미달해도
+  "수요가 없어서인지 못 찾아서인지" 구분할 수 없다. 지금 외부 밴드 0 (배포 하루)
+- **반대쪽 근거 (CEO-D4 가 지킨 것)**: 웨지는 투표이고 투표는 멤버가 있어야 성립한다(office-hours 설계 문서).
+  빈 밴드는 가치가 보이기 전에 초대 단계가 하나 더 붙는다. 플레이리스트 멤버마다 밴드를 따로 만들면
+  같은 밴드가 여러 개 생긴다(방에서 올리기는 방장 한 명이 만들어서 이 문제가 없다)
+- **수요 숫자**: 실제 방장 6명 중 플레이리스트 2개 이상 만든 사람 1명. 반복 수요는 아직 얇다
+
+### 0B. 기존 코드로 할 수 있는 것
+
+| 하위 문제 | 쓸 수 있는 코드 |
+|---|---|
+| 밴드 만들기 시트 | `CreateBandSheet.tsx` (이름 입력 · 검증). 지금은 `createTeamFromPlaylist` 전용 |
+| 빈 밴드 만들기 | 없음. `team.ts` 에 플레이리스트 없는 생성 액션이 필요. 초대 코드 생성 · owner 행 넣기는 `createTeamFromPlaylist` 안에 있다 |
+| 초대 | `BandInviteSheet.tsx`, `/join/[inviteCode]`, `band` 카톡 카드 그대로 |
+| 홈 분기 | `src/app/page.tsx` 가 이미 `getMyPlaylists` · `getMyTeams` 를 한 번에 읽는다(eng D5) |
+| 안내 카드 | `BandPromptCard.tsx` (닫기 · localStorage 기억 · `useSyncExternalStore`) |
+| 밴드에 넣기 | `attachPlaylistToTeam` + `RoomSettingsButton` 버튼 목록 |
+| 로그인 목적지 | `HeroCTA.tsx:23` 한 줄, `auth/callback` 의 `safeNextPath` |
+
+### 0C. 12개월 그림
+
+```
+  지금                               이번 결정                           12개월 뒤
+  밴드는 플레이리스트 설정 안에       로그인 홈이 밴드를 말한다.            밴드가 기본 단위. 공연마다 밴드 홈에서
+  숨은 2차 기능. 로그인하면 /new.     밴드를 만드는 입구가 겉에 있고,      새 플레이리스트. 단발성 투표는 여전히
+  여러 밴드는 데이터만 지원.          밴드 없는 플레이리스트가 묶일 길이   밴드 없이 된다. 쌓인 밴드 기록이
+                                     보인다.                            카탈로그의 시드
+```
+
+### 시장 조사 (WebSearch + Mobbin, 2026-10-06)
+
+- **Layer 1 (검증된 방식)**: 그룹 앱은 원자 행동을 주 버튼으로 두고 그룹 만들기를 늘 보이는 보조 입구로 둔다.
+  Splitwise 는 "Add expense" 가 주 버튼이고 홈에 "Create group" · "Start a new group" 이 있으며, 그룹 없는 기록은
+  "Non-group expenses" 묶음으로 보인다. 빈 그룹은 "You're the only one here! Add members · Share a link"
+  ([Mobbin](https://mobbin.com/flows/48011a8d-9b9a-4a35-870f-95460cfd3795)).
+  Discord 빈 상태는 "Join a Server" · "Create Your Server" 를 나란히 둔다
+  ([Mobbin](https://mobbin.com/flows/1688170e-94a2-4e08-a058-fa25707a4e10)).
+  yope 는 첫 화면에서 "초대받았나요?" 를 먼저 묻는다([Mobbin](https://mobbin.com/flows/4536a392-f1f3-4645-817c-99fef5ea2ea3))
+- **Layer 2 (요즘 말)**: 밴드 관리 앱(BandMGT · BANDZONE · SetBook)은 "밴드 만들고 멤버 초대"가 첫 단계다.
+  리뷰가 반복해서 꼽는 실패는 온보딩 마찰과 데이터 입력 마찰이다
+  ([SetBook](https://www.set-book.com/blog/best-band-management-apps), [BANDZONE](https://the.band.zone/en/blog/amazona-review))
+- **Layer 3 (Plypick 에서 다른 점)**: 밴드 관리 앱은 이미 밴드인 사람이 쓰는 도구라 밴드 먼저가 맞다. Plypick 의
+  첫 사용자는 단톡방 링크로 들어온 멤버이고, 투표 한 번이 가치다. 그래서 강제 온보딩보다 Splitwise 형
+  "원자 행동은 그대로 + 그룹 입구는 늘 보이게 + 그룹 없는 기록 묶음" 이 맞는 쪽이다
+
+### 결정 장부
+
+| ID · owner | 계약과 근거 | Current | Proposed | Status | 승인과 범위 |
+|---|---|---|---|---|---|
+| CEO2-A · 방장 | 로그인 직후 목적지와 밴드 입구(정할 것 1·2·3). 근거: P1~P4, 0A, 시장 조사 | 상태별 홈 + 두 입구: 홈 CTA 로그인 → 홈(링크로 온 사람은 원래 링크), 홈에 "새 밴드" 늘 보임, 밴드·플레이리스트 0 인 사람에게 밴드 만들기를 앞에, 빈 밴드 허용. CEO-D4 → "플레이리스트에서 올리기 + 홈에서 바로 만들기" | — | approved | D1 "상태별 홈 + 두 입구 (recommended)" (2026-10-06). 범위: 위 Current 다섯 가지. 중복 밴드 완화는 디자인 리뷰로 |
+| CEO2-B · 방장 | 밴드 없이 플레이리스트만 쓰는 사람(정할 것 4) | 1급 유지 | — | approved | D1 답의 비교표 행 "밴드 없는 플레이리스트: A = 1급" |
+| CEO2-C · 방장 | 로그아웃 범위(정할 것 5). 근거: P5 | **이 기기만**: `signOut({ scope: 'local' })` | — | approved | D5 "이 기기만 (recommended)" (2026-10-06). "모든 기기에서 로그아웃" 버튼은 범위 밖 |
+| CEO2-D · 방장 | 밴드 만들기 유도 장치(정할 것 6). 근거: P7 | 플레이리스트 안 카드 유지 + **홈에 닫을 수 있는 카드**: 로그인 멤버 ≥ 2 인 밴드 없는 내 플레이리스트가 있으면 "{플레이리스트} 멤버 그대로 밴드 만들기"(그 플레이리스트에서 올리기, 닫으면 플레이리스트별 기억). 팝업 없음 | — | approved | D4 "홈에 닫을 수 있는 카드 (recommended)" (2026-10-06) |
+| CEO2-E · 방장 | 밴드에 넣는 길의 위치(정할 것 7). 근거: P8 | 설정 안 · 완료 화면 유지 + **밴드 홈에 owner 용 "내 플레이리스트 넣기"**(밴드 없는 내 플레이리스트 목록, 빈 밴드 홈에서는 초대와 함께 앞에) | — | approved | D2 "밴드 홈에서 넣기 (recommended)" (2026-10-06). 플레이리스트 겉 입구는 넣지 않음 |
+| CEO2-F · 방장 | 밴드가 여럿일 때 넣기 UI(정할 것 8). 근거: P9 | 밴드 수만큼 버튼 (그대로) | — | deferred | D3 "TODOS.md 로 미루기 (recommended)" (2026-10-06). 재개: 밴드 2개 이상 속한 외부 계정 ≥ 1 |
+| CEO2-G · 방장 | 빈 밴드 지표(Section 8). 근거: 홈에서 만든 빈 밴드가 멤버 없이 죽는지 볼 수단이 없다 | `team-metrics.mjs` 에 두 줄: 홈에서 만든 밴드 수(외부, promote 플레이리스트 없는 밴드) · 만든 지 7일 지나도 owner 혼자 · 플레이리스트 0 인 밴드 수. DB 변경 없음 | — | approved | D6 "지표 추가 (recommended)" (2026-10-06) |
+
+## 답한 결정: CEO2-A (D1, 답 "상태별 홈 + 두 입구 (recommended)")
+Commitment comparison:
+
+| Commitment | Source/approval or pending | Current | A | B | C |
+|---|---|---|---|---|---|
+| 홈 CTA 로그인 직후 목적지 | pending | `/new` | 홈 | 밴드 없으면 밴드 만들기 화면 | 홈 |
+| 링크로 온 사람의 로그인 복귀 | 승인됨 (eng R8 콜백 next) | 원래 링크 | 같음 | 같음 | 같음 |
+| 플레이리스트 없이 밴드 만들기 | pending (CEO-D4 재개) | 불가 | 홈에서 허용 | 온보딩에서 허용 | 불가 |
+| 플레이리스트에서 밴드로 올리기 | 승인됨 (CEO-D4) | 있음 | 유지 | 유지 | 유지 |
+| 홈의 "새 밴드" 입구 | pending | 없음 | 늘 보임 | 온보딩 + 홈 | 없음 (안내 카드만) |
+| 밴드 없는 플레이리스트 | 승인됨 (웨지) | 1급 | 1급 | 예외 길 | 1급 |
+| 중복 밴드 위험 | 관찰 | 없음 | 있음 (완화는 디자인 리뷰) | 큼 | 없음 |
+
+Question: D1 — CEO2-A: 로그인 직후 어디로 보내고, 밴드는 어디서 만들게 할까요?
+Project/branch/task: main, 유저 플로우 지도의 정할 것 1·2·3. 지금은 로그인하면 무조건 /new 이고, 밴드는 플레이리스트 설정 안에서만 만들어져요(CEO-D4).
+ELI10: 밴드를 하려는 사람이 밴드 만드는 버튼을 찾지 못하고 있어요. 반대로 밴드를 억지로 먼저 만들게 하면, 단톡방 링크로 들어와 투표 한 번 하려던 사람도 빈 밴드부터 거쳐야 하고, 같은 밴드 멤버들이 각자 밴드를 만들어 밴드가 여러 개로 쪼개질 수 있어요.
+Stakes if we pick wrong: 너무 숨기면 6주 밴드 지표가 수요 부족인지 못 찾아서인지 구분이 안 되고, 너무 밀면 첫 투표까지 단계가 늘고 중복 밴드가 생겨요.
+Recommendation: A because 투표 웨지(플레이리스트 링크 → 투표)를 그대로 두면서 밴드 입구를 홈에 늘 보이게 하는, Splitwise 가 쓰는 모양이에요.
+Note: options differ in kind, not coverage — no completeness score.
+Net: 밴드를 얼마나 앞에 세울지와 첫 투표까지의 마찰을 맞바꿔요.
+Header: 밴드 입구
+A) 상태별 홈 + 두 입구 (recommended)
+로그인하면 홈으로 가요(링크로 온 사람은 원래 링크로). 홈에 "새 밴드"를 늘 보이게 하고, 밴드도 플레이리스트도 없는 사람에게는 밴드 만들기를 앞에 세워요. 빈 밴드를 허용해 CEO-D4 를 "플레이리스트에서 올리기 + 홈에서 바로 만들기"로 고쳐요. 노력 M, 위험 medium, CreateBandSheet·BandInviteSheet 재사용, 검증은 액션 테스트와 E2E 밴드 흐름 확장. ✅ 플레이리스트 링크로 온 멤버의 투표 길이 그대로라 웨지가 느려지지 않아요 ✅ 밴드를 하려는 방장은 홈에서 바로 밴드를 만들고 단톡방에 초대 링크를 보낼 수 있어요 ❌ 플레이리스트 멤버가 각자 밴드를 만들면 같은 밴드가 여러 개 생길 수 있어 디자인에서 막아야 해요
+B) 밴드 먼저 온보딩
+로그인했는데 밴드가 없으면 전용 "밴드 만들기" 화면으로 보내고 건너뛰기는 작게 둬요. 플레이리스트는 밴드 안에서 만드는 게 기본이고, 밴드 없는 플레이리스트는 예외 길이 돼요. 노력 M, 위험 high, CreateBandSheet 재사용, 검증은 온보딩 E2E 신규. ✅ 밴드가 Plypick 의 기본 단위라는 메시지가 첫 화면부터 분명해요 ✅ 밴드 생성 수가 가장 빨리 올라가 6주 지표를 빨리 판단할 수 있어요 ❌ 투표 한 번 하려던 사람도 밴드 화면을 거쳐 첫 가치까지 단계가 늘고, 멤버마다 밴드를 만드는 중복이 가장 커요
+C) 지금 흐름 + 홈 안내만
+CEO-D4 를 유지해 밴드는 계속 플레이리스트에서만 올려요. 로그인 목적지만 홈으로 바꾸고, 홈에 닫을 수 있는 밴드 안내 카드를 둬요. 노력 S, 위험 low, BandPromptCard 재사용, 검증은 컴포넌트 테스트. ✅ 바뀌는 코드가 가장 적고 중복 밴드 위험이 없어요 ✅ 이미 정한 디자인·eng 결정(방에서 올리기)을 거의 그대로 둬요 ❌ 플레이리스트 없이는 밴드를 만들 수 없어 "홈에 새 밴드 버튼" 메모가 풀리지 않아요
+
+### 0E. 모드
+
+- **SCOPE REDUCTION** — 질문 답 "SCOPE REDUCTION (recommended)" (2026-10-06). 추천 근거: 8가지를 모두 담으면 약 18개 파일(추정)이 바뀐다
+- 이 모드의 남은 Step 0: 0G (최소 범위 제안 + 항목별 미루기/남기기)
+
+### 0G. 최소 범위 제안
+
+**핵심 (CEO2-A 승인 범위, 남긴다)**
+
+1. 홈 CTA 로그인 목적지 `/new` → 홈 (`HeroCTA.tsx:23`). 링크로 온 사람의 복귀는 그대로
+2. 플레이리스트 없는 빈 밴드 만들기: `team.ts` 새 액션 + `CreateBandSheet` 재사용, 만든 뒤 밴드 홈과 초대 시트
+3. 홈에 "새 밴드" 입구를 늘 보이게 (`MyBands` 선반 · 홈 버튼 줄)
+4. 상태별 홈: 밴드도 플레이리스트도 없는 사람에게 밴드 만들기를 앞에
+5. ~~빈 밴드 생성 지표~~ — D1 답의 약속에 없는 추가 제안이라 핵심에서 뺀다. Section 8 결정 CEO2-G 로 따로 묻는다
+
+**미룰지 물어볼 항목**: CEO2-E(넣기 위치), CEO2-F(여러 밴드 넣기 UI), CEO2-D(기존 방장 유도 장치), CEO2-C(로그아웃 범위)
+
+## 답한 결정: CEO2-E (D2, 답 "밴드 홈에서 넣기 (recommended)")
+Commitment comparison:
+
+| Commitment | Source/approval or pending | Current | A | B | C |
+|---|---|---|---|---|---|
+| 플레이리스트 설정 안 "{밴드}에 넣기" | 승인됨 (CEO-F2/T14) | 있음 | 유지 | 유지 | 유지 |
+| 밴드 홈에서 내 플레이리스트 넣기 | pending | 없음 | 추가 (owner, 밴드 없는 내 플레이리스트 목록) | 없음 | 없음 |
+| 플레이리스트 화면 겉의 넣기 입구 | pending | 없음 | 없음 | 추가 (헤더 · 안내 카드) | 없음 |
+| 빈 밴드 홈 첫 화면 | CEO2-A 로 생김 | — | "내 플레이리스트 넣기" + 초대 | 초대만 | 초대만 |
+
+Question: D2 — CEO2-E: 밴드에 없는 플레이리스트를 밴드에 넣는 길을 이번에 어디에 둘까요?
+Project/branch/task: main, 정할 것 7. 지금은 ⋮ → 플레이리스트 설정 안과 새 플레이리스트 완료 화면에서만 넣을 수 있어요(P8).
+ELI10: D1 으로 홈에서 빈 밴드를 만들 수 있게 됐어요. 기존 방장이 밴드를 만들면 텅 빈 밴드 홈에 도착하는데, 바로 그때 예전 플레이리스트를 넣고 싶어져요. 그 길을 밴드 홈에 둘지, 플레이리스트 화면 겉에 둘지, 나중으로 미룰지예요.
+Stakes if we pick wrong: 미루면 홈에서 밴드를 만든 기존 방장이 빈 밴드 홈에서 멈추고, 엉뚱한 곳에 두면 쓰이지 않는 버튼이 하나 늘어요.
+Recommendation: A because 넣고 싶어지는 순간(밴드를 막 만든 빈 밴드 홈)에 길이 있어야 쓰이고, 밴드 홈이 첫날부터 기록으로 차요(CEO-F2 와 같은 이유).
+Note: options differ in kind, not coverage — no completeness score.
+Net: 넣는 길을 필요한 순간에 둘지, 늘 보이는 곳에 둘지, 나중에 볼지예요.
+Header: 넣는 길
+A) 밴드 홈에서 넣기 (recommended)
+밴드 홈에 owner 용 "내 플레이리스트 넣기"를 두고, 밴드 없는 내 플레이리스트 목록에서 골라 넣어요. 빈 밴드 홈에서는 초대와 함께 앞에 보여요. 노력 S, 위험 low, attachPlaylistToTeam·Modal 재사용, 검증은 액션 테스트(이미 있음) + 컴포넌트 테스트 + E2E 한 단계. ✅ 홈에서 밴드를 만든 기존 방장이 빈 밴드 홈에서 바로 예전 플레이리스트를 묶을 수 있어요 ✅ 밴드 하나를 고르는 일이 없어 여러 밴드 UI 문제(CEO2-F)를 피해 가요 ❌ 플레이리스트 화면에서 넣는 길은 여전히 설정 안에 숨어 있어요
+B) 플레이리스트 겉에서 넣기
+밴드 없는 내 플레이리스트의 헤더나 안내 카드에 "밴드에 넣기"를 꺼내요. 노력 S, 위험 low, BandPromptCard·PlaylistHeader 재사용, 검증은 컴포넌트 테스트. ✅ 플레이리스트를 열 때마다 보여 방장 메모(설정 안에 숨어 있음)를 바로 풀어요 ✅ 이미 있는 안내 카드에 버튼을 더하는 작은 변경이에요 ❌ 밴드가 여럿이면 밴드 고르는 UI(CEO2-F)를 같이 풀어야 하고, 빈 밴드 홈은 여전히 비어 있어요
+C) TODOS.md 로 미루기
+이번에는 설정 안 길만 두고, 실제 밴드가 생긴 뒤 다시 정해요. 노력 S (지금 구현 0), 위험 low. ✅ 이번 변경 파일이 줄어 밴드 입구 핵심을 빨리 낼 수 있어요 ✅ 외부 밴드가 어디서 막히는지 보고 위치를 정할 수 있어요 ❌ 홈에서 밴드를 만든 기존 방장은 빈 밴드 홈에서 예전 플레이리스트를 넣을 길을 못 찾아요
+
+## 답한 결정: CEO2-F (D3, 답 "TODOS.md 로 미루기 (recommended)")
+Commitment comparison:
+
+| Commitment | Source/approval or pending | Current | A | B |
+|---|---|---|---|---|
+| 설정·완료 화면의 "{밴드}에 넣기" | 승인됨 (CEO-F2/T14) | 밴드 수만큼 버튼 | 그대로 | 밴드 고르는 목록 시트 |
+| 밴드 홈에서 넣기 | 승인됨 (CEO2-E) | 밴드를 고를 필요 없음 | 그대로 | 그대로 |
+| 재개 조건 | — | — | 밴드 2개 이상 속한 외부 계정 ≥ 1 | — |
+
+Question: D3 — CEO2-F: 밴드가 여럿일 때 "{밴드}에 넣기" 버튼이 밴드 수만큼 뜨는 것을 이번에 고칠까요?
+Project/branch/task: main, 정할 것 8. 설정과 완료 화면은 속한 밴드마다 버튼을 하나씩 띄우고 개수 제한이 없어요(P9).
+ELI10: 밴드가 서너 개인 사람은 버튼이 줄줄이 쌓여요. 그런데 지금 밴드를 2개 이상 가진 사람이 0명이고, D2 로 정한 밴드 홈 쪽 넣기는 밴드를 고를 일이 없어요.
+Stakes if we pick wrong: 미뤘는데 여러 밴드 사용자가 빨리 생기면 설정 화면이 길어지고, 지금 고치면 볼 사람 없는 UI 에 시간을 써요.
+Recommendation: A because 밴드 2개 이상인 계정이 0명이라 볼 사람이 없고, 새 넣기 길(밴드 홈)은 이 문제를 피해 가요.
+Note: options differ in kind, not coverage — no completeness score.
+Net: 지금 아무도 안 겪는 문제를 미리 고칠지, 첫 사례를 보고 고칠지예요.
+Header: 여러 밴드
+A) TODOS.md 로 미루기 (recommended)
+지금은 밴드 수만큼 버튼을 그대로 두고, 밴드 2개 이상 속한 외부 계정이 1명 생기면 다시 정해요. 노력 S (지금 구현 0), 위험 low. ✅ 이번 변경 파일이 줄어 밴드 입구 핵심에 집중할 수 있어요 ✅ 실제 여러 밴드 사용자가 어느 화면에서 넣는지 보고 고칠 수 있어요 ❌ 그 전에 밴드를 여럿 만든 사람은 설정에서 버튼이 길게 쌓인 목록을 봐요
+B) 이번에 남기기 (목록 시트)
+설정·완료 화면의 버튼 목록을 "밴드에 넣기" 하나 + 밴드 고르는 시트로 바꿔요. 노력 S, 위험 low, Modal 재사용, 검증은 컴포넌트 테스트 2개. ✅ 밴드가 몇 개든 화면 길이가 같아요 ✅ 밴드 홈 넣기와 같은 시트를 쓰면 넣는 방식이 하나로 맞춰져요 ❌ 지금 볼 사람이 없는 화면에 디자인·테스트 시간을 써요
+
+## 답한 결정: CEO2-D (D4, 답 "홈에 닫을 수 있는 카드 (recommended)")
+Commitment comparison:
+
+| Commitment | Source/approval or pending | Current | A | B | C |
+|---|---|---|---|---|---|
+| 플레이리스트 안 안내 카드 (방장 · 밴드 없음 · 로그인 멤버 ≥ 2) | 승인됨 (CEO-F7) | 있음 | 유지 | 유지 | 유지 |
+| 홈 "새 밴드" 입구 · 처음 온 사람에게 밴드 만들기 앞에 | 승인됨 (CEO2-A) | — | 유지 | 유지 | 유지 |
+| 기존 방장용 홈 유도 | pending | 없음 | 닫을 수 있는 카드: "{플레이리스트} 멤버로 밴드 만들기" | 홈 진입 때 한 번 뜨는 팝업 | 없음 |
+| 밴드를 만드는 방식 | — | — | 그 플레이리스트에서 올리기 (멤버 그대로) | 빈 밴드 또는 올리기 | — |
+| 대상 | pending | — | 밴드 없는 내 플레이리스트 중 로그인 멤버 ≥ 2 가 있는 방장 | 밴드 없는 로그인 사용자 전체 | — |
+| 닫으면 | 승인됨 (디자인 리뷰: 해당 상태에서만, 닫으면 기억) | — | 그 플레이리스트에 대해 기억 | 계정당 한 번 | — |
+
+Question: D4 — CEO2-D: 밴드 없는 플레이리스트를 가진 기존 방장을 밴드로 어떻게 이끌까요?
+Project/branch/task: main, 정할 것 6. 지금 유도 장치는 플레이리스트 안 안내 카드 하나라, 플레이리스트를 다시 열어야 보여요(P7). 방장 질문: "기존 유저용 닫을 수 있는 팝업 같은 게 필요한가?"
+ELI10: 실제 방장의 플레이리스트 7개 중 5개는 이미 로그인 멤버가 2명 이상이라 밴드로 묶기 딱 좋은 상태예요. 이 사람들은 빈 밴드를 새로 만들기보다 그 플레이리스트에서 밴드로 올리는 게 맞아요. 멤버가 그대로 따라오고 같은 밴드가 두 번 생기지 않아요. 문제는 홈에서 그걸 어떻게 알려 주느냐예요.
+Stakes if we pick wrong: 아무것도 안 하면 가장 밴드가 될 만한 5개 플레이리스트의 방장이 밴드를 못 보고 지나가고, 팝업은 홈에 온 목적(새 플레이리스트·투표 확인)을 가로막아요.
+Recommendation: A because 대상이 정확히 그 5명이고, 플레이리스트에서 올리기라 멤버가 따라오며 중복 밴드가 안 생기고, 지난 디자인 리뷰 원칙(해당 상태에서만 · 닫으면 기억)과 맞아요.
+Note: options differ in kind, not coverage — no completeness score.
+Net: 정확한 대상에게 조용히 보여줄지, 모두에게 한 번 크게 보여줄지, 지금 입구만으로 볼지예요.
+Header: 유도 장치
+A) 홈에 닫을 수 있는 카드 (recommended)
+로그인 멤버 2명 이상인 밴드 없는 내 플레이리스트가 있으면 홈에 "{플레이리스트} 멤버 그대로 밴드 만들기" 카드를 보여요. 누르면 그 플레이리스트에서 밴드로 올리는 시트가 열리고, 닫으면 그 플레이리스트에 대해 기억해요. 노력 S, 위험 low, BandPromptCard·CreateBandSheet·createTeamFromPlaylist 재사용, 검증은 컴포넌트 테스트 + 홈 데이터 조건 테스트. ✅ 밴드가 될 만한 5개 플레이리스트의 방장에게 정확히 보이고, 멤버가 그대로 밴드로 따라와요 ✅ 플레이리스트에서 올리기라 같은 밴드가 두 번 생기는 일이 없어요 ❌ 홈 데이터에 플레이리스트별 로그인 멤버 수가 필요해 홈 조회가 조금 늘어요
+B) 홈 진입 때 한 번 뜨는 팝업
+밴드 없는 로그인 사용자가 홈에 오면 "밴드를 만들어 보세요" 모달을 계정당 한 번 띄워요. 노력 S, 위험 medium, Modal·CreateBandSheet 재사용, 검증은 컴포넌트 테스트. ✅ 놓칠 수 없게 확실히 보여요 ✅ 대상 조건 계산 없이 단순해요 ❌ 홈에 온 목적을 가로막고, 플레이리스트 멤버에게도 떠서 멤버마다 빈 밴드를 만드는 중복을 부추겨요
+C) TODOS.md 로 미루기
+홈 "새 밴드" 입구(CEO2-A)와 플레이리스트 안 카드만으로 먼저 보고, 6주 지표가 미달이면 다시 정해요. 노력 S (지금 구현 0), 위험 low. ✅ 이번 변경 파일이 줄어 밴드 입구 핵심을 빨리 낼 수 있어요 ✅ 새 입구만으로 밴드가 생기는지 깨끗하게 볼 수 있어요 ❌ 밴드가 될 만한 기존 방장 5명이 플레이리스트를 다시 열기 전까지 밴드를 권유받지 못해요
+
+## 답한 결정: CEO2-C (D5, 답 "이 기기만 (recommended)")
+Commitment comparison:
+
+| Commitment | Source/approval or pending | Current | A | B | C |
+|---|---|---|---|---|---|
+| 로그아웃이 끊는 세션 | pending | 그 계정의 모든 기기 (`signOut()` 기본 `global`) | 이 기기만 (`scope: 'local'`) | 모든 기기 (그대로) | 그대로 |
+| 다른 기기 로그인 유지 | — | 끊김 | 유지 | 끊김 | 끊김 |
+| E2E 저장 로그인 (운영자 계정) | 관찰 (2026-10-06 끊김) | 운영자가 로그아웃하면 끊김 | 유지 | 끊김 | 끊김 |
+
+Question: D5 — CEO2-C: 로그아웃하면 이 기기만 끊을까요, 그 계정의 모든 기기를 끊을까요?
+Project/branch/task: main, 정할 것 5. `src/app/auth/logout/route.ts:6` 의 `supabase.auth.signOut()` 이 기본값 global 이라 모든 기기 세션이 같이 끊겨요(P5).
+ELI10: 지금은 노트북에서 로그아웃하면 폰에서도 로그아웃돼요. 단톡방 링크를 폰으로 열었다가 다시 카카오 로그인을 해야 하는 일이 생겨요. 오늘 E2E 저장 로그인이 끊긴 것도 이 때문으로 보여요(확인 못 함).
+Stakes if we pick wrong: global 을 두면 다른 기기 로그인이 뜻밖에 풀리고, local 로 바꾸면 기기를 잃어버렸을 때 "모든 기기에서 로그아웃"할 방법이 없어요(지금도 그 버튼은 따로 없음).
+Recommendation: A because 사용자가 기대하는 동작이 "이 기기에서 로그아웃"이고, 한 줄 변경으로 다른 기기 로그인과 E2E 저장 로그인이 유지돼요.
+Note: options differ in kind, not coverage — no completeness score.
+Net: 다른 기기 로그인 유지와 한 번에 전부 끊는 안전장치 사이의 선택이에요.
+Header: 로그아웃
+A) 이 기기만 (recommended)
+`signOut({ scope: 'local' })` 로 바꿔 지금 기기의 세션만 끊어요. 노력 S, 위험 low, 코드 한 줄 + 라우트 테스트 한 개. ✅ 노트북에서 로그아웃해도 폰의 단톡방 링크는 로그인된 채로 열려요 ✅ 운영자가 어디서 로그아웃해도 E2E 저장 로그인이 끊기지 않아요 ❌ 기기를 잃어버렸을 때 다른 기기에서 그 기기를 로그아웃시킬 방법이 없어요
+B) 모든 기기 (그대로)
+지금처럼 로그아웃하면 그 계정의 모든 세션을 끊어요. 노력 S (구현 0), 위험 low. ✅ 로그아웃 한 번으로 모든 기기가 확실히 정리돼 공용 PC·분실에 안전해요 ✅ 바꿀 코드가 없어요 ❌ 다른 기기 로그인이 뜻밖에 풀리고, 운영자 로그아웃마다 E2E 로그인을 다시 저장해야 해요
+C) TODOS.md 로 미루기
+이번 흐름 작업과 떼어서 나중에 정해요. 노력 S (지금 구현 0), 위험 low. ✅ 이번 범위를 밴드 흐름에만 묶어 둘 수 있어요 ✅ 실제 사용자 불만이 생기는지 보고 정할 수 있어요 ❌ 그동안 다른 기기 로그아웃과 E2E 로그인 끊김이 계속돼요
+
+## 섹션 리뷰 (strategy-only, SCOPE REDUCTION)
+
+Current scope — 채택: CEO2-A(D1) · CEO2-B(D1 비교표) · CEO2-E(D2) · CEO2-D(D4) · CEO2-C(D5). 미룸: CEO2-F(D3, TODOS.md). 거절·미정: 없음.
+
+### Section 1: Architecture
+
+```
+                         ┌──────────────── 홈 / (서버 컴포넌트) ────────────────┐
+  카카오 로그인 ──next=/──▶│ getMyPlaylists ∪ getMyTeams (한 번의 Promise.all, eng D5) │
+  (HeroCTA, 지금 /new)    │   상태 판정: 밴드 0 · 플레이리스트 0 → 밴드 먼저        │
+                         │   [새] 밴드 없는 내 플레이리스트 중 로그인 멤버 ≥ 2 → 홈 카드 │
+                         └───┬──────────────┬──────────────────────┬───────────┘
+                             │새 밴드        │홈 카드 (CEO2-D)        │새 플레이리스트
+                             ▼              ▼                      ▼
+                  [새] createTeam(name)   createTeamFromPlaylist   createPlaylist / createBandPlaylist
+                    teams + team_members    (기존, promote)          (기존)
+                             │              │
+                             ▼              ▼
+                     /band/{id}?created=1 ──▶ BandHomeClient
+                                              ├─ 초대 시트 (기존)
+                                              └─ [새] 내 플레이리스트 넣기 (owner) ─▶ attachPlaylistToTeam (기존, attach)
+  로그아웃 /auth/logout ─▶ signOut({ scope: 'local' })  [바뀜, CEO2-C]
+```
+
+- **새 경계**: 빈 밴드 생성 액션 하나. 나머지(초대·넣기·올리기)는 기존 액션을 새 화면에서 부른다. DB 스키마 변화 없음:
+  `teams` · `team_members` 는 플레이리스트 없이도 성립하고, `playlists.team_id` 는 nullable 이다
+- **결합**: 홈이 밴드 상태와 플레이리스트별 로그인 멤버 수를 알아야 한다(CEO2-D). 홈 → `playlist_members` 의존이 새로 생긴다
+- **상태 기계 (밴드)**:
+  ```
+  (없음) ─createTeam─▶ 빈 밴드(owner 1, 플레이리스트 0) ─join─▶ 멤버 있음 ─attach/band─▶ 플레이리스트 있음
+     └──createTeamFromPlaylist──▶ 멤버 있음 + 플레이리스트 1 (promote)
+  막힌 전이: 다른 밴드에 든 플레이리스트 attach (조건부 UPDATE `.is("team_id", null)`),
+            방장 아닌 사람의 attach (`not_room_owner`), 비멤버 attach (`not_member`)
+  ```
+- **10x/100x**: 밴드 수는 사용자 수에 비례하고 쿼리는 사용자 단위라 먼저 깨질 곳은 없다. 홈의 멤버 수 조회가 플레이리스트 수에 비례
+- **보안 경계**: 새 쓰기 `createTeam` — 로그인 사용자 누구나, 자기 자신이 owner 인 밴드만 만든다. 넣기 목록은 서버가 `creator_user_id = 나` 로 거른다
+- **실패 시나리오**: owner 행 넣기 실패 → 팀만 남는 고아 행. 기존 `rollbackTeam` 패턴(`team.ts:279`)으로 지운다
+- **되돌리기**: 코드만 되돌리면 된다(Vercel 롤백 1분). 이미 만든 빈 밴드는 지금 운영 코드에서도 정상 표시된다
+  (밴드 홈 빈 상태 `BandHomeClient.tsx:454`, 홈 선반 "플레이리스트 0")
+- 판정: **OK**. 결정 필요 없음. 구현 owner 가 증명할 것: `createTeam` 이 초대 코드 생성·재시도·롤백을
+  `createTeamFromPlaylist` 와 같은 헬퍼로 쓴다(중복 구현 금지)
+
+### Section 2: Error & Rescue Map (capability 단위)
+
+```
+  CAPABILITY                 | WHAT CAN GO WRONG                   | CLASS
+  ---------------------------|-------------------------------------|------------------------
+  빈 밴드 만들기 (createTeam) | 이름 빈 값·51자↑                     | invalid_name (reason)
+                             | 초대 코드 충돌                       | 재시도 (기존 헬퍼)
+                             | team_members insert 실패             | write_failed + rollbackTeam
+                             | rollback delete 실패                 | 고아 팀 (로그만)
+                             | 프록시 429 (분당 30회)               | 액션 throw
+  홈 카드 데이터              | 멤버 수 조회 실패                    | 카드 숨김
+  밴드 홈에서 넣기            | 이미 다른 밴드 / 방장 아님 / 비멤버  | reason (기존)
+                             | 목록 조회 실패                       | 시트 안 오류
+  로그인 목적지               | next 가 홈이 아닌 외부 경로          | safeNextPath (기존)
+  로그아웃 local              | signOut 실패                         | 쿠키만 지우고 홈
+
+  CLASS                 | RESCUED? | RESCUE ACTION                            | USER SEES
+  ----------------------|----------|------------------------------------------|---------------------------
+  invalid_name          | Y        | 버튼 아래 문구 (team-messages)            | "밴드 이름을 …"
+  write_failed          | Y        | rollbackTeam + logTeamError              | 다시 시도 문구
+  고아 팀               | N (로그)  | logTeamError "orphan team left"         | 없음 (owner 행이 없어 안 보임)
+  프록시 429            | Y        | CreateBandSheet catch → teamMessage(기본 문구) (`CreateBandSheet.tsx:94`) | 기본 오류 문구
+  홈 카드 조회 실패     | Y        | 카드만 숨기고 console.error              | 카드 없음 (홈은 정상)
+  넣기 reason           | Y        | teamMessage (기존)                       | 이유 문구
+```
+
+- 판정: **OK** — 처음엔 429 처리가 미확인이었으나 `CreateBandSheet.tsx:94` 의 `catch → teamMessage(caught)` 가 기본 문구로 덮는다.
+  구현 owner 가 증명할 것: 빈 밴드 만들기는 이 시트를 재사용하고(새 시트 금지), 밴드 홈 넣기 시트도 같은 catch 패턴을 쓴다.
+  고아 팀(rollback 실패)은 owner 행이 없어 화면에 안 보이고 로그만 남는다 — 기존 수용 범위
+
+### Section 3: Security & Threat Model
+
+| 위협 | 가능성 | 영향 | 막는 것 |
+|---|---|---|---|
+| 빈 밴드 대량 생성 (스팸) | Low | Low | 프록시 POST 분당 30회/IP/경로 (`proxy.ts:38`, 인스턴스 메모리). 사용자당 밴드 상한은 없음 |
+| 남의 플레이리스트를 내 밴드에 넣기 | Low | Med | `attachPlaylistToTeam` 의 `not_room_owner` 검사 (`team.ts:422`). 목록은 서버가 내 것만 |
+| 남의 밴드에 플레이리스트 넣기 | Low | Med | `not_member` 검사 (`team.ts:424`) |
+| 밴드 이름에 스크립트 | Low | Low | React 이스케이프 + `validateTeamName` 1~50자. OG 카드는 이미지 렌더 |
+| 로그아웃 local 로 분실 기기 세션 유지 | Low | Med | 없음 (모든 기기 로그아웃 버튼 범위 밖, CEO2-C 의 ❌ 로 승인) |
+
+- 새 비밀값·의존성 없음. 감사 로그는 기존 `logTeamError` 수준
+- 판정: **OK**. 결정 필요 없음
+
+### Section 4: Data Flow & Interaction Edge Cases
+
+```
+  빈 밴드:  이름 입력 ─▶ validateTeamName(1~50) ─▶ teams insert(초대 코드 재시도) ─▶ team_members(owner) ─▶ /band/{id}?created=1
+             │ 빈 값 → 버튼 비활성     │ 51자↑ → invalid_name      │ 충돌 → 재시도          │ 실패 → rollbackTeam + write_failed
+  홈 카드:  getMyPlaylists(내가 만든 · 밴드 없음) + 로그인 멤버 수 ─▶ ≥ 2 인 것 하나 ─▶ 카드 ─▶ createTeamFromPlaylist(기존)
+             │ 조회 실패 → 카드 숨김   │ 0 개 → 카드 없음          │ 닫힘(localStorage) → 숨김 │ 사이에 밴드에 들어감 → already_in_team
+  밴드 홈 넣기: 시트 열기 ─▶ 내 밴드 없는 플레이리스트 목록(서버, creator = 나) ─▶ 고르기 ─▶ attachPlaylistToTeam(기존)
+             │ 0 개 → 빈 문구          │ 조회 실패 → 시트 안 오류  │ 경쟁 → already_in_team
+```
+
+**경쟁 (같은 플레이리스트를 홈 카드로 올리면서 밴드 홈에서 넣기)** — 불변식: 한 플레이리스트는 밴드 하나에만.
+
+```
+  시간 ▶   홈 카드 promote                 밴드 홈 attach                  playlists.team_id
+  순서 1   teams+members insert ……         UPDATE .is(null) ✔ (attach)     → B
+           UPDATE .is(null) ✘ 0행 → rollbackTeam, already_in_team          → B (새 팀 삭제)
+  순서 2   UPDATE .is(null) ✔ (promote)                                    → A
+                                           UPDATE .is(null) ✘ → already_in_team → A
+```
+
+막는 장치: 두 경로 모두 조건부 UPDATE (`team.ts:372-382`, `team.ts:426-436`). 진 쪽 promote 는 만든 팀을 지운다.
+회귀 증명(구현 owner): link 가 0행일 때 promote 가 rollback 하고 `already_in_team` 을 돌려주는 액션 테스트.
+
+| INTERACTION | EDGE CASE | HANDLED? | HOW |
+|---|---|---|---|
+| 새 밴드 만들기 | 두 번 탭 | Y | `pending` 이면 submit 무시 (`CreateBandSheet.tsx:78`) |
+| 새 밴드 만들기 | 만드는 중 화면 이탈 | Y | 서버는 끝까지 만든다. 홈 "내 밴드"에 보인다 |
+| 홈 카드 | 다른 화면에서 이미 밴드로 올림 | Y | 홈은 요청마다 다시 그린다. 낡은 카드를 누르면 `already_in_team` 문구 |
+| 홈 카드 | 대상 플레이리스트 여러 개 | 미정 | 카드 하나에 무엇을 보일지 → 디자인 리뷰 |
+| 홈 카드 | localStorage 막힘 | Y | 닫아도 다음에 다시 뜬다 (기존 `BandPromptCard` 와 같음) |
+| 밴드 홈 넣기 | 넣을 플레이리스트 0 | 미정 | 버튼 숨김 또는 빈 문구 → 디자인 리뷰 |
+| 밴드 홈 넣기 | 목록 20개 이상 | 미정 | 스크롤 시트 → 디자인 리뷰 |
+| 상태별 홈 | 플레이리스트 링크로 들어온 멤버 | Y | `getMyPlaylists` 가 참여한 방도 세므로(`playlist.ts:55`) "밴드 먼저"에 안 걸린다 → 멤버의 중복 밴드 유도를 막는다 |
+| 상태별 홈 | 초대 링크로 들어온 멤버 | Y | 밴드가 있으므로 밴드 먼저에 안 걸린다 |
+| 홈 카드 · 플레이리스트 안 카드 | 한쪽에서 닫음 | 해석 | CEO2-D "그 플레이리스트에 대해 기억" → 두 카드가 같은 키를 쓴다 |
+
+- 판정: **OK**, 디자인 리뷰로 넘기는 미정 3건(카드 대상 고르기, 넣을 것 0, 긴 목록)
+
+### Section 5: Code Quality
+
+- **재사용**: 빈 밴드는 `CreateBandSheet` 에 "플레이리스트 없이" 모드를 더한다(새 시트 금지). 홈 카드는 `BandPromptCard` 를
+  홈용으로 일반화한다(문구·대상 플레이리스트만 다름). 넣기 시트는 `Modal` + `attachPlaylistToTeam`
+- **중복 위험**: 초대 코드 생성·재시도와 owner 행 넣기가 `createTeamFromPlaylist` 안에 있다. `createTeam` 이 복사하면 두 곳이
+  갈라진다 → 공유 헬퍼로 뺀다 (Section 1 증명 항목과 같음)
+- **반환 계약**: 새 액션도 `{ success, reason }` (학습 `server-action-success-reason-result`, `team-messages.ts`)
+- 판정: **OK**
+
+### Section 6: Test Review
+
+```
+  새로 생기는 것                          | 종류         | 행복 경로                     | 실패 경로                          | 경계
+  ----------------------------------------|--------------|-------------------------------|------------------------------------|---------------------------
+  createTeam 액션                          | Unit(액션)   | owner 1명 밴드 + 초대 코드     | invalid_name · 비로그인 · member 실패 시 rollback | 이름 50/51자, 코드 충돌 재시도
+  홈 상태 판정 (밴드 먼저)                 | Unit(컴포넌트)| 0/0 → 밴드 만들기가 앞         | —                                  | 참여 방만 있음 → 밴드 먼저 아님
+  홈 "새 밴드" 입구                        | Unit         | 밴드 있어도 없어도 보임        | —                                  | —
+  홈 카드 (CEO2-D)                        | Unit         | 멤버 ≥ 2 · 밴드 없음 · 내가 방장 → 카드 | 조회 실패 → 카드 없음        | 멤버 1 → 없음, 닫음 → 없음, 남의 방 → 없음
+  밴드 홈 넣기 (CEO2-E)                   | Unit + 액션  | 내 밴드 없는 목록 → 넣기 → 갱신 | already_in_team · not_room_owner   | 0 개, 비owner 에게 버튼 없음
+  promote/attach 경쟁                      | Unit(액션)   | —                             | link 0행 → rollback + already_in_team | —
+  HeroCTA 로그인 목적지                    | Unit         | triggerKakaoLogin("/")        | —                                  | —
+  로그아웃 local                           | Unit(라우트) | signOut({ scope: 'local' })   | —                                  | —
+  E2E: 홈 → 새 밴드 → 밴드 홈 → 초대 시트  | E2E(account-a)| 밴드 홈 도착 + 초대 링크       | —                                  | `[e2e]` 이름, cleanup.team
+  E2E: 처음 로그인 홈 (account-b)          | E2E          | 밴드 만들기가 앞에 보임        | —                                  | 읽기만
+```
+
+- 2am 금요일 테스트: E2E 두 개 + `createTeam` rollback 액션 테스트. 적대적 QA: 남의 플레이리스트를 넣기 목록에 끼워 넣는 요청
+  (`not_room_owner`). 카오스: rollback delete 실패 시 고아 팀이 화면에 안 보이는지
+- 피라미드: 단위 다수 · E2E 2개 — 정상. 시간·외부 의존: E2E 는 운영 DB 와 카카오 저장 로그인에 기댄다(기존 수용 지름길 `dec-60acf136`)
+- 판정: **OK** — 위 표는 승인된 행동(CEO2-A·C·D·E)에서 바로 정해지는 증명이라 추가 승인이 필요 없다
+
+### Section 7: Performance
+
+- **홈**: 홈 카드(CEO2-D)는 내가 만든 밴드 없는 플레이리스트별 로그인 멤버 수가 필요하다. `getMyPlaylists` 의 "내가 만든 방" 조회에
+  중첩 집계(`playlist_members(count)`)를 붙이면 왕복이 늘지 않는다. 구현 owner 가 증명할 것: 홈의 DB 왕복 수가 지금(eng D5)과 같다
+- **밴드 홈**: 넣기 목록은 시트를 열 때만 읽는다(`getTeamHome` 에 넣지 않음). 밴드 홈 첫 화면 비용은 그대로
+- **새 인덱스**: 필요 없음. `playlists(creator_user_id)` · `playlist_members(playlist_id)` 조회는 기존 경로
+- 느린 경로 상위: ① 홈(로그인) 집계 추가 ② 넣기 시트 목록 ③ `createTeam` (insert 2번 + 재시도)
+- 판정: **OK**, 증명 항목 1건
+
+### Section 8: Observability
+
+- **로그**: `createTeam` 실패는 `logTeamError` (액션 · 단계 · userId). 홈 카드 조회 실패는 `console.error` 로 남기고 카드만 숨긴다
+- **이벤트**: `track("team_created", { source })` 가 이미 있다(`CreateBandSheet.tsx:87`). 새 source 값 `home`(빈 밴드) · `home_card`(홈 카드)를
+  `EventMap` 에 먼저 등록한다(AGENTS.md 규칙) — 승인된 화면의 기본 계측이라 추가 승인 불필요
+- **지표 공백**: 6주 지표는 "만들어진 밴드 수"만 센다. 홈에서 만든 빈 밴드가 멤버를 못 불러 죽는지(owner 혼자 · 플레이리스트 0 으로 남음)
+  알 수단이 없다. 지금 `scripts/team-metrics.mjs` 로는 promote 로 만든 밴드와 홈에서 만든 밴드를 나눠 보지 않는다
+  (promote 는 생성과 동시에 `team_linked_via = 'promote'` 플레이리스트가 붙으므로, 그런 플레이리스트가 없는 밴드 = 홈에서 만든 밴드로
+  마이그레이션 없이 구분할 수 있다) → **결정 CEO2-G**
+- **런북**: 고아 팀(rollback 실패)은 `logTeamError "orphan team left"` 로 찾고 service_role 로 지운다(기존 절차)
+
+## 답한 결정: CEO2-G (D6, 답 "지표 추가 (recommended)")
+Commitment comparison:
+
+| Commitment | Source/approval or pending | Current | A | B | C |
+|---|---|---|---|---|---|
+| 6주 지표 "만들어진 밴드 (외부) ≥ 5" | 승인됨 (CEO-F5) | 셈 | 그대로 | 그대로 | 그대로 |
+| 홈에서 만든 밴드 수 (외부) | pending | 없음 | 추가 (promote 플레이리스트가 없는 밴드) | 없음 | 6주 점검 때 |
+| 7일 지나도 owner 혼자 · 플레이리스트 0 인 밴드 수 | pending | 없음 | 추가 | 없음 | 6주 점검 때 |
+| DB 변경 | — | — | 없음 | 없음 | 없음 |
+
+Question: D6 — CEO2-G: 홈에서 만든 빈 밴드가 멤버 없이 방치되는지 볼 지표를 이번에 넣을까요?
+Project/branch/task: main, Section 8. 지금 성공 지표 스크립트(`scripts/team-metrics.mjs`)는 밴드 수만 세고, 홈에서 만든 밴드와 플레이리스트에서 올린 밴드를 나눠 보지 않아요.
+ELI10: 이번에 홈에서 밴드를 바로 만들 수 있게 되면 밴드 수는 늘 거예요. 그런데 그 밴드들이 멤버를 부르지 못하고 혼자 남은 빈 밴드라면, 밴드 수가 늘어도 성공이 아니에요. 그걸 구분해서 보는 지표예요.
+Stakes if we pick wrong: 안 넣으면 6주 뒤 "밴드 5개 달성"이 진짜 밴드인지 빈 껍데기인지 모르고 판단하게 되고, 넣으면 스크립트와 테스트가 조금 늘어요.
+Recommendation: A because 새 입구가 만드는 결과(빈 밴드)를 재지 않으면 이번 결정이 맞았는지 알 수 없고, DB 변경 없이 기존 표로 셀 수 있어요.
+Note: options differ in kind, not coverage — no completeness score.
+Net: 작은 스크립트 추가로 6주 판단의 질을 살지예요.
+Header: 빈 밴드 지표
+A) 지표 추가 (recommended)
+`scripts/team-metrics.mjs` 에 두 줄을 더해요. 홈에서 만든 밴드 수(외부)와, 만든 지 7일이 지나도 owner 혼자 · 플레이리스트 0 인 밴드 수예요. promote 플레이리스트 유무로 구분해 DB 변경은 없어요. 노력 S, 위험 low, 기존 스크립트·테스트 재사용, 검증은 `team-metrics` 단위 테스트 2개. ✅ 6주 뒤 밴드 수가 진짜 밴드인지 빈 밴드인지 나눠서 판단할 수 있어요 ✅ 마이그레이션 없이 지금 표만으로 계산돼 배포 위험이 없어요 ❌ 스크립트와 테스트가 조금 늘고, 7일 기준은 임의 값이라 나중에 조정이 필요할 수 있어요
+B) 추가 안 함
+지금처럼 밴드 수만 봐요. 노력 S (구현 0), 위험 low. ✅ 이번 변경이 가장 작아요 ✅ 이미 정한 6주 지표 정의를 그대로 써요 ❌ 홈 입구가 빈 밴드만 늘렸는지 알 수 없어 6주 판단이 흐려져요
+C) TODOS.md 로 미루기
+6주 점검 때 필요하면 그때 스크립트를 고쳐요. 노력 S (지금 구현 0), 위험 low. ✅ 이번 범위를 화면 흐름에만 묶어 둘 수 있어요 ✅ 데이터가 이미 DB 에 있어 나중에 소급해서 셀 수 있어요 ❌ 6주 중간에 빈 밴드 문제가 생겨도 바로 알아채지 못해요
+
+- 판정 (Section 8): 지표 공백은 CEO2-G(D6)로 해결. 나머지 **OK**
+
+### Section 9: Deployment & Rollout
+
+- **마이그레이션**: 없음. 빈 밴드는 지금 스키마로 성립한다
+- **플래그**: 없음 (CEO-F6 와 같은 전체 공개). 되돌림은 코드 롤백으로 충분하다
+- **순서**: 코드만. 배포 전 로컬 게이트(`npm run test:e2e`, 새 밴드 E2E 2개 포함)
+- **옛 코드와 새 데이터**: 새 코드로 만든 빈 밴드를 옛 코드(롤백 뒤)가 읽어도 정상 — 밴드 홈 빈 상태 · 홈 선반 "플레이리스트 0" 이 이미 있다
+- **로그아웃 local**: 배포 순간 이미 로그인한 세션에는 영향 없음. 이후 로그아웃부터 이 기기만 끊긴다
+- **배포 뒤 확인**: 5분 — 홈(로그아웃) · 홈(로그인, account-b 0/0 → 밴드 먼저) · 새 밴드 → 밴드 홈 · 에러 로그 0. 1시간 — `npm run metrics:teams` 로 홈에서 만든 밴드 행이 나오는지
+- **되돌리기 흐름**:
+  ```
+  이상 발견 ─▶ vercel rollback (1분) ─▶ 만든 빈 밴드는 그대로 둔다(옛 코드에서도 정상)
+                                  └─▶ 고아 팀 로그가 있으면 service_role 로 정리
+  ```
+- 판정: **OK**
+
+### Section 10: Long-Term Trajectory
+
+- **되돌릴 수 있는 정도**: 4/5. 코드는 되돌리기 쉽고, 만들어진 빈 밴드는 데이터로 남지만 해가 없다
+- **빚**: ADR 0014 가 "방이 밴드에 들어오는 길은 셋"과 "밴드는 방 위에 얕게"만 말한다. 이제 밴드는 플레이리스트 없이도
+  생긴다 → ADR 0014 에 한 줄 정정 또는 새 ADR. 계획 문서의 CEO-D4 행에 "CEO2-A 로 수정" 표시. 둘 다 승인된 결정을 문서에
+  반영하는 일이라 추가 승인 불필요
+- **경로 의존**: 홈이 상태별로 갈리면, 이후 홈 개편(TODOS "홈 화면 개편")이 이 상태 판정을 기준으로 쌓인다. 판정 로직을 한 곳(홈 서버 컴포넌트)에 둔다
+- **1년 뒤 질문**: 새 사람이 "밴드는 어디서 만들어지나"를 물으면 답이 셋(홈 빈 밴드 · 플레이리스트에서 올리기 · 홈 카드=올리기)이다.
+  ADR 이 이 셋을 적어 두면 명확하다
+- 판정: **OK**, 문서 빚 2건(작업으로)
+
+### Section 11: Design & UX
+
+**정보 구조 (로그인 홈, 위에서 아래)**
+
+```
+  [상태 A: 밴드 0 · 플레이리스트 0 — 처음 온 사람]      [상태 B: 그 밖]
+  인사 "○○님, 다음 합주곡 정해 볼까요?"                 인사
+  ① 밴드 만들기 (주)  ② 플레이리스트만 만들기 (보조)    ① 새 플레이리스트  ② 새 밴드 (늘 보임)
+                                                      ③ 홈 카드: "{플레이리스트} 멤버 그대로 밴드 만들기" (CEO2-D, 대상 있을 때만)
+                                                      ④ 내 밴드 선반  ⑤ 내 플레이리스트
+```
+
+**사용자 흐름 (화면·상태 전이)**
+
+```
+  로그아웃 홈 ─카카오─▶ 로그인 홈 ─┬─(A) 밴드 만들기 ─▶ 이름 시트 ─▶ 밴드 홈(빈) ─┬─▶ 초대 시트 ─▶ 단톡방
+                                 │                                            └─▶ 내 플레이리스트 넣기 (CEO2-E)
+                                 ├─(B) 홈 카드 ─▶ 이름 시트 ─▶ 밴드 홈(멤버·플레이리스트 있음)
+                                 ├─ 새 밴드 ─▶ (A 와 같음)
+                                 └─ 새 플레이리스트 ─▶ 기존 흐름 (밴드 없이 1급)
+  플레이리스트 링크 ─▶ 플레이리스트 (변화 없음)        초대 링크 ─▶ /join ─▶ 밴드 홈 (변화 없음)
+```
+
+**상태 커버리지**
+
+| 기능 | 로딩 | 빈 | 오류 | 성공 | 부분 |
+|---|---|---|---|---|---|
+| 새 밴드 시트 | 버튼 로딩 (기존) | 이름 비면 비활성 | 버튼 아래 문구 | 밴드 홈 + `?created=1` 배너 | — |
+| 홈 카드 | 서버 렌더 (없음) | 대상 없으면 숨김 | 조회 실패면 숨김 | 시트 → 밴드 홈 | 닫힘 기억 |
+| 밴드 홈 넣기 시트 | 목록 로딩 필요 ← 설계 | 넣을 것 0 ← 설계 | 시트 안 문구 | 목록에서 빠지고 밴드 홈 갱신 | 여러 개 연속 넣기 ← 설계 |
+| 상태별 홈 A | 서버 렌더 | — | **GAP**: 지금 조회 실패가 빈 결과로 보인다 → 아래 증명 항목 | — | — |
+
+- **여정**: 처음 온 방장은 "밴드 이름 → 단톡방에 초대"로 30초 안에 첫 가치(멤버가 들어오는 것)를 본다. 기존 방장은 홈 카드에서
+  이미 같이 투표한 사람들을 밴드로 묶는다. 링크로 온 멤버의 여정은 바뀌지 않는다
+- **AI 슬롭 위험**: "밴드를 만들어 보세요!" 류 일반 문구 금지. AGENTS.md 톤("~해요", 페르소나 용어)과 기존 바이올렛 토큰 유지(방장 피드백)
+- **모바일**: 버튼 두 개가 한 줄일 때 각각 ≥ 44px. 홈 카드는 닫기 버튼 44px (기존 `BandPromptCard` 와 같음)
+- **접근성**: 시트는 `Modal` 의 포커스 트랩·복귀(T17) 그대로
+- **GAP (승인 범위 안의 필수 수리)**: `getMyTeams` 는 조회 실패 때 `[]` 를 돌려주고(`team.ts:709-711`), `getMyPlaylists` 도 실패한
+  집합을 비운 채 진행한다(`playlist.ts:62,79`). 그러면 DB 가 잠깐 흔들릴 때 밴드가 있는 사람도 "밴드 0 · 플레이리스트 0"(상태 A)으로 판정돼
+  밴드 만들기가 앞에 뜨고 중복 밴드가 생길 수 있다. CEO2-A 가 승인한 대상은 *정말로* 0/0 인 사람이므로, 구현 owner 가 증명할 것:
+  홈이 조회 실패를 빈 결과와 구분하고, 실패면 상태 A 로 판정하지 않는다(실패 때 무엇을 보일지는 디자인 리뷰)
+- 판정: 미정 설계 4건(로딩 · 넣을 것 0 · 연속 넣기 · 카드 대상 고르기)과 조회 실패 화면은 다음 `/plan-design-review` 로. Consider running /plan-design-review for a deep design review of this plan before implementation.
+- 구현 뒤: `/design-review` 로 실제 화면 점검
+
+## 마무리
+
+- **외부 검토 (Outside Voice)**: Codex `model_unusable`(gstack 이 고른 모델 이름이 잘못됨), 내부 대체 검토는 결과를 기다리는 도구(TaskOutput)가
+  이 세션에 없어 건너뜀 → **외부 검토 없음**. 리뷰 기록에 unavailable 로 남김
+- **남은 TODO 후보**: 없음 (CEO2-F 는 D3 로 TODOS.md 에 들어감)
+
+**Approval readiness: PASS** (2026-10-06) — CEO2-A (D1 "상태별 홈 + 두 입구 (recommended)"), CEO2-B (D1 비교표 "밴드 없는 플레이리스트 1급"),
+CEO2-C (D5 "이 기기만 (recommended)"), CEO2-D (D4 "홈에 닫을 수 있는 카드 (recommended)"), CEO2-E (D2 "밴드 홈에서 넣기 (recommended)"),
+CEO2-F (D3 "TODOS.md 로 미루기 (recommended)", 전달 범위 보류로 확정), CEO2-G (D6 "지표 추가 (recommended)").
+섹션 리뷰의 "구현 owner 가 증명할 것"은 승인된 행동에서 바로 나오는 증명이며 새 행동을 더하지 않는다.
+
+### NOT in scope
+
+| 항목 | 처리 | 근거 |
+|---|---|---|
+| 여러 밴드 넣기 UI (CEO2-F) | **미룸** → TODOS.md | D3. 밴드 2개 이상 계정 0명 |
+| 밴드 먼저 온보딩 화면 (강제) | 거절 | D1 에서 A 선택. 첫 가치까지 단계·중복 밴드 위험 |
+| CEO-D4 그대로 유지 + 홈 안내만 | 거절 | D1 에서 A 선택. 홈 새 밴드 버튼 메모가 안 풀림 |
+| 플레이리스트 화면 겉의 넣기 입구 | 거절 | D2 에서 A(밴드 홈) 선택 |
+| 홈 진입 팝업 | 거절 | D4 에서 A(카드) 선택. 목적 가로막기 · 멤버 중복 밴드 |
+| 로그아웃 global 유지 | 거절 | D5 에서 A(이 기기만) 선택 |
+| "모든 기기에서 로그아웃" 버튼 | 범위 밖 | D5 A 의 ❌ 로 수용 |
+| 사용자당 밴드 개수 상한 | 제안 안 함 | Section 3: 가능성 Low · 영향 Low, 프록시 POST 제한이 있음 |
+
+### What already exists
+
+| 하위 문제 | 기존 코드 | 재사용 |
+|---|---|---|
+| 밴드 이름 시트 | `CreateBandSheet.tsx` (검증 · 중복 제출 막기 · catch) | 예 — "플레이리스트 없이" 모드 추가 |
+| 초대 · 가입 | `BandInviteSheet.tsx`, `/join/[inviteCode]`, `joinTeam` | 예 — 그대로 |
+| 플레이리스트에서 올리기 | `createTeamFromPlaylist` (조건부 UPDATE · rollback) | 예 — 홈 카드가 호출 |
+| 밴드에 넣기 | `attachPlaylistToTeam` (`not_room_owner` · `not_member` · `already_in_team`) | 예 — 밴드 홈 시트가 호출 |
+| 닫을 수 있는 카드 | `BandPromptCard.tsx` (localStorage · `useSyncExternalStore`) | 예 — 홈용으로 일반화, 같은 키 |
+| 홈 데이터 | `getMyPlaylists` ∪ `getMyTeams` 한 번의 Promise.all | 예 — 집계 하나 추가, 실패 구분 필요 |
+| 지표 | `scripts/team-metrics.mjs` + 테스트 | 예 — 두 줄 추가 |
+| 빈 밴드 생성 액션 | 없음 | 새로 — 초대 코드 헬퍼는 공유 |
+
+### Dream state delta
+
+이번 결정 뒤 Plypick 은 밴드를 "플레이리스트 설정 안의 2차 기능"에서 "로그인 홈의 첫 입구"로 올린다. 12개월 그림(밴드가 기본 단위,
+공연마다 밴드 홈에서 시작)까지 남은 것: 밴드 홈에서의 반복 사용(E3 지난 후보곡, E5 알림 — TODOS), 여러 밴드 UI(CEO2-F), 홈 화면 개편 전체.
+
+### Error & Rescue Registry (capability 단위)
+
+| Capability | 실패 방식 | 사용자 영향 | 있는 장치 | 증명 owner |
+|---|---|---|---|---|
+| 빈 밴드 만들기 | 이름 · 코드 충돌 · owner 행 실패 · 429 | 시트 안 문구 | `validateTeamName`, 재시도, `rollbackTeam`, 시트 catch | eng 리뷰: 헬퍼 공유 |
+| 홈 상태 판정 | 조회 실패가 빈 결과로 보임 | 밴드 있는 사람에게 "밴드 먼저" (중복 밴드) | 없음 ← **GAP** | eng 리뷰: 실패와 빈 결과 구분 |
+| 홈 카드 | 멤버 수 조회 실패 | 카드 없음 | (설계) 숨김 + console.error | eng 리뷰 |
+| 밴드 홈 넣기 | 목록 실패 · 경쟁 · 권한 | 시트 안 문구 | 기존 reason, 조건부 UPDATE | eng 리뷰: 시트 catch |
+| 로그아웃 local | signOut 실패 | 모름 | 모름 | eng 리뷰: 지금 라우트의 오류 처리 확인 |
+
+### Failure Modes Registry
+
+```
+  CODEPATH            | FAILURE MODE                     | RESCUED? | TEST?   | USER SEES?            | LOGGED?
+  --------------------|----------------------------------|----------|---------|-----------------------|--------
+  빈 밴드 만들기       | owner 행 insert 실패              | Y        | 계획됨  | 오류 문구             | Y
+  빈 밴드 만들기       | rollback delete 실패 (고아 팀)    | N        | N       | 오류 문구 (팀은 안 보임) | Y
+  빈 밴드 만들기       | 프록시 429                        | Y        | N       | 기본 오류 문구         | N
+  홈 상태 판정         | 조회 실패 → 상태 A                | N ← GAP  | 계획됨  | 틀린 화면 (밴드 먼저)   | Y
+  홈 카드              | 멤버 수 조회 실패                 | Y (설계) | 계획됨  | 카드 없음             | Y
+  밴드 홈 넣기         | promote 와 경쟁                   | Y        | 계획됨  | already_in_team 문구  | N (예상 실패)
+  로그아웃 local       | signOut 실패                      | 모름     | 계획됨  | 모름                  | 모름
+```
+
+CRITICAL GAP 0 (조용히 실패하면서 막는 장치도 테스트도 없는 행 없음). GAP 1(홈 상태 판정)은 승인 범위 안의 필수 수리.
+
+### Diagrams
+
+시스템 구조 · 밴드 상태 기계(Section 1), 데이터 흐름 · 경쟁 일정(Section 4), 오류 표(Section 2), 배포 · 되돌리기(Section 9),
+정보 구조 · 사용자 흐름(Section 11).
+
+### Stale Diagram Audit
+
+- `src/actions/team.ts:295-297` — `createTeamFromPlaylist` 단계 주석. 지금은 정확. 초대 코드 헬퍼를 꺼내면 같은 커밋에서 고친다
+- 나머지 대상 파일(`page.tsx`, `HeroCTA.tsx`, `MyBands.tsx`, `CreateBandSheet.tsx`, `BandHomeClient.tsx`, `BandPromptCard.tsx`,
+  `auth/logout/route.ts`, `team-metrics.mjs`, ADR 0014)에는 ASCII 다이어그램이 없다
+
+## Implementation Tasks
+Synthesized from this review's findings. Each task derives from a specific
+finding above. Run with Claude Code or Codex; checkbox as you ship.
+
+- [ ] **C1 (P1, human: ~반나절 / CC: ~30분)** — design — 상태별 홈 · 홈 카드 · 밴드 홈 넣기 시트의 화면을 정한다 (`/plan-design-review`)
+  - Surfaced by: Section 4 미정 3건, Section 11 미정 4건 + 조회 실패 화면, D1 의 중복 밴드 완화
+  - Files: 이 문서 (`docs/plans/2026-10-06-user-flow-map.md`)
+  - Verify: 디자인 리뷰 보고서가 미정 항목을 모두 결정으로 닫는다
+- [ ] **C2 (P1, human: ~반나절 / CC: ~30분)** — eng — 구현 계약을 정한다 (`/plan-eng-review`)
+  - Surfaced by: Section 1·5 (초대 코드 헬퍼 공유), Section 7 (홈 왕복 수), Section 11 GAP (조회 실패 구분), Section 6 테스트 표
+  - Files: to be determined
+  - Verify: eng 리뷰 보고서 CLEAR, 테스트 표가 작업 계획에 들어감
+- [ ] **C3 (P2, human: ~30분 / CC: ~5분)** — docs — ADR 0014 와 계획 문서에 CEO2-A 를 반영한다
+  - Surfaced by: Section 10 (밴드가 플레이리스트 없이도 생긴다, 생성 경로 셋)
+  - Files: `docs/adr/0014-bands-sit-shallow-on-rooms.md`, `docs/plans/2026-09-21-teams-and-shared-catalog.md` (CEO-D4 행)
+  - Verify: ADR 에 "홈에서 빈 밴드" 경로가 있고 CEO-D4 행에 "CEO2-A 로 수정" 표시
+- [ ] **C4 (P2, human: ~30분 / CC: ~5분)** — auth — 로그아웃을 이 기기만 끊게 한다 (CEO2-C)
+  - Surfaced by: D5, P5
+  - Files: `src/app/auth/logout/route.ts` (+ 라우트 테스트)
+  - Verify: 라우트 테스트가 `signOut({ scope: 'local' })` 호출을 확인
+- [ ] **C5 (P2, human: ~1시간 / CC: ~10분)** — metrics — 홈에서 만든 밴드 · 7일 방치된 빈 밴드를 센다 (CEO2-G)
+  - Surfaced by: D6, Section 8
+  - Files: `scripts/team-metrics.mjs`, `scripts/__tests__/team-metrics.test.ts`
+  - Verify: `npm test` 의 team-metrics 테스트 2개, `npm run metrics:teams` 에 두 줄
+
+### Completion Summary
+
+```
+  +====================================================================+
+  |            MEGA PLAN REVIEW — COMPLETION SUMMARY                   |
+  +====================================================================+
+  | Mode selected        | SCOPE REDUCTION                             |
+  | System Audit         | CEO-D4 재개; 홈 조회가 실패를 빈 결과로 숨김; |
+  |                      | Codex 모델 설정 오류                         |
+  | Step 0               | D1 상태별 홈+두 입구, D2 밴드 홈 넣기,        |
+  |                      | D3 여러 밴드 UI 미룸, D4 홈 카드, D5 local    |
+  | Section 1  (Arch)    | 0 issues found (증명 1)                      |
+  | Section 2  (Errors)  | 10 error paths mapped, 0 GAPS               |
+  | Section 3  (Security)| 5 issues found, 0 High severity             |
+  | Section 4  (Data/UX) | 10 edge cases mapped, 3 unhandled (→디자인) |
+  | Section 5  (Quality) | 1 issues found (헬퍼 공유)                  |
+  | Section 6  (Tests)   | Diagram produced, 0 gaps                    |
+  | Section 7  (Perf)    | 0 issues found (증명 1)                      |
+  | Section 8  (Observ)  | 1 gaps found (→ D6)                          |
+  | Section 9  (Deploy)  | 0 risks flagged                             |
+  | Section 10 (Future)  | Reversibility: 4/5, debt items: 2           |
+  | Section 11 (Design)  | 1 issues (조회 실패 GAP) + 미정 5 → 디자인   |
+  +--------------------------------------------------------------------+
+  | NOT in scope         | written (8 items)                           |
+  | What already exists  | written                                     |
+  | Dream state delta    | written                                     |
+  | Error/rescue registry| 5 rows, 0 CRITICAL GAPS                     |
+  | Failure modes        | 7 total, 0 CRITICAL GAPS                    |
+  | TODOS.md updates     | 1 items proposed (CEO2-F, D3)               |
+  | Scope proposals      | 0 proposed, 0 accepted (REDUCTION)          |
+  | CEO plan             | skipped by mode                             |
+  | Outside voice        | codex unavailable (model_unusable)          |
+  | Lake Score           | N/A (점수 매긴 질문 없음)                    |
+  | Diagrams produced    | 8 (구조·상태·흐름·경쟁·오류·배포·IA·여정)    |
+  | Stale diagrams found | 0 (1 건 헬퍼 추출 시 갱신)                   |
+  | Unresolved decisions | 0                                           |
+  +====================================================================+
+```
+
+### Unresolved Decisions
+
+없음. 디자인 미정 5건과 eng 증명 항목은 C1·C2 작업으로 넘어간 후속 리뷰 범위다.
+
+## GSTACK REVIEW REPORT
+
+| Review | Trigger | Why | Runs | Status | Findings |
+|--------|---------|-----|------|--------|----------|
+| CEO Review | `/plan-ceo-review` | Scope & strategy | 3 | CLEAR | mode: SCOPE_REDUCTION, 0 critical gaps (결정 6건, 미룸 1건) |
+| Outside Review | codex (plan-review, `/plan-ceo-review` 기본 단계) | Independent 2nd opinion | 5 | unavailable | Codex `model_unusable`(모델 이름 오류), 내부 대체 검토도 불가(TaskOutput 없음) — no completed external review |
+| Eng Review | `/plan-eng-review` | Architecture & tests (required) | 3 | ISSUES OPEN | 8 issues, 0 critical gaps (2026-10-04, 밴드 계획 대상 — 이 계획은 아직 eng 리뷰 없음) |
+| Design Review | `/plan-design-review` | UI/UX gaps | 2 | CLEAR | score: 4/10 → 8/10, 8 decisions (2026-10-04, 밴드 계획 대상) |
+| DX Review | `/plan-devex-review` | Developer experience gaps | 0 | — | — |
+
+- **OUTSIDE COVERAGE:** codex · plan-review · unavailable (`model_unusable`, gstack 의 Codex 모델 설정 오류). 내부 대체 검토 unavailable. 발견 0 이 아니라 검토 자체가 없다
+- **CROSS-MODEL:** 없음 — 완료된 외부 검토가 없어 비교하지 않음
+- **VERDICT:** CEO CLEARED (이 흐름 계획) — eng review required. 다음 순서는 `/plan-design-review`(C1) 와 `/plan-eng-review`(C2)
+
+NO UNRESOLVED DECISIONS
