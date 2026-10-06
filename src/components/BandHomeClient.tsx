@@ -187,30 +187,31 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
       </header>
 
       <div className="mx-auto max-w-md px-4 pb-16">
-        {/* Action row: Spotify Jam avatars + invite. */}
-        <div className="mt-4 flex items-center gap-1">
-          <a href="#band-members" className="flex min-h-11 items-center pr-1" aria-label={`멤버 ${members.length}명`}>
-            <span className="flex -space-x-2">
-              {members.slice(0, STACKED_AVATARS).map((member) => (
-                <MemberAvatar
-                  key={`${member.displayName}-${member.joinedAt}`}
-                  name={member.displayName}
-                  className="h-8 w-8 text-sm ring-2 ring-bg"
-                />
-              ))}
-            </span>
-            {members.length > STACKED_AVATARS && (
-              <span className="ml-1.5 text-sm text-text-muted tabular-nums">+{members.length - STACKED_AVATARS}</span>
-            )}
-          </a>
-          {!starting && (
+        {/* Action row: Spotify Jam avatars + invite. The start area has its own invite, and the members
+            section below already shows the one avatar, so the row would be a lone 32px link (FINDING-002). */}
+        {!starting && (
+          <div className="mt-4 flex items-center gap-1">
+            <a href="#band-members" className="flex min-h-11 items-center pr-1" aria-label={`멤버 ${members.length}명`}>
+              <span className="flex -space-x-2">
+                {members.slice(0, STACKED_AVATARS).map((member) => (
+                  <MemberAvatar
+                    key={`${member.displayName}-${member.joinedAt}`}
+                    name={member.displayName}
+                    className="h-8 w-8 text-sm ring-2 ring-bg"
+                  />
+                ))}
+              </span>
+              {members.length > STACKED_AVATARS && (
+                <span className="ml-1.5 text-sm text-text-muted tabular-nums">+{members.length - STACKED_AVATARS}</span>
+              )}
+            </a>
             <IconButton bare aria-label="멤버 초대" onClick={() => setInviteOpen(true)}>
               <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
               </svg>
             </IconButton>
-          )}
-        </div>
+          </div>
+        )}
 
         {starting && (
           <BandStartArea

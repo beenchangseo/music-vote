@@ -206,6 +206,8 @@ describe("BandHomeClient start area for a new empty band (DR1, DR16)", () => {
     expect(screen.queryByRole("button", { name: "멤버 초대" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "더 부르기" })).not.toBeInTheDocument();
     expect(screen.queryByText("멤버를 불러야 같이 투표해요")).not.toBeInTheDocument();
+    // No lone avatar link above the area; the members section shows the one member.
+    expect(screen.queryByRole("link", { name: "멤버 1명" })).not.toBeInTheDocument();
     // No empty shelf with a second "new playlist" and no empty history.
     expect(screen.queryByRole("link", { name: "새 플레이리스트" })).not.toBeInTheDocument();
     expect(screen.queryByRole("region", { name: /우리가 했던 곡/ })).not.toBeInTheDocument();
