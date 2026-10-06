@@ -109,7 +109,7 @@ export default async function Home({ searchParams }: HomeProps) {
           {/* Social proof strip — 결정 직전 신뢰 (조용한 네온, 펄스 없음) */}
           {(stats.playlists > 0 || stats.songs > 0 || stats.users > 0) && (
             <p className="mt-6 text-center text-caption text-text-muted tabular-nums">
-              합주 <strong className="font-bold text-primary">{stats.playlists.toLocaleString()}</strong>
+              플레이리스트 <strong className="font-bold text-primary">{stats.playlists.toLocaleString()}</strong>
               <span className="mx-1.5 text-text-subtle/50" aria-hidden>·</span>
               멤버 <strong className="font-bold text-primary">{stats.users.toLocaleString()}</strong>
               <span className="mx-1.5 text-text-subtle/50" aria-hidden>·</span>
