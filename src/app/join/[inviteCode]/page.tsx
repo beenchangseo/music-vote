@@ -23,7 +23,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // Same text as the band Kakao card so a pasted link unfurls the same way (25A: exact date only).
   const now = new Date();
   const title = `${invite.name} · Plypick`;
-  const description = bandShareDescription(invite.nextShowAt, invite.memberCount, now);
+  // previewNames puts the owner first (2A), so a band of one carries the owner's name (DR13).
+  const description = bandShareDescription(invite.nextShowAt, invite.memberCount, now, invite.previewNames[0] ?? null);
   const og = new URLSearchParams({ variant: "band", title: invite.name, members: String(invite.memberCount) });
   const date = shareableShowDate(invite.nextShowAt, now);
   if (date) og.set("date", date);

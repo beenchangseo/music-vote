@@ -207,6 +207,16 @@ describe("show date formatting (cards and screens)", () => {
     expect(bandShareDescription(null, 1, NOON_KST)).toBe("멤버 1명 · 카카오 로그인 한 번이면 합류");
   });
 
+  it("names the owner instead of '멤버 1명' while the band is just them (DR13)", () => {
+    expect(bandShareDescription(null, 1, NOON_KST, "보컬")).toBe("보컬님이 밴드를 만들었어요 · 카카오 로그인 한 번이면 합류");
+    expect(bandShareDescription("2026-10-16", 1, NOON_KST, "보컬")).toBe("10월 16일(금) 공연 · 보컬님의 밴드");
+    // A past show is not put on the card (25A).
+    expect(bandShareDescription("2026-10-03", 1, NOON_KST, "보컬")).toBe("보컬님이 밴드를 만들었어요 · 카카오 로그인 한 번이면 합류");
+    // From two members on, the count is the news; without a name the old line stays.
+    expect(bandShareDescription("2026-10-16", 2, NOON_KST, "보컬")).toBe("10월 16일(금) 공연 · 멤버 2명");
+    expect(bandShareDescription(null, 1, NOON_KST, null)).toBe("멤버 1명 · 카카오 로그인 한 번이면 합류");
+  });
+
   it("prefixes the room card only while the show is ahead", () => {
     expect(roomSharePrefix("2026-10-16", NOON_KST)).toBe("10월 16일 공연 · ");
     expect(roomSharePrefix("2026-10-03", NOON_KST)).toBe("");

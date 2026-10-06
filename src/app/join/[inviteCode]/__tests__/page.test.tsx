@@ -85,6 +85,24 @@ describe("/join/[inviteCode]", () => {
   });
 });
 
+describe("/join/[inviteCode] card for a band of one (DR13)", () => {
+  it("names the owner and leaves the member count off the image", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-04T03:00:00Z"));
+    state.getTeamInvite.mockResolvedValue({
+      status: "invite",
+      loggedIn: false,
+      name: "일코해제",
+      memberCount: 1,
+      previewNames: ["보컬"],
+      nextShowAt: null,
+    });
+    const meta = await generateMetadata(props());
+    vi.useRealTimers();
+    expect(meta.description).toBe("보컬님이 밴드를 만들었어요 · 카카오 로그인 한 번이면 합류");
+  });
+});
+
 describe("/join/[inviteCode] not-found", () => {
   it("tells a logged-out visitor to ask for a new link", async () => {
     state.getCurrentUser.mockResolvedValue(null);

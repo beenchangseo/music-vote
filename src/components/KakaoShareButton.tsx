@@ -36,6 +36,8 @@ type KakaoShareButtonProps = ShareLink & {
   showDate?: string | null;
   /** Band card only: member count. */
   members?: number;
+  /** Band card only: the band owner's name, used when the owner is still alone (DR13). */
+  ownerName?: string | null;
   /** OG image params (forwarded to /api/og). */
   songs?: number;
   participants?: number;
@@ -59,13 +61,14 @@ const variantContent = (
   participants: number,
   showDate: string | null,
   members: number,
+  ownerName: string | null,
 ): { title: string; description: string; cta: string } => {
   const now = new Date();
   switch (v) {
     case "band":
       return {
         title: `🎸 ${title}`,
-        description: description || bandShareDescription(showDate, members, now),
+        description: description || bandShareDescription(showDate, members, now, ownerName),
         cta: "밴드 들어가기",
       };
     case "decided":
@@ -154,6 +157,7 @@ export default function KakaoShareButton({
   description,
   showDate = null,
   members = 0,
+  ownerName = null,
   songs = 0,
   participants = 0,
   topSong,
@@ -184,7 +188,7 @@ export default function KakaoShareButton({
       setlistCount,
       ...(variant === "band" ? { members, date: shareableShowDate(showDate, new Date()) } : {}),
     });
-    const c = variantContent(variant, title, description, songs, participants, showDate, members);
+    const c = variantContent(variant, title, description, songs, participants, showDate, members, ownerName);
 
     // Kakao Share path
     try {

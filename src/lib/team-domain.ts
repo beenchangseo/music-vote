@@ -99,13 +99,20 @@ export function shareableShowDate(nextShowAt: string | null | undefined, now: Da
   return dday.state === "upcoming" || dday.state === "today" ? dday.date : null;
 }
 
-/** band 카드 설명 (디자인 25A). 날짜가 주인공이고, 날짜가 없거나 지났으면 합류 안내. */
+/**
+ * band 카드 설명 (디자인 25A). 날짜가 주인공이고, 날짜가 없거나 지났으면 합류 안내.
+ * 만든 사람 혼자인 밴드(홈에서 만든 빈 밴드)는 "멤버 1명" 대신 만든 사람 이름을 싣는다 (DR13).
+ */
 export function bandShareDescription(
   nextShowAt: string | null | undefined,
   memberCount: number,
   now: Date,
+  ownerName?: string | null,
 ): string {
   const date = shareableShowDate(nextShowAt, now);
+  if (memberCount <= 1 && ownerName) {
+    return date ? `${formatShowDate(date)} 공연 · ${ownerName}님의 밴드` : `${ownerName}님이 밴드를 만들었어요 · 카카오 로그인 한 번이면 합류`;
+  }
   return date
     ? `${formatShowDate(date)} 공연 · 멤버 ${memberCount}명`
     : `멤버 ${memberCount}명 · 카카오 로그인 한 번이면 합류`;

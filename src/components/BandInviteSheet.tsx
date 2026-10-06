@@ -43,6 +43,8 @@ interface BandInviteSheetProps {
   inviteCode: string;
   memberCount: number;
   nextShowAt: string | null;
+  /** 밴드를 만든 사람 이름. 혼자인 밴드의 카톡 카드 문구에 쓴다 (DR13). */
+  ownerName: string | null;
   /** owner 에게만 "링크 새로 만들기"를 보여준다. */
   isOwner: boolean;
   /** 링크를 새로 만들었을 때 새 코드 (R7). 주소(/band/{teamId})는 그대로다. */
@@ -67,6 +69,7 @@ function InviteSheetBody({
   inviteCode,
   memberCount,
   nextShowAt,
+  ownerName,
   isOwner,
   onInviteCodeChange,
 }: Omit<BandInviteSheetProps, "open" | "onClose">) {
@@ -123,6 +126,7 @@ function InviteSheetBody({
         title={name}
         showDate={nextShowAt}
         members={memberCount}
+        ownerName={ownerName}
         size="lg"
         className="mt-3 w-full"
         ariaLabel="카톡으로 보내기"

@@ -323,6 +323,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
         inviteCode={inviteCode}
         memberCount={members.length}
         nextShowAt={nextShowAt}
+        ownerName={members.find((member) => member.role === "owner")?.displayName ?? null}
         isOwner={isOwner}
         onInviteCodeChange={setRotatedCode}
       />

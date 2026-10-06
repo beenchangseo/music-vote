@@ -739,6 +739,7 @@ export default function PlaylistClient({
           inviteCode={justCreatedTeam.inviteCode}
           memberCount={justCreatedTeam.memberCount}
           nextShowAt={null}
+          ownerName={nickname || null}
           isOwner
           onInviteCodeChange={(inviteCode) => setJustCreatedTeam((current) => (current ? { ...current, inviteCode } : current))}
         />

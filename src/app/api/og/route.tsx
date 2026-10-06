@@ -536,7 +536,8 @@ function BandView({
       )}
 
       <div style={{ display: "flex", gap: 32, marginTop: "auto" }}>
-        {members > 0 && <Stat label="명" value={members} />}
+        {/* DR13: a band of one shows no big "1명"; the card text names who made it instead. */}
+        {members > 1 && <Stat label="명" value={members} />}
         <div style={{ display: "flex", marginLeft: "auto" }}>
           <CTAPill>밴드 들어가기 →</CTAPill>
         </div>

@@ -226,6 +226,20 @@ describe("BandHomeClient start area for a new empty band (DR1, DR16)", () => {
     expect(screen.getByRole("link", { name: "새 플레이리스트" })).toBeInTheDocument();
   });
 
+  it("sends an invite card that names who made the band, not '멤버 1명' (DR13)", () => {
+    const sendDefault = vi.fn();
+    window.Kakao = { isInitialized: () => true, Share: { sendDefault } };
+    try {
+      renderHome(empty());
+      fireEvent.click(screen.getByRole("button", { name: "카톡으로 멤버 부르기" }));
+      fireEvent.click(within(screen.getByRole("dialog", { name: "멤버 초대" })).getByRole("button", { name: "카톡으로 보내기" }));
+      const card = sendDefault.mock.calls[0][0] as { content: { description: string } };
+      expect(card.content.description).toBe("보컬님이 밴드를 만들었어요 · 카카오 로그인 한 번이면 합류");
+    } finally {
+      delete window.Kakao;
+    }
+  });
+
   it("tells a member who joined a band with no playlist what to wait for", () => {
     renderHome(view({ rooms: [] }), { joined: true });
     const banner = screen.getByRole("status");
