@@ -126,6 +126,55 @@ describe("computeTeamMetrics", () => {
   });
 });
 
+describe("home-created bands (CEO2-G)", () => {
+  const NOW = new Date("2026-10-20T00:00:00Z");
+  const homeData = {
+    teams: [
+      // Made at home 8 days ago, still the owner alone with no room: stalled.
+      { id: "H1", name: "빈 밴드", created_at: "2026-10-12T00:00:00Z", created_by: "u-h1", next_show_at: null, created_via: "home" },
+      // Made at home 8 days ago, a member joined: not stalled.
+      { id: "H2", name: "모인 밴드", created_at: "2026-10-12T00:00:00Z", created_by: "u-h2", next_show_at: null, created_via: "home" },
+      // Made at home 2 days ago: too early to call.
+      { id: "H3", name: "새 밴드", created_at: "2026-10-18T00:00:00Z", created_by: OPERATOR, next_show_at: null, created_via: "home" },
+      // Promoted, its original room later deleted: still counted as promote, not home.
+      { id: "P1", name: "올린 밴드", created_at: "2026-10-01T00:00:00Z", created_by: "u-p1", next_show_at: null, created_via: "promote" },
+      // Exported before v21 (no column): treated as promote.
+      { id: "P2", name: "옛 밴드", created_at: "2026-10-01T00:00:00Z", created_by: "u-p2", next_show_at: null },
+    ],
+    teamMembers: [
+      { team_id: "H1", user_id: "u-h1", role: "owner" },
+      { team_id: "H2", user_id: "u-h2", role: "owner" },
+      { team_id: "H2", user_id: "u-h2-bass", role: "member" },
+      { team_id: "H3", user_id: OPERATOR, role: "owner" },
+      { team_id: "P1", user_id: "u-p1", role: "owner" },
+      { team_id: "P2", user_id: "u-p2", role: "owner" },
+      { team_id: "P2", user_id: "u-p2-drum", role: "member" },
+    ],
+    playlists: [],
+    songs: [],
+    votes: [],
+    comments: [],
+  };
+  const metrics = computeTeamMetrics(homeData, {
+    e2eIds: new Set(),
+    operatorIds: new Set([OPERATOR]),
+    launchDate: null,
+    now: NOW,
+  });
+
+  it("counts bands made at home from teams.created_via, external ones apart", () => {
+    expect(metrics.homeBandsCreated).toBe(3);
+    expect(metrics.externalHomeBandsCreated).toBe(2);
+    expect(metrics.bands.find((band) => band.id === "P2")?.createdVia).toBe("promote");
+  });
+
+  it("counts bands left with the owner alone and no room seven days after creation", () => {
+    // H1 only. P1 is also alone with no room (its room was deleted), so it counts too.
+    expect(metrics.bands.filter((band) => band.emptyAfterSevenDays).map((band) => band.id)).toEqual(["H1", "P1"]);
+    expect(metrics.emptyBandsAfterSevenDays).toBe(2);
+  });
+});
+
 describe("helpers", () => {
   it("uses the KST calendar date", () => {
     expect(kstDate("2026-10-21T14:59:00Z")).toBe("2026-10-21");

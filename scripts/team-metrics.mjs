@@ -12,6 +12,8 @@
 //   - 밴드에서 만든 새 방: playlists.team_linked_via = 'band' (밴드 홈 "새 합주방").
 //     붙인 방('attach')·밴드로 올린 원래 방('promote')은 빠지고, "팀 생성 뒤 만들어 붙인 방"은 따로 출력한다.
 //   - 활동은 투표(votes)·곡 추가(songs)·댓글(comments), 날짜는 KST.
+//   - 홈에서 만든 밴드: teams.created_via = 'home' (v21). 방치된 빈 밴드: 만든 지 7일이 지났는데
+//     멤버가 owner 혼자이고 방이 0개 (CEO2-G, docs/plans/2026-10-06-user-flow-map.md).
 //
 // 환경 변수 (.env 를 읽고 .env.local 이 덮어쓴다. 셸 환경 변수가 가장 우선)
 //   NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY  필수
@@ -26,6 +28,7 @@ import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** 타임스탬프의 KST 달력 날짜 (YYYY-MM-DD). */
 export function kstDate(timestamp) {
@@ -52,18 +55,19 @@ export function parseIdList(value) {
  * 순수 계산. 테스트가 고정 데이터로 부른다.
  *
  * data: { teams, teamMembers, playlists, songs, votes, comments } — DB 행 그대로
- *   teams        { id, name, created_at, created_by, next_show_at }
+ *   teams        { id, name, created_at, created_by, next_show_at, created_via }
  *   teamMembers  { team_id, user_id, role }
  *   playlists    { id, team_id, team_linked_via, creator_user_id, created_at }   (team_id 가 있는 방만)
  *   songs        { id, playlist_id, added_by_user_id, created_at }
  *   votes        { song_id, user_id, created_at }
  *   comments     { song_id, user_id, created_at }
- * options: { e2eIds: Set, operatorIds: Set, launchDate: "YYYY-MM-DD" | null }
+ * options: { e2eIds: Set, operatorIds: Set, launchDate: "YYYY-MM-DD" | null, now?: Date }
  */
 export function computeTeamMetrics(data, options) {
   const e2eIds = options.e2eIds ?? new Set();
   const operatorIds = options.operatorIds ?? new Set();
   const launchMs = options.launchDate ? kstMidnightMs(options.launchDate) : null;
+  const nowMs = (options.now ?? new Date()).getTime();
 
   const membersByTeam = groupBy(data.teamMembers, (row) => row.team_id);
   const roomsByTeam = groupBy(
@@ -125,6 +129,9 @@ export function computeTeamMetrics(data, options) {
       id: team.id,
       name: team.name,
       external: !!ownerId && !operatorIds.has(ownerId),
+      // Rows written before v21 get the column default, so a missing value only means an old export.
+      createdVia: team.created_via ?? "promote",
+      emptyAfterSevenDays: members.length <= 1 && rooms.length === 0 && nowMs - teamCreatedMs >= SEVEN_DAYS_MS,
       memberCount: members.length,
       hasNextShow: !!team.next_show_at,
       maxMemberActiveDays,
@@ -148,6 +155,10 @@ export function computeTeamMetrics(data, options) {
     bandsCreated: bands.length,
     externalBandsCreated: bands.filter((band) => band.external).length,
     bandsWithMemberActiveTwoDays: bands.filter((band) => band.maxMemberActiveDays >= 2).length,
+    // 홈에서 만든 빈 밴드 (CEO2-G)
+    homeBandsCreated: bands.filter((band) => band.createdVia === "home").length,
+    externalHomeBandsCreated: bands.filter((band) => band.createdVia === "home" && band.external).length,
+    emptyBandsAfterSevenDays: bands.filter((band) => band.emptyAfterSevenDays).length,
     // 배포 + 3.5개월
     bandsWithBandRoom: bands.filter((band) => band.bandRoomCount >= 1).length,
     nonCreatorMemberVotesInBandRooms: sum((band) => band.nonCreatorMemberVotes),
@@ -200,7 +211,9 @@ async function selectIn(admin, table, columns, column, ids) {
 
 async function loadData(admin) {
   const [teams, teamMembers, playlists] = await Promise.all([
-    selectAll(() => admin.from("teams").select("id, name, created_at, created_by, next_show_at").order("created_at")),
+    selectAll(() =>
+      admin.from("teams").select("id, name, created_at, created_by, next_show_at, created_via").order("created_at"),
+    ),
     selectAll(() => admin.from("team_members").select("team_id, user_id, role").order("team_id")),
     selectAll(() =>
       admin
@@ -252,6 +265,10 @@ function printReport(metrics, { launchDate, now }) {
   line("만들어진 밴드 (외부)", `${metrics.bandsCreated} (${metrics.externalBandsCreated})`, "목표 ≥ 5 (외부 ≥ 1)");
   line("owner 아닌 멤버가 서로 다른 날 2일 이상 활동한 밴드", metrics.bandsWithMemberActiveTwoDays, "목표 ≥ 2");
 
+  console.log("\n홈에서 만든 빈 밴드 (CEO2-G)");
+  line("홈에서 만든 밴드 (외부)", `${metrics.homeBandsCreated} (${metrics.externalHomeBandsCreated})`);
+  line("만든 지 7일 지나도 owner 혼자 · 방 0개인 밴드", metrics.emptyBandsAfterSevenDays, "멤버를 못 불러 멈춘 밴드");
+
   console.log("\n배포 + 3.5개월 (공연 한 주기)");
   line("밴드에서 만든 새 방이 1개 이상인 밴드", metrics.bandsWithBandRoom, "목표 ≥ 2");
   line("밴드에서 만든 새 방에서 만든 사람 아닌 멤버의 투표", metrics.nonCreatorMemberVotesInBandRooms, "목표 ≥ 1회");
@@ -270,7 +287,8 @@ function printReport(metrics, { launchDate, now }) {
     console.log("\n밴드별");
     for (const band of metrics.bands) {
       console.log(
-        `  ${band.name}${band.external ? " [외부]" : ""} — 멤버 ${band.memberCount}, 새 방 ${band.bandRoomCount}, ` +
+        `  ${band.name}${band.external ? " [외부]" : ""}${band.createdVia === "home" ? " [홈]" : ""} — ` +
+          `멤버 ${band.memberCount}, 새 방 ${band.bandRoomCount}, ` +
           `멤버 최다 활동일 ${band.maxMemberActiveDays}, 새 방 멤버 투표 ${band.nonCreatorMemberVotes}`,
       );
     }
@@ -326,8 +344,9 @@ async function main() {
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
   const data = await loadData(admin);
-  const metrics = computeTeamMetrics(data, { e2eIds, operatorIds, launchDate });
-  printReport(metrics, { launchDate, now: new Date() });
+  const now = new Date();
+  const metrics = computeTeamMetrics(data, { e2eIds, operatorIds, launchDate, now });
+  printReport(metrics, { launchDate, now });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
