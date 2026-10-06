@@ -322,7 +322,7 @@ song_catalog (신규) — 공유 가능한 값만 담는다
 |---|---|---|---|
 | CEO-D2 | 구현 방식 **CEO-B** "팀 우선 최소판". CEO-A(축소안 유지)·CEO-C(원래 7단계) 대비. 승인한 요약문에 "보안 T1~T3 먼저 … 탭 템포는 병렬"이 들어 있어 T1~T4·T6 승계도 이 답이 근거 | "B 팀 우선 최소판" | approved |
 | CEO-D3 | 리뷰 모드 SELECTIVE EXPANSION | "골라 담기" | approved (admin) |
-| CEO-D4 | 밴드는 합주방에서 "이 멤버로 밴드 만들기"로 올린다. 방 만들기 흐름은 그대로 | "A 합주방에서 밴드로 올리기" | approved |
+| CEO-D4 | 밴드는 합주방에서 "이 멤버로 밴드 만들기"로 올린다. 방 만들기 흐름은 그대로 | "A 합주방에서 밴드로 올리기" | approved → **CEO2-A 로 수정** (2026-10-06): 플레이리스트에서 올리기 + 홈에서 바로 만들기(빈 밴드). `docs/plans/2026-10-06-user-flow-map.md` |
 | CEO-E1 | 밴드 홈 "우리가 했던 곡" (팀 방 셋리스트 이력) | "A 이번 계획에 넣기" | approved |
 | CEO-E2 | 다음 공연 D-day (`teams.next_show_at`). 밴드 홈 + 카톡 카드 | "A 이번 계획에 넣기" | approved |
 | CEO-E3 | 새 팀 방에 지난 후보곡 이어받기 | "B TODOS.md 로 미루기" | deferred |
