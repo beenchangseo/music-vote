@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Pin the root to this folder. Without it Next infers the root from the outermost lockfile,
+  // and a stray ~/package-lock.json made Turbopack watch the whole home directory
+  // (dev server ate memory until macOS panicked, 2026-10-06).
+  turbopack: { root: __dirname },
   serverExternalPackages: ["pdfkit"],
   images: {
     remotePatterns: [
