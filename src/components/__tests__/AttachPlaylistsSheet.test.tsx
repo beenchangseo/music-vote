@@ -56,7 +56,7 @@ describe("AttachPlaylistsSheet (DR8, DR9)", () => {
     const onClose = vi.fn();
     const sheet = open(onClose);
     fireEvent.click(await within(sheet).findByRole("button", { name: "「10월 합주」 넣기" }));
-    expect(await within(sheet).findByText("넣었어요 ✓")).toBeInTheDocument();
+    expect(await within(sheet).findByText("넣었어요")).toBeInTheDocument();
     expect(state.attachPlaylistToTeam).toHaveBeenCalledWith("pl-1", TEAM);
     expect(state.track).toHaveBeenCalledWith("team_created", { source: "attach" });
     expect(within(sheet).getByRole("status")).toHaveTextContent("「10월 합주」을 넣었어요");
@@ -77,7 +77,7 @@ describe("AttachPlaylistsSheet (DR8, DR9)", () => {
     expect(await within(sheet).findByText("이미 다른 밴드에 들어 있는 플레이리스트예요")).toBeInTheDocument();
     expect(within(sheet).getByRole("button", { name: "「9월 합주」 넣기" })).toBeEnabled();
     fireEvent.click(within(sheet).getByRole("button", { name: "「10월 합주」 다시 넣기" }));
-    expect(await within(sheet).findByText("넣었어요 ✓")).toBeInTheDocument();
+    expect(await within(sheet).findByText("넣었어요")).toBeInTheDocument();
   });
 
   it("offers to load again when the list cannot be read", async () => {

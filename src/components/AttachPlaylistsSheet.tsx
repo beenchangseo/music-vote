@@ -144,7 +144,13 @@ function SheetBody({ teamId, onAttached, onClose }: { teamId: string; onAttached
                       </p>
                     </div>
                     {row.status === "done" ? (
-                      <span className="inline-flex min-h-11 shrink-0 items-center text-sm font-semibold text-success">넣었어요 ✓</span>
+                      // Same check icon as the band home's success lines, not a text glyph.
+                      <span className="inline-flex min-h-11 shrink-0 items-center gap-1 text-sm font-semibold text-success">
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                        넣었어요
+                      </span>
                     ) : (
                       <Button
                         variant="secondary"
