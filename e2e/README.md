@@ -68,10 +68,12 @@ npx playwright test --list                    # 목록만 (아무것도 실행 �
 | `account-a` | `account-a/room-create.spec.ts` | `/new` 에서 방 만들기 → 방 페이지 도착 | **방 1개** |
 | `account-a` | `account-a/comment.spec.ts` | 고정 방의 곡에 댓글 쓰기 → 고치기 → 지우기 → 새로고침 뒤에도 없음 (DB 로도 확인) | **댓글 1개** |
 | `account-a` | `account-a/band.spec.ts` | 방 → 방 설정에서 밴드 만들기 → 초대 시트 링크 → account-b 가 `/join` 으로 가입 → 밴드 홈 "새 합주방" → account-b 홈에 밴드·새 방 → 링크 새로 만들기 뒤 옛 `/join` 무효·밴드 주소는 그대로 → account-b 밴드 나가기. account-b 는 같은 테스트 안의 별도 컨텍스트로 쓰고 로그인 상태를 되씁니다 | **방 2개·밴드 1개** |
+| `account-a` | `account-a/band-home.spec.ts` | 로그인 홈 "새 밴드" → 멤버 없이 빈 밴드 → 밴드 홈 시작 영역(첫 플레이리스트 링크 · 초대 입구 하나) → DB 에 `created_via = 'home'`, 멤버 1명. account-a 의 실제 플레이리스트는 시트에서 읽기만 하고 넣지 않아요 | **밴드 1개** |
 | `account-b` | `account-b/session.spec.ts` | 두 번째 계정 로그인 상태가 살아 있음 | 없음 |
+| `account-b` | `account-b/home.spec.ts` | 처음 로그인한 사람의 홈(상태 A): "어떻게 시작할까요?" + 두 선택지. 시작 전에 account-b 가 비어 있는지 DB 로 확인하고, 남은 게 있으면 그 목록을 적고 실패해요 | 없음 |
 | `account-b` | `account-b/band-guest.spec.ts` | 비멤버가 보는 밴드 화면: `/band/{id}` 멤버 전용 안내, `/new?band=` 거부·없는 밴드, `/join/{code}?join=1` 이 쿠키 없이 가입하지 않음, 죽은 초대 링크, 로그아웃 상태의 로그인 안내 | **밴드 1개** (service_role 로 넣고 지움) |
 
-밴드 스펙 둘은 v19(`teams`) 가 운영 DB 에 없으면 스스로 건너뜁니다. 둘 다 `E2E_ACCOUNT_IDS` 에 두 계정이 모두 있어야 돌아요.
+밴드 스펙은 v19(`teams`) 가 운영 DB 에 없으면 스스로 건너뜁니다. `band-home.spec.ts` 는 v21(`teams.created_via`) 이 없을 때 건너뛰어요. 밴드 스펙은 `E2E_ACCOUNT_IDS` 에 해당 계정이 있어야 돌아요.
 
 ¹ 로그인한 계정이 방을 열면 앱이 `playlist_members` 에 그 계정을 한 줄 등록합니다(멱등). 테스트 계정이라
 지표에서 빠지는 대상이에요.
