@@ -37,8 +37,8 @@ const props = (band?: string) => ({ searchParams: Promise.resolve(band ? { band 
 
 beforeEach(() => {
   state.getCurrentUser.mockReset().mockResolvedValue(ME);
-  state.getMyPlaylists.mockReset().mockResolvedValue([]);
-  state.getMyTeams.mockReset().mockResolvedValue([]);
+  state.getMyPlaylists.mockReset().mockResolvedValue({ playlists: [], failed: false });
+  state.getMyTeams.mockReset().mockResolvedValue({ teams: [], failed: false });
   state.getTeamHome.mockReset();
   state.formProps = [];
 });
@@ -47,7 +47,10 @@ afterEach(cleanup);
 
 describe("/new?band=", () => {
   it("shows the band label and creates inside the band for a member", async () => {
-    state.getMyTeams.mockResolvedValue([{ id: TEAM, name: "일코해제", nextShowAt: "2026-10-16", role: "member", roomCount: 2 }]);
+    state.getMyTeams.mockResolvedValue({
+      teams: [{ id: TEAM, name: "일코해제", nextShowAt: "2026-10-16", role: "member", roomCount: 2 }],
+      failed: false,
+    });
     render(await NewPlaylistPage(props(TEAM)));
     expect(screen.getByText("일코해제의 플레이리스트")).toBeInTheDocument();
     // 17A: a label, not a control.
@@ -82,9 +85,17 @@ describe("/new?band=", () => {
 
   it("passes my bands to the plain form for the completion screen (13A)", async () => {
     const mine = [{ id: TEAM, name: "일코해제", nextShowAt: null, role: "owner", roomCount: 1 }];
-    state.getMyTeams.mockResolvedValue(mine);
+    state.getMyTeams.mockResolvedValue({ teams: mine, failed: false });
     render(await NewPlaylistPage(props()));
     expect(state.formProps[0]).toMatchObject({ band: null, myTeams: mine });
     expect(screen.queryByText("일코해제의 플레이리스트")).not.toBeInTheDocument();
+  });
+
+  it("still shows the form without bands when the lookups fail (eng E1)", async () => {
+    state.getMyPlaylists.mockResolvedValue({ playlists: [], failed: true });
+    state.getMyTeams.mockResolvedValue({ teams: [], failed: true });
+    render(await NewPlaylistPage(props()));
+    expect(screen.getByRole("form", { name: "플레이리스트 만들기 폼" })).toBeInTheDocument();
+    expect(state.formProps[0]).toMatchObject({ band: null, myTeams: [] });
   });
 });

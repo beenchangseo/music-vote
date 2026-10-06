@@ -39,36 +39,59 @@ export interface MyPlaylistDbEntry {
   teamName: string | null;
   /** 홈 타일 커버 모자이크: 최근에 올라온 곡 썸네일 최대 4개. */
   coverThumbs: string[];
+  /** 내가 만든(방장인) 플레이리스트인지. 홈 카드 · 새 밴드 시트의 대상 판정. */
+  isMine: boolean;
+  /** 이 플레이리스트가 속한 밴드. 밴드 밖이면 null (내가 멤버가 아닌 밴드여도 id 는 채운다). */
+  teamId: string | null;
+  /** 로그인 참여자 수(나 포함). 내가 만든 플레이리스트만 센다. 그 밖에는 0. */
+  memberCount: number;
+  /** 나를 뺀 참여자 이름 앞 3명, 들어온 순서. 내가 만든 플레이리스트만. 홈 카드 문구(DR5). */
+  memberPreview: string[];
+}
+
+export interface MyPlaylistsResult {
+  playlists: MyPlaylistDbEntry[];
+  /** 세 묶음 중 하나라도 조회에 실패했는지. 홈은 '없음'과 구분해 오류를 보인다(DR7, eng E1). */
+  failed: boolean;
 }
 
 type MyPlaylistSongRow = { thumbnail_url: string | null; created_at: string };
+type MyPlaylistMemberRow = { user_id: string; display_name: string; joined_at: string | null };
 type MyPlaylistRow = {
   id: string;
   share_code: string;
   title: string;
   created_at: string;
+  team_id: string | null;
+  creator_user_id: string | null;
   songs?: MyPlaylistSongRow | MyPlaylistSongRow[] | null;
+  playlist_members?: MyPlaylistMemberRow | MyPlaylistMemberRow[] | null;
 };
 type MyTeamRow = { name: string; playlists: MyPlaylistRow | MyPlaylistRow[] | null };
 
 // Song thumbnails ride along in the same nested select (still one round trip, eng D5).
-const MY_PLAYLIST_COLUMNS = "id, share_code, title, created_at, songs(thumbnail_url, created_at)";
+const MY_PLAYLIST_COLUMNS =
+  "id, share_code, title, created_at, team_id, creator_user_id, songs(thumbnail_url, created_at)";
+// Only my own rooms need their participants (home card, new-band sheet). Same round trip.
+const MY_CREATED_COLUMNS = `${MY_PLAYLIST_COLUMNS}, playlist_members(user_id, display_name, joined_at)`;
+const MEMBER_PREVIEW_SIZE = 3;
 
 /**
  * 홈 "내 합주방": 내가 만든 방 ∪ 참여자로 들어간 방 ∪ 내 밴드의 방.
- * id 로 중복을 없애고 created_at 내림차순. 비로그인 시 빈 배열.
+ * id 로 중복을 없애고 created_at 내림차순. 비로그인 시 빈 목록.
  *
  * 세 집합은 FK 중첩 select 로 한 번의 Promise.all 에 읽는다 (eng D5, 왕복 1번).
- * 한 집합의 조회가 실패해도 나머지 집합은 보여준다 (+ console.error).
+ * 한 집합의 조회가 실패해도 나머지 집합은 보여주고 failed 를 켠다 (+ console.error).
+ * 부르는 곳이 failed 를 어떻게 다룰지 정한다: 홈은 오류 화면(DR7), /new 와 플레이리스트는 빈 것으로.
  */
-export async function getMyPlaylists(): Promise<MyPlaylistDbEntry[]> {
+export async function getMyPlaylists(): Promise<MyPlaylistsResult> {
   // The user comes from the session; playlists itself is read with service_role
   // because the public key can no longer select it (v18).
   const user = await getCurrentUser();
-  if (!user) return [];
+  if (!user) return { playlists: [], failed: false };
   const admin = createAdminClient();
   const [created, joined, teams] = await Promise.all([
-    admin.from("playlists").select(MY_PLAYLIST_COLUMNS).eq("creator_user_id", user.id),
+    admin.from("playlists").select(MY_CREATED_COLUMNS).eq("creator_user_id", user.id),
     admin.from("playlist_members").select(`playlists(${MY_PLAYLIST_COLUMNS})`).eq("user_id", user.id),
     admin.from("team_members").select(`teams(name, playlists(${MY_PLAYLIST_COLUMNS}))`).eq("user_id", user.id),
   ]);
@@ -94,6 +117,13 @@ export async function getMyPlaylists(): Promise<MyPlaylistDbEntry[]> {
       .slice()
       .sort((a, b) => b.created_at.localeCompare(a.created_at))
       .map((song) => ({ thumbnailUrl: song.thumbnail_url }));
+    const isMine = room.creator_user_id === user.id;
+    // Participants come only with my own rooms (MY_CREATED_COLUMNS).
+    const members = isMine
+      ? nestedRows(room.playlist_members)
+          .slice()
+          .sort((a, b) => (a.joined_at ?? "").localeCompare(b.joined_at ?? ""))
+      : [];
     byId.set(room.id, {
       id: room.id,
       shareCode: room.share_code,
@@ -101,6 +131,13 @@ export async function getMyPlaylists(): Promise<MyPlaylistDbEntry[]> {
       createdAt: room.created_at,
       teamName,
       coverThumbs: roomCoverThumbs([], newestFirst),
+      isMine,
+      teamId: room.team_id,
+      memberCount: members.length,
+      memberPreview: members
+        .filter((member) => member.user_id !== user.id)
+        .slice(0, MEMBER_PREVIEW_SIZE)
+        .map((member) => member.display_name),
     });
   };
 
@@ -120,7 +157,10 @@ export async function getMyPlaylists(): Promise<MyPlaylistDbEntry[]> {
     }
   }
 
-  return [...byId.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return {
+    playlists: [...byId.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    failed: Boolean(created.error || joined.error || teams.error),
+  };
 }
 
 export async function createPlaylist(

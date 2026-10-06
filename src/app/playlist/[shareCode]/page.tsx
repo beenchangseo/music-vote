@@ -178,7 +178,8 @@ export default async function PlaylistPage({ params }: PageProps) {
         .select("song_id, comment_count, version_count")
         .eq("playlist_id", playlist.id),
       teamId ? loadRoomBand(admin, teamId, currentUser?.id ?? null) : Promise.resolve(null),
-      wantsBandPrompt ? getMyTeams() : Promise.resolve([] as MyTeam[]),
+      // A failed lookup shows as "no bands" here (eng E1): only the attach row and card hide.
+      wantsBandPrompt ? getMyTeams().then((result) => result.teams) : Promise.resolve([] as MyTeam[]),
       // Logged-in members of the room, not voters (playlist_stats.participant_count counts voters, v15:101).
       wantsBandPrompt
         ? admin.from("playlist_members").select("user_id", { count: "exact", head: true }).eq("playlist_id", playlist.id)

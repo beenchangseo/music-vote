@@ -24,7 +24,9 @@ export default async function Home({ searchParams }: HomeProps) {
   ]);
   const loggedIn = !!user;
   // Rooms and bands in one round trip (eng D5).
-  const [dbPlaylists, myTeams] = loggedIn ? await Promise.all([getMyPlaylists(), getMyTeams()]) : [[], []];
+  const [{ playlists: dbPlaylists }, { teams: myTeams }] = loggedIn
+    ? await Promise.all([getMyPlaylists(), getMyTeams()])
+    : [{ playlists: [] }, { teams: [] }];
 
   // Returning users get their own home (Spotify / YouTube Music home): no landing pitch in the way.
   if (user) {

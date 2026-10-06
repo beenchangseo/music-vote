@@ -22,7 +22,10 @@ export default async function NewPlaylistPage({ searchParams }: PageProps) {
   const [user, query] = await Promise.all([getCurrentUser(), searchParams]);
   const bandId = typeof query.band === "string" && query.band ? query.band : null;
   // My bands ride on the same round trip as my rooms (eng 3회차 13A correction).
-  const [dbPlaylists, myTeams] = user ? await Promise.all([getMyPlaylists(), getMyTeams()]) : [[], []];
+  // A failed lookup shows as empty here (eng E1): the form still works, only the lists are missing.
+  const [{ playlists: dbPlaylists }, { teams: myTeams }] = user
+    ? await Promise.all([getMyPlaylists(), getMyTeams()])
+    : [{ playlists: [] }, { teams: [] }];
 
   // /new?band={teamId} (R10). A band I belong to is in myTeams; otherwise tell "missing" from
   // "not a member" without offering any way in (a teamId cannot invite).

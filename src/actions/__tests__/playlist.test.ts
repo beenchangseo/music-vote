@@ -192,24 +192,47 @@ describe("getMyPlaylists", () => {
   it("returns an empty list without querying when nobody is logged in", async () => {
     state.getCurrentUser.mockResolvedValue(null);
 
-    await expect(getMyPlaylists()).resolves.toEqual([]);
+    await expect(getMyPlaylists()).resolves.toEqual({ playlists: [], failed: false });
     expect(state.admin.ops).toEqual([]);
   });
 
-  const room = (id: string, createdAt: string) => ({
+  const room = (id: string, createdAt: string, extra: Record<string, unknown> = {}) => ({
     id,
     share_code: `code-${id}`,
     title: `방 ${id}`,
     created_at: createdAt,
+    team_id: null,
+    creator_user_id: "user-other",
+    ...extra,
   });
-  const entry = (id: string, createdAt: string, teamName: string | null = null, coverThumbs: string[] = []) => ({
+  /** A room I created, as the created set returns it. */
+  const mine = (id: string, createdAt: string, extra: Record<string, unknown> = {}) =>
+    room(id, createdAt, { creator_user_id: USER.id, ...extra });
+  const entry = (
+    id: string,
+    createdAt: string,
+    teamName: string | null = null,
+    extra: Partial<{
+      coverThumbs: string[];
+      isMine: boolean;
+      teamId: string | null;
+      memberCount: number;
+      memberPreview: string[];
+    }> = {},
+  ) => ({
     id,
     shareCode: `code-${id}`,
     title: `방 ${id}`,
     createdAt,
     teamName,
-    coverThumbs,
+    coverThumbs: [],
+    isMine: false,
+    teamId: null,
+    memberCount: 0,
+    memberPreview: [],
+    ...extra,
   });
+  const list = (...playlists: ReturnType<typeof entry>[]) => ({ playlists, failed: false });
 
   /** Responds per set: created (playlists), joined (playlist_members), team (team_members). */
   function sets(results: { created?: FakeResult; joined?: FakeResult; teams?: FakeResult }) {
@@ -223,9 +246,9 @@ describe("getMyPlaylists", () => {
 
   it("reads the three sets for the session user in one round trip through the admin client", async () => {
     state.getCurrentUser.mockResolvedValue(USER);
-    state.admin = createFakeClient(sets({ created: ok([room("pl-1", "2026-10-01")]) }));
+    state.admin = createFakeClient(sets({ created: ok([mine("pl-1", "2026-10-01")]) }));
 
-    await expect(getMyPlaylists()).resolves.toEqual([entry("pl-1", "2026-10-01")]);
+    await expect(getMyPlaylists()).resolves.toEqual(list(entry("pl-1", "2026-10-01", null, { isMine: true })));
 
     expect(state.admin.ops.map((op) => [op.table, op.action, op.filters])).toEqual([
       ["playlists", "select", { creator_user_id: USER.id }],
@@ -236,6 +259,11 @@ describe("getMyPlaylists", () => {
     expect(state.admin.ops[0].columns).toContain("songs(thumbnail_url, created_at)");
     expect(state.admin.ops[1].columns).toContain("playlists(");
     expect(state.admin.ops[2].columns).toContain("teams(name, playlists(");
+    // Band and owner columns for the home card; participants only with my own rooms (DR4 · DR5).
+    for (const op of state.admin.ops) expect(op.columns).toContain("team_id, creator_user_id");
+    expect(state.admin.ops[0].columns).toContain("playlist_members(user_id, display_name, joined_at)");
+    expect(state.admin.ops[1].columns).not.toContain("playlist_members(");
+    expect(state.admin.ops[2].columns).not.toContain("playlist_members(");
     // The session client cannot select playlists after v18.
     expect(state.session.ops).toEqual([]);
   });
@@ -244,26 +272,64 @@ describe("getMyPlaylists", () => {
     state.getCurrentUser.mockResolvedValue(USER);
     state.admin = createFakeClient(
       sets({
-        created: ok([room("mine", "2026-10-01"), room("shared", "2026-09-01")]),
-        joined: ok([{ playlists: room("joined", "2026-10-03") }, { playlists: room("shared", "2026-09-01") }]),
+        created: ok([mine("mine", "2026-10-01"), mine("shared", "2026-09-01", { team_id: "team-1" })]),
+        joined: ok([
+          { playlists: room("joined", "2026-10-03") },
+          { playlists: mine("shared", "2026-09-01", { team_id: "team-1" }) },
+        ]),
         teams: ok([
           {
             teams: {
               name: "일코해제",
-              playlists: [room("band-new", "2026-10-05"), room("shared", "2026-09-01")],
+              playlists: [
+                room("band-new", "2026-10-05", { team_id: "team-1" }),
+                mine("shared", "2026-09-01", { team_id: "team-1" }),
+              ],
             },
           },
         ]),
       }),
     );
 
-    await expect(getMyPlaylists()).resolves.toEqual([
-      entry("band-new", "2026-10-05", "일코해제"),
-      entry("joined", "2026-10-03"),
-      entry("mine", "2026-10-01"),
-      // In several sets: listed once, with the band caption from the team set.
-      entry("shared", "2026-09-01", "일코해제"),
-    ]);
+    await expect(getMyPlaylists()).resolves.toEqual(
+      list(
+        entry("band-new", "2026-10-05", "일코해제", { teamId: "team-1" }),
+        entry("joined", "2026-10-03"),
+        entry("mine", "2026-10-01", null, { isMine: true }),
+        // In several sets: listed once, with the band caption from the team set.
+        entry("shared", "2026-09-01", "일코해제", { isMine: true, teamId: "team-1" }),
+      ),
+    );
+  });
+
+  it("counts the participants of my own rooms and previews up to three others in join order (DR5)", async () => {
+    state.getCurrentUser.mockResolvedValue(USER);
+    const member = (user_id: string, display_name: string, joined_at: string) => ({ user_id, display_name, joined_at });
+    state.admin = createFakeClient(
+      sets({
+        created: ok([
+          mine("pl-1", "2026-10-01", {
+            playlist_members: [
+              member("user-d", "드럼", "2026-10-01T04:00:00Z"),
+              member(USER.id, "보컬", "2026-10-01T00:00:00Z"),
+              member("user-g", "기타", "2026-10-01T01:00:00Z"),
+              member("user-k", "키보드", "2026-10-01T05:00:00Z"),
+              member("user-b", "베이스", "2026-10-01T02:00:00Z"),
+            ],
+          }),
+          // A participant-only room never carries member data (not mine).
+        ]),
+        joined: ok([{ playlists: room("theirs", "2026-09-30", { playlist_members: [member("x", "엑스", "2026-09-30")] }) }]),
+      }),
+    );
+
+    const { playlists } = await getMyPlaylists();
+    expect(playlists.find((p) => p.id === "pl-1")).toMatchObject({
+      isMine: true,
+      memberCount: 5,
+      memberPreview: ["기타", "베이스", "드럼"],
+    });
+    expect(playlists.find((p) => p.id === "theirs")).toMatchObject({ isMine: false, memberCount: 0, memberPreview: [] });
   });
 
   it("builds the home tile cover from the newest song pictures, each once, at most four", async () => {
@@ -272,8 +338,7 @@ describe("getMyPlaylists", () => {
     state.admin = createFakeClient(
       sets({
         created: ok([
-          {
-            ...room("pl-1", "2026-10-01"),
+          mine("pl-1", "2026-10-01", {
             songs: [
               song("t-old", "2026-10-01T01:00:00Z"),
               song("t-new", "2026-10-01T05:00:00Z"),
@@ -283,14 +348,14 @@ describe("getMyPlaylists", () => {
               song("t-4", "2026-10-01T02:30:00Z"),
               song("t-5", "2026-10-01T00:30:00Z"),
             ],
-          },
+          }),
         ]),
       }),
     );
 
-    await expect(getMyPlaylists()).resolves.toEqual([
-      entry("pl-1", "2026-10-01", null, ["t-new", "t-mid", "t-4", "t-old"]),
-    ]);
+    await expect(getMyPlaylists()).resolves.toEqual(
+      list(entry("pl-1", "2026-10-01", null, { isMine: true, coverThumbs: ["t-new", "t-mid", "t-4", "t-old"] })),
+    );
   });
 
   it.each([
@@ -302,7 +367,7 @@ describe("getMyPlaylists", () => {
     state.admin = createFakeClient(sets({ joined: ok([row]) }));
 
     const expected = row.playlists ? [entry("a", "2026-10-02")] : [];
-    await expect(getMyPlaylists()).resolves.toEqual(expected);
+    await expect(getMyPlaylists()).resolves.toEqual(list(...expected));
   });
 
   it.each([
@@ -315,24 +380,24 @@ describe("getMyPlaylists", () => {
 
     const teams = row.teams === null ? [] : Array.isArray(row.teams) ? row.teams : [row.teams];
     const expected = teams.some((team) => team.playlists) ? [entry("t", "2026-10-02", "밴드")] : [];
-    await expect(getMyPlaylists()).resolves.toEqual(expected);
+    await expect(getMyPlaylists()).resolves.toEqual(list(...expected));
   });
 
-  it("keeps the other sets and logs when one query fails", async () => {
+  it("keeps the other sets, logs and reports the failure when one query fails (eng E1)", async () => {
     state.getCurrentUser.mockResolvedValue(USER);
     state.admin = createFakeClient(
       sets({
-        created: ok([room("mine", "2026-10-01")]),
+        created: ok([mine("mine", "2026-10-01")]),
         joined: { data: null, error: { code: "57014", message: "timeout" } },
         teams: ok([{ teams: { name: "일코해제", playlists: [room("band", "2026-10-02")] } }]),
       }),
     );
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    await expect(getMyPlaylists()).resolves.toEqual([
-      entry("band", "2026-10-02", "일코해제"),
-      entry("mine", "2026-10-01"),
-    ]);
+    await expect(getMyPlaylists()).resolves.toEqual({
+      playlists: [entry("band", "2026-10-02", "일코해제"), entry("mine", "2026-10-01", null, { isMine: true })],
+      failed: true,
+    });
     expect(log).toHaveBeenCalledWith(
       expect.stringContaining("joined"),
       expect.objectContaining({ userId: USER.id, code: "57014" }),
@@ -349,13 +414,12 @@ describe("getMyPlaylists", () => {
         teams: ok([{ teams: { name: "일코해제", playlists: [room("entered", "2026-10-01"), room("never-opened", "2026-10-02")] } }]),
       }),
     );
-    await expect(getMyPlaylists()).resolves.toEqual([
-      entry("never-opened", "2026-10-02", "일코해제"),
-      entry("entered", "2026-10-01", "일코해제"),
-    ]);
+    await expect(getMyPlaylists()).resolves.toEqual(
+      list(entry("never-opened", "2026-10-02", "일코해제"), entry("entered", "2026-10-01", "일코해제")),
+    );
 
     // After: no team_members row. The room I entered stays (without the band caption).
     state.admin = createFakeClient(sets({ joined: ok([{ playlists: room("entered", "2026-10-01") }]) }));
-    await expect(getMyPlaylists()).resolves.toEqual([entry("entered", "2026-10-01")]);
+    await expect(getMyPlaylists()).resolves.toEqual(list(entry("entered", "2026-10-01")));
   });
 });

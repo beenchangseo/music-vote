@@ -23,6 +23,7 @@ vi.mock("nanoid", () => ({ nanoid: state.nanoid }));
 import {
   attachPlaylistToTeam,
   createBandPlaylist,
+  createTeam,
   createTeamFromPlaylist,
   getMyTeams,
   getTeamHome,
@@ -148,7 +149,12 @@ describe("createTeamFromPlaylist", () => {
 
     expect(state.assertPlaylistWritable).toHaveBeenCalledWith(ROOM);
     const [teamInsert] = opsFor("teams", "insert");
-    expect(teamInsert.row).toEqual({ name: "일코해제", invite_code: "invite-1", created_by: ME.id });
+    expect(teamInsert.row).toEqual({
+      name: "일코해제",
+      invite_code: "invite-1",
+      created_by: ME.id,
+      created_via: "promote",
+    });
     expect(teamInsert.returning).toBe(true);
 
     const [membersInsert] = opsFor("team_members", "insert");
@@ -291,6 +297,78 @@ describe("createTeamFromPlaylist", () => {
     );
     // Never log nicknames.
     expect(JSON.stringify(log.mock.calls)).not.toContain(ME.nickname);
+  });
+});
+
+// ============================================================
+// createTeam (홈의 빈 밴드)
+// ============================================================
+
+describe("createTeam", () => {
+  function happyPath(overrides: Record<string, Handler> = {}) {
+    return router({ "teams:insert": ok({ id: TEAM }), "team_members:insert": ok(), ...overrides });
+  }
+
+  it("requires a logged-in user", async () => {
+    state.getCurrentUser.mockResolvedValue(null);
+    await expect(createTeam("일코해제")).resolves.toEqual({ success: false, reason: "not_logged_in" });
+    expect(state.admin.ops).toEqual([]);
+  });
+
+  it.each([
+    ["51 characters", "가".repeat(51)],
+    ["only spaces", "   "],
+  ])("rejects a band name of %s before touching the database", async (_label, name) => {
+    await expect(createTeam(name)).resolves.toEqual({ success: false, reason: "invalid_name" });
+    expect(state.admin.ops).toEqual([]);
+  });
+
+  it("creates a band from home with the caller as its only member", async () => {
+    state.admin = createFakeClient(happyPath());
+
+    await expect(createTeam("  일코해제  ")).resolves.toEqual({ success: true, teamId: TEAM });
+
+    const [teamInsert] = opsFor("teams", "insert");
+    expect(teamInsert.row).toEqual({
+      name: "일코해제",
+      invite_code: "invite-1",
+      created_by: ME.id,
+      created_via: "home",
+    });
+    const [ownerInsert] = opsFor("team_members", "insert");
+    expect(ownerInsert.row).toEqual({ team_id: TEAM, user_id: ME.id, display_name: ME.nickname, role: "owner" });
+    expect(indexOf("teams", "insert")).toBeLessThan(indexOf("team_members", "insert"));
+    // No room is touched: the band starts empty.
+    expect(state.admin.ops.filter((op) => op.table === "playlists")).toEqual([]);
+    expect(opsFor("teams", "delete")).toEqual([]);
+  });
+
+  it("accepts a 50-character name", async () => {
+    state.admin = createFakeClient(happyPath());
+    await expect(createTeam("가".repeat(50))).resolves.toMatchObject({ success: true });
+  });
+
+  it("retries with a fresh invite code when the first one collides (23505)", async () => {
+    state.admin = createFakeClient(happyPath({ "teams:insert": [collision, ok({ id: TEAM })] }));
+    await expect(createTeam("일코해제")).resolves.toMatchObject({ success: true });
+    expect(opsFor("teams", "insert").map((op) => op.row?.invite_code)).toEqual(["invite-1", "invite-2"]);
+  });
+
+  it("deletes the new band when the owner row cannot be written", async () => {
+    state.admin = createFakeClient(happyPath({ "team_members:insert": dbError() }));
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await expect(createTeam("일코해제")).resolves.toEqual({ success: false, reason: "write_failed" });
+    expect(opsFor("teams", "delete")[0].filters).toEqual({ id: TEAM });
+    expect(JSON.stringify(log.mock.calls)).not.toContain(ME.nickname);
+  });
+
+  it("reports a failed team insert without writing members", async () => {
+    state.admin = createFakeClient(happyPath({ "teams:insert": dbError() }));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await expect(createTeam("일코해제")).resolves.toEqual({ success: false, reason: "write_failed" });
+    expect(opsFor("team_members", "insert")).toEqual([]);
   });
 });
 
@@ -699,7 +777,7 @@ describe("getTeamHome", () => {
 describe("getMyTeams", () => {
   it("returns an empty list without querying when nobody is logged in", async () => {
     state.getCurrentUser.mockResolvedValue(null);
-    await expect(getMyTeams()).resolves.toEqual([]);
+    await expect(getMyTeams()).resolves.toEqual({ teams: [], failed: false });
     expect(state.admin.ops).toEqual([]);
   });
 
@@ -723,19 +801,22 @@ describe("getMyTeams", () => {
       }),
     );
 
-    await expect(getMyTeams()).resolves.toEqual([
-      { id: "t-2", name: "산울림", nextShowAt: null, role: "member", roomCount: 1 },
-      { id: "t-3", name: "빈 밴드", nextShowAt: null, role: "member", roomCount: 0 },
-      { id: "t-1", name: "일코해제", nextShowAt: "2026-10-16", role: "owner", roomCount: 3 },
-    ]);
+    await expect(getMyTeams()).resolves.toEqual({
+      teams: [
+        { id: "t-2", name: "산울림", nextShowAt: null, role: "member", roomCount: 1 },
+        { id: "t-3", name: "빈 밴드", nextShowAt: null, role: "member", roomCount: 0 },
+        { id: "t-1", name: "일코해제", nextShowAt: "2026-10-16", role: "owner", roomCount: 3 },
+      ],
+      failed: false,
+    });
     expect(state.admin.ops).toHaveLength(1);
     expect(state.admin.ops[0].filters).toEqual({ user_id: ME.id });
   });
 
-  it("falls back to an empty list and logs when the query fails", async () => {
+  it("reports the failure with an empty list and logs when the query fails (eng E1)", async () => {
     state.admin = createFakeClient(router({ "team_members:select": dbError() }));
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
-    await expect(getMyTeams()).resolves.toEqual([]);
+    await expect(getMyTeams()).resolves.toEqual({ teams: [], failed: true });
     expect(log).toHaveBeenCalled();
   });
 });

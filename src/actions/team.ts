@@ -12,6 +12,7 @@
   - console.error 에는 액션 이름과 id 만 남긴다. 닉네임은 남기지 않는다.
 
   액션별 권한 (계획 "HOLD SCOPE 점검" 표):
+    createTeam              로그인 (홈의 빈 밴드, 누른 사람이 owner 혼자)
     createTeamFromPlaylist  로그인 · 방장 · assertPlaylistWritable
     attachPlaylistToTeam    로그인 · 방장 그리고 그 밴드 멤버 · assertPlaylistWritable
     joinTeam                로그인 · 유효한 초대 코드
@@ -61,6 +62,11 @@ export type CreateTeamFromPlaylistResult = ActionResult<
   | "already_in_team"
   | "invite_code_conflict"
   | "write_failed"
+>;
+
+export type CreateTeamResult = ActionResult<
+  { teamId: string },
+  "not_logged_in" | "invalid_name" | "invite_code_conflict" | "write_failed"
 >;
 
 export type JoinTeamResult = ActionResult<
@@ -339,7 +345,7 @@ export async function createTeamFromPlaylist(
   const created = await withFreshInviteCode<{ id: string }>((code) =>
     admin
       .from("teams")
-      .insert({ name: teamName, invite_code: code, created_by: user.id })
+      .insert({ name: teamName, invite_code: code, created_by: user.id, created_via: "promote" })
       .select("id")
       .single(),
   );
@@ -384,6 +390,55 @@ export async function createTeamFromPlaylist(
 
   revalidatePath(`/playlist/${room.share_code}`);
   return { success: true, teamId, name: teamName, inviteCode: created.code, memberCount: memberRows.length };
+}
+
+// ============================================================
+// 빈 밴드 만들기 (홈, CEO2-A)
+// ============================================================
+
+/**
+ * 홈의 "새 밴드" → "멤버 없이 새 밴드로 시작". 플레이리스트 없이 누른 사람 혼자인 밴드를 만든다.
+ * 멤버는 초대 링크로만 들어온다.
+ *
+ *   검증(로그인·이름) ─▶ 1. teams insert (created_via 'home', 초대 코드 23505 재시도)
+ *     ─▶ 2. team_members insert (owner 한 줄)
+ *   2 가 실패하면 1 의 teams 행을 지운다. owner 없는 밴드는 아무도 볼 수 없는 고아다.
+ */
+export async function createTeam(name: string): Promise<CreateTeamResult> {
+  const action = "createTeam";
+  const user = await getCurrentUser();
+  if (!user) return fail("not_logged_in");
+  const teamName = validateTeamName(name);
+  if (!teamName) return fail("invalid_name");
+
+  const admin = createAdminClient();
+  // 1. teams
+  const created = await withFreshInviteCode<{ id: string }>((code) =>
+    admin
+      .from("teams")
+      .insert({ name: teamName, invite_code: code, created_by: user.id, created_via: "home" })
+      .select("id")
+      .single(),
+  );
+  if (!created.ok || !created.data) {
+    const reason = created.ok ? "write_failed" : created.reason;
+    logTeamError(action, "team insert failed", { userId: user.id }, created.ok ? null : created.error);
+    return fail(reason);
+  }
+  const teamId = created.data.id;
+
+  // 2. The caller is the owner and, for now, the only member.
+  const { error: ownerError } = await admin
+    .from("team_members")
+    .insert({ team_id: teamId, user_id: user.id, display_name: user.nickname, role: "owner" });
+  if (ownerError) {
+    logTeamError(action, "owner insert failed", { teamId, userId: user.id }, ownerError);
+    await rollbackTeam(admin, action, teamId);
+    return fail("write_failed");
+  }
+
+  revalidatePath("/");
+  return { success: true, teamId };
 }
 
 // ============================================================
@@ -693,13 +748,19 @@ export async function getTeamHome(teamId: string): Promise<TeamHomeView | null> 
   };
 }
 
+export interface MyTeamsResult {
+  teams: MyTeam[];
+  /** 조회 실패. 홈은 '밴드 없음'과 구분해 오류를 보인다(DR7, eng E1). */
+  failed: boolean;
+}
+
 /**
- * 홈 "내 밴드"와 방 설정의 "이 플레이리스트를 내 밴드에 넣기" 후보. 비로그인은 빈 배열.
- * 조회가 실패해도 홈을 깨지 않도록 빈 배열 + console.error.
+ * 홈 "내 밴드"와 방 설정의 "이 플레이리스트를 내 밴드에 넣기" 후보. 비로그인은 빈 목록.
+ * 조회가 실패하면 빈 목록 + failed (+ console.error). 부르는 곳이 failed 를 어떻게 다룰지 정한다.
  */
-export async function getMyTeams(): Promise<MyTeam[]> {
+export async function getMyTeams(): Promise<MyTeamsResult> {
   const user = await getCurrentUser();
-  if (!user) return [];
+  if (!user) return { teams: [], failed: false };
 
   const admin = createAdminClient();
   const { data, error } = await admin
@@ -708,7 +769,7 @@ export async function getMyTeams(): Promise<MyTeam[]> {
     .eq("user_id", user.id);
   if (error) {
     logTeamError("getMyTeams", "lookup failed", { userId: user.id }, error);
-    return [];
+    return { teams: [], failed: true };
   }
 
   type TeamRow = {
@@ -719,7 +780,7 @@ export async function getMyTeams(): Promise<MyTeam[]> {
   };
   type Row = { role: TeamRole; joined_at: string | null; teams: TeamRow | TeamRow[] | null };
 
-  return ((data ?? []) as Row[])
+  const teams = ((data ?? []) as Row[])
     .flatMap((row) =>
       nestedRows(row.teams).map((team) => ({
         joinedAt: row.joined_at ?? "",
@@ -734,6 +795,7 @@ export async function getMyTeams(): Promise<MyTeam[]> {
     )
     .sort((a, b) => b.joinedAt.localeCompare(a.joinedAt))
     .map((entry) => entry.team);
+  return { teams, failed: false };
 }
 
 // ============================================================
