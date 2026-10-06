@@ -167,7 +167,7 @@ describe("BandHomeClient primary action (1A)", () => {
     const lone = ownerView({ members: [ownerView().members[0]], rooms: [room()] });
     renderHome(lone);
     const card = screen.getByText("멤버를 불러야 같이 투표해요").closest("div")!.parentElement!;
-    fireEvent.click(within(card).getByRole("button", { name: "닫기" }));
+    fireEvent.click(within(card).getByRole("button", { name: "안내 닫기" }));
     expect(screen.queryByText("멤버를 불러야 같이 투표해요")).not.toBeInTheDocument();
     expect(window.localStorage.getItem(`plypick:band-invite-card-dismissed:${TEAM}`)).toBe("1");
 

@@ -267,7 +267,8 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
                 </p>
                 <p className="mt-1 text-sm text-text-muted">단톡방에 초대 링크를 보내면 바로 들어와요</p>
               </div>
-              <CloseButton onClick={dismissInviteCard} />
+              {/* A prompt card, like BandPromptCard's: "안내 닫기". Status banners keep plain "닫기". */}
+              <CloseButton label="안내 닫기" onClick={dismissInviteCard} />
             </div>
             <KakaoInviteButton onClick={() => setInviteOpen(true)} className="mt-4 w-full">
               카톡으로 멤버 부르기
@@ -579,9 +580,9 @@ function PlayedSongs({ songs }: { songs: PlayedSong[] }) {
   );
 }
 
-function CloseButton({ onClick }: { onClick: () => void }) {
+function CloseButton({ onClick, label = "닫기" }: { onClick: () => void; label?: string }) {
   return (
-    <IconButton bare aria-label="닫기" onClick={onClick} className="-my-2 -mr-2">
+    <IconButton bare aria-label={label} onClick={onClick} className="-my-2 -mr-2">
       <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
       </svg>
