@@ -759,18 +759,256 @@ finding above. Run with Claude Code or Codex; checkbox as you ship.
 
 없음. 디자인 미정 5건과 eng 증명 항목은 C1·C2 작업으로 넘어간 후속 리뷰 범위다.
 
+
+## 디자인 리뷰 (2026-10-06, /plan-design-review)
+
+- 대상: 이 문서의 CEO2 결정과 Section 11. 초기 완성도 4/10. 범위: 7개 영역 전체(질문 답 "전체 7개 영역 (recommended)")
+- 디자인 시스템: `DESIGN.md` 없음 → AGENTS.md "디자인 시스템" · `globals.css` 토큰 · 방장 피드백(기존 바이올렛 토큰만, 목적 겹치는 버튼 금지, 유도 카드는 해당 상태에서만 · 닫으면 기억)
+- 목업: gstack designer 는 OpenAI 키가 없어 생성 실패("No OpenAI API key found") → Mobbin 레퍼런스로 대신(과거 학습 `mobbin-as-mockup-substitute`)
+- 독립 검토: Codex(completed, 6건) + Claude 서브에이전트(17건). 공통 확인: 빈 밴드 홈 중복 버튼(하드 리젝트 #7), 상태 B 밴드 입구 경쟁, 조회 실패 화면 미정
+- 레퍼런스: [Spotify Add to playlist](https://mobbin.com/screens/12351da3-4a6c-4f23-bea0-7674d19c8eea) ·
+  [Meetup 유도 카드](https://mobbin.com/screens/1724b850-0199-42a4-a008-590e29e8b8de) ·
+  [Nextdoor 새 그룹 첫 화면](https://mobbin.com/screens/4689c09a-b166-4ab9-8de7-169625b31fbc) ·
+  [Splitwise 빈 그룹](https://mobbin.com/flows/48011a8d-9b9a-4a35-870f-95460cfd3795) ·
+  [Discord Join/Create](https://mobbin.com/flows/1688170e-94a2-4e08-a058-fa25707a4e10)
+
+### Pass 1: 정보 구조 — 4/10 (시작)
+
+- **DR1 빈 밴드 홈 첫 화면** — 답 "시작 영역 하나 · 플레이리스트 먼저 (recommended)".
+  owner 혼자 · 플레이리스트 0 이면 `?created=1` 배너와 혼자 카드를 "시작" 영역 하나로 합친다. 성공은 밴드 이름 아래 한 줄 상태
+  ("밴드를 만들었어요", 멤버 수 문구 없음). 주 버튼은 첫 플레이리스트: 넣을 내 플레이리스트가 있으면 "있던 플레이리스트 넣기"(CEO2-E 시트),
+  없으면 "첫 플레이리스트 만들기"(`/new?band={id}`). 보조 버튼 "카톡으로 멤버 부르기"(초대 시트). 이 영역이 보이는 동안 상단 초대 아이콘과
+  멤버 칸 "더 부르기"는 숨기고, 곡이 0이면 "우리가 했던 곡" 섹션도 숨긴다. 근거: 초대로 들어온 멤버가 바로 투표할 곳이 있어야 한다
+  (joined 배너 "지금 플레이리스트 가기"는 활성 플레이리스트가 있을 때만 뜸, `BandHomeClient.tsx:212`)
+- **DR2 상태 A 홈 (밴드 0 · 플레이리스트 0)** — 답 "뜻이 붙은 두 선택지 (recommended)".
+  제목 "○○님, 어떻게 시작할까요?". 전체 너비 행 두 개를 세로로: [밴드로 시작하기](primary) + 아래 한 줄 "멤버를 한 번 모아 두면 공연마다 바로 투표해요",
+  [이번 합주곡만 정하기](secondary) + "플레이리스트 링크를 단톡방에 보내요". "플레이리스트만"처럼 낮추는 말은 쓰지 않는다(CEO2-B 1급).
+  상태 A 에서는 기존 빈 상태 문구(`page.tsx:52`)를 뺀다
+- **DR3 상태 B 밴드 입구** — 답 "버튼 줄 한 곳 + 시트가 길 안내 (recommended)".
+  "새 밴드"는 홈 버튼 줄 한 곳: [＋ 새 플레이리스트](primary 알약) 옆 [기타 아이콘 새 밴드](secondary 알약, 기존 `surface-hover` · `border` · `text`
+  토큰, h-12). "내 밴드" 선반에는 + 타일을 두지 않는다(0G 의 "선반 · 버튼 줄" 중 선반은 뺀다). "새 밴드"로 연 시트는, 내가 방장인 밴드 없는
+  플레이리스트 중 로그인 멤버 ≥ 2 인 것이 있으면 첫 단계로 "같이 투표한 멤버로 만들기" 목록(제목 · 멤버 n명)을 먼저 보이고, 그 아래 텍스트 버튼
+  "멤버 없이 새 밴드로 시작". 대상이 없으면 바로 이름 입력. 홈 카드 버튼 문구는 플레이리스트 설정 행과 같은 "이 멤버로 밴드 만들기"
+- **DR4 홈 카드 대상** — 답 "밴드 0개인 방장에게만 (recommended)". CEO2-D 카드 조건에 "내 밴드 0개"를 더한다. 밴드가 있는 방장의
+  밴드 밖 플레이리스트는 밴드 홈 "있던 플레이리스트 넣기"(CEO2-E)로 넣는다. 홈에 넣기 카드는 만들지 않는다
+- **DR5 홈 카드 대상 고르기 · 닫기 · 문구** — 답 "최근 하나 · 닫으면 대체 안 함 (recommended)".
+  대상 = 조건을 채우는 플레이리스트 중 가장 최근에 만든 하나. 그 대상의 닫힘만 보고, 닫혔으면 카드 없음(예전 후보로 대체하지 않음).
+  더 최근 후보가 새로 생기면 다시 뜬다. 문구 "「{제목}」 멤버 {n}명, 다음 공연도 같이 해요?"(제목 한 줄 자름) + 작은 글씨 앞 3명 이름 +
+  [이 멤버로 밴드 만들기] 44px + 닫기 44px. 플레이리스트 안 카드와 닫기를 공유하는 것은 의도한 동작이다(한쪽에서 닫으면 둘 다 사라짐)
+- **DR6 홈 카드 위치와 닫힘 저장** — 답 "닫힘을 쿠키로, 버튼 줄 아래 (recommended)". 닫힘 기록을 localStorage 대신 쿠키(플레이리스트 id 목록)에
+  저장해 서버가 카드 여부를 정한다. 카드는 버튼 줄 바로 아래에 처음부터 그려 하이드레이션 밀림이 없다. 플레이리스트 안 카드도 같은 쿠키를 쓰고,
+  기존 localStorage 기록은 한 번 읽어 쿠키로 옮긴다(`BandPromptCard.tsx:11,47`)
+
+Pass 1 재평가: **4 → 8/10**. 남은 것: 상태 A/B 경계 사례(Pass 7)
+
+### Pass 2: 상태 처리 — 3/10 (시작)
+
+- **DR7 홈 조회 실패 화면** — 답 "상태 B 뼈대 + 목록 자리 오류 (recommended)". 내 밴드·플레이리스트 조회가 하나라도 실패하면 상태 B 배치
+  (인사 + [새 플레이리스트] [새 밴드])를 보이고, 내 밴드 · 내 플레이리스트 자리에 "목록을 불러오지 못했어요" + [다시 불러오기](44px, 새로고침).
+  상태 A 배치 · 홈 카드 · 빈 상태 문구는 모두 숨긴다. 전제: 조회 결과가 실패와 빈 결과를 구분한다(CEO 리뷰 GAP, eng 리뷰 C2)
+- **DR8 밴드 홈 "있던 플레이리스트 넣기"** — 답 "행마다 바로 넣기 (recommended)".
+  입구: owner 에게만, 밴드 홈 플레이리스트 선반의 "새 플레이리스트" 옆 점선 타일 "있던 플레이리스트 넣기"(빈 밴드는 DR1 시작 영역).
+  넣을 것이 0개면 입구를 숨긴다(밴드 홈은 개수만 미리 읽고 목록은 시트를 열 때 읽는다 — eng 리뷰에서 조회 방식 확인).
+  시트: 제목 "있던 플레이리스트 넣기 · n개" 고정, 로딩 스켈레톤 3행, 행 = 표지 + 제목(2줄까지) + "참여자 n명 · 날짜" + [넣기] 44px,
+  누른 행만 처리 중 → "넣었어요 ✓"로 남고 시트는 열린 채(연속 넣기), 실패는 그 행 아래 사유 문구(`teamMessage`) + 다시 넣기,
+  마지막을 넣으면 "모두 넣었어요" + [닫기], 긴 목록은 최근순 · 시트 안 스크롤, 닫을 때 밴드 홈 갱신. 결과 알림은 `role="status"`
+- **DR9 넣은 뒤 멤버 수 모순** — 답 "알리고 부르기 (recommended)". 넣기 시트 제목 아래 한 줄 "넣어도 참여자는 밴드 멤버가 되지 않아요".
+  넣은 뒤 밴드가 여전히 혼자이고 넣은 플레이리스트의 로그인 참여자가 2명 이상이면, 기존 혼자 카드의 문구를 "「{제목}」 참여자 n명은 아직
+  밴드 멤버가 아니에요" + [카톡으로 멤버 부르기]로 바꾼다(새 카드 없음). ADR 0014 의 "넣기는 멤버를 옮기지 않는다"는 그대로
+- **DR10 로그인 직후 홈 로딩** — 답 "홈 전용 뼈대 화면 (recommended)". 홈에만 뼈대 화면: 인사 줄 + 버튼 줄 높이(상태 A/B 미정이라 높이만) +
+  2열 타일 4칸. 루트 `loading.tsx` 가 아니라 홈 안의 Suspense(또는 홈 전용 라우트 그룹)로 둬 다른 경로와 404 상태 코드에 영향이 없게 한다
+
+**상태 표 (결정 반영)**
+
+```
+  FEATURE              | LOADING                 | EMPTY                          | ERROR                              | SUCCESS                        | PARTIAL
+  ---------------------|-------------------------|--------------------------------|------------------------------------|--------------------------------|---------------------------
+  로그인 홈            | 홈 전용 뼈대 (DR10)      | 상태 A 두 선택지 (DR2)          | 상태 B 뼈대 + 목록 자리 오류 (DR7) | 상태 B: 버튼 줄 + 카드 + 목록    | 한 목록만 실패 → DR7 과 같음
+  새 밴드 시트         | 버튼 로딩 (기존)          | 이름 비면 비활성                | 버튼 아래 문구 (teamMessage)       | 밴드 홈 + 시작 영역 (DR1)        | —
+  홈 카드              | 서버 렌더 (쿠키, DR6)     | 대상 없음 · 밴드 있음 → 없음    | 조회 실패 → 없음 (DR7)              | 올리기 시트 → 밴드 홈           | 닫힘 기억 · 대체 안 함 (DR5)
+  빈 밴드 홈           | 기존 밴드 홈 loading      | 시작 영역 (DR1)                 | 기존 error.tsx                     | 첫 플레이리스트 → 일반 밴드 홈   | 넣은 뒤 혼자 → 문구 바꿈 (DR9)
+  넣기 시트            | 스켈레톤 3행 (DR8)        | 0개 → 입구 숨김 (DR8)           | 행 아래 사유 + 다시 넣기            | "넣었어요 ✓", 마지막 → 모두 넣음 | 연속 넣기 중 일부 실패 → 그 행만
+```
+
+Pass 2 재평가: **3 → 8/10**. 남은 것: 새 밴드 시트의 홈 모드 구성(Pass 5)
+
+### Pass 3: 여정 — 4/10 (시작)
+
+**스토리보드 (승인된 결정 그대로)**
+
+```
+  처음 온 방장
+  STEP | USER DOES                              | USER FEELS             | PLAN SPECIFIES?
+  -----|----------------------------------------|------------------------|-----------------------------------
+  1    | 로그아웃 홈 → 카카오로 시작하기           | 호기심                  | 기존 랜딩
+  2    | 카카오에서 돌아옴                        | "됐나?" 불안            | DR10 홈 뼈대
+  3    | "○○님, 어떻게 시작할까요?" 두 선택지      | 무엇이 다른지 이해       | DR2 뜻이 붙은 선택지
+  4    | 밴드로 시작하기 → 이름                   | 작은 성취               | 새 밴드 시트 (Pass 5)
+  5    | 빈 밴드 홈 시작 영역 → 첫 플레이리스트     | 할 일이 하나로 분명      | DR1
+  6    | 곡 넣고 카톡으로 멤버 부르기              | 보여주고 싶음            | DR1 보조 버튼, 초대 시트
+  7    | 멤버 가입 → 지금 플레이리스트 가기 → 투표  | 보상 (같이 쓰는 느낌)    | 기존 joined 배너
+
+  밴드 없는 기존 방장 (실제 5명)
+  1    | 홈 → 카드 "「제목」 멤버 4명, 다음 공연도 같이 해요?" | 알아봐 줌      | DR5 · DR6
+  2    | 이 멤버로 밴드 만들기 → 밴드 홈 (멤버 4명) | 이미 모인 느낌          | 기존 올리기
+  3    | 닫으면 조용해짐                          | 존중받음                | DR5 대체 안 함
+
+  플레이리스트 링크로 온 멤버
+  1    | 링크 → 로그인 → 투표 (변화 없음)          | 빠름                    | 기존 E2
+  2    | 나중에 홈 → 상태 B, "새 밴드" 보임         | 우리 밴드도 만들어야 하나? | ← D11
+```
+
+- 5초: 뼈대 → 제목 하나와 두 선택지. 5분: 밴드 · 첫 플레이리스트 · 초대까지. 5년: 밴드 홈에 했던 곡과 공연이 쌓인다
+
+- **DR11 플레이리스트 멤버의 중복 밴드** — 답 "조건부 한 줄 알림 (recommended)". "새 밴드" 시트 맨 위에, 내가 참여만 한(방장 아님) 밴드 없는
+  플레이리스트가 있을 때만 한 줄: "「{제목}」 멤버와 같은 밴드라면, 방장이 그 플레이리스트에서 만들면 다 같이 들어가요"(가장 최근 것 하나).
+  만들기는 막지 않는다. 초대 링크 안내 문장은 넣지 않는다
+- **DR12 밴드 1개인 사람의 새 플레이리스트** — 답 "밴드 1개면 \"{밴드}에 만들기\" 기본 켬 (recommended)". 홈 만들기 모달과 `/new` 에서
+  내 밴드가 딱 1개면 이름 칸 아래 토글 행 "{밴드}에 만들기"를 켠 채 보인다. 켜면 밴드 안에(`createBandPlaylist`), 끄면 밴드 밖에 만든다.
+  밴드 0개 · 2개 이상은 지금처럼(완료 화면 넣기, 여러 밴드 UI 는 CEO2-F 로 미룸). 토글은 44px 행 전체가 누르는 영역
+- **DR13 빈 밴드의 카톡 초대 카드** — 답 "1명이면 만든 사람 이름으로 (recommended)". 멤버가 1명이면 설명을
+  "{닉네임}님이 밴드를 만들었어요 · 카카오 로그인 한 번이면 합류"(공연 날짜가 있으면 "{날짜} 공연 · {닉네임}님의 밴드")로 바꾸고, OG 이미지의 큰
+  멤버 수를 숨긴다. 2명부터는 지금 문구(`team-domain.ts:103-112`)
+
+Pass 3 재평가: **4 → 8/10**. 남은 것: 상태 A/B 경계 사례(Pass 7)
+
+### Pass 4: AI 슬롭 — 5/10 → 8/10
+
+- 분류: APP UI (OPERATE). 두 검토 공통 하드 리젝트 #7(카드를 쌓은 앱 UI)은 DR1 이 해소. 상태 A 의 뜻 어긋난 제목은 DR2 가 해소
+- 리트머스(결정 뒤): 제품 분명 YES · 시각 중심 하나 YES(화면마다 주 행동 하나) · 제목만 훑어도 이해 YES · 섹션마다 일 하나 YES ·
+  카드 필요 YES(홈 카드만, 상태 한정) · 모션 YES(시트 · fade 만) · 그림자 없이도 YES
+- 새 슬롭 패턴 없음. 남은 것 없음
+
+### Pass 5: 디자인 시스템 — 6/10 (시작)
+
+- 토큰: 새 화면은 `primary` · `surface` · `surface-hover` · `border` · `text` · `text-muted` · `kakao` 계열만(방장 피드백). 새 토큰 없음
+- 컴포넌트: `Button`(primary/secondary), `Card`(홈 카드만), `Modal` 시트, `CreateBandSheet`, `BandPromptCard` 재사용
+- **DR14 홈에서 여는 새 밴드 시트** — 답 "홈 모드에 맞게 정리 (recommended)". 빈 밴드로 만들 때는 참여자 미리보기 상자 자리에 한 줄
+  "만들고 나면 단톡방에 초대 링크를 보내요". 홈에서 연 시트(빈 밴드 · 홈 카드)에서는 "나중에" 버튼을 빼고 헤더 X 하나만 둔다. 이름 도움말
+  ("나중에 바꿀 수 없어요. 공연 이름 말고 밴드 이름을 써 주세요")은 사실이라 유지. `team_created` source 에 `home` · `home_card` 추가(CEO 리뷰 Section 8)
+
+Pass 5 재평가: **6 → 8/10**. 남은 것: `DESIGN.md` 없음(AGENTS.md · 토큰으로 대신, 필요하면 `/design-consultation`)
+
+### Pass 6: 반응형 · 접근성 — 6/10 → 8/10
+
+- 결정이 이미 정한 것: 휴대폰 세로 배치(DR2), 44px 누르는 영역(DR2 · DR5 · DR8 · DR12), 넣기 결과 `role="status"`(DR8), 시트 포커스 트랩·복귀(기존 `Modal`, T17)
+- 데스크톱은 기존 `max-w-md` 한 열 그대로. 새 질문 없음
+
+### Pass 7: 미정 결정
+
+- **DR15 상태 A 경계** — 답 "경계 규칙 명시 (recommended)". (a) 상태 A 는 서버 기준 0/0 으로 정하되, 두 선택지 아래에 localStorage 에 남은
+  로그인 전 플레이리스트를 "내 플레이리스트"로 그대로 보인다(`MyPlaylists.tsx:29-75`). (b) 밴드를 막 나온 직후(`?left=1`)에는 상태 B 로 보인다.
+  (c) 상태 A 에서 밴드를 만든 뒤 다음 방문부터 상태 B 로 바뀌는 것은 의도한 동작
+- **DR16 플레이리스트 0개인 밴드에 들어온 멤버** — 답 "기다릴 것 한 줄 안내 (recommended)". joined 배너를 "{밴드}에 들어왔어요 · 방장이 첫
+  플레이리스트를 만들면 여기에 떠요"로(버튼 없음). 활성 플레이리스트가 있으면 지금처럼 "지금 플레이리스트 가기"
+
+```
+  DECISION NEEDED                          | IF DEFERRED, WHAT HAPPENS                  | 처리
+  -----------------------------------------|--------------------------------------------|------
+  빈 밴드 홈 첫 화면                        | 초대 버튼 4개 · "멤버 1명" 배너              | DR1
+  상태 A 제목 · 선택지                      | 제목과 주 버튼 뜻 어긋남                     | DR2
+  상태 B 밴드 입구 경쟁                     | 빈 밴드 · 멤버 재초대 유도                   | DR3
+  홈 카드 대상 · 규칙 · 위치                | 두더지 잡기 · 하이드레이션 밀림              | DR4 · DR5 · DR6
+  조회 실패 화면                            | 장애가 온보딩으로 위장 · 중복 밴드           | DR7
+  넣기 시트 상태 · 넣은 뒤 모순              | 죽은 버튼 · '멤버 1명' 모순                  | DR8 · DR9
+  로그인 직후 로딩                          | 멈춘 화면                                   | DR10
+  멤버 중복 밴드 · 기본 밴드 · 초대 카드      | 쪼개진 밴드 · 빈 밴드 홈 · 약한 카톡 카드    | DR11 · DR12 · DR13
+  새 밴드 시트 홈 모드 · 상태 A 경계 · 빈 밴드 가입 | 틀린 문구 · 엉뚱한 버튼 · 할 일 없는 화면 | DR14 · DR15 · DR16
+```
+
+### 디자인 리뷰 산출물
+
+**NOT in scope (디자인)**
+
+| 항목 | 처리 | 근거 |
+|---|---|---|
+| 넣을 때 참여자도 밴드 멤버로 (attach 규칙 변경) | 거절 | D9 에서 "알리고 부르기" 선택. ADR 0014 유지 |
+| 홈의 넣기 카드 (밴드 1개인 방장) | 거절 | D4 에서 "밴드 0개인 방장에게만" 선택. 넣기는 밴드 홈 한 곳(D2) |
+| 대상이 있으면 "새 밴드" 숨기기 | 거절 | D3 에서 A 선택. CEO2-A "늘 보임" 유지 |
+| 넣기 시트 다중 선택 + 한 번에 넣기 | 거절 | D8 에서 행마다 바로 넣기 선택 |
+| 초대 링크 안내 문장 (새 밴드 시트) | 거절 | D11 에서 조건부 한 줄만 |
+| 시각 목업 | 못 함 | gstack designer OpenAI 키 없음. Mobbin 레퍼런스로 대신 |
+
+**What already exists**: `BandPromptCard`(닫기 기억 · 44px 닫기), `CreateBandSheet`(이름 검증 · 중복 제출 막기 · catch), `Modal` 시트(포커스 트랩, T17),
+`MyBands` 선반, `HeroCTA` compact 알약, 밴드 홈 혼자 카드 · joined 배너, `Button` primary/secondary, `KakaoInviteButton`, `teamMessage` 문구 맵.
+
+**TODOS.md**: 새 항목 없음. 디자인 결정은 모두 이번 범위에 들어갔고, 미룬 것은 CEO2-F(이미 TODOS.md)뿐
+
+**Approval reconciliation**: DR1~DR16 은 각각 D1~D16 질문의 개별 답이다. 다른 제안은 없다
+
+## Implementation Tasks (디자인 리뷰)
+Synthesized from this review's findings. Each task derives from a specific
+finding above. Run with Claude Code or Codex; checkbox as you ship.
+
+- [ ] **DT1 (P1, human: ~1일 / CC: ~40min)** — home — 상태별 홈: 상태 A 두 선택지(DR2), 상태 B 버튼 줄 [새 플레이리스트][새 밴드](DR3), 경계 규칙(DR15), 조회 실패 화면(DR7), 홈 전용 뼈대(DR10)
+  - Surfaced by: Pass 1 · 2 · 7 — DR2, DR3, DR7, DR10, DR15
+  - Files: `src/app/page.tsx`, `src/components/HeroCTA.tsx`, `src/components/MyBands.tsx`, `src/components/MyPlaylists.tsx`, 새 홈 뼈대 컴포넌트
+  - Verify: 컴포넌트 테스트(0/0 → 상태 A, 참여 방만 → B, `?left=1` → B, 조회 실패 → B + 오류 문구), E2E account-b 처음 홈
+- [ ] **DT2 (P1, human: ~반나절 / CC: ~30min)** — sheet — 새 밴드 시트 홈 모드: 첫 단계 "같이 투표한 멤버로 만들기" 목록 + "멤버 없이 새 밴드로 시작"(DR3), 참여자 한 줄 알림(DR11), 빈 밴드 문구 · "나중에" 제거(DR14)
+  - Surfaced by: Pass 1 · 3 · 5 — DR3, DR11, DR14
+  - Files: `src/components/CreateBandSheet.tsx`, `src/lib/analytics.ts`(source home · home_card)
+  - Verify: 컴포넌트 테스트(대상 있음/없음, 참여만 한 방 → 한 줄, 빈 밴드 → 미리보기 대신 한 줄)
+- [ ] **DT3 (P1, human: ~반나절 / CC: ~30min)** — card — 홈 카드: 밴드 0개 방장만(DR4), 최근 하나 · 대체 안 함 · 문구(DR5), 쿠키 닫힘 + 서버 판정 + 버튼 줄 아래(DR6)
+  - Surfaced by: Pass 1 — DR4, DR5, DR6
+  - Files: `src/components/BandPromptCard.tsx`, `src/app/page.tsx`, `src/components/PlaylistClient.tsx`(쿠키 공유)
+  - Verify: 컴포넌트 테스트(밴드 있음 → 없음, 닫힌 최근 대상 → 없음 · 예전 후보로 대체 안 함), localStorage → 쿠키 이전 테스트
+- [ ] **DT4 (P1, human: ~1일 / CC: ~40min)** — band home — 빈 밴드 시작 영역(DR1), 넣기 시트(DR8), 넣은 뒤 혼자 카드 문구(DR9), 0개 밴드 joined 배너(DR16)
+  - Surfaced by: Pass 1 · 2 · 7 — DR1, DR8, DR9, DR16
+  - Files: `src/components/BandHomeClient.tsx`, 새 넣기 시트 컴포넌트, `src/actions/team.ts`(owner 넣기 개수 · 목록 — eng 리뷰 확인)
+  - Verify: 컴포넌트 테스트(혼자 · 0개 → 시작 영역 하나 · 초대 입구 1개, 넣기 연속 · 행 실패 · 모두 넣음, 넣은 뒤 문구), E2E 홈 → 새 밴드 → 시작 영역
+- [ ] **DT5 (P2, human: ~반나절 / CC: ~20min)** — create — 밴드 1개면 "{밴드}에 만들기" 토글 기본 켬(DR12)
+  - Surfaced by: Pass 3 — DR12
+  - Files: `src/components/CreatePlaylistForm.tsx`, `src/app/new/page.tsx`
+  - Verify: 컴포넌트 테스트(밴드 1 → 토글 켬 · createBandPlaylist, 끄면 createPlaylist, 밴드 0 · 2+ → 토글 없음)
+- [ ] **DT6 (P2, human: ~1시간 / CC: ~10min)** — share — 멤버 1명 밴드의 카톡 카드 문구 · OG 멤버 수 숨김(DR13)
+  - Surfaced by: Pass 3 — DR13
+  - Files: `src/lib/team-domain.ts`, `src/app/api/og/route.tsx`, `src/app/join/[inviteCode]/page.tsx`
+  - Verify: `team-domain` 단위 테스트(1명 · 날짜 유무), OG 이미지 확인
+
+### Completion Summary (디자인 리뷰)
+
+```
+  +====================================================================+
+  |         DESIGN PLAN REVIEW — COMPLETION SUMMARY                    |
+  +====================================================================+
+  | System Audit         | DESIGN.md 없음 (AGENTS.md·토큰 대신), UI 6면 |
+  | Step 0               | 4/10, 7개 영역 전체                          |
+  | Pass 1  (Info Arch)  | 4/10 → 8/10 after fixes                     |
+  | Pass 2  (States)     | 3/10 → 8/10 after fixes                     |
+  | Pass 3  (Journey)    | 4/10 → 8/10 after fixes                     |
+  | Pass 4  (AI Slop)    | 5/10 → 8/10 after fixes                     |
+  | Pass 5  (Design Sys) | 6/10 → 8/10 after fixes                     |
+  | Pass 6  (Responsive) | 6/10 → 8/10 after fixes                     |
+  | Pass 7  (Decisions)  | 16 resolved, 0 deferred                     |
+  +--------------------------------------------------------------------+
+  | NOT in scope         | written (6 items)                           |
+  | What already exists  | written                                     |
+  | TODOS.md updates     | 0 items proposed                            |
+  | Approved Mockups     | 0 generated (OpenAI 키 없음), 0 approved     |
+  | Decisions made       | 16 added to plan                            |
+  | Decisions deferred   | 0                                           |
+  | Overall design score | 3/10 → 8/10                                 |
+  +====================================================================+
+```
+
+Plan is design-complete. Run /design-review after implementation for visual QA.
+
+### Unresolved Decisions (디자인 리뷰)
+
+없음.
+
 ## GSTACK REVIEW REPORT
 
 | Review | Trigger | Why | Runs | Status | Findings |
 |--------|---------|-----|------|--------|----------|
-| CEO Review | `/plan-ceo-review` | Scope & strategy | 3 | CLEAR | mode: SCOPE_REDUCTION, 0 critical gaps (결정 6건, 미룸 1건) |
-| Outside Review | codex (plan-review, `/plan-ceo-review` 기본 단계) | Independent 2nd opinion | 5 | unavailable | Codex `model_unusable`(모델 이름 오류), 내부 대체 검토도 불가(TaskOutput 없음) — no completed external review |
+| CEO Review | `/plan-ceo-review` | Scope & strategy | 3 | CLEAR | mode: SCOPE_REDUCTION, 0 critical gaps (2026-10-06, 이 계획) |
+| Outside Review | codex (design 단계 `/plan-design-review`; plan-review 단계 `/plan-ceo-review`) | Independent 2nd opinion | 6 | design: completed · plan-review: unavailable | design 6 findings; 6 resolved (DR1·DR3·DR5·DR7·DR8·DR2); 0 unresolved. plan-review: no completed external review (zsh 에서 gstack 점검 경로가 깨짐) |
 | Eng Review | `/plan-eng-review` | Architecture & tests (required) | 3 | ISSUES OPEN | 8 issues, 0 critical gaps (2026-10-04, 밴드 계획 대상 — 이 계획은 아직 eng 리뷰 없음) |
-| Design Review | `/plan-design-review` | UI/UX gaps | 2 | CLEAR | score: 4/10 → 8/10, 8 decisions (2026-10-04, 밴드 계획 대상) |
+| Design Review | `/plan-design-review` | UI/UX gaps | 3 | CLEAR | score: 3/10 → 8/10, 16 decisions |
 | DX Review | `/plan-devex-review` | Developer experience gaps | 0 | — | — |
 
-- **OUTSIDE COVERAGE:** codex · plan-review · unavailable (`model_unusable`, gstack 의 Codex 모델 설정 오류). 내부 대체 검토 unavailable. 발견 0 이 아니라 검토 자체가 없다
-- **CROSS-MODEL:** 없음 — 완료된 외부 검토가 없어 비교하지 않음
-- **VERDICT:** CEO CLEARED (이 흐름 계획) — eng review required. 다음 순서는 `/plan-design-review`(C1) 와 `/plan-eng-review`(C2)
+- **OUTSIDE COVERAGE:** codex · design · completed (gpt-5.6-sol, 6 findings, 모두 DR 결정으로 해소). codex · plan-review(CEO 리뷰) · unavailable — 원인은 zsh 에서 `gstack-codex-probe` 의 `BASH_SOURCE` 가 비어 모델 해석 경로가 깨진 것, bash 로 돌리면 정상
+- **CROSS-MODEL:** 디자인 단계에서 native Claude 서브에이전트(17건)와 codex(6건)가 함께 완료. 겹친 것: 빈 밴드 홈 중복 초대(하드 리젝트 #7), 상태 B 밴드 입구 경쟁, 홈 카드 대상·닫기 규칙, 상태 A 제목 어긋남, 넣기 시트 상태, 조회 실패 화면. Claude 만: 넣은 뒤 멤버 수 모순, 로그인 직후 로딩, 밴드 있는 방장 카드, 하이드레이션 밀림, 멤버 중복 밴드, 기본 밴드 토글, 카톡 카드 문구, 상태 A 경계, 새 밴드 시트 홈 모드. Codex 만: 없음. 두 모델 사이 반대 의견은 순서(빈 밴드 홈 첫 행동: Codex 초대 먼저 / Claude 플레이리스트 먼저) 하나 — 방장이 플레이리스트 먼저(DR1) 선택
+- **VERDICT:** CEO + DESIGN CLEARED (이 흐름 계획) — eng review required
 
 NO UNRESOLVED DECISIONS
