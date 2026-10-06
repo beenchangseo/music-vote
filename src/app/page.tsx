@@ -1,4 +1,8 @@
+import { Suspense } from "react";
+import { cookies } from "next/headers";
+import Link from "next/link";
 import HeroCTA from "@/components/HeroCTA";
+import HomeSkeleton from "@/components/HomeSkeleton";
 import DemoVote from "@/components/home/DemoVote";
 import DemoPlayback from "@/components/home/DemoPlayback";
 import DemoSetlist from "@/components/home/DemoSetlist";
@@ -6,67 +10,118 @@ import DemoBand from "@/components/home/DemoBand";
 import MyPlaylists from "@/components/MyPlaylists";
 import MyBands from "@/components/MyBands";
 import LeftBandNotice from "@/components/LeftBandNotice";
-import { getCurrentUser } from "@/lib/auth";
-import { getMyPlaylists, getHomeStats } from "@/actions/playlist";
+import { buttonClassName } from "@/components/ui/Button";
+import type { BandCandidate } from "@/components/CreateBandSheet";
+import { getCurrentUser, hasAuthCookie } from "@/lib/auth";
+import { getMyPlaylists, getHomeStats, type MyPlaylistDbEntry } from "@/actions/playlist";
 import { getMyTeams } from "@/actions/team";
 
 export const revalidate = 600; // 10분마다 통계 갱신
+
+type HomeStats = Awaited<ReturnType<typeof getHomeStats>>;
 
 interface HomeProps {
   searchParams: Promise<{ left?: string | string[] }>;
 }
 
 export default async function Home({ searchParams }: HomeProps) {
-  const [user, stats, query] = await Promise.all([
-    getCurrentUser(),
-    getHomeStats().catch(() => ({ playlists: 0, users: 0, songs: 0 })),
-    searchParams,
-  ]);
-  const loggedIn = !!user;
-  // Rooms and bands in one round trip (eng D5).
-  const [{ playlists: dbPlaylists }, { teams: myTeams }] = loggedIn
-    ? await Promise.all([getMyPlaylists(), getMyTeams()])
-    : [{ playlists: [] }, { teams: [] }];
+  // Started now, awaited only on the landing, so signed-in people never wait for it.
+  const statsPromise = getHomeStats().catch(() => ({ playlists: 0, users: 0, songs: 0 }));
+  const [cookieStore, query] = await Promise.all([cookies(), searchParams]);
+  const left = query.left === "1";
 
-  // Returning users get their own home (Spotify / YouTube Music home): no landing pitch in the way.
-  if (user) {
-    return (
-      <main className="relative isolate min-h-full">
-        <div aria-hidden className="absolute inset-x-0 top-0 -z-10 h-80 bg-gradient-to-b from-primary-soft/60 to-transparent" />
-        <div className="mx-auto w-full max-w-md px-4 pb-16 pt-6">
-          {/* 디자인 2회차 6A: once, right after leaving a band. */}
-          <LeftBandNotice left={query.left === "1"} />
-          <BrandMark />
-
-          <h1 className="mt-10 break-keep text-h1 font-bold leading-snug text-text">
-            {user.nickname}님,
-            <br />
-            다음 합주곡 정해 볼까요?
-          </h1>
-          <div className="mt-6">
-            <HeroCTA loggedIn myTeams={myTeams} compact />
-          </div>
-
-          {/* Bands sit right above the playlists (4A). */}
-          <MyBands teams={myTeams} />
-          <MyPlaylists loggedIn dbPlaylists={dbPlaylists} />
-          {dbPlaylists.length === 0 && myTeams.length === 0 && (
-            <p className="mt-10 text-sm leading-relaxed text-text-muted">
-              새 플레이리스트를 만들고 단톡방에 링크를 보내면, 멤버들이 곡을 올리고 투표해요.
-            </p>
-          )}
-
-          <nav aria-label="Plypick 안내" className="mt-14 flex flex-wrap gap-x-4 gap-y-1 text-caption text-text-subtle">
-            <a href="/guide" className="inline-flex min-h-11 items-center transition-colors hover:text-text-muted">사용 가이드</a>
-            <a href="/about" className="inline-flex min-h-11 items-center transition-colors hover:text-text-muted">소개</a>
-            <a href="/privacy" className="inline-flex min-h-11 items-center transition-colors hover:text-text-muted">개인정보처리방침</a>
-            <a href="/terms" className="inline-flex min-h-11 items-center transition-colors hover:text-text-muted">이용약관</a>
-          </nav>
-        </div>
-      </main>
-    );
+  // No login cookie: the landing, at once. With one, the skeleton goes out before the
+  // Supabase Auth check and the list lookups run behind it (DR10, eng O4).
+  if (!hasAuthCookie(cookieStore.getAll().map((cookie) => cookie.name))) {
+    return <Landing stats={await statsPromise} left={left} />;
   }
+  return (
+    <Suspense fallback={<HomeSkeleton />}>
+      <SignedInHome left={left} statsPromise={statsPromise} />
+    </Suspense>
+  );
+}
 
+/** 새 밴드 시트의 "같이 투표한 멤버로 만들기" 대상 (DR3): 내가 방장 · 밴드 없음 · 로그인 멤버 ≥ 2. 최근 것부터. */
+function bandCandidates(playlists: MyPlaylistDbEntry[]): BandCandidate[] {
+  return playlists
+    .filter((playlist) => playlist.isMine && !playlist.teamId && playlist.memberCount >= 2)
+    .map(({ id, title, memberCount, memberPreview }) => ({ id, title, memberCount, memberPreview }));
+}
+
+async function SignedInHome({ left, statsPromise }: { left: boolean; statsPromise: Promise<HomeStats> }) {
+  const user = await getCurrentUser();
+  // The cookie outlived the session.
+  if (!user) return <Landing stats={await statsPromise} left={left} />;
+
+  // Rooms and bands in one round trip (eng D5).
+  const [playlistsResult, teamsResult] = await Promise.all([getMyPlaylists(), getMyTeams()]);
+  const failed = playlistsResult.failed || teamsResult.failed;
+  const dbPlaylists = playlistsResult.playlists;
+  const myTeams = teamsResult.teams;
+  const empty = dbPlaylists.length === 0 && myTeams.length === 0;
+  // State A only for a real 0/0 (DR2). A failed lookup (DR7) and a band just left (DR15) stay in B.
+  const variant = !failed && !left && empty ? "start" : "row";
+
+  return (
+    <main className="relative isolate min-h-full">
+      <div aria-hidden className="absolute inset-x-0 top-0 -z-10 h-80 bg-gradient-to-b from-primary-soft/60 to-transparent" />
+      <div className="mx-auto w-full max-w-md px-4 pb-16 pt-6">
+        {/* 디자인 2회차 6A: once, right after leaving a band. */}
+        <LeftBandNotice left={left} />
+        <BrandMark />
+
+        <h1 className="mt-10 break-keep text-h1 font-bold leading-snug text-text">
+          {user.nickname}님,
+          <br />
+          {variant === "start" ? "어떻게 시작할까요?" : "다음 합주곡 정해 볼까요?"}
+        </h1>
+        <div className="mt-6">
+          <HeroCTA
+            variant={variant}
+            myTeams={myTeams}
+            bandCandidates={bandCandidates(dbPlaylists)}
+            // DR11: the newest band-less playlist I only take part in.
+            participantOnlyTitle={dbPlaylists.find((playlist) => !playlist.isMine && !playlist.teamId)?.title ?? null}
+          />
+        </div>
+
+        {failed ? (
+          <section aria-labelledby="home-load-error" className="mt-10 rounded-card border border-border bg-surface p-4">
+            <p id="home-load-error" className="text-sm text-text">
+              목록을 불러오지 못했어요
+            </p>
+            {/* The home is dynamic, so navigating to it again reads the lists again. */}
+            <Link href="/" prefetch={false} className={buttonClassName({ variant: "secondary", className: "mt-3 min-h-11" })}>
+              다시 불러오기
+            </Link>
+          </section>
+        ) : (
+          <>
+            {/* Bands sit right above the playlists (4A). In state A only playlists kept on this device show (DR15). */}
+            <MyBands teams={myTeams} />
+            <MyPlaylists loggedIn dbPlaylists={dbPlaylists} />
+            {variant === "row" && empty && (
+              <p className="mt-10 text-sm leading-relaxed text-text-muted">
+                새 플레이리스트를 만들고 단톡방에 링크를 보내면, 멤버들이 곡을 올리고 투표해요.
+              </p>
+            )}
+          </>
+        )}
+
+        <nav aria-label="Plypick 안내" className="mt-14 flex flex-wrap gap-x-4 gap-y-1 text-caption text-text-subtle">
+          <a href="/guide" className="inline-flex min-h-11 items-center transition-colors hover:text-text-muted">사용 가이드</a>
+          <a href="/about" className="inline-flex min-h-11 items-center transition-colors hover:text-text-muted">소개</a>
+          <a href="/privacy" className="inline-flex min-h-11 items-center transition-colors hover:text-text-muted">개인정보처리방침</a>
+          <a href="/terms" className="inline-flex min-h-11 items-center transition-colors hover:text-text-muted">이용약관</a>
+        </nav>
+      </div>
+    </main>
+  );
+}
+
+/** 로그아웃 랜딩. 로그인 쿠키가 없거나 세션이 끝난 사람. */
+function Landing({ stats, left }: { stats: HomeStats; left: boolean }) {
   return (
     <main className="min-h-full flex flex-col">
       {/* HERO — 첫 뷰포트, 후킹 우선 */}
@@ -77,7 +132,7 @@ export default async function Home({ searchParams }: HomeProps) {
 
         <div className="relative z-10 w-full max-w-md mx-auto">
           {/* 디자인 2회차 6A: once, right after leaving a band. */}
-          <LeftBandNotice left={query.left === "1"} />
+          <LeftBandNotice left={left} />
           {/* 작은 브랜드 마크 */}
           <div className="mb-10">
             <BrandMark />
@@ -101,12 +156,10 @@ export default async function Home({ searchParams }: HomeProps) {
           </div>
 
           {/* CTA */}
-          <HeroCTA loggedIn={loggedIn} myTeams={myTeams} />
-          {!loggedIn && (
-            <p className="mt-3 text-center text-caption text-text-subtle">
-              카카오로 3초면 시작 · 멤버도 로그인 한 번이면 참여
-            </p>
-          )}
+          <HeroCTA variant="landing" />
+          <p className="mt-3 text-center text-caption text-text-subtle">
+            카카오로 3초면 시작 · 멤버도 로그인 한 번이면 참여
+          </p>
 
           {/* Social proof strip — 결정 직전 신뢰 (조용한 네온, 펄스 없음) */}
           {(stats.playlists > 0 || stats.songs > 0 || stats.users > 0) && (
@@ -119,9 +172,6 @@ export default async function Home({ searchParams }: HomeProps) {
             </p>
           )}
 
-          {/* Returning user shortcut. Bands sit right above the rooms (4A). */}
-          <MyBands teams={myTeams} />
-          <MyPlaylists loggedIn={loggedIn} dbPlaylists={dbPlaylists} />
         </div>
       </section>
 
@@ -233,7 +283,7 @@ export default async function Home({ searchParams }: HomeProps) {
             <p className="text-sm text-text mb-4">
               지금 첫 플레이리스트, 5분이면 시작.
             </p>
-            <HeroCTA loggedIn={loggedIn} myTeams={myTeams} />
+            <HeroCTA variant="landing" />
           </div>
         </div>
       </section>

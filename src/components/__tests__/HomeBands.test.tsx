@@ -2,12 +2,23 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import HeroCTA from "../HeroCTA";
 import LeftBandNotice, { LEFT_BAND_STORAGE_KEY } from "../LeftBandNotice";
 import MyBands from "../MyBands";
 import MyPlaylists from "../MyPlaylists";
 
 const replace = vi.fn();
+const triggerKakaoLogin = vi.hoisted(() => vi.fn());
+const bandSheet = vi.hoisted(() => ({ props: [] as Record<string, unknown>[] }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push: vi.fn(), refresh: vi.fn() }) }));
+vi.mock("@/lib/kakao-login", () => ({ triggerKakaoLogin }));
+vi.mock("../CreatePlaylistForm", () => ({ default: () => <form aria-label="플레이리스트 만들기 폼" /> }));
+vi.mock("../CreateBandSheet", () => ({
+  default: (props: Record<string, unknown>) => {
+    bandSheet.props.push(props);
+    return props.open ? <div role="dialog" aria-label="밴드 만들기" /> : null;
+  },
+}));
 
 const TEAM = "11111111-1111-4111-8111-111111111111";
 
@@ -21,6 +32,39 @@ afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   vi.useRealTimers();
+});
+
+describe("HeroCTA (CEO2-A, DR2, DR3)", () => {
+  const signedIn = { myTeams: [], bandCandidates: [], participantOnlyTitle: null };
+
+  it("brings a new visitor back to the home after Kakao login, not to /new", () => {
+    render(<HeroCTA variant="landing" />);
+    fireEvent.click(screen.getByRole("button", { name: "카카오로 시작하기 →" }));
+    expect(triggerKakaoLogin).toHaveBeenCalledWith("/");
+  });
+
+  it("gives state A two choices, each with what it means", () => {
+    bandSheet.props = [];
+    render(<HeroCTA variant="start" {...signedIn} />);
+    expect(screen.getByText("멤버를 한 번 모아 두면 공연마다 바로 투표해요")).toBeInTheDocument();
+    expect(screen.getByText("플레이리스트 링크를 단톡방에 보내요")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "밴드로 시작하기" }));
+    expect(screen.getByRole("dialog", { name: "밴드 만들기" })).toBeInTheDocument();
+    expect(bandSheet.props.at(-1)).toMatchObject({ mode: "home", source: "home" });
+
+    fireEvent.click(screen.getByRole("button", { name: "이번 합주곡만 정하기" }));
+    expect(screen.getByRole("form", { name: "플레이리스트 만들기 폼" })).toBeInTheDocument();
+  });
+
+  it("puts 새 밴드 next to 새 플레이리스트 in state B and hands the candidates to the sheet", () => {
+    bandSheet.props = [];
+    const candidate = { id: "pl-1", title: "10월 합주", memberCount: 3, memberPreview: ["기타", "드럼"] };
+    render(<HeroCTA variant="row" {...signedIn} bandCandidates={[candidate]} participantOnlyTitle="남의 합주" />);
+    expect(screen.getByRole("button", { name: "새 플레이리스트" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "새 밴드" }));
+    expect(bandSheet.props.at(-1)).toMatchObject({ open: true, candidates: [candidate], participantOnlyTitle: "남의 합주" });
+  });
 });
 
 describe("LeftBandNotice (디자인 2회차 6A)", () => {
