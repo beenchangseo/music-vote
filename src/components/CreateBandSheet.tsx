@@ -143,6 +143,25 @@ function HomeBody({ source, candidates, participantOnlyTitle, target, inputRef }
   const [step, setStep] = useState<"choose" | "empty" | BandCandidate>(
     target ?? (candidates.length > 0 ? "choose" : "empty"),
   );
+  // Back from a name step lands on the row just left. A card opens on its own playlist, so it has no back.
+  const canGoBack = !target && candidates.length > 0;
+  const [returnTo, setReturnTo] = useState<string | null>(null);
+  const returnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (step === "choose" && returnTo) returnRef.current?.focus();
+  }, [step, returnTo]);
+
+  function back() {
+    setReturnTo(typeof step === "object" ? step.id : "empty");
+    setStep("choose");
+  }
+
+  const backButton = canGoBack && (
+    <Button type="button" variant="ghost" fullWidth className="mt-2" onClick={back}>
+      다시 고르기
+    </Button>
+  );
 
   function created(teamId: string) {
     track("team_created", { source });
@@ -166,10 +185,17 @@ function HomeBody({ source, candidates, participantOnlyTitle, target, inputRef }
             <li key={candidate.id}>
               <button
                 type="button"
+                ref={returnTo === candidate.id ? returnRef : undefined}
                 onClick={() => setStep(candidate)}
                 className="flex min-h-14 w-full items-center justify-between gap-3 rounded-control border border-border bg-surface px-4 py-3 text-left transition-colors hover:bg-surface-hover"
               >
-                <span className="min-w-0 flex-1 truncate text-body font-medium text-text">{candidate.title}</span>
+                {/* Names tell apart playlists with similar titles before picking one. */}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-body font-medium text-text">{candidate.title}</span>
+                  {candidate.memberPreview.length > 0 && (
+                    <span className="mt-0.5 block truncate text-caption text-text-muted">{memberLine(candidate)}</span>
+                  )}
+                </span>
                 <span className="shrink-0 text-sm text-text-muted tabular-nums">멤버 {candidate.memberCount}명</span>
               </button>
             </li>
@@ -177,6 +203,7 @@ function HomeBody({ source, candidates, participantOnlyTitle, target, inputRef }
         </ul>
         <button
           type="button"
+          ref={returnTo === "empty" ? returnRef : undefined}
           onClick={() => setStep("empty")}
           className="mt-3 inline-flex min-h-11 w-full items-center justify-center text-sm font-semibold text-text-muted transition-colors hover:text-text"
         >
@@ -200,12 +227,12 @@ function HomeBody({ source, candidates, participantOnlyTitle, target, inputRef }
         }}
         // DR14: no participant box for an empty band, one line on what comes next instead.
         note={<p className="text-sm text-text-muted">만들고 나면 단톡방에 초대 링크를 보내요</p>}
+        footer={backButton}
       />
     );
   }
 
-  const others = step.memberPreview.join(", ");
-  const rest = step.memberCount - 1 - step.memberPreview.length;
+  const others = memberLine(step);
   return (
     <NameForm
       inputRef={inputRef}
@@ -221,16 +248,19 @@ function HomeBody({ source, candidates, participantOnlyTitle, target, inputRef }
           <p className="text-sm font-medium text-text">
             「{step.title}」 참여자 {step.memberCount}명이 멤버가 돼요
           </p>
-          {others && (
-            <p className="mt-1 text-caption leading-relaxed text-text-muted">
-              {others}
-              {rest > 0 && ` 외 ${rest}명`}
-            </p>
-          )}
+          {others && <p className="mt-1 text-caption leading-relaxed text-text-muted">{others}</p>}
         </>
       }
+      footer={backButton}
     />
   );
+}
+
+/** "기타, 베이스, 드럼 외 1명". memberPreview 는 나를 뺀 앞 3명, memberCount 는 나를 포함한다. */
+function memberLine(candidate: BandCandidate): string {
+  if (candidate.memberPreview.length === 0) return "";
+  const rest = candidate.memberCount - 1 - candidate.memberPreview.length;
+  return candidate.memberPreview.join(", ") + (rest > 0 ? ` 외 ${rest}명` : "");
 }
 
 /** 밴드 이름 입력 + 만들기. onSubmit 은 실패면 reason, 성공이면 null 을 돌려준다. */

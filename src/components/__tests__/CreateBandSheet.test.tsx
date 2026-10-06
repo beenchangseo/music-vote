@@ -69,7 +69,8 @@ describe("CreateBandSheet from home (DR3, DR11, DR14)", () => {
     openHome({ candidates: [candidate] });
     expect(screen.queryByLabelText("밴드 이름")).not.toBeInTheDocument();
     expect(screen.getByText("같이 투표한 멤버로 만들기")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /10월 정기 합주\s*멤버 5명/ }));
+    // The row names the members, so similar titles can be told apart before picking.
+    fireEvent.click(screen.getByRole("button", { name: /10월 정기 합주\s*기타, 베이스, 드럼 외 1명\s*멤버 5명/ }));
 
     expect(screen.getByLabelText("밴드 이름")).toHaveFocus();
     expect(screen.getByText("「10월 정기 합주」 참여자 5명이 멤버가 돼요")).toBeInTheDocument();
@@ -79,6 +80,23 @@ describe("CreateBandSheet from home (DR3, DR11, DR14)", () => {
     await waitFor(() => expect(state.push).toHaveBeenCalledWith(`/band/${TEAM}?created=1`));
     expect(state.createTeamFromPlaylist).toHaveBeenCalledWith("pl-1", "일코해제");
     expect(state.createTeam).not.toHaveBeenCalled();
+  });
+
+  it("goes back to the choice from a name step, focusing the row it left", () => {
+    openHome({ candidates: [candidate] });
+    fireEvent.click(screen.getByRole("button", { name: /10월 정기 합주/ }));
+    fireEvent.click(screen.getByRole("button", { name: "다시 고르기" }));
+    expect(screen.getByText("같이 투표한 멤버로 만들기")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /10월 정기 합주/ })).toHaveFocus();
+
+    fireEvent.click(screen.getByRole("button", { name: "멤버 없이 새 밴드로 시작" }));
+    fireEvent.click(screen.getByRole("button", { name: "다시 고르기" }));
+    expect(screen.getByRole("button", { name: "멤버 없이 새 밴드로 시작" })).toHaveFocus();
+  });
+
+  it("has no way back when there was nothing to choose from", () => {
+    openHome();
+    expect(screen.queryByRole("button", { name: "다시 고르기" })).not.toBeInTheDocument();
   });
 
   it("can still start an empty band when candidates exist", async () => {
@@ -137,6 +155,8 @@ describe("CreateBandSheet from the home card (DR5)", () => {
     );
     expect(screen.queryByText("같이 투표한 멤버로 만들기")).not.toBeInTheDocument();
     expect(screen.getByText("「10월 정기 합주」 참여자 5명이 멤버가 돼요")).toBeInTheDocument();
+    // The card picked the playlist, so there is nothing to go back to.
+    expect(screen.queryByRole("button", { name: "다시 고르기" })).not.toBeInTheDocument();
     submitName("일코해제");
     await waitFor(() => expect(state.push).toHaveBeenCalledWith(`/band/${TEAM}?created=1`));
     expect(state.createTeamFromPlaylist).toHaveBeenCalledWith("pl-1", "일코해제");
