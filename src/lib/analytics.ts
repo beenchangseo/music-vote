@@ -27,8 +27,9 @@ type EventMap = {
   };
   // 밴드(팀). 사람·날짜 단위 성공 지표는 DB 로 센다(scripts/team-metrics.mjs). 이벤트는 경로 비교용.
   team_created: {
-    // card = 방의 안내 카드, settings = 방 설정, attach = 기존 방을 내 밴드에 넣음(팀 행은 새로 안 생김)
-    source: "card" | "settings" | "attach";
+    // card = 방의 안내 카드, settings = 방 설정, attach = 기존 방을 내 밴드에 넣음(팀 행은 새로 안 생김),
+    // home = 홈 "새 밴드" 시트(빈 밴드든 고른 플레이리스트든), home_card = 홈의 밴드 만들기 카드
+    source: "card" | "settings" | "attach" | "home" | "home_card";
   };
   team_joined: {
     // true = 로그인 복귀 자동 가입(?join=1), false = "밴드 들어가기" 버튼

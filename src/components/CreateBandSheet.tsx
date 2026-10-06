@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type RefObject } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useRouter } from "next/navigation";
 import Modal from "./ui/Modal";
 import Button from "./ui/Button";
 import Input from "./ui/Input";
-import { createTeamFromPlaylist } from "@/actions/team";
+import { createTeam, createTeamFromPlaylist } from "@/actions/team";
 import { getVotingSettings } from "@/actions/member";
 import { track } from "@/lib/analytics";
 import { TEAM_NAME_MAX } from "@/lib/team-domain";
@@ -18,45 +19,70 @@ export interface CreatedBand {
   memberCount: number;
 }
 
-interface CreateBandSheetProps {
-  open: boolean;
-  onClose: () => void;
+/** 홈에서 고르는 "같이 투표한 멤버" 플레이리스트 (DR3): 내가 방장 · 밴드 없음 · 로그인 멤버 ≥ 2. */
+export interface BandCandidate {
+  id: string;
+  title: string;
+  /** 로그인 참여자 수(나 포함). 올리면 모두 멤버가 된다. */
+  memberCount: number;
+  /** 나를 뺀 참여자 앞 3명. */
+  memberPreview: string[];
+}
+
+type PromoteProps = {
+  /** 방 설정 행이나 플레이리스트 안 안내 카드에서 연다. 만든 뒤 방에 머문다. */
+  mode?: "promote";
   playlistId: string;
   adminToken: string | null;
   /** team_created 이벤트의 출처. 방 설정 행이면 settings, 안내 카드면 card. */
   source: "card" | "settings";
   onCreated: (band: CreatedBand) => void;
-}
+};
+
+type HomeProps = {
+  /** 홈의 "새 밴드"(home)나 홈 카드(home_card)에서 연다. 만든 뒤 밴드 홈으로 간다. */
+  mode: "home";
+  source: "home" | "home_card";
+  /** "같이 투표한 멤버로 만들기" 목록. 비면 바로 빈 밴드 이름 입력. */
+  candidates: BandCandidate[];
+  /** 내가 참여만 한(방장 아님) 밴드 없는 플레이리스트 중 가장 최근 것의 제목 (DR11). 없으면 null. */
+  participantOnlyTitle: string | null;
+};
+
+type CreateBandSheetProps = { open: boolean; onClose: () => void } & (PromoteProps | HomeProps);
 
 /**
- * "이 멤버로 밴드 만들기" 시트 (디자인 리뷰 9A·10A). 방 설정 행과 안내 카드(F7)가 같이 연다.
- * 이름은 비운 채 자동 포커스 (방 제목은 보통 공연 이름이라 미리 채우지 않는다).
+ * "밴드 만들기" 시트 (디자인 리뷰 9A·10A, DR3 · DR11 · DR14).
+ * - promote: 방 설정 행과 안내 카드(F7)가 연다. 그 방의 참여자가 모두 멤버가 된다.
+ * - home: 홈에서 연다. 대상 플레이리스트가 있으면 먼저 고르게 하고, 아니면 멤버 없는 빈 밴드를 만든다.
+ * 이름은 비운 채 포커스 (방 제목은 보통 공연 이름이라 미리 채우지 않는다).
  */
-export default function CreateBandSheet({ open, onClose, ...body }: CreateBandSheetProps) {
+export default function CreateBandSheet(props: CreateBandSheetProps) {
   // initialFocus instead of autoFocus so focus goes back to the opener on close.
   const inputRef = useRef<HTMLInputElement>(null);
   return (
-    <Modal open={open} onClose={onClose} title="밴드 만들기" initialFocus={inputRef}>
-      <CreateBandBody {...body} onClose={onClose} inputRef={inputRef} />
+    <Modal open={props.open} onClose={props.onClose} title="밴드 만들기" initialFocus={inputRef}>
+      {props.mode === "home" ? (
+        <HomeBody {...props} inputRef={inputRef} />
+      ) : (
+        <PromoteBody {...props} inputRef={inputRef} />
+      )}
     </Modal>
   );
 }
 
-function CreateBandBody({
+type InputRef = { inputRef: RefObject<HTMLInputElement | null> };
+
+function PromoteBody({
   playlistId,
   adminToken,
   source,
   onCreated,
   onClose,
   inputRef,
-}: Omit<CreateBandSheetProps, "open"> & { inputRef: RefObject<HTMLInputElement | null> }) {
-  const inputId = useId();
-  const helpId = useId();
-  const [name, setName] = useState("");
+}: PromoteProps & { onClose: () => void } & InputRef) {
   // Participants who become members. Reuses the owner-only room settings read (member.ts).
   const [memberNames, setMemberNames] = useState<string[] | null>(null);
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -73,33 +99,183 @@ function CreateBandBody({
     };
   }, [playlistId, adminToken]);
 
+  return (
+    <NameForm
+      inputRef={inputRef}
+      onSubmit={async (name) => {
+        const result = await createTeamFromPlaylist(playlistId, name);
+        if (!result.success) return result.reason;
+        track("team_created", { source });
+        onCreated({
+          teamId: result.teamId,
+          name: result.name,
+          inviteCode: result.inviteCode,
+          memberCount: result.memberCount,
+        });
+        return null;
+      }}
+      note={
+        memberNames === null ? (
+          <p className="text-sm text-text-muted">참여자를 불러오는 중…</p>
+        ) : memberNames.length > 0 ? (
+          <>
+            <p className="text-sm font-medium text-text">이 플레이리스트 참여자 {memberNames.length}명이 멤버가 돼요</p>
+            <p className="mt-1 text-caption leading-relaxed text-text-muted">{memberNames.join(", ")}</p>
+          </>
+        ) : (
+          <p className="text-sm text-text-muted">이 플레이리스트 참여자가 모두 멤버가 돼요</p>
+        )
+      }
+      footer={
+        <Button type="button" variant="ghost" fullWidth className="mt-2" onClick={onClose}>
+          나중에
+        </Button>
+      }
+    />
+  );
+}
+
+function HomeBody({ source, candidates, participantOnlyTitle, inputRef }: HomeProps & InputRef) {
+  const router = useRouter();
+  // With candidates the sheet asks first (DR3); otherwise it goes straight to an empty band.
+  const [step, setStep] = useState<"choose" | "empty" | BandCandidate>(candidates.length > 0 ? "choose" : "empty");
+
+  function created(teamId: string) {
+    track("team_created", { source });
+    router.push(`/band/${teamId}?created=1`);
+  }
+
+  // DR11: a member of someone else's band-less playlist may be about to split that band in two.
+  const participantNote = participantOnlyTitle && (
+    <p className="mb-4 rounded-control bg-surface px-3 py-2.5 text-sm leading-relaxed text-text-muted">
+      「{participantOnlyTitle}」 멤버와 같은 밴드라면, 방장이 그 플레이리스트에서 만들면 다 같이 들어가요
+    </p>
+  );
+
+  if (step === "choose") {
+    return (
+      <div>
+        {participantNote}
+        <p className="text-sm font-semibold text-text">같이 투표한 멤버로 만들기</p>
+        <ul className="mt-2 space-y-2">
+          {candidates.map((candidate) => (
+            <li key={candidate.id}>
+              <button
+                type="button"
+                onClick={() => setStep(candidate)}
+                className="flex min-h-14 w-full items-center justify-between gap-3 rounded-control border border-border bg-surface px-4 py-3 text-left transition-colors hover:bg-surface-hover"
+              >
+                <span className="min-w-0 flex-1 truncate text-body font-medium text-text">{candidate.title}</span>
+                <span className="shrink-0 text-sm text-text-muted tabular-nums">멤버 {candidate.memberCount}명</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <button
+          type="button"
+          onClick={() => setStep("empty")}
+          className="mt-3 inline-flex min-h-11 w-full items-center justify-center text-sm font-semibold text-text-muted transition-colors hover:text-text"
+        >
+          멤버 없이 새 밴드로 시작
+        </button>
+      </div>
+    );
+  }
+
+  if (step === "empty") {
+    return (
+      <NameForm
+        inputRef={inputRef}
+        focusOnMount={candidates.length > 0}
+        header={participantNote}
+        onSubmit={async (name) => {
+          const result = await createTeam(name);
+          if (!result.success) return result.reason;
+          created(result.teamId);
+          return null;
+        }}
+        // DR14: no participant box for an empty band, one line on what comes next instead.
+        note={<p className="text-sm text-text-muted">만들고 나면 단톡방에 초대 링크를 보내요</p>}
+      />
+    );
+  }
+
+  const others = step.memberPreview.join(", ");
+  const rest = step.memberCount - 1 - step.memberPreview.length;
+  return (
+    <NameForm
+      inputRef={inputRef}
+      focusOnMount
+      onSubmit={async (name) => {
+        const result = await createTeamFromPlaylist(step.id, name);
+        if (!result.success) return result.reason;
+        created(result.teamId);
+        return null;
+      }}
+      note={
+        <>
+          <p className="text-sm font-medium text-text">
+            「{step.title}」 참여자 {step.memberCount}명이 멤버가 돼요
+          </p>
+          {others && (
+            <p className="mt-1 text-caption leading-relaxed text-text-muted">
+              {others}
+              {rest > 0 && ` 외 ${rest}명`}
+            </p>
+          )}
+        </>
+      }
+    />
+  );
+}
+
+/** 밴드 이름 입력 + 만들기. onSubmit 은 실패면 reason, 성공이면 null 을 돌려준다. */
+function NameForm({
+  inputRef,
+  onSubmit,
+  note,
+  header,
+  footer,
+  focusOnMount = false,
+}: InputRef & {
+  onSubmit: (name: string) => Promise<string | null>;
+  note: ReactNode;
+  header?: ReactNode;
+  footer?: ReactNode;
+  /** 시트 안에서 고르기 단계 다음에 나타날 때. 처음부터 보이면 Modal 의 initialFocus 가 맡는다. */
+  focusOnMount?: boolean;
+}) {
+  const inputId = useId();
+  const helpId = useId();
+  const [name, setName] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (focusOnMount) inputRef.current?.focus();
+  }, [focusOnMount, inputRef]);
+
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!name.trim() || pending) return;
     setPending(true);
     setError(null);
+    // On success the sheet closes or the page moves on; staying busy blocks a second band meanwhile.
+    let succeeded = false;
     try {
-      const result = await createTeamFromPlaylist(playlistId, name);
-      if (!result.success) {
-        setError(teamMessage(result.reason));
-        return;
-      }
-      track("team_created", { source });
-      onCreated({
-        teamId: result.teamId,
-        name: result.name,
-        inviteCode: result.inviteCode,
-        memberCount: result.memberCount,
-      });
+      const reason = await onSubmit(name);
+      if (reason) setError(teamMessage(reason));
+      else succeeded = true;
     } catch (caught) {
       setError(teamMessage(caught));
     } finally {
-      setPending(false);
+      if (!succeeded) setPending(false);
     }
   }
 
   return (
     <form onSubmit={submit}>
+      {header}
       <label htmlFor={inputId} className="text-sm font-semibold text-text">
         밴드 이름
       </label>
@@ -118,18 +294,7 @@ function CreateBandBody({
         나중에 바꿀 수 없어요. 공연 이름 말고 밴드 이름을 써 주세요
       </p>
 
-      <div className="mt-4 rounded-control border border-border bg-surface px-3 py-2.5">
-        {memberNames === null ? (
-          <p className="text-sm text-text-muted">참여자를 불러오는 중…</p>
-        ) : memberNames.length > 0 ? (
-          <>
-            <p className="text-sm font-medium text-text">이 플레이리스트 참여자 {memberNames.length}명이 멤버가 돼요</p>
-            <p className="mt-1 text-caption leading-relaxed text-text-muted">{memberNames.join(", ")}</p>
-          </>
-        ) : (
-          <p className="text-sm text-text-muted">이 플레이리스트 참여자가 모두 멤버가 돼요</p>
-        )}
-      </div>
+      <div className="mt-4 rounded-control border border-border bg-surface px-3 py-2.5">{note}</div>
 
       <Button type="submit" size="lg" fullWidth className="mt-5" disabled={!name.trim()} loading={pending}>
         밴드 만들기
@@ -139,9 +304,7 @@ function CreateBandBody({
           {error}
         </p>
       )}
-      <Button type="button" variant="ghost" fullWidth className="mt-2" onClick={onClose}>
-        나중에
-      </Button>
+      {footer}
     </form>
   );
 }
