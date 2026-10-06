@@ -23,6 +23,7 @@
     leaveTeam               로그인 · owner 가 아닌 멤버 (자기 행만)
     getTeamInvite           불필요 · 이름·멤버 수·앞 3명·공연 날짜만 (방·초대 코드 없음)
     getTeamHome             불필요 · 멤버만 본문, 그 외에는 밴드 이름만
+    teamExists              불필요 · 있는지만 (밴드 홈이 응답 전에 404 를 정하려고)
     getAttachablePlaylists  로그인 · 그 밴드 멤버 · 내가 만든 밴드 없는 플레이리스트만 (넣기 시트 DR8)
     getMyTeams              불필요 (비로그인 빈 배열) · 내 team_members 행만
 */
@@ -790,6 +791,24 @@ export async function getTeamHome(teamId: string): Promise<TeamHomeView | null> 
     }),
     attachableCount,
   };
+}
+
+// ============================================================
+// 존재 확인 (밴드 홈 404)
+// ============================================================
+
+/**
+ * 밴드가 있는지만 본다. 밴드 홈은 응답을 흘려보내기 전에 이것으로 없는 밴드를 404 로 끝낸다
+ * (스트리밍이 시작되면 상태 코드를 바꿀 수 없다). 기본키 한 줄이라 빠르다. 조회 실패는 던진다(오류 화면).
+ */
+export async function teamExists(teamId: string): Promise<boolean> {
+  if (!isTeamIdFormat(teamId)) return false;
+  const { data, error } = await createAdminClient().from("teams").select("id").eq("id", teamId).maybeSingle();
+  if (error) {
+    logTeamError("teamExists", "lookup failed", { teamId }, error);
+    throw new Error("밴드를 불러오지 못했어요.");
+  }
+  return !!data;
 }
 
 // ============================================================

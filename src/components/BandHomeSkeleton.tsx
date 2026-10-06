@@ -1,5 +1,9 @@
-/** 밴드 홈 자리 표시 (디자인 리뷰 7A): 이름·날짜 타일·주 버튼 자리를 그대로 잡아 둔다. */
-export default function BandLoading() {
+/**
+ * 밴드 홈 자리 표시 (디자인 리뷰 7A): 이름·날짜 타일·주 버튼 자리를 그대로 잡아 둔다.
+ * 라우트의 loading.tsx 가 아니라 페이지 안 Suspense 의 fallback 이다. loading.tsx 는 응답을 무조건 먼저
+ * 흘려보내 없는 밴드도 200 이 됐다. 페이지가 존재를 먼저 확인한 뒤에 이 뼈대를 보낸다.
+ */
+export default function BandHomeSkeleton() {
   return (
     <main className="min-h-full bg-bg" aria-busy="true" aria-label="밴드를 불러오는 중">
       <div className="mx-auto max-w-md px-4 py-6">

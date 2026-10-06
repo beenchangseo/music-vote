@@ -1,11 +1,12 @@
-import { cache } from "react";
+import { cache, Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import BandHomeClient from "@/components/BandHomeClient";
+import BandHomeSkeleton from "@/components/BandHomeSkeleton";
 import LoginButton from "@/components/LoginButton";
 import { buttonClassName } from "@/components/ui/Button";
-import { getTeamHome } from "@/actions/team";
+import { getTeamHome, teamExists, type TeamHomeView } from "@/actions/team";
 
 // generateMetadata and the page read the same band once per request.
 const loadTeamHome = cache((teamId: string) => getTeamHome(teamId));
@@ -27,14 +28,37 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function BandPage({ params, searchParams }: PageProps) {
   const [{ teamId }, query] = await Promise.all([params, searchParams]);
-  const view = await loadTeamHome(teamId);
+  // The full read starts now and runs while the existence check below decides the status code.
+  const home = loadTeamHome(teamId);
+  home.catch(() => {}); // Handled where it is awaited; this only keeps a 404 from logging an unhandled rejection.
+  // A real 404 needs the answer before anything streams (Next: the status is sent with the first chunk).
+  if (!(await teamExists(teamId))) notFound();
+
+  return (
+    <Suspense fallback={<BandHomeSkeleton />}>
+      <BandHome home={home} created={query.created === "1"} joined={query.joined === "1"} />
+    </Suspense>
+  );
+}
+
+async function BandHome({
+  home,
+  created,
+  joined,
+}: {
+  home: Promise<TeamHomeView | null>;
+  created: boolean;
+  joined: boolean;
+}) {
+  const view = await home;
+  // Deleted between the check and the read: a streamed not-found (200 + noindex) is fine for that race.
   if (!view) notFound();
 
   if (view.access === "guest") {
     return <MembersOnly teamId={view.team.id} name={view.team.name} loggedIn={view.loggedIn} />;
   }
 
-  return <BandHomeClient view={view} created={query.created === "1"} joined={query.joined === "1"} />;
+  return <BandHomeClient view={view} created={created} joined={joined} />;
 }
 
 /**

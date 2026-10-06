@@ -26,6 +26,7 @@ import {
   createTeam,
   createTeamFromPlaylist,
   getAttachablePlaylists,
+  teamExists,
   getMyTeams,
   getTeamHome,
   getTeamInvite,
@@ -815,6 +816,28 @@ describe("getTeamHome", () => {
 // ============================================================
 // getMyTeams
 // ============================================================
+
+describe("teamExists (band home 404)", () => {
+  it("answers no for something that is not a band id, without a query", async () => {
+    await expect(teamExists("not-a-uuid")).resolves.toBe(false);
+    expect(state.admin.ops).toEqual([]);
+  });
+
+  it("reads one row by id", async () => {
+    state.admin = createFakeClient(router({ "teams:select": ok({ id: TEAM }) }));
+    await expect(teamExists(TEAM)).resolves.toBe(true);
+    expect(state.admin.ops).toHaveLength(1);
+    expect(state.admin.ops[0].filters).toEqual({ id: TEAM });
+  });
+
+  it("answers no for a missing band and throws on a failed read", async () => {
+    state.admin = createFakeClient(router({ "teams:select": ok(null) }));
+    await expect(teamExists(TEAM)).resolves.toBe(false);
+    state.admin = createFakeClient(router({ "teams:select": dbError() }));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    await expect(teamExists(TEAM)).rejects.toThrow("밴드를 불러오지 못했어요.");
+  });
+});
 
 describe("getAttachablePlaylists (DR8)", () => {
   const rows = [
