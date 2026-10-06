@@ -144,8 +144,9 @@ describe("BandHomeClient banners (11A)", () => {
 });
 
 describe("BandHomeClient primary action (1A)", () => {
+  // A lone owner who already has a playlist (made from a room). With none, DR1's start area takes over.
   it("asks a lone owner to call members", () => {
-    renderHome(ownerView({ members: [ownerView().members[0]] }));
+    renderHome(ownerView({ members: [ownerView().members[0]], rooms: [room()] }));
     expect(screen.getByRole("button", { name: "카톡으로 멤버 부르기" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "새 플레이리스트" })).toHaveAttribute("href", `/new?band=${TEAM}`);
   });
@@ -156,7 +157,7 @@ describe("BandHomeClient primary action (1A)", () => {
   });
 
   it("closes the call-members card and keeps it closed for this band in this browser", () => {
-    const lone = ownerView({ members: [ownerView().members[0]] });
+    const lone = ownerView({ members: [ownerView().members[0]], rooms: [room()] });
     renderHome(lone);
     const card = screen.getByText("멤버를 불러야 같이 투표해요").closest("div")!.parentElement!;
     fireEvent.click(within(card).getByRole("button", { name: "닫기" }));
@@ -183,6 +184,53 @@ describe("BandHomeClient primary action (1A)", () => {
     renderHome(view({ rooms: [room({ setlistConfirmed: true })] }));
     expect(screen.queryByRole("link", { name: /지금 플레이리스트/ })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "새 플레이리스트" })).toBeInTheDocument();
+  });
+});
+
+describe("BandHomeClient start area for a new empty band (DR1, DR16)", () => {
+  const empty = () => ownerView({ members: [ownerView().members[0]], rooms: [] });
+
+  it("gathers the first steps into one area and hides the other ways in", () => {
+    renderHome(empty());
+    const area = screen.getByRole("region", { name: "첫 플레이리스트를 만들어요" });
+    expect(within(area).getByRole("link", { name: "첫 플레이리스트 만들기" })).toHaveAttribute("href", `/new?band=${TEAM}`);
+    // One way to invite: the start area. No icon, no 더 부르기 tile, no call-members card.
+    expect(screen.getAllByRole("button", { name: /부르기|멤버 초대/ })).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: "멤버 초대" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "더 부르기" })).not.toBeInTheDocument();
+    expect(screen.queryByText("멤버를 불러야 같이 투표해요")).not.toBeInTheDocument();
+    // No empty shelf with a second "new playlist" and no empty history.
+    expect(screen.queryByRole("link", { name: "새 플레이리스트" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: /우리가 했던 곡/ })).not.toBeInTheDocument();
+
+    fireEvent.click(within(area).getByRole("button", { name: "카톡으로 멤버 부르기" }));
+    expect(screen.getByRole("dialog", { name: "멤버 초대" })).toBeInTheDocument();
+  });
+
+  it("says the band was made in one line, without a member count, and strips the query", () => {
+    renderHome(empty(), { created: true });
+    expect(screen.getByRole("status")).toHaveTextContent(/^밴드를 만들었어요$/);
+    expect(screen.queryByRole("button", { name: "카톡으로 알리기" })).not.toBeInTheDocument();
+    expect(replace).toHaveBeenCalledWith(`/band/${TEAM}`, { scroll: false });
+  });
+
+  it("goes back to the usual home once the band has a playlist", () => {
+    renderHome(ownerView({ members: [ownerView().members[0]], rooms: [room()] }));
+    expect(screen.queryByRole("region", { name: "첫 플레이리스트를 만들어요" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "멤버 초대" })).toBeInTheDocument();
+  });
+
+  it("goes back to the usual home once a member joins", () => {
+    renderHome(ownerView({ rooms: [] }));
+    expect(screen.queryByRole("region", { name: "첫 플레이리스트를 만들어요" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "새 플레이리스트" })).toBeInTheDocument();
+  });
+
+  it("tells a member who joined a band with no playlist what to wait for", () => {
+    renderHome(view({ rooms: [] }), { joined: true });
+    const banner = screen.getByRole("status");
+    expect(banner).toHaveTextContent("방장이 첫 플레이리스트를 만들면 여기에 떠요");
+    expect(within(banner).queryByRole("link")).not.toBeInTheDocument();
   });
 });
 

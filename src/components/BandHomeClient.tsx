@@ -11,6 +11,7 @@ import GuitarIcon from "./GuitarIcon";
 import { showDateSpokenLabel } from "./ShowDateTile";
 import { BandArt, MemberAvatar, RoomCover, SongThumb } from "./BandArt";
 import BandInviteSheet, { KakaoInviteButton } from "./BandInviteSheet";
+import BandStartArea from "./BandStartArea";
 import BandDateSheet from "./BandDateSheet";
 import RemoveMemberModal from "./RemoveMemberModal";
 import { LEFT_BAND_STORAGE_KEY } from "./LeftBandNotice";
@@ -40,7 +41,7 @@ const roomDate = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric
 
 interface BandHomeClientProps {
   view: MemberView;
-  /** ?created=1 (방 설정에서 만들고 왔다). 배너는 한 번만, 쿼리는 첫 마운트에 지운다 (11A·Codex 6). */
+  /** ?created=1 (방 설정이나 홈에서 만들고 왔다). 배너는 한 번만, 쿼리는 첫 마운트에 지운다 (11A·Codex 6). */
   created: boolean;
   /** ?joined=1 (초대 링크로 막 들어왔다). */
   joined: boolean;
@@ -110,6 +111,9 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
   const activeRoom = rooms[0] && !rooms[0].setlistConfirmed ? rooms[0] : null;
   const alone = members.length === 1;
   const newRoomHref = `/new?band=${team.id}`;
+  // DR1: a band made at home starts as the owner alone with no playlist. One start area replaces
+  // the created banner, the call-members card, the invite icon, "더 부르기" and the empty shelf.
+  const starting = isOwner && alone && rooms.length === 0;
 
   async function leave() {
     const ok = await showDanger(LEAVE_MESSAGE, { title: `${team.name}에서 나갈까요?`, confirmLabel: "나가기" });
@@ -159,6 +163,15 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
             <h1 className="mt-1 line-clamp-2 break-keep text-display font-black text-white [text-shadow:0_2px_16px_rgb(0_0_0/0.35)]">
               {team.name}
             </h1>
+            {/* DR1: in the start area the success is one quiet line, not a banner with a member count. */}
+            {starting && banner === "created" && (
+              <p role="status" className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-success">
+                <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                밴드를 만들었어요
+              </p>
+            )}
             <p className="mt-2 text-sm text-text-muted tabular-nums">
               멤버 {members.length}명<Dot />
               플레이리스트 {rooms.length}개<Dot />
@@ -186,14 +199,18 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
               <span className="ml-1.5 text-sm text-text-muted tabular-nums">+{members.length - STACKED_AVATARS}</span>
             )}
           </a>
-          <IconButton bare aria-label="멤버 초대" onClick={() => setInviteOpen(true)}>
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
-            </svg>
-          </IconButton>
+          {!starting && (
+            <IconButton bare aria-label="멤버 초대" onClick={() => setInviteOpen(true)}>
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+              </svg>
+            </IconButton>
+          )}
         </div>
 
-        {banner && (
+        {starting && <BandStartArea newRoomHref={newRoomHref} onInvite={() => setInviteOpen(true)} />}
+
+        {banner && !starting && (
           <Card role="status" className="mt-4 flex items-start gap-3">
             <svg className="mt-0.5 h-5 w-5 shrink-0 text-success" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -204,6 +221,10 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
                   ? `밴드를 만들었어요. 멤버 ${members.length}명이 함께해요`
                   : `${team.name} 밴드에 들어왔어요`}
               </p>
+              {/* DR16: nothing to vote on yet, so say what to wait for instead of offering a button. */}
+              {banner === "joined" && rooms.length === 0 && (
+                <p className="mt-1 text-sm text-text-muted">방장이 첫 플레이리스트를 만들면 여기에 떠요</p>
+              )}
               {banner === "created" && (
                 <KakaoInviteButton onClick={() => setInviteOpen(true)} className="mt-3">
                   카톡으로 알리기
@@ -223,7 +244,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
         )}
 
         {/* 1A: a band of one needs members before anything else. Closable; the invite icon stays. */}
-        {alone && !inviteCardStoredClosed && !inviteCardClosed && (
+        {alone && !starting && !inviteCardStoredClosed && !inviteCardClosed && (
           <Card variant="elevated" className="mt-5 motion-safe:animate-fade-in">
             <div className="flex items-start gap-3">
               <div className="min-w-0 flex-1">
@@ -240,9 +261,9 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
 
         {activeRoom && <NowRoomCard room={activeRoom} />}
 
-        <RoomsShelf rooms={rooms} newRoomHref={newRoomHref} />
+        {!starting && <RoomsShelf rooms={rooms} newRoomHref={newRoomHref} />}
 
-        <PlayedSongs songs={played} />
+        {!(starting && played.length === 0) && <PlayedSongs songs={played} />}
 
         <section id="band-members" aria-labelledby="band-members-title" className="mt-10 scroll-mt-4">
           <SectionTitle id="band-members-title" title="멤버" count={members.length} />
@@ -255,20 +276,22 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
                 onRemove={() => setRemoving({ userId: member.userId!, displayName: member.displayName })}
               />
             ))}
-            <li>
-              <button
-                type="button"
-                onClick={() => setInviteOpen(true)}
-                className="flex w-full flex-col items-center gap-2 text-text-muted transition-colors hover:text-text"
-              >
-                <span className="flex h-16 w-16 items-center justify-center rounded-pill border-2 border-dashed border-border-strong">
-                  <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                  </svg>
-                </span>
-                <span className="text-sm">더 부르기</span>
-              </button>
-            </li>
+            {!starting && (
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setInviteOpen(true)}
+                  className="flex w-full flex-col items-center gap-2 text-text-muted transition-colors hover:text-text"
+                >
+                  <span className="flex h-16 w-16 items-center justify-center rounded-pill border-2 border-dashed border-border-strong">
+                    <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                  </span>
+                  <span className="text-sm">더 부르기</span>
+                </button>
+              </li>
+            )}
           </ul>
         </section>
 
