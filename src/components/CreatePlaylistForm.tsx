@@ -324,7 +324,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
             className={`relative h-6 w-10 shrink-0 rounded-pill transition-colors ${inSoleTeam ? "bg-primary" : "bg-border-strong"}`}
           >
             <span
-              className={`absolute top-0.5 h-5 w-5 rounded-pill bg-white transition-all ${inSoleTeam ? "left-[18px]" : "left-0.5"}`}
+              className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-pill bg-white transition-transform ${inSoleTeam ? "translate-x-4" : "translate-x-0"}`}
             />
           </span>
         </button>
