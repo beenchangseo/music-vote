@@ -107,7 +107,8 @@ async function SignedInHome({
 
         {failed ? (
           <section aria-labelledby="home-load-error" className="mt-10 rounded-card border border-border bg-surface p-4">
-            <p id="home-load-error" className="text-sm text-text">
+            {/* The skeleton announced loading; a failure that replaces it has to be announced too. */}
+            <p id="home-load-error" role="alert" className="text-sm text-text">
               목록을 불러오지 못했어요
             </p>
             {/* The home is dynamic, so navigating to it again reads the lists again. */}

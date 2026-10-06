@@ -100,7 +100,9 @@ function SheetBody({ teamId, onAttached, onClose }: { teamId: string; onAttached
 
       {loadFailed ? (
         <div className="rounded-control border border-border bg-surface p-4">
-          <p className="text-sm text-text">목록을 불러오지 못했어요</p>
+          <p role="alert" className="text-sm text-text">
+            목록을 불러오지 못했어요
+          </p>
           <Button
             variant="secondary"
             className="mt-3 min-h-11"

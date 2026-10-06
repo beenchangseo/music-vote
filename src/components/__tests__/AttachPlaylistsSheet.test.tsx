@@ -83,7 +83,8 @@ describe("AttachPlaylistsSheet (DR8, DR9)", () => {
   it("offers to load again when the list cannot be read", async () => {
     state.getAttachablePlaylists.mockResolvedValueOnce({ success: false, reason: "write_failed" });
     const sheet = open();
-    fireEvent.click(await within(sheet).findByRole("button", { name: "다시 불러오기" }));
+    expect(await within(sheet).findByRole("alert")).toHaveTextContent("목록을 불러오지 못했어요");
+    fireEvent.click(within(sheet).getByRole("button", { name: "다시 불러오기" }));
     expect(await within(sheet).findByText("10월 합주")).toBeInTheDocument();
     expect(state.getAttachablePlaylists).toHaveBeenCalledTimes(2);
   });
