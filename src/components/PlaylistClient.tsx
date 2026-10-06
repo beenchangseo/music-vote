@@ -51,6 +51,8 @@ interface PlaylistClientProps {
   myTeams?: MyTeam[];
   /** Owner of a room without a band only: logged-in room members, for the band prompt (F7). */
   memberCount?: number | null;
+  /** The band prompt was closed for this room (server read of the dismissal cookie, DR6). */
+  bandPromptDismissed?: boolean;
 }
 
 export default function PlaylistClient({
@@ -64,6 +66,7 @@ export default function PlaylistClient({
   team = null,
   myTeams = [],
   memberCount = null,
+  bandPromptDismissed = false,
 }: PlaylistClientProps) {
   // 보관된 합주방: 로그인 도입 전 익명 합주방. 지난 기록만 읽는다.
   const isArchived = isArchivedPlaylist(playlist);
@@ -441,7 +444,12 @@ export default function PlaylistClient({
                   onDismiss={() => setJustCreatedTeam(null)}
                 />
               ) : showBandPrompt ? (
-                <BandPromptCard playlistId={playlist.id} adminToken={adminToken} onCreated={setJustCreatedTeam} />
+                <BandPromptCard
+                  playlistId={playlist.id}
+                  adminToken={adminToken}
+                  dismissed={bandPromptDismissed}
+                  onCreated={setJustCreatedTeam}
+                />
               ) : null}
 
               {/* Add song form (hide if expired) */}

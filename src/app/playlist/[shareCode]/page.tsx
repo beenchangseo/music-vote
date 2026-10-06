@@ -1,8 +1,10 @@
 import { cache } from "react";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { createAdminClient, createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { shouldExposeVoters } from "@/lib/vote-domain";
+import { BAND_PROMPT_COOKIE, parseDismissals } from "@/lib/prompt-dismissals";
 import { getMyTeams, type MyTeam } from "@/actions/team";
 import PlaylistClient from "@/components/PlaylistClient";
 import type { Metadata } from "next";
@@ -235,6 +237,10 @@ export default async function PlaylistPage({ params }: PageProps) {
     };
   });
 
+  // DR6: the band prompt's closed state comes with the page, so the card never pops in or out after load.
+  const bandPromptDismissed =
+    wantsBandPrompt && parseDismissals((await cookies()).get(BAND_PROMPT_COOKIE)?.value).includes(playlist.id);
+
   songsWithScores.sort((a, b) => b.score - a.score || new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
   return (
@@ -249,6 +255,7 @@ export default async function PlaylistPage({ params }: PageProps) {
       team={roomTeam}
       myTeams={myTeams}
       memberCount={memberCount}
+      bandPromptDismissed={bandPromptDismissed}
     />
   );
 }

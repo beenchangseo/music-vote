@@ -122,6 +122,28 @@ describe("CreateBandSheet from home (DR3, DR11, DR14)", () => {
   });
 });
 
+describe("CreateBandSheet from the home card (DR5)", () => {
+  it("starts at the name for the card's playlist and builds the band from it", async () => {
+    render(
+      <CreateBandSheet
+        open
+        onClose={vi.fn()}
+        mode="home"
+        source="home_card"
+        candidates={[candidate]}
+        target={candidate}
+        participantOnlyTitle={null}
+      />,
+    );
+    expect(screen.queryByText("같이 투표한 멤버로 만들기")).not.toBeInTheDocument();
+    expect(screen.getByText("「10월 정기 합주」 참여자 5명이 멤버가 돼요")).toBeInTheDocument();
+    submitName("일코해제");
+    await waitFor(() => expect(state.push).toHaveBeenCalledWith(`/band/${TEAM}?created=1`));
+    expect(state.createTeamFromPlaylist).toHaveBeenCalledWith("pl-1", "일코해제");
+    expect(state.track).toHaveBeenCalledWith("team_created", { source: "home_card" });
+  });
+});
+
 describe("CreateBandSheet from a playlist (promote, unchanged)", () => {
   it("keeps the participant preview and 나중에", async () => {
     state.getVotingSettings.mockResolvedValue({ members: [{ display_name: "보컬" }, { display_name: "기타" }] });

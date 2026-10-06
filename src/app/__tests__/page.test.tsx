@@ -7,6 +7,7 @@ import type { MyPlaylistDbEntry } from "@/actions/playlist";
 
 const state = vi.hoisted(() => ({
   cookieNames: [] as string[],
+  dismissedCookie: undefined as string | undefined,
   getCurrentUser: vi.fn(),
   getMyPlaylists: vi.fn(),
   getMyTeams: vi.fn(),
@@ -15,7 +16,13 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock("next/headers", () => ({
-  cookies: async () => ({ getAll: () => state.cookieNames.map((name) => ({ name, value: "x" })) }),
+  cookies: async () => ({
+    getAll: () => state.cookieNames.map((name) => ({ name, value: "x" })),
+    get: (name: string) =>
+      name === "plypick_band_prompt_dismissed" && state.dismissedCookie !== undefined
+        ? { name, value: state.dismissedCookie }
+        : undefined,
+  }),
 }));
 vi.mock("@/lib/supabase/server", () => ({ createServerSupabaseClient: vi.fn(), createAdminClient: vi.fn() }));
 vi.mock("@/lib/auth", async (importOriginal) => ({
@@ -33,6 +40,9 @@ vi.mock("@/components/HeroCTA", () => ({
 vi.mock("@/components/MyBands", () => ({ default: () => <div data-testid="my-bands" /> }));
 vi.mock("@/components/MyPlaylists", () => ({ default: () => <div data-testid="my-playlists" /> }));
 vi.mock("@/components/LeftBandNotice", () => ({ default: () => null }));
+vi.mock("@/components/BandPromptCard", () => ({
+  HomeBandCard: ({ candidate }: { candidate: { id: string } }) => <div data-testid="home-card" data-target={candidate.id} />,
+}));
 vi.mock("@/components/home/DemoVote", () => ({ default: () => null }));
 vi.mock("@/components/home/DemoPlayback", () => ({ default: () => null }));
 vi.mock("@/components/home/DemoSetlist", () => ({ default: () => null }));
@@ -80,6 +90,7 @@ const hero = () => state.heroProps.at(-1)!;
 
 beforeEach(() => {
   state.cookieNames = [SESSION_COOKIE];
+  state.dismissedCookie = undefined;
   state.getCurrentUser.mockReset().mockResolvedValue(ME);
   state.getMyPlaylists.mockReset().mockResolvedValue({ playlists: [], failed: false });
   state.getMyTeams.mockReset().mockResolvedValue({ teams: [], failed: false });
@@ -162,6 +173,53 @@ describe("home with a login cookie", () => {
     expect(screen.queryByTestId("my-bands")).not.toBeInTheDocument();
     expect(screen.queryByTestId("my-playlists")).not.toBeInTheDocument();
     expect(screen.queryByText(/단톡방에 링크를 보내면/)).not.toBeInTheDocument();
+  });
+
+  describe("home band card (DR4 · DR5 · DR6)", () => {
+    const NEW = "11111111-0000-4000-8000-000000000001";
+    const OLD = "11111111-0000-4000-8000-000000000002";
+    const twoCandidates = {
+      playlists: [
+        playlist(NEW, { isMine: true, memberCount: 3, createdAt: "2026-10-05T00:00:00Z" }),
+        playlist(OLD, { isMine: true, memberCount: 4, createdAt: "2026-09-01T00:00:00Z" }),
+      ],
+      failed: false,
+    };
+    const card = () => screen.queryByTestId("home-card");
+
+    it("shows the newest playlist voted with others to an owner with no band", async () => {
+      state.getMyPlaylists.mockResolvedValue(twoCandidates);
+      await renderHome();
+      expect(card()).toHaveAttribute("data-target", NEW);
+    });
+
+    it("shows nothing once that one was closed, never an older one instead", async () => {
+      state.getMyPlaylists.mockResolvedValue(twoCandidates);
+      state.dismissedCookie = NEW;
+      await renderHome();
+      expect(card()).not.toBeInTheDocument();
+    });
+
+    it("comes back for a newer candidate after an older one was closed", async () => {
+      state.getMyPlaylists.mockResolvedValue(twoCandidates);
+      state.dismissedCookie = OLD;
+      await renderHome();
+      expect(card()).toHaveAttribute("data-target", NEW);
+    });
+
+    it("is not for someone who already has a band", async () => {
+      state.getMyPlaylists.mockResolvedValue(twoCandidates);
+      state.getMyTeams.mockResolvedValue({ teams: [TEAM], failed: false });
+      await renderHome();
+      expect(card()).not.toBeInTheDocument();
+    });
+
+    it("is not shown when the bands could not be read", async () => {
+      state.getMyPlaylists.mockResolvedValue(twoCandidates);
+      state.getMyTeams.mockResolvedValue({ teams: [], failed: true });
+      await renderHome();
+      expect(card()).not.toBeInTheDocument();
+    });
   });
 
   it("is state B with my band and lists", async () => {

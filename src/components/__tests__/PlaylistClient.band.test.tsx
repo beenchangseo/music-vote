@@ -75,8 +75,10 @@ const TEAM = "11111111-1111-4111-8111-111111111111";
 const OWNER = "user-owner";
 const PROMPT = /이 멤버 그대로 다음 공연도 해요/;
 
+const ROOM_ID = "22222222-2222-4222-8222-222222222222";
+
 const playlist: Playlist = {
-  id: "room-1",
+  id: ROOM_ID,
   title: "10월 합주",
   share_code: "abc123",
   deadline: null,
@@ -116,6 +118,7 @@ function ui(overrides: Partial<Props> = {}) {
 
 beforeEach(() => {
   window.localStorage.clear();
+  document.cookie = "plypick_band_prompt_dismissed=; Path=/; Max-Age=0";
 });
 
 afterEach(() => {
@@ -150,16 +153,33 @@ describe("PlaylistClient band prompt (F7, 27A)", () => {
     expect(screen.getByText(PROMPT)).toBeInTheDocument();
   });
 
-  it("stays closed in that room after it is dismissed, also after a reload", () => {
+  it("remembers a dismissal in the cookie the server reads, so a reload draws no card (DR6)", () => {
     const { unmount } = render(ui());
     fireEvent.click(screen.getByRole("button", { name: "안내 닫기" }));
     expect(screen.queryByText(PROMPT)).not.toBeInTheDocument();
+    expect(document.cookie).toContain(`plypick_band_prompt_dismissed=${ROOM_ID}`);
     unmount();
-    render(ui());
+    // Reload: the page read the cookie.
+    render(ui({ bandPromptDismissed: true }));
     expect(screen.queryByText(PROMPT)).not.toBeInTheDocument();
   });
 
-  it("still renders, and closes for this visit, when localStorage is blocked", () => {
+  it("stays closed when a cached page still says open (client navigation back)", () => {
+    const { unmount } = render(ui());
+    fireEvent.click(screen.getByRole("button", { name: "안내 닫기" }));
+    unmount();
+    render(ui({ bandPromptDismissed: false }));
+    expect(screen.queryByText(PROMPT)).not.toBeInTheDocument();
+  });
+
+  it("carries over a dismissal stored before the cookie (localStorage) and moves it (O5)", () => {
+    window.localStorage.setItem(`plypick:band-prompt-dismissed:${ROOM_ID}`, "1");
+    render(ui());
+    expect(screen.queryByText(PROMPT)).not.toBeInTheDocument();
+    expect(document.cookie).toContain(ROOM_ID);
+  });
+
+  it("still renders, and closes for this visit, when storage is blocked", () => {
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new Error("blocked");
     });

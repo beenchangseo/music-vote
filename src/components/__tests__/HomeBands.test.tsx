@@ -3,6 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import HeroCTA from "../HeroCTA";
+import { HomeBandCard } from "../BandPromptCard";
 import LeftBandNotice, { LEFT_BAND_STORAGE_KEY } from "../LeftBandNotice";
 import MyBands from "../MyBands";
 import MyPlaylists from "../MyPlaylists";
@@ -64,6 +65,31 @@ describe("HeroCTA (CEO2-A, DR2, DR3)", () => {
     expect(screen.getByRole("button", { name: "새 플레이리스트" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "새 밴드" }));
     expect(bandSheet.props.at(-1)).toMatchObject({ open: true, candidates: [candidate], participantOnlyTitle: "남의 합주" });
+  });
+});
+
+describe("HomeBandCard (DR5)", () => {
+  const candidate = { id: "33333333-3333-4333-8333-333333333333", title: "10월 정기 합주", memberCount: 4, memberPreview: ["기타", "드럼", "베이스"] };
+
+  beforeEach(() => {
+    document.cookie = "plypick_band_prompt_dismissed=; Path=/; Max-Age=0";
+  });
+
+  it("names the playlist and its members and opens the band sheet for it", () => {
+    bandSheet.props = [];
+    render(<HomeBandCard candidate={candidate} dismissed={false} />);
+    expect(screen.getByText("「10월 정기 합주」")).toBeInTheDocument();
+    expect(screen.getByText(/멤버 4명, 다음 공연도 같이 해요\?/)).toBeInTheDocument();
+    expect(screen.getByText("기타, 드럼, 베이스")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "이 멤버로 밴드 만들기" }));
+    expect(bandSheet.props.at(-1)).toMatchObject({ open: true, mode: "home", source: "home_card", target: candidate });
+  });
+
+  it("closes with a 44px button and remembers it for that playlist (shared with the playlist card)", () => {
+    render(<HomeBandCard candidate={candidate} dismissed={false} />);
+    fireEvent.click(screen.getByRole("button", { name: "안내 닫기" }));
+    expect(screen.queryByText("「10월 정기 합주」")).not.toBeInTheDocument();
+    expect(document.cookie).toContain(candidate.id);
   });
 });
 

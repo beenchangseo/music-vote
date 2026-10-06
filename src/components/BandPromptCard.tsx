@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import Card from "./ui/Card";
 import Button, { buttonClassName } from "./ui/Button";
 import IconButton from "./ui/IconButton";
-import CreateBandSheet, { type CreatedBand } from "./CreateBandSheet";
+import CreateBandSheet, { type BandCandidate, type CreatedBand } from "./CreateBandSheet";
 import { KakaoInviteButton } from "./BandInviteSheet";
-
-const dismissKey = (playlistId: string) => `plypick:band-prompt-dismissed:${playlistId}`;
+import { dismissBandPrompt, hasBandPromptDismissal, migrateLegacyDismissal } from "@/lib/prompt-dismissals";
 
 function subscribeStorage(callback: () => void) {
   window.addEventListener("storage", callback);
@@ -23,43 +22,46 @@ function CloseIcon() {
   );
 }
 
+/**
+ * 닫힘 기억 (DR6). 서버가 쿠키를 읽어 `dismissed` 로 넘기므로 카드는 첫 화면부터 맞게 그려진다.
+ * 마운트 때 한 번 더 본다: 클라이언트 이동 캐시로 서버 값이 낡았거나 쿠키 전 localStorage 기록이 있을 때(O5).
+ */
+function useBandPromptDismissal(playlistId: string, dismissed: boolean) {
+  // Hydrates with the server's answer, then reads this browser's record.
+  const stored = useSyncExternalStore(
+    subscribeStorage,
+    () => dismissed || hasBandPromptDismissal(playlistId),
+    () => dismissed,
+  );
+  const [closed, setClosed] = useState(false);
+  useEffect(() => migrateLegacyDismissal(playlistId), [playlistId]);
+  return {
+    closed: stored || closed,
+    dismiss() {
+      setClosed(true);
+      dismissBandPrompt(playlistId);
+    },
+  };
+}
+
 interface BandPromptCardProps {
   playlistId: string;
   adminToken: string | null;
+  /** 서버가 읽은 닫힘 쿠키 (DR6). */
+  dismissed: boolean;
   onCreated: (band: CreatedBand) => void;
 }
 
 /**
  * 방장에게 보이는 밴드 만들기 안내 카드 (CEO-F7, 디자인 27A). 후보곡 탭의 툴바 아래에만 놓인다.
  * 보일지(방장 · 팀 없음 · 로그인 멤버 ≥ 2)는 PlaylistClient 가 정하고, 닫기 기억은 여기서 한다.
- * 닫으면 그 방에서는 다시 뜨지 않는다. localStorage 가 막혀도 카드는 렌더되고 이번 화면에서만 닫힌다.
+ * 닫으면 그 플레이리스트에서는(홈 카드에서도) 다시 뜨지 않는다. 쿠키를 못 쓰면 이번 화면에서만 닫힌다.
  */
-export default function BandPromptCard({ playlistId, adminToken, onCreated }: BandPromptCardProps) {
-  const storedDismissed = useSyncExternalStore(
-    subscribeStorage,
-    () => {
-      try {
-        return window.localStorage.getItem(dismissKey(playlistId)) === "1";
-      } catch {
-        return false;
-      }
-    },
-    // Server render: stay hidden so a dismissed card never flashes before hydration.
-    () => true,
-  );
-  const [closed, setClosed] = useState(false);
+export default function BandPromptCard({ playlistId, adminToken, dismissed, onCreated }: BandPromptCardProps) {
+  const { closed, dismiss } = useBandPromptDismissal(playlistId, dismissed);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  if (storedDismissed || closed) return null;
-
-  function dismiss() {
-    setClosed(true);
-    try {
-      window.localStorage.setItem(dismissKey(playlistId), "1");
-    } catch {
-      // Hidden for this visit only.
-    }
-  }
+  if (closed) return null;
 
   return (
     <Card variant="outline" className="mb-3 flex items-start gap-3">
@@ -84,6 +86,47 @@ export default function BandPromptCard({ playlistId, adminToken, onCreated }: Ba
           setSheetOpen(false);
           onCreated(band);
         }}
+      />
+    </Card>
+  );
+}
+
+/**
+ * 홈의 밴드 만들기 카드 (CEO2-D, DR4 · DR5 · DR6). 밴드가 하나도 없는 방장에게, 같이 투표한 멤버가 있는
+ * 가장 최근 플레이리스트 하나만 보인다(누가 대상인지는 홈 서버가 정한다). 닫으면 예전 후보로 바꿔 보이지 않는다.
+ * 만들면 그 플레이리스트 참여자가 모두 멤버인 밴드의 홈으로 간다.
+ */
+export function HomeBandCard({ candidate, dismissed }: { candidate: BandCandidate; dismissed: boolean }) {
+  const { closed, dismiss } = useBandPromptDismissal(candidate.id, dismissed);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  if (closed) return null;
+
+  return (
+    <Card variant="outline" className="mt-5 flex items-start gap-3">
+      <div className="min-w-0 flex-1">
+        <p className="text-sm leading-relaxed text-text">
+          <span className="block truncate font-semibold">「{candidate.title}」</span>
+          멤버 {candidate.memberCount}명, 다음 공연도 같이 해요?
+        </p>
+        {candidate.memberPreview.length > 0 && (
+          <p className="mt-1 truncate text-caption text-text-muted">{candidate.memberPreview.join(", ")}</p>
+        )}
+        <Button size="sm" className="mt-3 min-h-11" onClick={() => setSheetOpen(true)}>
+          이 멤버로 밴드 만들기
+        </Button>
+      </div>
+      <IconButton bare aria-label="안내 닫기" onClick={dismiss} className="-my-2 -mr-2">
+        <CloseIcon />
+      </IconButton>
+      <CreateBandSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        mode="home"
+        source="home_card"
+        candidates={[candidate]}
+        target={candidate}
+        participantOnlyTitle={null}
       />
     </Card>
   );

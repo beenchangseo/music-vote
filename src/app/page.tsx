@@ -10,9 +10,11 @@ import DemoBand from "@/components/home/DemoBand";
 import MyPlaylists from "@/components/MyPlaylists";
 import MyBands from "@/components/MyBands";
 import LeftBandNotice from "@/components/LeftBandNotice";
+import { HomeBandCard } from "@/components/BandPromptCard";
 import { buttonClassName } from "@/components/ui/Button";
 import type { BandCandidate } from "@/components/CreateBandSheet";
 import { getCurrentUser, hasAuthCookie } from "@/lib/auth";
+import { BAND_PROMPT_COOKIE, parseDismissals } from "@/lib/prompt-dismissals";
 import { getMyPlaylists, getHomeStats, type MyPlaylistDbEntry } from "@/actions/playlist";
 import { getMyTeams } from "@/actions/team";
 
@@ -35,9 +37,10 @@ export default async function Home({ searchParams }: HomeProps) {
   if (!hasAuthCookie(cookieStore.getAll().map((cookie) => cookie.name))) {
     return <Landing stats={await statsPromise} left={left} />;
   }
+  const dismissals = parseDismissals(cookieStore.get(BAND_PROMPT_COOKIE)?.value);
   return (
     <Suspense fallback={<HomeSkeleton />}>
-      <SignedInHome left={left} statsPromise={statsPromise} />
+      <SignedInHome left={left} statsPromise={statsPromise} dismissals={dismissals} />
     </Suspense>
   );
 }
@@ -49,7 +52,16 @@ function bandCandidates(playlists: MyPlaylistDbEntry[]): BandCandidate[] {
     .map(({ id, title, memberCount, memberPreview }) => ({ id, title, memberCount, memberPreview }));
 }
 
-async function SignedInHome({ left, statsPromise }: { left: boolean; statsPromise: Promise<HomeStats> }) {
+async function SignedInHome({
+  left,
+  statsPromise,
+  dismissals,
+}: {
+  left: boolean;
+  statsPromise: Promise<HomeStats>;
+  /** Playlists whose band card was closed (DR6 cookie). */
+  dismissals: string[];
+}) {
   const user = await getCurrentUser();
   // The cookie outlived the session.
   if (!user) return <Landing stats={await statsPromise} left={left} />;
@@ -62,6 +74,11 @@ async function SignedInHome({ left, statsPromise }: { left: boolean; statsPromis
   const empty = dbPlaylists.length === 0 && myTeams.length === 0;
   // State A only for a real 0/0 (DR2). A failed lookup (DR7) and a band just left (DR15) stay in B.
   const variant = !failed && !left && empty ? "start" : "row";
+  const candidates = bandCandidates(dbPlaylists);
+  // Home card (DR4 · DR5): only for someone with no band yet, only the newest candidate. Once that one is
+  // closed there is no card, even if older candidates exist; a newer candidate brings it back.
+  const cardTarget = !failed && myTeams.length === 0 ? (candidates[0] ?? null) : null;
+  const showCard = cardTarget !== null && !dismissals.includes(cardTarget.id);
 
   return (
     <main className="relative isolate min-h-full">
@@ -80,11 +97,13 @@ async function SignedInHome({ left, statsPromise }: { left: boolean; statsPromis
           <HeroCTA
             variant={variant}
             myTeams={myTeams}
-            bandCandidates={bandCandidates(dbPlaylists)}
+            bandCandidates={candidates}
             // DR11: the newest band-less playlist I only take part in.
             participantOnlyTitle={dbPlaylists.find((playlist) => !playlist.isMine && !playlist.teamId)?.title ?? null}
           />
         </div>
+        {/* DR6: drawn by the server under the button row, so it never pops in after load. */}
+        {showCard && <HomeBandCard candidate={cardTarget} dismissed={false} />}
 
         {failed ? (
           <section aria-labelledby="home-load-error" className="mt-10 rounded-card border border-border bg-surface p-4">

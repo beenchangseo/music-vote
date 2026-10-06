@@ -47,6 +47,8 @@ type HomeProps = {
   candidates: BandCandidate[];
   /** 내가 참여만 한(방장 아님) 밴드 없는 플레이리스트 중 가장 최근 것의 제목 (DR11). 없으면 null. */
   participantOnlyTitle: string | null;
+  /** 홈 카드처럼 대상이 이미 정해졌을 때: 고르기 없이 그 플레이리스트의 이름 입력부터. */
+  target?: BandCandidate;
 };
 
 type CreateBandSheetProps = { open: boolean; onClose: () => void } & (PromoteProps | HomeProps);
@@ -135,10 +137,12 @@ function PromoteBody({
   );
 }
 
-function HomeBody({ source, candidates, participantOnlyTitle, inputRef }: HomeProps & InputRef) {
+function HomeBody({ source, candidates, participantOnlyTitle, target, inputRef }: HomeProps & InputRef) {
   const router = useRouter();
   // With candidates the sheet asks first (DR3); otherwise it goes straight to an empty band.
-  const [step, setStep] = useState<"choose" | "empty" | BandCandidate>(candidates.length > 0 ? "choose" : "empty");
+  const [step, setStep] = useState<"choose" | "empty" | BandCandidate>(
+    target ?? (candidates.length > 0 ? "choose" : "empty"),
+  );
 
   function created(teamId: string) {
     track("team_created", { source });
