@@ -1372,19 +1372,19 @@ finding above. Run with Claude Code or Codex; checkbox as you ship.
   - Surfaced by: CEO 리뷰 Section 10 (C3); O6 (D11)
   - Files: `docs/adr/0014-bands-sit-shallow-on-rooms.md`, `docs/plans/2026-09-21-teams-and-shared-catalog.md`, `e2e/README.md`
   - Verify: ADR 에 "홈에서 빈 밴드" 경로, README 에 account-b 한 줄
-- [ ] **T11 (P2, human: ~4h / CC: ~30min)** — card — 닫힘 쿠키와 서버가 정하는 홈 카드를 만든다
+- [x] **T11 (P2, human: ~4h / CC: ~30min)** — card — 닫힘 쿠키와 서버가 정하는 홈 카드를 만든다
   - Surfaced by: DR4 · DR5 · DR6, Section 1 쿠키 형식, O5 (D10)
   - Files: `src/lib/prompt-dismissals.ts`(새), `src/components/BandPromptCard.tsx`, `src/components/PlaylistClient.tsx`, `src/app/page.tsx`, `src/app/playlist/[shareCode]/page.tsx` + 테스트
   - Verify: `npm test` — prompt-dismissals · 홈 카드 4규칙 · `:153` · `:162` · 이전
-- [ ] **T12 (P2, human: ~1d / CC: ~40min)** — attach — 밴드 홈에서 있던 플레이리스트를 넣는 시트를 만든다
+- [x] **T12 (P2, human: ~1d / CC: ~40min)** — attach — 밴드 홈에서 있던 플레이리스트를 넣는 시트를 만든다
   - Surfaced by: DR8 · DR9, Section 1 `getAttachablePlaylists`, Section 4 개수 조회, Outside Voice #4b
   - Files: `src/actions/team.ts`, `src/components/AttachPlaylistsSheet.tsx`(새), `src/components/BandStartArea.tsx`, `src/components/BandHomeClient.tsx` + 테스트
   - Verify: `npm test` — 행 ✓ · 행 실패 · 모두 넣음 · 목록 오류 · 갱신 · `participantCount` · DR9
-- [ ] **T13 (P2, human: ~4h / CC: ~20min)** — create — 밴드 1개면 "{밴드}에 만들기"를 기본으로 켠다
+- [x] **T13 (P2, human: ~4h / CC: ~20min)** — create — 밴드 1개면 "{밴드}에 만들기"를 기본으로 켠다
   - Surfaced by: DR12; Section 3 — E3 (D4)
   - Files: `src/components/CreatePlaylistForm.tsx`, `src/app/new/page.tsx`, `src/components/__tests__/CreatePlaylistForm.band.test.tsx`
   - Verify: `npm test` — 밴드 1 켬/끔 · 끄면 완료 화면 제안 없음 · 0 · 2+ 토글 없음
-- [ ] **T14 (P2, human: ~2h / CC: ~15min)** — share — 멤버 1명 밴드의 카톡 카드를 만든 사람 이름으로 바꾼다
+- [x] **T14 (P2, human: ~2h / CC: ~15min)** — share — 멤버 1명 밴드의 카톡 카드를 만든 사람 이름으로 바꾼다
   - Surfaced by: DR13; Outside Voice #4c
   - Files: `src/lib/team-domain.ts`, `src/components/BandInviteSheet.tsx`, `src/components/KakaoShareButton.tsx`, `src/components/BandHomeClient.tsx`, `src/app/join/[inviteCode]/page.tsx`, `src/app/api/og/route.tsx` + 테스트
   - Verify: `npm test` team-domain(1명 · 날짜 유무 · 2명+ 그대로), OG 이미지 눈으로 확인
