@@ -41,9 +41,23 @@ test.describe("account-a: a new band from the home page", () => {
     await page.waitForURL(/\/band\/[0-9a-f-]{36}$/);
     await expect(page.getByRole("heading", { level: 1, name: bandName })).toBeVisible();
     await expect(page.getByRole("status")).toHaveText("밴드를 만들었어요");
-    const area = page.getByRole("region", { name: "첫 플레이리스트를 만들어요" });
+    const area = page.getByRole("region", { name: "첫 플레이리스트부터 시작해요" });
     const teamId = new URL(page.url()).pathname.split("/").pop()!;
-    await expect(area.getByRole("link", { name: "첫 플레이리스트 만들기" })).toHaveAttribute("href", `/new?band=${teamId}`);
+    // account-a owns playlists outside any band, so putting one in is the main button (DR1 · DR8) and
+    // making a new one stays as a link. Open the sheet to see the list, then close it WITHOUT attaching:
+    // these are the operator's real playlists.
+    const attach = area.getByRole("button", { name: "있던 플레이리스트 넣기" });
+    if (await attach.count()) {
+      await expect(area.getByRole("link", { name: "새 플레이리스트 만들기" })).toHaveAttribute("href", `/new?band=${teamId}`);
+      await attach.click();
+      const attachSheet = page.getByRole("dialog", { name: /^있던 플레이리스트 넣기 · \d+개$/ });
+      await expect(attachSheet.getByText("넣어도 참여자는 밴드 멤버가 되지 않아요")).toBeVisible();
+      await expect(attachSheet.getByRole("button", { name: /넣기$/ }).first()).toBeVisible();
+      await attachSheet.getByRole("button", { name: "닫기" }).click();
+      await expect(attachSheet).toHaveCount(0);
+    } else {
+      await expect(area.getByRole("link", { name: "첫 플레이리스트 만들기" })).toHaveAttribute("href", `/new?band=${teamId}`);
+    }
     await expect(page.getByRole("button", { name: "멤버 초대" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "더 부르기" })).toHaveCount(0);
 

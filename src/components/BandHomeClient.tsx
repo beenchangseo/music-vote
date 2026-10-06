@@ -12,6 +12,7 @@ import { showDateSpokenLabel } from "./ShowDateTile";
 import { BandArt, MemberAvatar, RoomCover, SongThumb } from "./BandArt";
 import BandInviteSheet, { KakaoInviteButton } from "./BandInviteSheet";
 import BandStartArea from "./BandStartArea";
+import AttachPlaylistsSheet from "./AttachPlaylistsSheet";
 import BandDateSheet from "./BandDateSheet";
 import RemoveMemberModal from "./RemoveMemberModal";
 import { LEFT_BAND_STORAGE_KEY } from "./LeftBandNotice";
@@ -70,6 +71,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
   const members = view.members.filter((member) => !member.userId || !removedIds.includes(member.userId));
 
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [attachOpen, setAttachOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [removing, setRemoving] = useState<{ userId: string; displayName: string } | null>(null);
   const [leaveError, setLeaveError] = useState<string | null>(null);
@@ -114,6 +116,8 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
   // DR1: a band made at home starts as the owner alone with no playlist. One start area replaces
   // the created banner, the call-members card, the invite icon, "더 부르기" and the empty shelf.
   const starting = isOwner && alone && rooms.length === 0;
+  // DR9: a playlist put in keeps its participants out of the band; say so on the call-members card.
+  const roomWithGuests = alone ? rooms.find((room) => room.participantCount >= 2) : undefined;
 
   async function leave() {
     const ok = await showDanger(LEAVE_MESSAGE, { title: `${team.name}에서 나갈까요?`, confirmLabel: "나가기" });
@@ -208,7 +212,14 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
           )}
         </div>
 
-        {starting && <BandStartArea newRoomHref={newRoomHref} onInvite={() => setInviteOpen(true)} />}
+        {starting && (
+          <BandStartArea
+            newRoomHref={newRoomHref}
+            onInvite={() => setInviteOpen(true)}
+            attachableCount={view.attachableCount}
+            onAttach={() => setAttachOpen(true)}
+          />
+        )}
 
         {banner && !starting && (
           <Card role="status" className="mt-4 flex items-start gap-3">
@@ -248,7 +259,11 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
           <Card variant="elevated" className="mt-5 motion-safe:animate-fade-in">
             <div className="flex items-start gap-3">
               <div className="min-w-0 flex-1">
-                <p className="text-body font-semibold text-text">멤버를 불러야 같이 투표해요</p>
+                <p className="text-body font-semibold text-text">
+                  {roomWithGuests
+                    ? `「${roomWithGuests.title}」 참여자 ${roomWithGuests.participantCount}명은 아직 밴드 멤버가 아니에요`
+                    : "멤버를 불러야 같이 투표해요"}
+                </p>
                 <p className="mt-1 text-sm text-text-muted">단톡방에 초대 링크를 보내면 바로 들어와요</p>
               </div>
               <CloseButton onClick={dismissInviteCard} />
@@ -261,7 +276,14 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
 
         {activeRoom && <NowRoomCard room={activeRoom} />}
 
-        {!starting && <RoomsShelf rooms={rooms} newRoomHref={newRoomHref} />}
+        {!starting && (
+          <RoomsShelf
+            rooms={rooms}
+            newRoomHref={newRoomHref}
+            // DR8: owner only, and only when there is something to put in.
+            onAttach={isOwner && (view.attachableCount ?? 0) > 0 ? () => setAttachOpen(true) : null}
+          />
+        )}
 
         {!(starting && played.length === 0) && <PlayedSongs songs={played} />}
 
@@ -327,6 +349,14 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
         isOwner={isOwner}
         onInviteCodeChange={setRotatedCode}
       />
+      {isOwner && view.attachableCount !== null && (
+        <AttachPlaylistsSheet
+          open={attachOpen}
+          onClose={() => setAttachOpen(false)}
+          teamId={team.id}
+          count={view.attachableCount}
+        />
+      )}
       <BandDateSheet
         open={dateOpen}
         onClose={() => setDateOpen(false)}
@@ -446,7 +476,16 @@ function SectionTitle({ id, title, count }: { id: string; title: string; count: 
 }
 
 /** 합주방 가로 선반 (YouTube Music "새 앨범" 줄): 맨 앞은 새 합주방, 그다음 최근 방부터. */
-function RoomsShelf({ rooms, newRoomHref }: { rooms: TeamRoom[]; newRoomHref: string }) {
+function RoomsShelf({
+  rooms,
+  newRoomHref,
+  onAttach,
+}: {
+  rooms: TeamRoom[];
+  newRoomHref: string;
+  /** "있던 플레이리스트 넣기" 타일 (DR8). null 이면 타일 없음. */
+  onAttach: (() => void) | null;
+}) {
   return (
     <section aria-labelledby="band-rooms" className="mt-10">
       <SectionTitle id="band-rooms" title="플레이리스트" count={rooms.length} />
@@ -461,6 +500,18 @@ function RoomsShelf({ rooms, newRoomHref }: { rooms: TeamRoom[]; newRoomHref: st
             <span className="mt-2 block text-sm font-semibold text-text">새 플레이리스트</span>
           </Link>
         </li>
+        {onAttach && (
+          <li className="w-36 shrink-0 snap-start">
+            <button type="button" onClick={onAttach} className="group block w-full text-left">
+              <span className="flex aspect-square w-full items-center justify-center rounded-control border-2 border-dashed border-border-strong text-text-muted transition-colors group-hover:border-text-muted group-hover:text-text">
+                <svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" />
+                </svg>
+              </span>
+              <span className="mt-2 block text-sm font-semibold text-text">있던 플레이리스트 넣기</span>
+            </button>
+          </li>
+        )}
         {rooms.map((room) => (
           <li key={room.id} className="w-36 shrink-0 snap-start">
             <Link href={`/playlist/${room.shareCode}`} className="block">
