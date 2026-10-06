@@ -22,7 +22,8 @@ export default function MyBands({ teams }: { teams: MyTeam[] }) {
           const dday = showDdayLabel(showDday(team.nextShowAt, now));
           return (
             <li key={team.id} className="w-36 shrink-0 snap-start">
-              <Link href={`/band/${team.id}`} className="group block">
+              {/* Same as the playlist tiles: a band home renders per request, so prefetching buys nothing. */}
+              <Link href={`/band/${team.id}`} prefetch={false} className="group block">
                 {/* The same violet as the band home hero (existing tokens only). */}
                 <span className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-control bg-gradient-to-br from-primary to-primary-soft text-white">
                   <span aria-hidden className="absolute -right-6 -top-6 h-20 w-20 rounded-pill bg-primary-hover opacity-70 mix-blend-screen" />

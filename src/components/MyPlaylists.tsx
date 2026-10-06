@@ -91,6 +91,9 @@ export default function MyPlaylists({ loggedIn = true, dbPlaylists = [] }: MyPla
           <Link
             key={pl.shareCode}
             href={`/playlist/${pl.shareCode}`}
+            // Playlist pages render per request, so a prefetch only brings a ~236-byte shell. With six tiles it
+            // cost 12 server calls per home view and piled onto cold starts (2~8s in the network tab, 2026-10-06).
+            prefetch={false}
             className="flex h-16 min-w-0 items-center gap-2.5 overflow-hidden rounded-control bg-surface pr-2 transition-colors hover:bg-surface-hover"
           >
             <RoomCover thumbs={pl.coverThumbs ?? []} sizes="64px" square className="h-16 w-16 shrink-0" />
