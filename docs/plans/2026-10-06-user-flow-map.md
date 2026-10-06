@@ -1332,43 +1332,43 @@ finding above. Run with Claude Code or Codex; checkbox as you ship.
 기존 작업과의 관계: C1 · C2 완료. C3 → T10, C4 → T2, C5 → T8, DT1 → T5, DT2 → T6, DT3 → T11, DT4 → T7 + T12, DT5 → T13, DT6 → T14.
 배포 1 = T1~T10(T1 의 운영 SQL 먼저), 배포 2 = T11~T14 (O1). 노력 비율 가정: 기능 ~30x, 테스트 ~50x, DB · 문서 ~10x
 
-- [ ] **T1 (P1, human: ~1h / CC: ~10min)** — db — `teams.created_via` 를 v21 마이그레이션으로 추가한다
+- [x] **T1 (P1, human: ~1h / CC: ~10min)** — db — `teams.created_via` 를 v21 마이그레이션으로 추가한다
   - Surfaced by: Outside Voice #2 — O2 (D7)
   - Files: `supabase-migration-v21.sql`, `README.md`(실행 순서)
   - Verify: SQL 두 번 실행해도 무해. 운영 적용(방장 승인) 뒤 `created_via` 가 모두 'promote'
-- [ ] **T2 (P1, human: ~1h / CC: ~10min)** — auth — `getCurrentUser` 를 React cache 로 감싸고 로그아웃을 이 기기만 끊게 한다
+- [x] **T2 (P1, human: ~1h / CC: ~10min)** — auth — `getCurrentUser` 를 React cache 로 감싸고 로그아웃을 이 기기만 끊게 한다
   - Surfaced by: Section 4 — E4 (D5); CEO2-C (C4)
   - Files: `src/lib/auth.ts`, `src/app/auth/logout/route.ts`, `src/app/auth/logout/__tests__/route.test.ts`
   - Verify: `npm test` — 라우트 테스트 `signOut({ scope: "local" })`, 기존 테스트 통과
-- [ ] **T3 (P1, human: ~4h / CC: ~20min)** — loaders — 홈 로더가 실패를 돌려주고 홈 카드 데이터를 함께 읽게 한다
+- [x] **T3 (P1, human: ~4h / CC: ~20min)** — loaders — 홈 로더가 실패를 돌려주고 홈 카드 데이터를 함께 읽게 한다
   - Surfaced by: Section 1 — E1 (D2), `MY_PLAYLIST_COLUMNS` 필요 구현; Outside Voice #4a
   - Files: `src/actions/playlist.ts`, `src/actions/team.ts`(getMyTeams), `src/app/page.tsx`, `src/app/new/page.tsx`, `src/app/playlist/[shareCode]/page.tsx` + 테스트
   - Verify: `npm test` — playlist.test(한 묶음 실패 · 새 필드), team.test(getMyTeams 실패), new page test(failed → 폼)
-- [ ] **T4 (P1, human: ~3h / CC: ~15min)** — team — 플레이리스트 없이 밴드를 만드는 `createTeam` 을 더한다
+- [x] **T4 (P1, human: ~3h / CC: ~15min)** — team — 플레이리스트 없이 밴드를 만드는 `createTeam` 을 더한다
   - Surfaced by: CEO2-A; Section 2 단계 주석; O2 (D7)
   - Files: `src/actions/team.ts`, `src/actions/__tests__/team.test.ts`
   - Verify: `npm test` — 비로그인 · 50/51자 · owner 1명 + 초대 코드 · owner 행 실패 → rollback · `created_via` 'home' / 'promote'
-- [ ] **T5 (P1, human: ~1d / CC: ~40min)** — home — 상태별 홈과 쿠키로 먼저 가르는 홈 뼈대를 만든다
+- [x] **T5 (P1, human: ~1d / CC: ~40min)** — home — 상태별 홈과 쿠키로 먼저 가르는 홈 뼈대를 만든다
   - Surfaced by: DR2 · DR3 · DR7 · DR10 · DR15, O4 (D9), CEO2-A(HeroCTA 로그인 → `/`)
   - Files: `src/app/page.tsx`, `src/components/HeroCTA.tsx`, `src/components/MyBands.tsx`, `src/components/MyPlaylists.tsx`, `src/components/HomeSkeleton.tsx`(새), `src/app/__tests__/page.test.tsx`(새), `src/components/__tests__/HomeBands.test.tsx`
   - Verify: `npm test` — 판정 4분기 · 로컬 목록 · 쿠키 두 행 · HeroCTA 목적지
-- [ ] **T6 (P1, human: ~4h / CC: ~30min)** — sheet — 새 밴드 시트에 홈 모드를 더한다
+- [x] **T6 (P1, human: ~4h / CC: ~30min)** — sheet — 새 밴드 시트에 홈 모드를 더한다
   - Surfaced by: Section 2 `CreateBandSheet.tsx:21-28`; DR3 · DR11 · DR14; Section 8(CEO) source
   - Files: `src/components/CreateBandSheet.tsx`, `src/lib/analytics.ts`, `src/components/__tests__/CreateBandSheet.test.tsx`(새)
   - Verify: `npm test` — 대상 있음/없음 · 참여만 한 줄 · "나중에" 없음 · 두 번 눌러도 한 번 · source
-- [ ] **T7 (P1, human: ~4h / CC: ~30min)** — band home — 빈 밴드 시작 영역을 별도 컴포넌트로 만든다
+- [x] **T7 (P1, human: ~4h / CC: ~30min)** — band home — 빈 밴드 시작 영역을 별도 컴포넌트로 만든다
   - Surfaced by: Section 2 — E2 (D3); DR1 · DR16
   - Files: `src/components/BandStartArea.tsx`(새), `src/components/BandHomeClient.tsx` + 테스트
   - Verify: `npm test` — 혼자 · 0개 → 시작 영역 하나 · 숨김 3가지, `:124` · `:147` 픽스처, DR16
-- [ ] **T8 (P2, human: ~1h / CC: ~10min)** — metrics — 홈에서 만든 밴드와 7일 방치된 빈 밴드를 센다
+- [x] **T8 (P2, human: ~1h / CC: ~10min)** — metrics — 홈에서 만든 밴드와 7일 방치된 빈 밴드를 센다
   - Surfaced by: CEO2-G; O2 (D7)
   - Files: `scripts/team-metrics.mjs`, `scripts/__tests__/team-metrics.test.ts`
   - Verify: `npm test` team-metrics, `npm run metrics:teams` 에 두 줄
-- [ ] **T9 (P1, human: ~3h / CC: ~20min)** — e2e — 홈에서 빈 밴드 만들기와 처음 로그인 홈을 E2E 로 막는다
+- [x] **T9 (P1, human: ~3h / CC: ~20min)** — e2e — 홈에서 빈 밴드 만들기와 처음 로그인 홈을 E2E 로 막는다
   - Surfaced by: Section 3 E2E 2개; O6 (D11)
   - Files: `e2e/account-a/band-home.spec.ts`(새), `e2e/account-b/home.spec.ts`(새)
   - Verify: `npm run test:e2e`. account-a 는 `[e2e]` 플레이리스트만 누르고 실제 플레이리스트(`n0R9U6KT` 포함)는 넣지 않는다
-- [ ] **T10 (P2, human: ~30min / CC: ~5min)** — docs — ADR 0014 와 계획 문서에 CEO2-A 를 반영하고 account-b 를 E2E 전용으로 적는다
+- [x] **T10 (P2, human: ~30min / CC: ~5min)** — docs — ADR 0014 와 계획 문서에 CEO2-A 를 반영하고 account-b 를 E2E 전용으로 적는다
   - Surfaced by: CEO 리뷰 Section 10 (C3); O6 (D11)
   - Files: `docs/adr/0014-bands-sit-shallow-on-rooms.md`, `docs/plans/2026-09-21-teams-and-shared-catalog.md`, `e2e/README.md`
   - Verify: ADR 에 "홈에서 빈 밴드" 경로, README 에 account-b 한 줄
