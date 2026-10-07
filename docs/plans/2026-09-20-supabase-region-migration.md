@@ -19,7 +19,7 @@ Supabase 는 생성 후 리전을 바꿀 수 없으므로 서울 리전에 새 �
 | 0-4 카카오 Redirect URI | 완료 (2026-10-07, 운영자) |
 | 0-5 API 키 | 완료 (2026-10-07) — 새 키(`sb_publishable_`/`sb_secret_`)로 결정, 레거시는 대비책. 두 키 인증 확인. `.env.local` 에 주석으로 넣어 둠 → 2-4 직전에 주석만 푼다 |
 | 0-6 스크립트 보강 | 완료 (2026-10-07) — 로컬 Docker 로 권한 유실 재현·수정 확인, 0-6 의 검증 기록 참고 |
-| 1 리허설 | 남음 |
+| 1 리허설 | 생략 (2026-10-07 결정, 무료 플랜이라 임시 프로젝트 불가) — 대신 2-0 시험 덤프, 02:15 중단 시각, `--restore-only` 복구 경로 |
 | 2 전환 | 남음 |
 
 ## 한눈에
@@ -27,7 +27,7 @@ Supabase 는 생성 후 리전을 바꿀 수 없으므로 서울 리전에 새 �
 | 항목 | 내용 |
 |---|---|
 | 데이터 크기 | 14MB, 사용자 19명 — 덤프·복원 자체는 1분 안쪽. 시간 대부분은 검증이다 |
-| 서비스 영향 | 쓰기 정지 약 40~60분(읽기는 계속 됨), 전원 1회 재로그인 |
+| 서비스 영향 | 쓰기 정지 약 40~60분 예상, 최대 75분(02:15 중단 시각). 읽기는 계속 됨. 전원 1회 재로그인 |
 | 데이터 유실 | 0 이 목표 — 구 DB 를 읽기 전용으로 얼린 **뒤에** 덤프한다 |
 | 전환 시각 | 01:00 KST 시작 (00:00 KST 셋리스트 자동 확정 cron 이 끝난 뒤) |
 | 롤백 | 환경변수 교체 전: 구 DB 얼음만 푼다 / 교체 후: Vercel Instant Rollback + 얼음 해제 |
@@ -75,7 +75,7 @@ ref `vwygluhbrxtfcegkmgid`, 서울(ap-northeast-2).
 
 - **Supabase CLI** — 이미 있음(2.117). `brew upgrade supabase` 로 올려둔다.
 - **Docker Desktop 실행** — `supabase db dump` 는 Docker 컨테이너 안에서 pg_dump 를 돌린다.
-  리허설·전환 당일 켜져 있는지가 첫 확인 항목이다.
+  전환 당일 켜져 있는지가 첫 확인 항목이다.
 - **psql** — `/opt/homebrew/opt/libpq/bin/psql` (pg 18.4 클라이언트, 17 서버에 문제 없음).
 - **연결 문자열은 두 프로젝트 모두 Session pooler(5432)** 를 쓴다. Docker 컨테이너는 macOS 에서
   IPv6 로 나가지 못해 `db.<ref>.supabase.co` 직접 연결이 덤프에서 실패한다.
@@ -134,7 +134,7 @@ SELECT count(*) FROM auth.users;                     -- 0 이어야 한다
 | 새 키 | `sb_publishable_...` | `sb_secret_...` |
 | 레거시 JWT | `anon` | `service_role` |
 
-**결정: 새 키로 전환한다. 레거시 키는 리허설에서 막혔을 때의 대비책으로만 둔다.**
+**결정: 새 키로 전환한다. 레거시 키는 당일 2-4 에서 새 키가 막혔을 때의 대비책으로만 둔다.**
 
 - Supabase 는 레거시 키를 2026년 말에 없앤다. 이번에 레거시로 붙이면 석 달 안에 운영 환경변수를
   한 번 더 바꿔야 한다. 어차피 값을 바꾸는 이번에 같이 바꾼다.
@@ -145,7 +145,8 @@ SELECT count(*) FROM auth.users;                     -- 0 이어야 한다
 - 환경변수 이름은 그대로 두고 값만 바꾼다.
   `NEXT_PUBLIC_SUPABASE_ANON_KEY` ← publishable, `SUPABASE_SERVICE_ROLE_KEY` ← secret.
 - secret 키는 브라우저 User-Agent 로 오면 401 이다. 서버 액션·cron·스크립트·E2E 정리 헬퍼는 Node 라 문제없다.
-- 리허설에서 새 키로 2-4 를 전부 통과해야 한다. 키 때문에 막히면 전환은 레거시 키로 하고,
+- 전환 당일 2-4 를 새 키로 전부 통과해야 2-5 로 간다. 키 때문에 막히면(401, Realtime 연결 실패 등)
+  `.env.local` 의 두 키를 레거시 anon·service_role 로 바꿔 2-4 를 다시 하고, 2-5 도 레거시 키로 넣는다.
   새 키 전환은 따로 일정을 잡는다 (그때는 환경변수 교체와 재배포만 하면 되고 로그아웃은 없다).
 - 키는 비밀번호 관리자에만 둔다. 파일·채팅에 붙이지 않는다.
 
@@ -172,26 +173,34 @@ SELECT count(*) FROM auth.users;                     -- 0 이어야 한다
   - 2-1 의 얼리기 SQL 뒤 새 세션 쓰기가 `cannot execute INSERT in a read-only transaction` 으로 막혔고,
     얼린 원본에서 덤프·복원은 정상이었다. 롤백의 얼음 해제 SQL 로 쓰기가 돌아왔다.
   - data 단계에서 일부러 실패시키면 대상이 완전히 빈 상태로 돌아갔다(기본 권한도 원래대로).
-  - 한계: `supabase db dump` 대신 같은 플래그의 pg_dump 로 흉내 냈다. 실제 CLI 출력은 리허설에서 처음 본다.
+  - 한계: `supabase db dump` 대신 같은 플래그의 pg_dump 로 흉내 냈다. 실제 CLI 출력은 2-0 시험 덤프에서 처음 본다.
+  - 리허설 생략 결정 뒤(같은 날) `--dump-only`·`--restore-only` 를 더해 같은 방식으로 시험했다: 시험 덤프는
+    대상을 건드리지 않고, `supabase_admin` 소유권 줄이 섞인 덤프는 복원이 실패해 대상이 빈 채로 남았고, 그 줄을
+    주석 처리한 뒤 `--restore-only` 로 복원·대조가 통과했다. 얼리기 전 덤프로 표시된 `dump.meta` 는 거부됐다.
 
-## 단계 1 — 리허설 (D-3 ~ D-1)
+## 단계 1 — 리허설 (생략, 2026-10-07 결정)
 
-실제 서울 프로젝트는 깨끗하게 남겨두고 **임시 프로젝트**에 한 번 끝까지 해본다.
+무료 플랜은 활성 프로젝트가 2개까지라(싱가포르·서울) 임시 프로젝트를 만들 수 없다. 리허설 없이 서울
+프로젝트로 바로 전환한다.
 
-1. 서울 리전에 임시 프로젝트(`plypick-rehearsal`)를 실제 신규 프로젝트와 **같은 생성 옵션**으로 만든다.
-   무료 플랜이라 세 번째 프로젝트가 안 되면, 실제 서울 프로젝트로 리허설한 뒤 삭제하고 다시 만든다
-   (ref 가 바뀌므로 0-3·0-4·0-5 를 다시 한다).
-2. 구 DB 를 **얼리지 않고** 2-2 ~ 2-4 를 그대로 한다. 이전 스크립트는
-   `bash scripts/migrate-supabase-region.sh --rehearsal` 로 돌린다. 걸린 시간을 단계별로 적는다.
-   원본이 살아 있으니 덤프와 대조 사이에 누가 쓰면 행 수가 한두 개 어긋날 수 있다. 권한·구조·기본 권한은
-   반드시 일치해야 한다.
-3. `roles.sql`·`schema.sql` 에서 나는 오류(공식 문서의 `supabase_admin` 소유권, `cli_login_postgres`
-   grant 오류 등)는 여기서 다 만나고 대처법을 이 문서에 적어둔다.
-4. 로컬 앱을 임시 프로젝트에 붙여(`.env.local` 에 3개 값) 읽기 화면과 서버 액션 쓰기를 확인한다.
-   카카오 로그인까지 보려면 임시 프로젝트에도 0-3 의 Kakao 설정과 0-4 의 URI 가 필요하다.
-5. 끝나면 임시 프로젝트를 지우고 `.env.local` 을 되돌리고 `.migration/` 을 지운다.
+**리허설 없이도 되는 이유** — 당일 실패해도 최악은 "그날 밤 중단, 다른 날 재시도"다. 데이터 유실이나
+보안 구멍으로 이어지지 않는다.
 
-리허설에서 권한 지문이 일치하지 않으면 전환 날짜를 잡지 않는다.
+| 실패 지점 | 결과 |
+|---|---|
+| 복원 실패 | 한 트랜잭션이라 대상이 빈 상태로 돌아간다. 덤프를 고쳐 `--restore-only` 로 복원만 다시 한다 |
+| 권한이 어긋남 | 대조 스크립트가 잡는다. Vercel 을 바꾸기 전이라 운영 영향 없음 |
+| 카카오 로그인 실패 | 2-4 에서 로컬 앱으로 먼저 본다. 역시 Vercel 을 바꾸기 전 |
+| 그 밤을 포기 | 구 DB 얼음만 푼다(롤백 표 첫 줄). 잃는 데이터 없음 |
+
+**리허설 대신 하는 것**
+
+1. **2-0 시험 덤프** — 얼리기 전에 `--dump-only` 로 실제 CLI 덤프를 떠서 Docker·CLI·풀러 연결 문제와
+   알려진 복원 오류(2-3 표)를 쓰기 정지 **전에** 드러낸다.
+2. **중단 시각을 정해 둔다** — 02:15 까지 2-4 를 통과하지 못하면 얼음을 풀고 그날은 끝낸다.
+   공지는 2시간(01:00~03:00)으로 넉넉히 잡는다.
+3. **전환일은 서울 프로젝트가 잠들기 전에** — 무료 프로젝트는 7일간 쓰지 않으면 일시정지된다.
+   2026-10-14 전에 하거나, 2-0 에서 대시보드로 활성 상태인지 확인하고 멈춰 있으면 Restore 후 진행한다.
 
 ## 단계 2 — 전환 당일
 
@@ -207,7 +216,12 @@ export TARGET_DB_URL='postgresql://postgres.<신규-ref>:PASSWORD@aws-...-ap-nor
 - [ ] Docker Desktop 실행 중, `supabase --version`, `psql --version` 확인
 - [ ] Vercel 대시보드 → Deployments 에서 **현재 Production 배포 URL 을 적어둔다** (롤백 대상)
 - [ ] 00:00 KST cron(`/api/cron/auto-confirm-setlist`)이 성공했는지 Vercel 로그에서 확인
-- [ ] 단톡방에 공지: "01시~02시 점검, 그동안 투표·댓글이 저장되지 않아요. 끝나면 카카오로 한 번 다시 로그인해 주세요"
+- [ ] 서울 프로젝트가 활성 상태인지 대시보드에서 확인 (무료 플랜 7일 비활성 일시정지)
+- [ ] 단톡방에 공지: "01시~03시 점검, 그동안 투표·댓글이 저장되지 않아요. 끝나면 카카오로 한 번 다시 로그인해 주세요"
+- [ ] **시험 덤프** (원본 읽기만): `bash scripts/migrate-supabase-region.sh --dump-only`
+  — 끝에 나오는 "알려진 복원 오류 점검"에서 `supabase_admin`·`cli_login_postgres` 가 0줄이 아니면
+  2-3 표대로 미리 대처를 정해 둔다. `GRANT` 가 0줄이면 덤프에 권한이 안 실린 것이니 **진행하지 않는다**.
+  확인 뒤 `rm -rf .migration/dry-run`
 - [ ] 원본 현황 기록: `bash scripts/compare-supabase-projects.sh --source-only | tee ~/plypick-source-$(date +%Y%m%d).txt`
   — 권한 지문이 2026-10-07 값(61행, `8ad7e953…`)과 다르면 그 사이 스키마가 바뀐 것이다. 이유를 알고 넘어간다.
 
@@ -276,8 +290,29 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIO
 ```
 
 순서: roles.sql → **사전 SQL** → schema.sql → `SET session_replication_role = replica` → data.sql → **사후 SQL**.
-나머지는 공식 절차 그대로다 (`--single-transaction`, `ON_ERROR_STOP=1`). 실패하면 트랜잭션이 통째로
-되돌아가 대상이 빈 상태로 남으므로 원인을 고치고 다시 돌리면 된다.
+나머지는 공식 절차 그대로다 (`--single-transaction`, `ON_ERROR_STOP=1`).
+
+**복원이 실패하면** 트랜잭션이 통째로 되돌아가 대상은 빈 상태다. 원본은 얼려 있으니 덤프도 그대로 유효하다.
+아래 표대로 `.migration/` 의 파일을 고치고 **복원만** 다시 한다. 덤프를 다시 뜨면 고친 내용이 덮어써진다.
+
+```bash
+bash scripts/migrate-supabase-region.sh --restore-only
+```
+
+`--restore-only` 는 얼린 뒤에 뜬 덤프(`.migration/dump.meta` 의 `source_read_only=on`)만 받는다.
+2-0 시험 덤프(`.migration/dry-run/`)는 얼리기 전 데이터라 쓰지 않는다.
+
+| 오류 | 대처 |
+|---|---|
+| schema.sql 의 `supabase_admin` 관련 권한 오류 | `ALTER ... OWNER TO "supabase_admin"` 줄을 주석 처리 (Supabase 공식 문서) |
+| roles.sql 의 `cli_login_postgres` grant 권한 오류 | 그 GRANT 줄을 주석 처리 (공식 문서) |
+| `type "public.citext" does not exist` | 사전 점검이 막아야 정상이다. 대상에서 `DROP EXTENSION citext;` 후 다시 |
+| auth 테이블 COPY 에서 컬럼 불일치 | 구·신규 Supabase auth 버전 차이. 고치지 말고 중단 — 얼음 풀고 원인 확인 후 다른 날 |
+| 사전 점검의 "대상이 비어 있지 않습니다" | 누가 신규에 로그인했거나 이전 시도의 흔적. 무엇인지 확인하기 전에는 진행하지 않는다 |
+| 위에 없는 오류 | 02:15 중단 시각 안에 원인이 분명하면 고쳐서 `--restore-only`, 아니면 중단 |
+
+복원 로그는 `.migration/restore.log` 에 남는다. 2-0 시험 덤프에서 위 표의 앞 두 오류가 0줄이면
+당일 복원은 한 번에 통과할 가능성이 높다.
 
 ### 2-4 검증 게이트 (T+10 ~ T+30) — 하나라도 실패하면 2-5 로 가지 않는다
 
@@ -391,4 +426,4 @@ Instant Rollback 뒤에는 Vercel 이 새 배포를 Production 에 자동으로 
 6. **대조 범위** — v19 이후 테이블(teams, team_members)과 youtube_search_cache 가 빠져 있었다.
 7. **Docker 필요, Session pooler 사용** 명시.
 8. **복원 전 신규 프로젝트 로그인 금지** 명시.
-9. 리허설 단계 추가.
+9. 리허설은 무료 플랜이라 생략하고, 시험 덤프(`--dump-only`)·복원만 다시(`--restore-only`)·중단 시각으로 대신한다.
