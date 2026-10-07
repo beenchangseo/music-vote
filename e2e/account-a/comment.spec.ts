@@ -21,11 +21,14 @@ test.describe("account-a: comment add / edit / delete", () => {
     return (data ?? []).map((row) => row.content as string);
   }
 
-  // First song card -> ⋮ menu -> "댓글" opens the comment sheet (CommentModal).
+  // First song row -> tap its title to open the row (디자인 C9) -> "댓글" opens the comment sheet (CommentModal).
   async function openCommentSheet(page: Page) {
-    await page.getByRole("button", { name: "더보기" }).first().click();
-    // exact: the "댓글 N개" badge button must not match.
-    await page.getByRole("button", { name: "댓글", exact: true }).click();
+    const toggle = page.locator("button[aria-controls^='song-actions-']").first();
+    // The row may still be open from an earlier step; tapping it again would fold it.
+    if ((await toggle.getAttribute("aria-expanded")) !== "true") await toggle.click();
+    const actions = page.locator(`#${await toggle.getAttribute("aria-controls")}`);
+    // Other members' comments show as "댓글 N".
+    await actions.getByRole("button", { name: /^댓글( \d+)?$/ }).click();
     await expect(page.getByPlaceholder(/메모를 남겨보세요/)).toBeVisible(); // account-a has no comment yet
   }
 

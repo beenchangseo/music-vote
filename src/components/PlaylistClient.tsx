@@ -19,7 +19,7 @@ import RehearsalView from "./RehearsalView";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
 import { usePlaylistVotes } from "@/hooks/usePlaylistVotes";
 import { usePlaylistRealtime } from "@/hooks/usePlaylistRealtime";
-import { getSetlistItems, confirmSetlist, addSongToSetlist } from "@/actions/setlist";
+import { getSetlistItems, confirmSetlist, addSongToSetlist, removeSetlistItem } from "@/actions/setlist";
 import { getComments } from "@/actions/comment";
 import { track } from "@/lib/analytics";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
@@ -32,10 +32,10 @@ import type { CreatedBand } from "./CreateBandSheet";
 import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import type { ViewMode } from "./NavigationBar";
-import { scoreRatio } from "@/lib/vote-domain";
 import { isArchivedPlaylist } from "@/lib/playlist-archive";
 import type { MyTeam } from "@/actions/team";
 import type { Playlist, RoomTeam, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/lib/types";
+import { displayTitle } from "@/lib/song-meta";
 
 interface PlaylistClientProps {
   playlist: Playlist;
@@ -53,6 +53,8 @@ interface PlaylistClientProps {
   memberCount?: number | null;
   /** The band prompt was closed for this room (server read of the dismissal cookie, DR6). */
   bandPromptDismissed?: boolean;
+  /** Setlist read with the page, so candidate rows can show "셋리스트에 있음" (디자인 C9). */
+  initialSetlistItems?: SetlistItem[] | null;
 }
 
 export default function PlaylistClient({
@@ -67,6 +69,7 @@ export default function PlaylistClient({
   myTeams = [],
   memberCount = null,
   bandPromptDismissed = false,
+  initialSetlistItems = null,
 }: PlaylistClientProps) {
   // 보관된 합주방: 로그인 도입 전 익명 합주방. 지난 기록만 읽는다.
   const isArchived = isArchivedPlaylist(playlist);
@@ -86,13 +89,15 @@ export default function PlaylistClient({
   const [justCreatedTeam, setJustCreatedTeam] = useState<CreatedBand | null>(null);
   const [createdInviteOpen, setCreatedInviteOpen] = useState(false);
 
-  // Lazy-loaded data for setlist/rehearsal modes
-  const [setlistItems, setSetlistItems] = useState<SetlistItem[] | null>(null);
+  // Setlist comes with the page (candidate rows mark songs already in it); comments load on the rehearsal tab.
+  const [setlistItems, setSetlistItems] = useState<SetlistItem[] | null>(initialSetlistItems);
+  // 디자인 C9: one candidate row open at a time.
+  const [expandedSongId, setExpandedSongId] = useState<string | null>(null);
   const [comments, setComments] = useState<Comment[] | null>(null);
   const [loadingSetlist, setLoadingSetlist] = useState(false);
   const [loadingComments, setLoadingComments] = useState(false);
 
-  const { showConfirm, showAlert } = useDialog();
+  const { showConfirm, showAlert, showDanger } = useDialog();
   const router = useRouter();
   const playerRef = useRef<YouTubePlayerHandle>(null);
   const [listParent] = useAutoAnimate({ duration: 300, easing: "ease-in-out" });
@@ -189,13 +194,6 @@ export default function PlaylistClient({
     [songsWithVotes, filter],
   );
 
-  // 순위와 막대는 필터 전 전체 순위를 기준으로 한다.
-  // 필터를 걸었다고 4위가 1위로 보이면 안 된다.
-  //
-  // 번호는 상위 세 행까지만 붙인다. 점수가 5,5,4,4,4,4 처럼 몰리면
-  // 등수로만 자를 때 3등이 예닐곱 개가 되어 번호가 소음이 된다.
-
-  const topScore = songsWithVotes[0]?.score ?? 0;
 
   // Setlist highlight: top N songs after deadline
   const setlistCount = playlist.setlist_count;
@@ -246,8 +244,21 @@ export default function PlaylistClient({
     }
   }, [playerState.currentSongId, handleTogglePlay, filteredSongs, songsWithVotes, playerActions]);
 
-  // Score rank for the 1~3 badges; filters must not renumber the list.
-  const rankById = useMemo(() => new Map(songsWithVotes.map((song, index) => [song.id, index + 1])), [songsWithVotes]);
+  // Score rank for every row (디자인 C9). It comes from the whole list, so a filter never turns 4th into 1st.
+  // Ties share a number (5,5,4 → 1,1,3): with a number on every row, 1,2,3 for equal scores would read as a ranking.
+  const rankById = useMemo(() => {
+    const ranks = new Map<string, number>();
+    songsWithVotes.forEach((song, index) => {
+      const previous = songsWithVotes[index - 1];
+      ranks.set(song.id, previous && previous.score === song.score ? ranks.get(previous.id)! : index + 1);
+    });
+    return ranks;
+  }, [songsWithVotes]);
+
+  const setlistSongIds = useMemo(
+    () => new Set((setlistItems ?? []).flatMap((item) => (item.item_type === "song" && item.song_id ? [item.song_id] : []))),
+    [setlistItems],
+  );
 
   // The header's ⋮ sheet opens the settings modal; the gear no longer sits in each tab's toolbar.
   const settingsRef = useRef<RoomSettingsHandle>(null);
@@ -269,6 +280,23 @@ export default function PlaylistClient({
   const handleAddToSetlist = useCallback((songId: string) => {
     setSetlistConfirmSongId(songId);
   }, []);
+
+  async function handleRemoveFromSetlist(songId: string) {
+    const item = setlistItems?.find((entry) => entry.item_type === "song" && entry.song_id === songId);
+    if (!item) return;
+    const song = songsWithVotes.find((s) => s.id === songId);
+    const ok = await showDanger(song ? `「${displayTitle(song.title)}」을 셋리스트에서 뺄까요?` : "셋리스트에서 뺄까요?");
+    if (!ok) return;
+    const previous = setlistItems;
+    setSetlistItems((prev) => prev?.filter((entry) => entry.id !== item.id) ?? prev);
+    try {
+      await removeSetlistItem(playlist.id, adminToken, item.id, shareCode);
+      notifyChange();
+    } catch {
+      setSetlistItems(previous);
+      showAlert("셋리스트에서 빼지 못했어요.");
+    }
+  }
 
   async function handleConfirmAddToSetlist() {
     if (!setlistConfirmSongId) return;
@@ -622,7 +650,9 @@ export default function PlaylistClient({
                       adminToken={adminToken}
                       viewMode={viewMode}
                       rank={rankById.get(song.id)}
-                      scoreRatio={scoreRatio(song.score, topScore)}
+                      expanded={expandedSongId === song.id}
+                      onToggleExpand={() => setExpandedSongId((current) => (current === song.id ? null : song.id))}
+                      inSetlist={setlistSongIds.has(song.id)}
                       onVotePress={pressVote}
                       votePending={isVotePending(song.id)}
                       isPlaying={playerState.currentSongId === song.id && playerState.isPlaying}
@@ -631,6 +661,7 @@ export default function PlaylistClient({
                       isExpired={isExpired}
                       isHighlighted={highlightedSongIds.has(song.id)}
                       onAddToSetlist={canEditSetlist ? handleAddToSetlist : undefined}
+                      onRemoveFromSetlist={canEditSetlist ? handleRemoveFromSetlist : undefined}
                       loginGate={loginGate}
                       currentUserId={currentUserId}
                     />
