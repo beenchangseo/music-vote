@@ -4,26 +4,40 @@
 #
 #   export SOURCE_DB_URL='postgresql://...'   # 기존 프로젝트 (Session pooler)
 #   export TARGET_DB_URL='postgresql://...'   # 신규 프로젝트 (Session pooler)
-#   bash scripts/migrate-supabase-region.sh               # 전환: 원본이 얼려 있어야 한다 (런북 2-1)
-#   bash scripts/migrate-supabase-region.sh --rehearsal   # 리허설: 원본을 얼리지 않고 진행
+#
+#   bash scripts/migrate-supabase-region.sh --dump-only     # 얼리기 전 시험 덤프 (런북 2-0). 복원하지 않는다
+#   bash scripts/migrate-supabase-region.sh                 # 전환: 덤프 + 복원. 원본이 얼려 있어야 한다 (런북 2-1)
+#   bash scripts/migrate-supabase-region.sh --restore-only  # 복원 실패 뒤 덤프를 손보고 복원만 다시 (런북 2-3)
+#   --rehearsal 을 함께 주면 원본을 얼리지 않아도 진행한다 (로컬 시험용)
 #
 # 연결 문자열은 비밀번호를 담고 있다. 파일에 적지 말고 셸 변수로만 넘긴다.
 
 set -euo pipefail
 
 OUT_DIR=".migration"
+DRY_DIR="$OUT_DIR/dry-run"
 PSQL="${PSQL_BIN:-/opt/homebrew/opt/libpq/bin/psql}"
+MODE=full
 REHEARSAL=false
-[ "${1:-}" = "--rehearsal" ] && REHEARSAL=true
+for arg in "$@"; do
+  case "$arg" in
+    --dump-only) MODE=dump ;;
+    --restore-only) MODE=restore ;;
+    --rehearsal) REHEARSAL=true ;;
+    *) echo "  알 수 없는 옵션: $arg" >&2; exit 1 ;;
+  esac
+done
 
 fail() { echo "  실패: $*" >&2; exit 1; }
 
 [ -n "${SOURCE_DB_URL:-}" ] || fail "SOURCE_DB_URL 이 없습니다."
 [ -n "${TARGET_DB_URL:-}" ] || fail "TARGET_DB_URL 이 없습니다."
 [ "$SOURCE_DB_URL" != "$TARGET_DB_URL" ] || fail "원본과 대상이 같습니다."
-command -v supabase >/dev/null || fail "supabase CLI 가 없습니다. brew install supabase/tap/supabase"
-docker info >/dev/null 2>&1 || fail "Docker 가 꺼져 있습니다. supabase db dump 는 Docker 안에서 돈다."
 [ -x "$PSQL" ] || fail "psql 을 찾을 수 없습니다: $PSQL (PSQL_BIN 으로 지정 가능)"
+if [ "$MODE" != restore ]; then
+  command -v supabase >/dev/null || fail "supabase CLI 가 없습니다. brew install supabase/tap/supabase"
+  docker info >/dev/null 2>&1 || fail "Docker 가 꺼져 있습니다. supabase db dump 는 Docker 안에서 돈다."
+fi
 
 q() { # $1=db_url $2=sql
   "$PSQL" -X -At -v ON_ERROR_STOP=1 -d "$1" -c "$2"
@@ -45,6 +59,25 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES 
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO anon, authenticated, service_role;"
 
+dump_all() { # $1=dir
+  mkdir -p "$1"
+  echo "1/4  역할 덤프"
+  supabase db dump --db-url "$SOURCE_DB_URL" -f "$1/roles.sql" --role-only
+  echo "2/4  스키마 덤프"
+  supabase db dump --db-url "$SOURCE_DB_URL" -f "$1/schema.sql"
+  echo "3/4  데이터 덤프"
+  supabase db dump --db-url "$SOURCE_DB_URL" -f "$1/data.sql" \
+    --use-copy --data-only \
+    -x "storage.buckets_vectors" -x "storage.vector_indexes"
+}
+
+check_files() { # $1=dir
+  for f in roles schema data; do
+    [ -s "$1/$f.sql" ] || fail "$1/$f.sql 이 없거나 비어 있습니다."
+    printf "     %-8s %s\n" "$f.sql" "$(wc -c < "$1/$f.sql" | tr -d ' ') bytes"
+  done
+}
+
 echo "0/4  사전 점검"
 
 # 세션 값(SHOW)은 풀러가 얼리기 전 연결을 재사용하면 off 로 보일 수 있어, DB 설정 자체를 읽는다.
@@ -58,10 +91,10 @@ SELECT coalesce(
   'off')")
 if [ "$source_ro" = "on" ]; then
   echo "     원본 읽기 전용: on"
-elif $REHEARSAL; then
-  echo "     원본 읽기 전용: $source_ro (리허설이라 계속한다)"
+elif [ "$MODE" = dump ] || $REHEARSAL; then
+  echo "     원본 읽기 전용: $source_ro (시험 덤프·리허설이라 계속한다)"
 else
-  fail "원본이 읽기 전용이 아닙니다($source_ro). 런북 2-1 로 먼저 얼리세요. 리허설이면 --rehearsal."
+  fail "원본이 읽기 전용이 아닙니다($source_ro). 런북 2-1 로 먼저 얼리세요."
 fi
 
 # 대상은 비어 있어야 한다. 복원 전에 누가 로그인했거나 이전 시도가 남아 있으면 여기서 멈춘다.
@@ -81,29 +114,41 @@ if [ -n "$target_citext" ] && [ "$target_citext" != "public" ]; then
 fi
 echo "     citext 충돌 없음"
 
-mkdir -p "$OUT_DIR"
+if [ "$MODE" = dump ]; then
+  # 얼리기 전 시험이라 전환용 덤프와 다른 폴더에 둔다. 이 덤프로 복원하면 얼리기 전 데이터가 들어간다.
+  dump_all "$DRY_DIR"
+  check_files "$DRY_DIR"
+  echo
+  echo "알려진 복원 오류 점검 (런북 2-3 표)"
+  printf "     %-44s %s\n" 'schema.sql: OWNER TO "supabase_admin"' "$(grep -c 'OWNER TO "supabase_admin"' "$DRY_DIR/schema.sql" || true)줄"
+  printf "     %-44s %s\n" 'roles.sql: cli_login_postgres' "$(grep -c 'cli_login_postgres' "$DRY_DIR/roles.sql" || true)줄"
+  printf "     %-44s %s\n" 'schema.sql: GRANT' "$(grep -c '^GRANT ' "$DRY_DIR/schema.sql" || true)줄 (0 이면 권한이 안 실린 것)"
+  printf "     %-44s %s\n" 'schema.sql: ALTER DEFAULT PRIVILEGES' "$(grep -c '^ALTER DEFAULT PRIVILEGES' "$DRY_DIR/schema.sql" || true)줄"
+  printf "     %-44s %s\n" 'schema.sql: citext 생성' "$(grep -i 'CREATE EXTENSION.*citext' "$DRY_DIR/schema.sql" | head -1 || true)"
+  echo
+  echo "시험 덤프가 끝났습니다. 복원은 하지 않았습니다. 확인 뒤 지우세요: rm -rf $DRY_DIR"
+  exit 0
+fi
 
-echo "1/4  역할 덤프"
-supabase db dump --db-url "$SOURCE_DB_URL" -f "$OUT_DIR/roles.sql" --role-only
-
-echo "2/4  스키마 덤프"
-supabase db dump --db-url "$SOURCE_DB_URL" -f "$OUT_DIR/schema.sql"
-
-echo "3/4  데이터 덤프"
-supabase db dump --db-url "$SOURCE_DB_URL" -f "$OUT_DIR/data.sql" \
-  --use-copy --data-only \
-  -x "storage.buckets_vectors" -x "storage.vector_indexes"
-
-for f in roles schema data; do
-  [ -s "$OUT_DIR/$f.sql" ] || fail "$OUT_DIR/$f.sql 이 비어 있습니다."
-  printf "     %-8s %s\n" "$f.sql" "$(wc -c < "$OUT_DIR/$f.sql" | tr -d ' ') bytes"
-done
+if [ "$MODE" = full ]; then
+  dump_all "$OUT_DIR"
+  # --restore-only 가 얼린 뒤의 덤프인지 확인할 수 있게 남긴다.
+  printf 'source_read_only=%s\ndumped_at=%s\n' "$source_ro" "$(date '+%Y-%m-%dT%H:%M:%S%z')" > "$OUT_DIR/dump.meta"
+else
+  echo "1-3/4  덤프 건너뜀 (--restore-only) — $OUT_DIR 의 파일을 그대로 쓴다"
+  [ -f "$OUT_DIR/dump.meta" ] || fail "$OUT_DIR/dump.meta 가 없습니다. 전환 모드로 뜬 덤프만 다시 복원할 수 있습니다."
+  if ! $REHEARSAL && ! grep -q '^source_read_only=on$' "$OUT_DIR/dump.meta"; then
+    fail "이 덤프는 원본을 얼리기 전에 떴습니다. 얼린 뒤 전환 모드로 다시 뜨세요."
+  fi
+  sed 's/^/     /' "$OUT_DIR/dump.meta"
+fi
+check_files "$OUT_DIR"
 
 echo "4/4  대상 프로젝트로 복원"
 # 한 트랜잭션이라 중간에 실패하면 대상은 빈 상태로 돌아간다.
 # session_replication_role = replica 로 트리거를 끈다. 켜둔 채 복원하면 auth 컬럼이 이중 암호화된다.
 # 명령 결과는 로그로 보내고 오류만 화면에 남긴다.
-"$PSQL" \
+if ! "$PSQL" \
   -X \
   --single-transaction \
   --variable ON_ERROR_STOP=1 \
@@ -114,7 +159,13 @@ echo "4/4  대상 프로젝트로 복원"
   --file "$OUT_DIR/data.sql" \
   --command "$POST_RESTORE_SQL" \
   --dbname "$TARGET_DB_URL" \
-  > "$OUT_DIR/restore.log"
+  > "$OUT_DIR/restore.log"; then
+  echo
+  echo "  복원이 실패해 트랜잭션 전체가 되돌아갔습니다. 대상은 빈 상태입니다."
+  echo "  위 오류를 런북 2-3 의 표와 맞춰 보고 $OUT_DIR 의 파일을 고친 뒤:"
+  echo "    bash scripts/migrate-supabase-region.sh --restore-only"
+  exit 1
+fi
 echo "     복원 로그: $OUT_DIR/restore.log"
 
 echo
