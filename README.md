@@ -58,7 +58,7 @@
 | Language | TypeScript |
 | Styling | Tailwind CSS v4 (@theme inline) |
 | Font | Pretendard Variable (CDN dynamic subset) |
-| Database | Supabase Postgres + RLS |
+| Database | Supabase Postgres + RLS (서울 `ap-northeast-2`) |
 | Auth | Kakao OAuth (Supabase Auth) — 로그인 이전 합주방은 읽기 전용 보관 |
 | Image | next/image + next/og (Edge) |
 | Analytics | @vercel/analytics + Speed Insights |
@@ -86,10 +86,10 @@ npm install
 
 `.env.local`:
 ```
-# Supabase (필수)
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+# Supabase (필수) — Settings → API Keys
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
 
 # Vercel Cron 인증 (프로덕션에서 권장)
 CRON_SECRET=randomly-generated-32-char-hex
@@ -98,6 +98,11 @@ CRON_SECRET=randomly-generated-32-char-hex
 # 곡 추가 시 재생시간 자동 + 임베드 가능 여부 검사. 없으면 그 둘만 건너뛴다.
 YOUTUBE_API_KEY=your_youtube_data_api_key
 ```
+
+> Supabase 키는 새 형식(publishable·secret)을 쓴다. 변수 이름은 레거시 `anon`·`service_role` 키를 쓰던
+> 때 그대로이고 값만 바뀌었다 — `..._ANON_KEY` 에 publishable 키, `..._SERVICE_ROLE_KEY` 에 secret 키.
+> secret 키는 RLS 를 우회하므로 서버에서만 쓰고 `NEXT_PUBLIC_` 를 붙이지 않는다(브라우저에서 오면 Supabase 가 401 로 막는다).
+> 레거시 JWT 키도 아직 동작하지만 Supabase 가 2026년 말에 없앤다.
 
 > `YOUTUBE_API_KEY` 는 서버에서만 쓴다. `NEXT_PUBLIC_` 접두사를 붙이지 말 것 —
 > 붙이면 브라우저 번들에 그대로 실려 아무나 쿼터를 쓸 수 있다.

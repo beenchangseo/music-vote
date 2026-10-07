@@ -445,7 +445,7 @@ Instant Rollback 뒤에는 Vercel 이 새 배포를 Production 에 자동으로 
 
 **D+1**
 - E2E 로그인 상태 다시 저장 (`e2e/save-auth.mts`) — 저장된 쿠키가 구 프로젝트 것이다. 이후 E2E 게이트 1회.
-- README·AGENTS.md 의 프로젝트 ref·키 설명 갱신 (키 형식이 `sb_publishable_`/`sb_secret_` 로 바뀜).
+- README·AGENTS.md 의 프로젝트 ref·키 설명 갱신 (키 형식이 `sb_publishable_`/`sb_secret_` 로 바뀜). — 2026-10-07 완료
 - DataGrip 의 운영 연결을 신규로 바꾸고, 구 연결 이름에 `(old, read-only)` 를 붙인다.
 
 **D+1 ~ D+7**
@@ -462,7 +462,7 @@ Instant Rollback 뒤에는 Vercel 이 새 배포를 Production 에 자동으로 
 **이후 마이그레이션 규칙 (v22 부터)**
 - Supabase 는 2026-10-30 부터 기존 프로젝트에도 "새 테이블 자동 노출 끔"을 적용한다. 그 뒤로 public 에
   만드는 새 테이블은 `service_role` 에게도 권한이 없다. 새 테이블 마이그레이션에는
-  `GRANT ... TO service_role` (필요하면 anon·authenticated 도)을 명시한다. AGENTS.md 마이그레이션 절에 추가.
+  `GRANT ... TO service_role` (필요하면 anon·authenticated 도)을 명시한다. AGENTS.md 마이그레이션 절에 추가 — 2026-10-07 완료.
 
 ## 사용자 영향
 
