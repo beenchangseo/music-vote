@@ -135,7 +135,7 @@ export default function SongCard({
           expanded ? "bg-surface" : "hover:bg-surface/60"
         } ${isHighlighted ? "ring-1 ring-inset ring-warning/40" : ""} ${isPending ? "opacity-50" : ""}`}
       >
-        <div className="flex min-h-[72px] items-center gap-2.5">
+        <div className="flex min-h-[72px] items-center gap-2.5 max-[359px]:gap-2">
           {rank != null && (
             <span
               className={`w-5 shrink-0 text-center text-sm font-extrabold tabular-nums ${topRank ? "text-primary" : "text-text-subtle"}`}
@@ -147,7 +147,7 @@ export default function SongCard({
           {/* Cover = play button (Spotify: tap the art to play). */}
           <button
             onClick={onTogglePlay}
-            className="group relative h-12 w-12 shrink-0 overflow-hidden rounded-control bg-surface-elevated"
+            className="group relative h-12 w-12 shrink-0 overflow-hidden rounded-control bg-surface-elevated max-[359px]:h-10 max-[359px]:w-10"
             aria-label={`${title} ${isPlaying ? "일시정지" : "재생"}`}
           >
             {song.thumbnail_url && (
@@ -229,10 +229,12 @@ export default function SongCard({
               <p className="mb-1 line-clamp-2 break-all text-caption text-text-subtle">원래 제목 · {song.title}</p>
             )}
             <VoterStrip votes={song.votes} hide={votesAnonymous} />
-            {/* Right-aligned next to ⋯, under the vote pill, so the row reads as one block. */}
-            <div className="-mr-1 flex items-center justify-end gap-1.5">
+            {/* Spread evenly up to ⋯ so the group follows the card width; capped so a wide screen does not
+                scatter it, and right-aligned under the vote pill. */}
+            <div className="-mr-1 ml-auto flex max-w-[22rem] items-center justify-between gap-1">
               <ActionPill onClick={() => setShowComments(true)}>
-                <svg className="h-[15px] w-[15px]" fill="none" stroke="currentColor" strokeWidth={2.25} viewBox="0 0 24 24" aria-hidden>
+                {/* Below 360px the four buttons only fit without this icon. */}
+                <svg className="h-[15px] w-[15px] max-[359px]:hidden" fill="none" stroke="currentColor" strokeWidth={2.25} viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a8 8 0 01-11.6 7.1L3 21l1.9-6.4A8 8 0 1121 12z" />
                 </svg>
                 {song.commentCount > 0 ? `댓글 ${song.commentCount}` : "댓글"}
@@ -435,7 +437,7 @@ function ActionPill({
   return (
     <button type="button" onClick={onClick} aria-label={label} className="group/pill inline-flex min-h-11 shrink-0 items-center">
       <span
-        className={`inline-flex h-9 items-center gap-1.5 rounded-pill px-3.5 text-sm font-semibold transition-colors ${
+        className={`inline-flex h-9 items-center gap-1.5 rounded-pill px-3.5 text-sm font-semibold transition-colors max-[359px]:px-3 ${
           selected ? "bg-primary-soft text-text" : "bg-surface-hover text-text group-hover/pill:bg-border"
         }`}
       >
