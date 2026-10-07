@@ -8,6 +8,8 @@
 //     한 행이라도 돌아오면 실패다. 행 내용은 출력하지 않고 개수만 보여준다.
 //   - playlists 에 anon INSERT 가 막혀 있어야 한다. 프로브는 NOT NULL 을 어기는 행을 보내므로
 //     어느 쪽이든 행이 생기지 않는다. 막혀 있으면 42501, 정책이 열려 있으면 NOT NULL 위반(23502).
+//   - save_playlist_voting_settings RPC 가 anon 에게 막혀 있어야 한다(42501). 첫 인자 검사에서 끝나는
+//     값을 보내므로 열려 있어도 아무것도 바뀌지 않는다.
 //   - 집계 뷰는 계속 열려 있어야 한다. SECURITY DEFINER 뷰라 테이블 권한을 회수해도 읽힌다.
 //   - teams, team_members 는 v19 에서 생긴다. 테이블이 아직 없으면 건너뛴다.
 //
@@ -15,7 +17,8 @@
 // 키와 URL 은 출력하지 않는다. 하나라도 실패하면 종료 코드 1.
 //
 // 한계: 빈 테이블은 RLS 로 막힌 것과 0행이 똑같이 보인다. 출력의 "0행" 이 그 경우다.
-//       쓰기 계약은 playlists INSERT 하나만 본다.
+//       쓰기 계약은 playlists INSERT 와 위 RPC 만 본다. 나머지 권한은
+//       scripts/compare-supabase-projects.sh 의 권한 대조가 본다.
 
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "node:fs";
@@ -133,6 +136,27 @@ if (insertProbe.error?.code === "42501") {
   report("playlists INSERT", "fail", "오류 없이 통과 — 행이 만들어졌을 수 있습니다");
 } else {
   report("playlists INSERT", "fail", `예상 밖 오류 ${errorId(insertProbe.error, insertProbe.status)}`);
+}
+
+// save_playlist_voting_settings 는 service_role 전용 SECURITY DEFINER 함수다(v11). 공개 키에 EXECUTE 가
+// 붙으면 아무 방의 투표 설정을 바꿀 수 있다. 덤프·복원이 이 회수를 놓치기 쉬워 따로 본다.
+// p_votes_anonymous 를 null 로 보내므로 권한이 열려 있어도 함수는 첫 검사에서 예외(P0001)로 끝나고
+// 아무것도 바꾸지 않는다.
+const rpcProbe = await anon.rpc("save_playlist_voting_settings", {
+  p_playlist_id: "00000000-0000-0000-0000-000000000000",
+  p_votes_anonymous: null,
+  p_mode: "free",
+  p_default_limit: 1,
+  p_member_limits: [],
+});
+if (rpcProbe.error?.code === "42501") {
+  report("save_playlist_voting_settings RPC", "pass", "권한 거부 42501");
+} else if (rpcProbe.error?.code === "P0001") {
+  report("save_playlist_voting_settings RPC", "fail", "EXECUTE 가 열려 있음 (함수가 실행됨)");
+} else if (!rpcProbe.error) {
+  report("save_playlist_voting_settings RPC", "fail", "오류 없이 통과");
+} else {
+  report("save_playlist_voting_settings RPC", "fail", `예상 밖 오류 ${errorId(rpcProbe.error, rpcProbe.status)}`);
 }
 
 console.log("\n열려 있어야 하는 것");
