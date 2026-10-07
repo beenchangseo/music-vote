@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef, useEffect, type ReactNode } from "react";
+import { Fragment, useState, useTransition, useRef, useEffect, type ReactNode } from "react";
 import Image from "next/image";
 import VoteButtons from "./VoteButtons";
 import CommentModal from "./CommentModal";
@@ -177,99 +177,110 @@ export default function SongCard({
             </span>
           </button>
 
-          <button
-            type="button"
-            onClick={onToggleExpand}
-            aria-expanded={expanded}
-            aria-controls={actionsId}
-            className="flex min-h-14 min-w-0 flex-1 flex-col justify-center text-left"
-          >
-            <span className={`line-clamp-2 text-body font-semibold leading-snug ${isCurrent ? "text-accent-play" : "text-text"}`}>
-              {title}
-            </span>
-            {/* The second line is ~140px wide: the artist gets the room, comments and setlist are small marks. */}
-            <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-caption text-text-muted">
-              {artist && <span className="truncate">{artist}</span>}
-              {song.commentCount > 0 && (
-                <span className="inline-flex shrink-0 items-center gap-0.5 tabular-nums">
-                  <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a8 8 0 01-11.6 7.1L3 21l1.9-6.4A8 8 0 1121 12z" />
-                  </svg>
-                  <span className="sr-only">댓글</span>
-                  {song.commentCount}
-                </span>
-              )}
-              {inSetlist && (
-                <span className="inline-flex shrink-0 items-center text-primary">
-                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h12M4 12h12M4 18h6M14 18l2.5 2.5L21 16" />
-                  </svg>
-                  <span className="sr-only">셋리스트에 있음</span>
-                </span>
-              )}
-              <svg
-                className={`h-3.5 w-3.5 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2.5}
-                viewBox="0 0 24 24"
-                aria-hidden
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
-              </svg>
-            </span>
-          </button>
+          <div className={`min-w-0 flex-1 ${expanded ? "py-2" : ""}`}>
+            <button
+              type="button"
+              onClick={onToggleExpand}
+              aria-expanded={expanded}
+              aria-controls={actionsId}
+              className="flex min-h-14 w-full min-w-0 flex-col justify-center text-left"
+            >
+              <span className={`line-clamp-2 text-body font-semibold leading-snug ${isCurrent ? "text-accent-play" : "text-text"}`}>
+                {title}
+              </span>
+              {/* The second line is ~140px wide: the artist gets the room, comments and setlist are small marks. */}
+              <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-caption text-text-muted">
+                {artist && <span className="truncate">{artist}</span>}
+                {song.commentCount > 0 && (
+                  <span className="inline-flex shrink-0 items-center gap-0.5 tabular-nums">
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a8 8 0 01-11.6 7.1L3 21l1.9-6.4A8 8 0 1121 12z" />
+                    </svg>
+                    <span className="sr-only">댓글</span>
+                    {song.commentCount}
+                  </span>
+                )}
+                {inSetlist && (
+                  <span className="inline-flex shrink-0 items-center text-primary">
+                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h12M4 12h12M4 18h6M14 18l2.5 2.5L21 16" />
+                    </svg>
+                    <span className="sr-only">셋리스트에 있음</span>
+                  </span>
+                )}
+                <svg
+                  className={`h-3.5 w-3.5 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                  viewBox="0 0 24 24"
+                  aria-hidden
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+                </svg>
+              </span>
+            </button>
+            {/* Opened: the YouTube title before cleanup and the named voters sit under the title, in its column. */}
+            {expanded && title !== song.title.trim() && (
+              <p className="line-clamp-2 break-all text-caption text-text-subtle">원래 제목 · {song.title}</p>
+            )}
+            {expanded && <VoterStrip votes={song.votes} hide={votesAnonymous} />}
+          </div>
 
           <div className="shrink-0">{voteButtons}</div>
         </div>
 
         {expanded && (
-          <div id={actionsId} className="pb-2">
-            {title !== song.title.trim() && (
-              <p className="mb-1 line-clamp-2 break-all text-caption text-text-subtle">원래 제목 · {song.title}</p>
-            )}
-            <VoterStrip votes={song.votes} hide={votesAnonymous} />
-            {/* Spread evenly up to ⋯ so the group follows the card width; capped so a wide screen does not
-                scatter it, and right-aligned under the vote pill. */}
-            <div className="-mr-1 ml-auto flex max-w-[22rem] items-center justify-between gap-1">
-              <ActionPill onClick={() => setShowComments(true)}>
-                {/* Below 360px the four buttons only fit without this icon. */}
-                <svg className="h-[15px] w-[15px] max-[359px]:hidden" fill="none" stroke="currentColor" strokeWidth={2.25} viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a8 8 0 01-11.6 7.1L3 21l1.9-6.4A8 8 0 1121 12z" />
-                </svg>
+          // 디자인 E1 (LinkedIn · Grab): no pill backgrounds, one hairline, tabs share the width. Each tab keeps
+          // its label width and splits what is left, so "셋리스트에 추가" fits from 320px up.
+          <div id={actionsId} className="-mx-2 flex items-center border-t border-surface-hover">
+            {[
+              <ActionTab key="comments" icon={<CommentIcon />} onClick={() => setShowComments(true)}>
                 {song.commentCount > 0 ? `댓글 ${song.commentCount}` : "댓글"}
-              </ActionPill>
-              <ActionPill onClick={() => setShowVersions(true)}>
-                {versionCount > 0 ? `다른 버전 ${versionCount}` : "다른 버전"}
-              </ActionPill>
-              {/* 셋리스트는 ⋯ 안에 숨기면 못 찾는다. 펼친 줄에 바로 둔다. 들어 있으면 눌러서 뺀다. */}
-              {inSetlist && onRemoveFromSetlist ? (
-                <ActionPill selected onClick={() => onRemoveFromSetlist(song.id)} label="셋리스트에서 빼기">
-                  <CheckIcon />
-                  셋리스트
-                </ActionPill>
-              ) : !inSetlist && onAddToSetlist ? (
-                <ActionPill onClick={() => onAddToSetlist(song.id)} label="셋리스트에 넣기">
-                  <PlusIcon />
-                  셋리스트
-                </ActionPill>
-              ) : null}
+              </ActionTab>,
+              <ActionTab key="versions" icon={<LayersIcon />} onClick={() => setShowVersions(true)}>
+                {versionCount > 0 ? `버전 ${versionCount}` : "버전"}
+              </ActionTab>,
+              // 셋리스트는 ⋯ 안에 숨기면 못 찾는다. 상태를 글자로 보이고, 누르면 넣거나 뺀다.
+              inSetlist && onRemoveFromSetlist ? (
+                <ActionTab key="setlist" icon={<ListCheckIcon />} selected onClick={() => onRemoveFromSetlist(song.id)}>
+                  셋리스트에 있음<span className="sr-only">, 빼기</span>
+                </ActionTab>
+              ) : inSetlist ? (
+                <ActionTab key="setlist" icon={<ListCheckIcon />} selected>
+                  셋리스트에 있음
+                </ActionTab>
+              ) : onAddToSetlist ? (
+                <ActionTab key="setlist" icon={<ListPlusIcon />} onClick={() => onAddToSetlist(song.id)}>
+                  셋리스트에 추가
+                </ActionTab>
+              ) : null,
+            ]
+              .filter(Boolean)
+              .map((tab, index) => (
+                <Fragment key={index}>
+                  {index > 0 && <span aria-hidden className="h-5 w-px shrink-0 bg-surface-hover" />}
+                  {tab}
+                </Fragment>
+              ))}
 
-              {hasMenu && (
+            {hasMenu && (
+              <>
+                <span aria-hidden className="h-5 w-px shrink-0 bg-surface-hover" />
                 <div className="relative shrink-0" ref={showMenu ? menuRef : undefined}>
                   <button
                     onClick={() => setShowMenu(!showMenu)}
-                    className="flex h-11 w-11 items-center justify-center rounded-pill text-text-subtle transition-colors hover:bg-surface-hover hover:text-text"
+                    className="flex h-12 w-14 items-center justify-center text-text-muted transition-colors hover:text-text"
                     aria-label="더보기"
                   >
-                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <svg className="h-[18px] w-[18px]" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
                       <circle cx="5" cy="12" r="1.6" />
                       <circle cx="12" cy="12" r="1.6" />
                       <circle cx="19" cy="12" r="1.6" />
                     </svg>
                   </button>
                   {showMenu && (
-                    <div className="absolute right-0 top-10 z-20 w-44 overflow-hidden rounded-xl border border-border bg-surface-elevated shadow-lg">
+                    <div className="absolute right-2 top-11 z-20 w-44 overflow-hidden rounded-xl border border-border bg-surface-elevated shadow-lg">
                       {song.added_by && (
                         <div className="truncate px-3 py-2 text-caption text-text-subtle">
                           추가: <span className="text-text-muted">{song.added_by}</span>
@@ -290,8 +301,8 @@ export default function SongCard({
                     </div>
                   )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </div>
         )}
         {showComments && (
@@ -422,44 +433,79 @@ export default function SongCard({
   );
 }
 
-/** 펼친 행의 버튼 (디자인 C9). 보이는 높이는 36px, 누르는 자리는 44px. */
-function ActionPill({
+/**
+ * 펼친 행의 탭 (디자인 E1). 배경 없이 아이콘 + 글자, 높이 48px. 글자 폭은 지키고 남는 폭을 나눠 가진다.
+ * onClick 이 없으면 상태만 보이는 글자다 (셋리스트를 고칠 수 없는 참여자에게 "셋리스트에 있음").
+ */
+function ActionTab({
+  icon,
   onClick,
   selected = false,
-  label,
   children,
 }: {
-  onClick: () => void;
+  icon: ReactNode;
+  onClick?: () => void;
   selected?: boolean;
-  label?: string;
   children: ReactNode;
 }) {
-  return (
-    <button type="button" onClick={onClick} aria-label={label} className="group/pill inline-flex min-h-11 shrink-0 items-center">
-      <span
-        className={`inline-flex h-9 items-center gap-1.5 rounded-pill px-3.5 text-sm font-semibold transition-colors max-[359px]:px-3 ${
-          selected ? "bg-primary-soft text-text" : "bg-surface-hover text-text group-hover/pill:bg-border"
-        }`}
-      >
+  const className = `inline-flex h-12 min-w-0 flex-auto items-center justify-center gap-1.5 whitespace-nowrap px-1 text-sm font-semibold transition-colors max-[359px]:text-caption ${
+    selected ? "text-primary" : "text-text"
+  }`;
+  if (!onClick) {
+    return (
+      <span className={className}>
+        {icon}
         {children}
       </span>
+    );
+  }
+  return (
+    <button type="button" onClick={onClick} className={`${className} ${selected ? "hover:text-primary-hover" : "hover:text-primary"}`}>
+      {icon}
+      {children}
     </button>
   );
 }
 
-function CheckIcon() {
+/** 펼친 행 아이콘. 같은 굵기(1.75)의 선 아이콘으로 맞춘다. */
+function TabIcon({ children, strokeWidth = 1.75 }: { children: ReactNode; strokeWidth?: number }) {
   return (
-    <svg className="h-[15px] w-[15px]" fill="none" stroke="currentColor" strokeWidth={2.75} viewBox="0 0 24 24" aria-hidden>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+    <svg className="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+      {children}
     </svg>
   );
 }
 
-function PlusIcon() {
+function CommentIcon() {
   return (
-    <svg className="h-[15px] w-[15px]" fill="none" stroke="currentColor" strokeWidth={2.75} viewBox="0 0 24 24" aria-hidden>
-      <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-    </svg>
+    <TabIcon>
+      <path d="M21 12a8 8 0 01-11.6 7.1L3 21l1.9-6.4A8 8 0 1121 12z" />
+    </TabIcon>
+  );
+}
+
+function LayersIcon() {
+  return (
+    <TabIcon>
+      <path d="M12 3l9 5-9 5-9-5 9-5z" />
+      <path d="M3 13l9 5 9-5" />
+    </TabIcon>
+  );
+}
+
+function ListPlusIcon() {
+  return (
+    <TabIcon>
+      <path d="M4 6h12M4 12h12M4 18h7M18 15v6M15 18h6" />
+    </TabIcon>
+  );
+}
+
+function ListCheckIcon() {
+  return (
+    <TabIcon strokeWidth={2}>
+      <path d="M4 6h12M4 12h12M4 18h6M14 18l2.5 2.5L21 16" />
+    </TabIcon>
   );
 }
 

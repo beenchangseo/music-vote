@@ -89,15 +89,15 @@ describe("SongCard compact row (디자인 C9)", () => {
     expect(screen.getByText("원래 제목 · DAY6(데이식스)- 예뻤어 [가사/Lyrics]")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "댓글 2" }));
     expect(screen.getByRole("dialog", { name: "댓글 창" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "다른 버전 1" }));
+    fireEvent.click(screen.getByRole("button", { name: "버전 1" }));
     expect(screen.getByRole("dialog", { name: "다른 버전 창" })).toBeInTheDocument();
   });
 
-  it("adds to the setlist, or takes it out when it is already in", () => {
+  it("labels the setlist tab by state: 셋리스트에 추가, or 셋리스트에 있음 which takes it out", () => {
     const onAddToSetlist = vi.fn();
     const onRemoveFromSetlist = vi.fn();
     const { rerender } = renderRow({ expanded: true, onAddToSetlist, onRemoveFromSetlist });
-    fireEvent.click(screen.getByRole("button", { name: "셋리스트에 넣기" }));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트에 추가" }));
     expect(onAddToSetlist).toHaveBeenCalledWith("song-1");
 
     rerender(
@@ -122,12 +122,20 @@ describe("SongCard compact row (디자인 C9)", () => {
         onRemoveFromSetlist={onRemoveFromSetlist}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "셋리스트에서 빼기" }));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트에 있음, 빼기" }));
     expect(onRemoveFromSetlist).toHaveBeenCalledWith("song-1");
+  });
+
+  it("shows 셋리스트에 있음 as plain text to someone who cannot edit the setlist", () => {
+    renderRow({ expanded: true, inSetlist: true });
+    // ^: the row toggle's own name carries "셋리스트에 있음" from the summary line.
+    expect(screen.queryByRole("button", { name: /^셋리스트/ })).not.toBeInTheDocument();
+    // Once in the folded summary (screen-reader text) and once in the opened bar.
+    expect(screen.getAllByText("셋리스트에 있음")).toHaveLength(2);
   });
 
   it("has no setlist button for someone who cannot edit the setlist", () => {
     renderRow({ expanded: true });
-    expect(screen.queryByRole("button", { name: /셋리스트/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^셋리스트/ })).not.toBeInTheDocument();
   });
 });
