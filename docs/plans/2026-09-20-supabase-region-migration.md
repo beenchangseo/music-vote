@@ -20,7 +20,7 @@ Supabase 는 생성 후 리전을 바꿀 수 없으므로 서울 리전에 새 �
 | 0-5 API 키 | 완료 (2026-10-07) — 새 키(`sb_publishable_`/`sb_secret_`)로 결정, 레거시는 대비책. 두 키 인증 확인. `.env.local` 에 주석으로 넣어 둠 → 2-4 직전에 주석만 푼다 |
 | 0-6 스크립트 보강 | 완료 (2026-10-07) — 로컬 Docker 로 권한 유실 재현·수정 확인, 0-6 의 검증 기록 참고 |
 | 1 리허설 | 생략 (2026-10-07 결정, 무료 플랜이라 임시 프로젝트 불가) — 대신 2-0 시험 덤프, 02:15 중단 시각, `--restore-only` 복구 경로 |
-| 2 전환 | 남음 |
+| 2 전환 | **완료 (2026-10-07 20:47~20:57 KST)** — 아래 "전환 기록" |
 
 ## 한눈에
 
@@ -227,25 +227,54 @@ export TARGET_DB_URL='postgresql://postgres.<신규-ref>:PASSWORD@aws-...-ap-nor
 
 ### 2-1 구 DB 쓰기 정지 (T0)
 
-구 프로젝트에서 실행한다. 새로 열리는 세션부터 읽기 전용이 되므로, REST(PostgREST)가 쥐고 있는
-기존 연결을 끊어 다시 붙게 한다.
+> **2026-10-07 전환에서 바뀐 절차.** `default_transaction_read_only` 만으로는 앱 쓰기가 막히지 않았다.
+> PostgREST 는 쓰기 요청마다 트랜잭션을 `READ WRITE` 로 명시해 이 기본값을 덮어쓴다(얼린 뒤 service_role
+> UPDATE 프로브가 그대로 통과했다). 그래서 쓰기 차단은 **문장 단위 트리거**로 한다. 기본값 설정은 그대로
+> 함께 건다 — 로그인 등 PostgREST 밖의 쓰기를 막고, 이전 스크립트의 사전 점검이 이 값을 본다.
+
+구 프로젝트에서 실행한다. 기본값이 읽기 전용이 된 뒤라 트리거는 `BEGIN READ WRITE` 로 만든다.
 
 ```sql
+-- ① 기본값 (PostgREST 밖의 쓰기, 스크립트 사전 점검용)
 ALTER DATABASE postgres SET default_transaction_read_only = on;
-
-SELECT pg_terminate_backend(pid)
-FROM pg_stat_activity
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity
 WHERE usename = 'authenticator' AND pid <> pg_backend_pid();
+
+-- ② 실제 쓰기 차단: public 의 모든 테이블에 문장 단위 트리거
+BEGIN READ WRITE;
+SET LOCAL lock_timeout = '5s';
+CREATE FUNCTION public.migration_write_block() RETURNS trigger LANGUAGE plpgsql AS $fn$
+BEGIN
+  RAISE EXCEPTION 'Plypick 서버 이전 중이라 지금은 저장할 수 없어요.'
+    USING ERRCODE = 'read_only_sql_transaction';
+END
+$fn$;
+DO $do$
+DECLARE t text;
+BEGIN
+  FOR t IN SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+           WHERE n.nspname = 'public' AND c.relkind = 'r'
+  LOOP
+    EXECUTE format('CREATE TRIGGER migration_write_block BEFORE INSERT OR UPDATE OR DELETE OR TRUNCATE '
+                   'ON public.%I FOR EACH STATEMENT EXECUTE FUNCTION public.migration_write_block()', t);
+  END LOOP;
+END
+$do$;
+COMMIT;
 ```
 
-확인:
+트리거는 service_role 도, SECURITY DEFINER 함수도 피하지 못한다. 문장 단위라 0행 UPDATE 도 막힌다.
+이 함수와 트리거는 덤프에 실려 신규로 간다. 2-4 대조는 양쪽에 다 있는 상태로 통과시키고, 그 뒤
+**신규에서만** `DROP FUNCTION public.migration_write_block() CASCADE;` 로 지운다. 지운 뒤 신규의 권한 지문이
+얼리기 전 원본 값(2-0 기록)과 같은지 `--source-only` 로 확인한다.
 
-- [ ] DataGrip 에서 **새 콘솔**을 열어 `SHOW default_transaction_read_only;` → `on`
-- [ ] 운영 사이트 테스트 방(`qDPJnh1d`)에서 투표 → 실패해야 한다
-- [ ] 홈·합주방 읽기는 그대로 되는지
+확인 (없는 id 를 겨누는 UPDATE 라 열려 있어도 아무것도 바뀌지 않는다):
 
-이 시점부터 앱 데이터(서버 액션, RPC, cron)는 구 DB 에 쓸 수 없다. 로그인은 될 수도 있지만
-그 기록(`last_sign_in_at`, 세션)은 이전 대상이 아니라 잃어도 된다.
+- [ ] 구 프로젝트 service_role 키로 `playlists` 에 `update(...).eq('id', '00000000-…')` → `25006` 이어야 한다
+- [ ] 같은 키로 테이블·뷰 읽기는 그대로 되는지
+
+이 시점부터 앱 데이터(서버 액션, RPC, cron)는 구 DB 에 쓸 수 없다. 구 DB 는 전환 뒤에도 이 상태로 둔다 —
+전환 전에 열어둔 탭의 쓰기가 구 DB 에 쌓이지 않게.
 
 ### 2-2 덤프 (T+5)
 
@@ -374,15 +403,43 @@ vercel --prod
 | 2-5 후 ~ 2-6 끝 | Vercel 에서 2-0 에 적어둔 배포로 **Instant Rollback** (배포는 당시 환경변수를 들고 있다) + 구 DB 얼음 해제 | 그 사이 신규 DB 에 쓰인 것 (새벽이라 거의 없음, `created_at` 으로 확인) |
 | 2-7 이후 | 롤백하지 않는다. 앞으로 고친다 | — |
 
-얼음 해제 (구 프로젝트, 새 콘솔에서):
+얼음 해제 (구 프로젝트, DataGrip `postgres@supabase` 새 콘솔에서):
 
 ```sql
 SET default_transaction_read_only = off;
+DROP FUNCTION public.migration_write_block() CASCADE;   -- 트리거 11개도 함께 지워진다
 ALTER DATABASE postgres RESET default_transaction_read_only;
 ```
 
 Instant Rollback 뒤에는 Vercel 이 새 배포를 Production 에 자동으로 붙이지 않는다. 다시 전환할 때는
 새로 배포한 뒤 promote 한다. 환경변수도 구 값으로 되돌려 둔다.
+
+## 전환 기록 (2026-10-07)
+
+쓰기 이력을 보니 01시보다 저녁 18~20시가 조용해 당일 저녁으로 당겼다(최근 30일 쓰기 142건 중 18~20시 0건).
+준비가 길어져 실제로는 20:47 에 시작했다. 단톡방 공지는 하지 않았다.
+
+| 시각 (KST) | 일 |
+|---|---|
+| 20:40 | 원본 현황 기록 `~/plypick-source-20261007-2040.txt` — 권한 61행 `8ad7e953…`, 기본 권한 24행 `41c0ac67…` (10-07 기준값과 같음) |
+| 20:41 | 2-0 시험 덤프 실패 — CLI 가 `.env.local` 의 값 없는 줄을 해석하지 못함. 스크립트가 빈 임시 폴더에서 CLI 를 돌리게 고침(`2b8952f`) 후 통과. 알려진 복원 오류 0줄 |
+| 20:47:43 | `default_transaction_read_only = on`, authenticator 연결 2개 끊음 → **프로브 결과 앱 쓰기가 그대로 통과** |
+| 20:51:11 | 쓰기 차단 트리거 11개 (2-1 위 절차). 프로브: service_role UPDATE `25006`, 읽기 정상 |
+| 20:51:26~20:52:14 | 덤프 + 복원 48초. 경고는 citext 확장 함수 GRANT 뿐(`supabase_admin` 소유라 postgres 가 줄 수 없음, 무해) |
+| 20:52:34 | 대조 4항목 일치 (행 13테이블, 구조, 권한 65행, 기본 권한 24행 — 차단 함수 포함 상태) |
+| 20:53 | 신규에서 차단 함수·트리거 삭제 → 신규 권한 지문 61행 `8ad7e953…` = 얼리기 전 원본 |
+| 20:53 | 새 publishable 키로 audit 18항목 통과 |
+| 20:53~20:55 | 로컬 앱 → 신규: 카카오 로그인 후 `auth.users` 19 그대로(기존 user_id, 방 9개 연결), 투표·곡·댓글·실시간 확인 |
+| 20:55 | Vercel Production 환경변수 3개 교체 (`printf` + `--force`) |
+| 20:56:02~20:57:05 | `vercel redeploy` (직전 운영 배포 `riia0g36x` 를 새 환경변수로 재빌드) → `plypick.kr` 연결 |
+| 20:57~ | 운영 확인: 서울 전용 곡이 운영 방 페이지에 보임(서버→서울), 번들 19청크 중 서울 ref 2·publishable 2·싱가포르 0·줄바꿈 0, OG·셋리스트 이미지·PDF 200, 휴대폰 카카오톡 로그인·투표·실시간 운영자 확인 |
+
+- 앱 쓰기 정지는 20:51:11 ~ 20:57:05, **약 6분**. 읽기는 내내 됐다.
+- **TTFB (중앙값, 9회)**: 합주방 0.65초 → **0.35초**, 홈 0.22초.
+- 2-0 크론 수동 호출은 로컬 `CRON_SECRET` 이 운영 값과 달라 401. 00:00 정기 실행 로그로 확인한다.
+- 로컬 확인 중 테스트 방(`qDPJnh1d`)에 곡 1개(요루시카)와 댓글 1개가 남았다.
+- 정리: `.migration/`·`~/.plypick-migration.env` 삭제, `.env` 를 신규 값으로 교체, `.env.local` 임시 줄 제거.
+- 구 프로젝트는 쓰기 차단 트리거 + 읽기 전용 기본값이 걸린 채로 둔다.
 
 ## 단계 3 — 후속
 
