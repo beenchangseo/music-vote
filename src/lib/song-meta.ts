@@ -87,8 +87,12 @@ const TOPIC_SUFFIX = /\s*[-–]\s*Topic\s*$/i;
 const VEVO_SUFFIX = /\s*VEVO\s*$/;
 /** 핸들처럼 생긴 것: 공백 없이 점으로 이어진 이름. */
 const HANDLE_LIKE = /^[^\s]*\.[^\s]*$/;
-/** 제목에서 아티스트를 떼어낼 구분자. 전각 대시도 받는다. */
-const TITLE_SPLIT = /\s[-–—]\s/;
+/**
+ * 제목에서 아티스트를 떼어낼 구분자. 전각 대시도 받는다.
+ * 대시 뒤에는 공백이 있어야 한다. 앞 공백은 없어도 된다(`DAY6(데이식스)- 예뻤어`).
+ * `H1-KEY`, `Anti-Hero` 처럼 이름 안의 대시는 뒤에 공백이 없어서 걸리지 않는다.
+ */
+const TITLE_SPLIT = /\s*[-–—]\s+/;
 
 const MAX_ARTIST_LENGTH = 30;
 const MAX_ARTIST_WORDS = 4;
@@ -114,6 +118,30 @@ function artistFromTitle(title: string): string | null {
   if (parts.length < 2) return null;
   const candidate = tidy(parts[0]);
   return looksLikeArtist(candidate) ? candidate : null;
+}
+
+/** 앞에 붙은 대괄호 태그. `[MV] `, `[11회 풀버전] ` */
+const LEADING_TAGS = /^\s*(?:\[[^\]]*\]\s*)+/;
+/** ` | ` 뒤는 같은 곡의 다른 표기다. `낭만고양이 | Cherryfilter - Romantic Cat` */
+const ALT_TITLE = /\s+[|｜]\s+.*$/;
+/** 곡 이름이 아니라 영상 종류를 알리는 괄호. `[가사/Lyrics]`, `(Official Audio)`, `[MV]` */
+const NOISE_BRACKET =
+  /\s*[[(（【][^\])）】]*?(?:\bM\/?V\b|뮤직\s?비디오|가사|\b(?:official|lyrics?|audio|video|visualizer|color coded|4k|hd)\b)[^\])）】]*?[\])）】]/gi;
+
+/**
+ * 화면에 보여줄 곡 제목. 유튜브 제목에서 아티스트 앞부분, 영상 종류 태그, 다른 표기를 뗀다.
+ * `DAY6(데이식스)- 예뻤어 [가사/Lyrics]` → `예뻤어`. 저장된 제목은 그대로 두고 표시할 때만 쓴다.
+ * 다 떼고 남는 게 없으면 원래 제목을 돌려준다.
+ */
+export function displayTitle(title: string): string {
+  const original = title.trim();
+  let rest = original.replace(LEADING_TAGS, "").replace(ALT_TITLE, "");
+  const parts = rest.split(TITLE_SPLIT);
+  if (parts.length >= 2 && looksLikeArtist(tidy(parts[0]))) {
+    rest = rest.slice(rest.search(TITLE_SPLIT)).replace(TITLE_SPLIT, "");
+  }
+  const cleaned = rest.replace(NOISE_BRACKET, "").replace(/\s{2,}/g, " ").trim();
+  return cleaned || original;
 }
 
 /**
