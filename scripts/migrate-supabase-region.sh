@@ -61,14 +61,23 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIO
 
 dump_all() { # $1=dir
   mkdir -p "$1"
-  echo "1/4  역할 덤프"
-  supabase db dump --db-url "$SOURCE_DB_URL" -f "$1/roles.sql" --role-only
-  echo "2/4  스키마 덤프"
-  supabase db dump --db-url "$SOURCE_DB_URL" -f "$1/schema.sql"
-  echo "3/4  데이터 덤프"
-  supabase db dump --db-url "$SOURCE_DB_URL" -f "$1/data.sql" \
-    --use-copy --data-only \
-    -x "storage.buckets_vectors" -x "storage.vector_indexes"
+  local out cli_dir
+  out=$(cd "$1" && pwd)
+  # CLI 는 작업 폴더의 .env·.env.local 을 읽고, 해석하지 못하는 줄이 있으면 멈춘다.
+  # 앱용 env 파일에 휘둘리지 않게 빈 임시 폴더에서 돌린다.
+  cli_dir=$(mktemp -d)
+  (
+    cd "$cli_dir"
+    echo "1/4  역할 덤프"
+    supabase db dump --db-url "$SOURCE_DB_URL" -f "$out/roles.sql" --role-only
+    echo "2/4  스키마 덤프"
+    supabase db dump --db-url "$SOURCE_DB_URL" -f "$out/schema.sql"
+    echo "3/4  데이터 덤프"
+    supabase db dump --db-url "$SOURCE_DB_URL" -f "$out/data.sql" \
+      --use-copy --data-only \
+      -x "storage.buckets_vectors" -x "storage.vector_indexes"
+  )
+  rm -rf "$cli_dir"
 }
 
 check_files() { # $1=dir
