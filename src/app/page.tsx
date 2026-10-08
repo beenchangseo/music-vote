@@ -1,13 +1,13 @@
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import HeroCTA from "@/components/HeroCTA";
 import HomeSkeleton from "@/components/HomeSkeleton";
-import DemoVote from "@/components/home/DemoVote";
-import DemoPlayback from "@/components/home/DemoPlayback";
-import DemoSetlist from "@/components/home/DemoSetlist";
-import DemoBand from "@/components/home/DemoBand";
+import LandingVoteDemo from "@/components/home/LandingVoteDemo";
+import LandingSetlistPoster from "@/components/home/LandingSetlistPoster";
+import { LandingShareChat, LandingShareSteps } from "@/components/home/LandingShareCard";
+import LandingFaq, { LANDING_FAQ } from "@/components/home/LandingFaq";
 import MyPlaylists from "@/components/MyPlaylists";
 import MyBands from "@/components/MyBands";
 import LeftBandNotice from "@/components/LeftBandNotice";
@@ -16,11 +16,9 @@ import { buttonClassName } from "@/components/ui/Button";
 import type { BandCandidate } from "@/components/CreateBandSheet";
 import { getCurrentUser, hasAuthCookie } from "@/lib/auth";
 import { BAND_PROMPT_COOKIE, parseDismissals } from "@/lib/prompt-dismissals";
-import { getMyPlaylists, getHomeStats, type MyPlaylistDbEntry } from "@/actions/playlist";
+import { getMyPlaylists, type MyPlaylistDbEntry } from "@/actions/playlist";
 import { getMyTeams } from "@/actions/team";
 import { HOME_DESCRIPTION, HOME_TITLE, homeJsonLd, jsonLdScript } from "@/lib/seo";
-
-export const revalidate = 600; // 10분마다 통계 갱신
 
 // `?left=1` and other query variants are the same page.
 export const metadata: Metadata = {
@@ -29,27 +27,23 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-type HomeStats = Awaited<ReturnType<typeof getHomeStats>>;
-
 interface HomeProps {
   searchParams: Promise<{ left?: string | string[] }>;
 }
 
 export default async function Home({ searchParams }: HomeProps) {
-  // Started now, awaited only on the landing, so signed-in people never wait for it.
-  const statsPromise = getHomeStats().catch(() => ({ playlists: 0, users: 0, songs: 0 }));
   const [cookieStore, query] = await Promise.all([cookies(), searchParams]);
   const left = query.left === "1";
 
   // No login cookie: the landing, at once. With one, the skeleton goes out before the
   // Supabase Auth check and the list lookups run behind it (DR10, eng O4).
   if (!hasAuthCookie(cookieStore.getAll().map((cookie) => cookie.name))) {
-    return <Landing stats={await statsPromise} left={left} />;
+    return <Landing left={left} />;
   }
   const dismissals = parseDismissals(cookieStore.get(BAND_PROMPT_COOKIE)?.value);
   return (
     <Suspense fallback={<HomeSkeleton />}>
-      <SignedInHome left={left} statsPromise={statsPromise} dismissals={dismissals} />
+      <SignedInHome left={left} dismissals={dismissals} />
     </Suspense>
   );
 }
@@ -63,17 +57,15 @@ function bandCandidates(playlists: MyPlaylistDbEntry[]): BandCandidate[] {
 
 async function SignedInHome({
   left,
-  statsPromise,
   dismissals,
 }: {
   left: boolean;
-  statsPromise: Promise<HomeStats>;
   /** Playlists whose band card was closed (DR6 cookie). */
   dismissals: string[];
 }) {
   const user = await getCurrentUser();
   // The cookie outlived the session.
-  if (!user) return <Landing stats={await statsPromise} left={left} />;
+  if (!user) return <Landing left={left} />;
 
   // Rooms and bands in one round trip (eng D5).
   const [playlistsResult, teamsResult] = await Promise.all([getMyPlaylists(), getMyTeams()]);
@@ -149,198 +141,223 @@ async function SignedInHome({
   );
 }
 
-/** 로그아웃 랜딩. 로그인 쿠키가 없거나 세션이 끝난 사람. */
-function Landing({ stats, left }: { stats: HomeStats; left: boolean }) {
+const COMPARE_ROWS = [
+  ["곡 모으기", "위로 스크롤", "한 목록"],
+  ["의견", "말 많은 사람 순", "찬성·반대 투표"],
+  ["결정", "방장 혼자 정리", "점수순 정렬"],
+  ["공연 길이", "따로 계산", "쉬는 시간까지 합계"],
+  ["합주 날", "링크 다시 찾기", "셋리스트 그대로"],
+] as const;
+
+const SECTION_TITLE = "break-keep text-h2 font-bold text-text lg:text-h1";
+const SECTION_LEAD = "mt-2.5 max-w-xl break-keep text-body text-text-muted lg:text-h4 lg:font-normal";
+
+/**
+ * 로그아웃 랜딩. 로그인 쿠키가 없거나 세션이 끝난 사람. 검색엔진이 읽는 화면이라 모든 글이 서버
+ * HTML 로 나가고, 섹션 제목마다 사람들이 검색하는 말(밴드·곡 투표·합주곡·셋리스트)이 들어간다.
+ * 휴대폰은 한 줄, 넓은 화면은 2단(디자인 캔버스 L11 · D3).
+ */
+function Landing({ left }: { left: boolean }) {
   return (
-    <main className="min-h-full flex flex-col">
+    <main className="min-h-full">
       {/* Structured data for search engines. Only the landing: the signed-in home is personal. */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(homeJsonLd()) }} />
-      {/* HERO — 첫 뷰포트, 후킹 우선 */}
-      <section className="relative flex-1 flex flex-col justify-center px-4 pt-10 pb-12 min-h-[88vh] overflow-hidden">
-        {/* Animated gradient bg */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/25 via-bg to-indigo-900/25 animate-gradient pointer-events-none" />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(homeJsonLd(LANDING_FAQ)) }} />
+      <div className="mx-auto w-full max-w-md px-4 pb-16 pt-6 lg:max-w-6xl lg:px-6">
+        {/* 디자인 2회차 6A: once, right after leaving a band. */}
+        <LeftBandNotice left={left} />
+        <BrandMark />
 
-
-        <div className="relative z-10 w-full max-w-md mx-auto">
-          {/* 디자인 2회차 6A: once, right after leaving a band. */}
-          <LeftBandNotice left={left} />
-          {/* 작은 브랜드 마크 */}
-          <div className="mb-10">
-            <BrandMark />
-          </div>
-
-          {/* Hook */}
-          <div className="mb-8">
-            <p className="text-caption font-semibold text-primary uppercase tracking-wider mb-3">
-              밴드 곡 투표
-            </p>
-            <h1 className="text-display font-bold text-text leading-[1.15] tracking-tight">
-              다음 합주곡,<br />
-              <span className="bg-gradient-to-r from-primary to-indigo-400 bg-clip-text text-transparent">
-                5분 컷.
-              </span>
+        <div className="mt-10 flex flex-col gap-16 lg:mt-16 lg:flex-row lg:items-center">
+          <section aria-labelledby="hero-title" className="lg:flex-1">
+            <p className="text-caption font-semibold tracking-wider text-primary">밴드 곡 투표</p>
+            {/* The space before <br> keeps "합주곡, 투표로" two words for search engines. */}
+            <h1 id="hero-title" className="mt-3 break-keep text-display font-bold text-text">
+              밴드 합주곡,{" "}
+              <br />
+              투표로 5분 컷
             </h1>
-            <p className="mt-5 text-base text-text-muted leading-relaxed">
-              단톡방에서 미루던 곡 결정,<br />
-              Plypick에서 5분안에 끝내요.
+            <p className="mt-5 max-w-lg break-keep text-body text-text-muted lg:text-h4 lg:font-normal">
+              단톡방에 흩어진 후보곡을 링크 하나에 모아 투표하고, 표 많이 받은 곡으로 공연 셋리스트까지 정해요.
+            </p>
+            <div className="mt-8 lg:max-w-xs">
+              <HeroCTA variant="landing" />
+              <p className="mt-3 text-center text-caption text-text-subtle">멤버도 카카오 로그인 한 번이면 참여해요</p>
+            </div>
+          </section>
+
+          <section aria-labelledby="vote-title" className="lg:max-w-[500px] lg:flex-1">
+            <h2 id="vote-title" className="break-keep text-h2 font-bold text-text">
+              누르는 순간 순위가 바뀌어요
+            </h2>
+            <p className="mt-2.5 break-keep text-body text-text-muted">
+              밴드 멤버가 후보곡에 찬성·반대를 누르면 곡 목록이 점수순으로 바로 다시 정렬돼요. 멤버 넷이 이미 투표한
+              예시예요. 직접 눌러 보세요.
+            </p>
+            <div className="mt-5">
+              <LandingVoteDemo />
+            </div>
+            <p className="mt-3 text-center text-caption text-text-subtle">진짜 플레이리스트에선 멤버 표가 실시간으로 들어와요</p>
+          </section>
+        </div>
+
+        {/* Phones: heading, poster, features. Wide: poster left, heading and features right. */}
+        <section aria-labelledby="setlist-title" className="mt-16 grid gap-y-5 lg:mt-28 lg:grid-cols-2 lg:gap-x-16">
+          <div className="lg:col-start-2 lg:row-start-1 lg:self-end">
+            <h2 id="setlist-title" className={SECTION_TITLE}>
+              투표가 끝나면 셋리스트가 나와요
+            </h2>
+            <p className={SECTION_LEAD}>표 많이 받은 곡부터 공연 순서를 짜고, 곡 사이 쉬는 시간까지 더해 총 공연 길이를 맞춰요.</p>
+          </div>
+          <div className="lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-center">
+            <LandingSetlistPoster />
+          </div>
+          <ul className="mt-3 flex flex-col gap-5 lg:col-start-2 lg:row-start-2 lg:mt-0 lg:self-start">
+            <LandingFeature
+              title="총 공연 시간을 자동으로 더해요"
+              body="곡 시간에 멘트·악기 점검 같은 쉬는 시간을 더해서 보여 줘요. 30분 무대에 몇 곡이 들어가는지 바로 알 수 있어요."
+              icon={<path d="M12 9v4l2 2M9 2h6M20 13a8 8 0 11-16 0 8 8 0 0116 0z" />}
+            />
+            <LandingFeature
+              title="셋리스트 이미지 저장·PDF 인쇄"
+              body="확정한 셋리스트는 한 장짜리 이미지로 단톡방에 올리거나, PDF로 뽑아 합주실과 무대에 들고 가요."
+              icon={<path d="M6 9V3h12v6M5 17H4a1 1 0 01-1-1v-6a1 1 0 011-1h16a1 1 0 011 1v6a1 1 0 01-1 1h-1M7 14h10v7H7z" />}
+            />
+          </ul>
+        </section>
+
+        {/* Phones: heading, chat, steps. Wide: heading and steps left, chat right. */}
+        <section aria-labelledby="share-title" className="mt-16 grid gap-y-5 lg:mt-28 lg:grid-cols-2 lg:gap-x-16">
+          <div className="lg:col-start-1 lg:row-start-1 lg:self-end">
+            <h2 id="share-title" className={SECTION_TITLE}>
+              멤버는 카톡 카드만 누르면 돼요
+            </h2>
+            <p className={SECTION_LEAD}>
+              플레이리스트 링크를 단톡방에 보내면 이런 카드가 올라가요. 앱 설치도, 회원가입 양식도 없어요.
             </p>
           </div>
+          <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
+            <LandingShareChat />
+          </div>
+          <div className="lg:col-start-1 lg:row-start-2 lg:self-start">
+            <LandingShareSteps />
+            <p className="mt-4 break-keep text-sm text-text-muted">닉네임·프로필은 카카오에서 가져와요. 따로 적을 칸이 없어요.</p>
+          </div>
+        </section>
 
-          {/* CTA */}
-          <HeroCTA variant="landing" />
-          <p className="mt-3 text-center text-caption text-text-subtle">
-            카카오로 3초면 시작 · 멤버도 로그인 한 번이면 참여
-          </p>
-
-          {/* Social proof strip — 결정 직전 신뢰 (조용한 네온, 펄스 없음) */}
-          {(stats.playlists > 0 || stats.songs > 0 || stats.users > 0) && (
-            <p className="mt-6 text-center text-caption text-text-muted tabular-nums">
-              플레이리스트 <strong className="font-bold text-primary">{stats.playlists.toLocaleString()}</strong>
-              <span className="mx-1.5 text-text-subtle/50" aria-hidden>·</span>
-              멤버 <strong className="font-bold text-primary">{stats.users.toLocaleString()}</strong>
-              <span className="mx-1.5 text-text-subtle/50" aria-hidden>·</span>
-              곡 <strong className="font-bold text-primary">{stats.songs.toLocaleString()}</strong>
-            </p>
-          )}
-
-        </div>
-      </section>
-
-      {/* DEMO 1 — 투표 실시간 정렬 */}
-      <section className="px-4 py-12 bg-surface/30 border-y border-border/50">
-        <div className="max-w-md mx-auto">
-          <DemoVote />
-        </div>
-      </section>
-
-      {/* DEMO 2 — 재생 */}
-      <section className="px-4 py-12">
-        <div className="max-w-md mx-auto">
-          <DemoPlayback />
-        </div>
-      </section>
-
-      {/* DEMO 3 — 셋리스트 인터벌 */}
-      <section className="px-4 py-12 bg-surface/30 border-y border-border/50">
-        <div className="max-w-md mx-auto">
-          <DemoSetlist />
-        </div>
-      </section>
-
-      {/* DEMO 4 — 합주: 키·BPM·메트로놈·코멘트 (진짜 차별점) */}
-      <section className="px-4 py-12">
-        <div className="max-w-md mx-auto">
-          <DemoBand />
-        </div>
-      </section>
-
-      {/* PAIN → 해소 — 흩어진 채팅 맥락을 곡마다 한곳에 */}
-      <section className="px-4 py-12">
-        <div className="max-w-md mx-auto">
-          <h2 className="text-h3 font-bold text-text mb-5 text-center leading-snug">
-            채팅방 거슬러 올라가는 거,<br />이제 그만
+        <section aria-labelledby="compare-title" className="mt-16 lg:mt-28">
+          <h2 id="compare-title" className={SECTION_TITLE}>
+            단톡방 vs 플레이리스트
           </h2>
+          <p className={SECTION_LEAD}>같은 합주곡 후보를 두 곳에서 정해 보면 이렇게 달라요.</p>
+          <div className="mt-5 overflow-x-auto lg:max-w-3xl">
+            <table className="w-full table-fixed border-separate border-spacing-0 overflow-hidden break-keep rounded-card border border-surface-hover text-sm">
+              <thead>
+                <tr className="bg-surface text-caption text-text-muted">
+                  <th scope="col" className="px-3 py-2.5 text-left font-bold">
+                    <span className="sr-only">항목</span>
+                  </th>
+                  <th scope="col" className="px-3 py-2.5 text-left font-bold">
+                    단톡방
+                  </th>
+                  <th scope="col" className="px-3 py-2.5 text-left font-bold text-text">
+                    플레이리스트
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARE_ROWS.map(([label, chat, playlist]) => (
+                  <tr key={label}>
+                    <th scope="row" className="border-t border-surface-hover p-3 text-left font-bold text-text">
+                      {label}
+                    </th>
+                    <td className="border-t border-surface-hover p-3 text-text-muted">{chat}</td>
+                    <td className="border-t border-surface-hover p-3 text-text">{playlist}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-          {/* 카톡에서 묻혀 매번 다시 찾던 정보 — 흐릿한 인용 */}
-          <div className="space-y-2 mb-4">
+        <section
+          aria-labelledby="faq-title"
+          className="mt-16 lg:mt-28 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-16"
+        >
+          <h2 id="faq-title" className={SECTION_TITLE}>
+            자주 묻는 질문
+          </h2>
+          <div className="mt-4 lg:mt-0">
+            <LandingFaq />
+          </div>
+        </section>
+
+        <section aria-labelledby="cta-title" className="mt-16 lg:mx-auto lg:mt-28 lg:max-w-md">
+          <div className="rounded-card border border-border bg-surface p-6 text-center">
+            <h2 id="cta-title" className="break-keep text-h2 font-bold text-text">
+              다음 공연 셋리스트,{" "}
+              <br />
+              투표로 정해요
+            </h2>
+            <p className="mt-2 break-keep text-sm text-text-muted">카카오 로그인 한 번이면 첫 플레이리스트를 바로 만들어요.</p>
+            <div className="mt-5">
+              <HeroCTA variant="landing" />
+            </div>
+          </div>
+          {/* Keyword anchor text for the two pages search engines should reach next. */}
+          <nav aria-label="더 알아보기" className="mt-4 flex flex-col">
             {[
-              "기타는 이 곡을 왜 반대한다고 했더라…?",
-              "보컬이 몇 키 낮추자고 했더라…?",
-            ].map((q) => (
-              <p
-                key={q}
-                className="text-sm text-text-subtle italic pl-3 border-l-2 border-border"
+              { href: "/guide", label: "셋리스트 정하는 방법 보기" },
+              { href: "/about", label: "밴드 곡 투표 서비스 소개" },
+            ].map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="flex min-h-12 items-center justify-between gap-3 border-b border-surface-hover text-body font-semibold text-primary transition-colors last:border-b-0 hover:text-text"
               >
-                “{q}”
-              </p>
+                {link.label}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+              </a>
             ))}
-          </div>
-          <p className="text-sm text-text-muted text-center mb-8 leading-relaxed">
-            카톡 채팅방을 한참 올려다보며 확인하던 정보,
-            <br />
-            <strong className="text-text font-semibold">Plypick은 곡마다 한곳에</strong> 모아둬요.
-          </p>
+          </nav>
+        </section>
+      </div>
 
-          <div className="grid sm:grid-cols-2 gap-3 items-stretch">
-            {/* Before — 단톡방 */}
-            <div className="rounded-2xl bg-surface border border-border p-4">
-              <span className="inline-block text-caption font-bold uppercase tracking-wider text-text-subtle mb-3">
-                Before · 단톡방
-              </span>
-              <ul className="space-y-2.5">
-                {[
-                  "“뭐 칠까” 한참 떠들다 흐지부지",
-                  "왜 그 곡 골랐는지 스크롤 한참 위",
-                  "낮추기로 한 키, 메시지 속에 증발",
-                ].map((t) => (
-                  <li key={t} className="flex items-start gap-2 text-sm text-text-muted">
-                    <svg className="w-4 h-4 mt-0.5 shrink-0 text-text-subtle" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    <span className="leading-snug">{t}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* After — Plypick */}
-            <div className="rounded-2xl bg-primary/10 border border-primary/30 p-4">
-              <span className="inline-block text-caption font-bold uppercase tracking-wider text-primary mb-3">
-                After · Plypick
-              </span>
-              <ul className="space-y-2.5">
-                {[
-                  "후보마다 점수·의견 한눈에",
-                  "투표하면 점수순 자동 정렬",
-                  "키·코멘트가 곡에 딱 붙어요",
-                ].map((t) => (
-                  <li key={t} className="flex items-start gap-2 text-sm text-text">
-                    <svg className="w-4 h-4 mt-0.5 shrink-0 text-primary" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                    <span className="leading-snug font-medium">{t}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 마지막 CTA */}
-      <section className="px-4 pb-16">
-        <div className="max-w-md mx-auto">
-          <div className="rounded-2xl bg-gradient-to-br from-primary/15 to-indigo-600/10 border border-primary/30 p-6 text-center">
-            <p className="text-sm text-text mb-4">
-              지금 첫 플레이리스트, 5분이면 시작.
-            </p>
-            <HeroCTA variant="landing" />
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="px-4 py-6 text-center text-caption text-text-subtle">
-        <p>Plypick &mdash; 밴드를 위한 곡 투표 서비스</p>
-        <div className="mt-2 flex items-center justify-center gap-3">
-          <a href="/about" className="hover:text-text-muted transition-colors">
-            소개
-          </a>
-          <span aria-hidden>·</span>
-          <a href="/guide" className="hover:text-text-muted transition-colors">
-            사용 가이드
-          </a>
-          <span aria-hidden>·</span>
-          <a href="/privacy" className="hover:text-text-muted transition-colors">
-            개인정보처리방침
-          </a>
-          <span aria-hidden>·</span>
-          <a href="/terms" className="hover:text-text-muted transition-colors">
-            이용약관
-          </a>
+      <footer className="border-t border-surface-hover">
+        <div className="mx-auto flex w-full max-w-md flex-col gap-1.5 px-4 pb-9 pt-7 lg:max-w-6xl lg:px-6">
+          <p className="text-sm text-text-subtle">Plypick · 밴드 곡 투표</p>
+          <nav aria-label="Plypick 안내" className="flex flex-wrap gap-x-4 gap-y-1">
+            {[
+              { href: "/guide", label: "사용 가이드" },
+              { href: "/about", label: "소개" },
+              { href: "/privacy", label: "개인정보처리방침" },
+              { href: "/terms", label: "이용약관" },
+            ].map((link) => (
+              <a key={link.href} href={link.href} className="inline-flex min-h-11 items-center text-sm text-text-subtle transition-colors hover:text-text-muted">
+                {link.label}
+              </a>
+            ))}
+          </nav>
         </div>
       </footer>
     </main>
+  );
+}
+
+function LandingFeature({ title, body, icon }: { title: string; body: string; icon: ReactNode }) {
+  return (
+    <li className="flex items-start gap-3.5">
+      <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-control bg-primary-soft text-text">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          {icon}
+        </svg>
+      </span>
+      <div className="min-w-0">
+        <h3 className="text-h4 font-bold text-text">{title}</h3>
+        <p className="mt-1 break-keep text-sm text-text-muted">{body}</p>
+      </div>
+    </li>
   );
 }
 

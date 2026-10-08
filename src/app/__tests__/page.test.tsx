@@ -11,7 +11,6 @@ const state = vi.hoisted(() => ({
   getCurrentUser: vi.fn(),
   getMyPlaylists: vi.fn(),
   getMyTeams: vi.fn(),
-  getHomeStats: vi.fn(),
   heroProps: [] as Record<string, unknown>[],
 }));
 
@@ -29,7 +28,7 @@ vi.mock("@/lib/auth", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/auth")>()),
   getCurrentUser: state.getCurrentUser,
 }));
-vi.mock("@/actions/playlist", () => ({ getMyPlaylists: state.getMyPlaylists, getHomeStats: state.getHomeStats }));
+vi.mock("@/actions/playlist", () => ({ getMyPlaylists: state.getMyPlaylists }));
 vi.mock("@/actions/team", () => ({ getMyTeams: state.getMyTeams }));
 vi.mock("@/components/HeroCTA", () => ({
   default: (props: Record<string, unknown>) => {
@@ -43,10 +42,8 @@ vi.mock("@/components/LeftBandNotice", () => ({ default: () => null }));
 vi.mock("@/components/BandPromptCard", () => ({
   HomeBandCard: ({ candidate }: { candidate: { id: string } }) => <div data-testid="home-card" data-target={candidate.id} />,
 }));
-vi.mock("@/components/home/DemoVote", () => ({ default: () => null }));
-vi.mock("@/components/home/DemoPlayback", () => ({ default: () => null }));
-vi.mock("@/components/home/DemoSetlist", () => ({ default: () => null }));
-vi.mock("@/components/home/DemoBand", () => ({ default: () => null }));
+// The vote demo animates with auto-animate (needs browser APIs jsdom lacks); it has its own test.
+vi.mock("@/components/home/LandingVoteDemo", () => ({ default: () => null }));
 
 import Home from "../page";
 import HomeSkeleton from "@/components/HomeSkeleton";
@@ -94,7 +91,6 @@ beforeEach(() => {
   state.getCurrentUser.mockReset().mockResolvedValue(ME);
   state.getMyPlaylists.mockReset().mockResolvedValue({ playlists: [], failed: false });
   state.getMyTeams.mockReset().mockResolvedValue({ teams: [], failed: false });
-  state.getHomeStats.mockReset().mockResolvedValue({ playlists: 40, users: 10, songs: 100 });
   state.heroProps = [];
 });
 
@@ -106,7 +102,7 @@ describe("home without a login cookie", () => {
     const tree = await renderHome();
     expect(tree.type).not.toBe(Suspense);
     expect(hero().variant).toBe("landing");
-    expect(screen.getByText(/5분 컷/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("밴드 합주곡, 투표로 5분 컷");
     expect(state.getCurrentUser).not.toHaveBeenCalled();
   });
 
@@ -114,8 +110,15 @@ describe("home without a login cookie", () => {
     state.cookieNames = [];
     await renderHome();
     const script = document.querySelector('script[type="application/ld+json"]');
-    const types = JSON.parse(script!.textContent!)["@graph"].map((node: { "@type": string }) => node["@type"]);
-    expect(types).toEqual(expect.arrayContaining(["Organization", "WebSite", "WebApplication"]));
+    const graph: { "@type": string; mainEntity?: { name: string }[] }[] = JSON.parse(script!.textContent!)["@graph"];
+    expect(graph.map((node) => node["@type"])).toEqual(
+      expect.arrayContaining(["Organization", "WebSite", "WebApplication", "FAQPage"]),
+    );
+    // Structured data must say only what the page shows: the FAQ questions are the visible ones.
+    const shown = [...document.querySelectorAll("details summary")].map((summary) => summary.textContent);
+    const marked = graph.find((node) => node["@type"] === "FAQPage")!.mainEntity!.map((question) => question.name);
+    expect(marked).toEqual(shown);
+    expect(marked.length).toBeGreaterThan(0);
   });
 });
 

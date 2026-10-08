@@ -30,8 +30,14 @@ type HeroCTAProps =
 export default function HeroCTA(props: HeroCTAProps) {
   if (props.variant === "landing") {
     return (
-      <Button onClick={() => triggerKakaoLogin("/")} size="lg" fullWidth>
-        카카오로 시작하기 →
+      <Button variant="kakao" onClick={() => triggerKakaoLogin("/")} size="lg" fullWidth>
+        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden>
+          <path
+            fill="currentColor"
+            d="M10 3.2c-4.4 0-8 2.8-8 6.3 0 2.3 1.5 4.3 3.8 5.4l-.9 3.3c-.1.3.2.5.5.4l3.9-2.6c.2 0 .5 0 .7 0 4.4 0 8-2.8 8-6.3S14.4 3.2 10 3.2z"
+          />
+        </svg>
+        카카오로 시작하기
       </Button>
     );
   }

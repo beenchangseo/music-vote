@@ -1,6 +1,6 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger";
+type Variant = "primary" | "secondary" | "ghost" | "danger" | "kakao";
 type Size = "sm" | "md" | "lg" | "icon";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -19,6 +19,9 @@ const variantClasses: Record<Variant, string> = {
     "bg-transparent hover:bg-surface-hover text-text-muted",
   danger:
     "bg-danger hover:bg-red-600 text-white",
+  /** 카카오 로그인 버튼. 카카오 노랑 위 어두운 글자라 흰 글자 primary 보다 대비가 높다. */
+  kakao:
+    "bg-kakao hover:bg-kakao-hover text-kakao-text",
 };
 
 const sizeClasses: Record<Size, string> = {

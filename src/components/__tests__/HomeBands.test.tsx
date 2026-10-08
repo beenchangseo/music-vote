@@ -40,7 +40,7 @@ describe("HeroCTA (CEO2-A, DR2, DR3)", () => {
 
   it("brings a new visitor back to the home after Kakao login, not to /new", () => {
     render(<HeroCTA variant="landing" />);
-    fireEvent.click(screen.getByRole("button", { name: "카카오로 시작하기 →" }));
+    fireEvent.click(screen.getByRole("button", { name: "카카오로 시작하기" }));
     expect(triggerKakaoLogin).toHaveBeenCalledWith("/");
   });
 
