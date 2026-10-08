@@ -8,6 +8,12 @@ import DialogProvider from "@/components/DialogProvider";
 import AuthButton from "@/components/AuthButton";
 import "./globals.css";
 
+// Pretendard dynamic subset: only the glyphs a page uses get downloaded. Pinned to a version so
+// jsdelivr serves it as immutable for a year (the unpinned path is cached for 7 days). Loaded
+// from <head> rather than an @import in globals.css so it is fetched alongside our CSS, not after it.
+const PRETENDARD_CSS =
+  "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -55,6 +61,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={`${geistSans.variable} h-full antialiased`}>
+      <head>
+        {/* The font files are CORS requests to the same host. */}
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
+        <link rel="stylesheet" href={PRETENDARD_CSS} precedence="default" />
+      </head>
       <body className="min-h-full flex flex-col bg-bg text-text font-sans pb-[env(safe-area-inset-bottom)]">
         <DialogProvider>
           <div className="fixed top-2 right-2 z-50">

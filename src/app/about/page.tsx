@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "밴드 투표 서비스란? - Plypick",
   description:
     "밴드 곡 투표 서비스 Plypick(plypick.kr)를 소개해요. 밴드 멤버들과 다음 공연 셋리스트를 투표로 정하세요.",
+  alternates: { canonical: "/about" },
 };
 
 export default function AboutPage() {

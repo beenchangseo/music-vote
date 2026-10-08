@@ -109,9 +109,22 @@ describe("home without a login cookie", () => {
     expect(screen.getByText(/5분 컷/)).toBeInTheDocument();
     expect(state.getCurrentUser).not.toHaveBeenCalled();
   });
+
+  it("carries the site's structured data for search engines", async () => {
+    state.cookieNames = [];
+    await renderHome();
+    const script = document.querySelector('script[type="application/ld+json"]');
+    const types = JSON.parse(script!.textContent!)["@graph"].map((node: { "@type": string }) => node["@type"]);
+    expect(types).toEqual(expect.arrayContaining(["Organization", "WebSite", "WebApplication"]));
+  });
 });
 
 describe("home with a login cookie", () => {
+  it("leaves the structured data to the landing", async () => {
+    await renderHome();
+    expect(document.querySelector('script[type="application/ld+json"]')).toBeNull();
+  });
+
   it("sends the home skeleton first and checks the session behind it (DR10, O4)", async () => {
     const tree = await renderHome();
     expect(tree.type).toBe(Suspense);

@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "셋리스트 정하는 방법 - Plypick 사용 가이드",
   description:
     "Plypick로 밴드 셋리스트를 투표로 정하는 방법을 단계별로 안내해요. 플레이리스트 만들기부터 결과 공유까지.",
+  alternates: { canonical: "/guide" },
 };
 
 export default function GuidePage() {

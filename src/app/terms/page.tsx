@@ -4,6 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "이용약관 - Plypick",
   description: "Plypick(plypick.kr) 서비스 이용약관",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {

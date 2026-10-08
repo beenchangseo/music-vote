@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import HeroCTA from "@/components/HeroCTA";
@@ -17,8 +18,16 @@ import { getCurrentUser, hasAuthCookie } from "@/lib/auth";
 import { BAND_PROMPT_COOKIE, parseDismissals } from "@/lib/prompt-dismissals";
 import { getMyPlaylists, getHomeStats, type MyPlaylistDbEntry } from "@/actions/playlist";
 import { getMyTeams } from "@/actions/team";
+import { HOME_DESCRIPTION, HOME_TITLE, homeJsonLd, jsonLdScript } from "@/lib/seo";
 
 export const revalidate = 600; // 10분마다 통계 갱신
+
+// `?left=1` and other query variants are the same page.
+export const metadata: Metadata = {
+  title: HOME_TITLE,
+  description: HOME_DESCRIPTION,
+  alternates: { canonical: "/" },
+};
 
 type HomeStats = Awaited<ReturnType<typeof getHomeStats>>;
 
@@ -144,6 +153,8 @@ async function SignedInHome({
 function Landing({ stats, left }: { stats: HomeStats; left: boolean }) {
   return (
     <main className="min-h-full flex flex-col">
+      {/* Structured data for search engines. Only the landing: the signed-in home is personal. */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(homeJsonLd()) }} />
       {/* HERO — 첫 뷰포트, 후킹 우선 */}
       <section className="relative flex-1 flex flex-col justify-center px-4 pt-10 pb-12 min-h-[88vh] overflow-hidden">
         {/* Animated gradient bg */}

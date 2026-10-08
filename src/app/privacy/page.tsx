@@ -4,6 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "개인정보처리방침 - Plypick",
   description: "Plypick(plypick.kr) 개인정보처리방침",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {
