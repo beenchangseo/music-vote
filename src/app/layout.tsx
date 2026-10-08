@@ -31,6 +31,10 @@ export const metadata: Metadata = {
   title: "Plypick - 밴드 곡 투표",
   description: "밴드 구성원들과 함께 다음 공연 곡을 투표로 선정하세요",
   metadataBase: new URL("https://plypick.kr"),
+  // 네이버 서치어드바이저 소유 확인. 지우면 확인이 풀린다.
+  verification: {
+    other: { "naver-site-verification": "0a1d9805c1590ab9e13934bfad6eb790dcd561c5" },
+  },
   openGraph: {
     title: "Plypick - 밴드 곡 투표",
     description: "밴드 멤버들과 다음 공연 셋리스트를 투표로 정하세요",
