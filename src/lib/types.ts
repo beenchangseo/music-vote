@@ -96,7 +96,7 @@ export interface SetlistItem {
   id: string;
   playlist_id: string;
   position: number;
-  item_type: "song" | "interval";
+  item_type: "song" | "interval" | "original";
   song_id: string | null;
   label: string | null;
   description: string | null;

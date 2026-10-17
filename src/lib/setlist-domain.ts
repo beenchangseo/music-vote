@@ -29,6 +29,14 @@ export function summarizeSetlist(
       continue;
     }
 
+    if (item.item_type === "original") {
+      const duration = Math.max(0, item.duration_seconds || 0);
+      songCount += 1;
+      totalRuntime += duration;
+      if (duration === 0) missingDurationCount += 1;
+      continue;
+    }
+
     if (!item.song_id) continue;
     const song = songMap.get(item.song_id);
     if (!song) continue;
@@ -71,7 +79,7 @@ export function cumulativeStarts(
 
   return items.map((item) => {
     const start = elapsed;
-    if (item.item_type === "interval") {
+    if (item.item_type === "interval" || item.item_type === "original") {
       elapsed += Math.max(0, item.duration_seconds || 0);
       return start;
     }
