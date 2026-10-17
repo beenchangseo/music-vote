@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState, useTransition } from "react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Image from "next/image";
 import AddIntervalForm from "./AddIntervalForm";
+import AddOriginalForm from "./AddOriginalForm";
 import IntervalBlock, { MinusCircle, MoveButton } from "./IntervalBlock";
 import SetlistItemEditModal from "./SetlistItemEditModal";
 import SetlistShareButton from "./SetlistShareButton";
@@ -40,6 +41,7 @@ interface Props {
 export default function SetlistView({ setlistItems, songs, playlistId, shareCode, adminToken, loading, onItemsChange, title, canEdit, actions }: Props) {
   const [isPending, startTransition] = useTransition();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddOriginalForm, setShowAddOriginalForm] = useState(false);
   const [editing, setEditing] = useState<SetlistItem | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [showAllSuggestions, setShowAllSuggestions] = useState(false);
@@ -317,16 +319,39 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
               }}
               onCancel={() => setShowAddForm(false)}
             />
+          ) : showAddOriginalForm ? (
+            <AddOriginalForm
+              playlistId={playlistId}
+              shareCode={shareCode}
+              adminToken={adminToken}
+              nextPosition={sortedItems.length}
+              onAdded={(item) => {
+                onItemsChange([...setlistItems, item]);
+                setShowAddOriginalForm(false);
+              }}
+              onCancel={() => setShowAddOriginalForm(false)}
+            />
           ) : (
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-pill border border-dashed border-warning/40 px-4 text-sm font-medium text-warning transition-colors hover:bg-warning-soft/30"
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              인터벌 블록 추가
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setShowAddOriginalForm(true)}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-pill border border-dashed border-primary/30 px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                자작곡 블록 추가
+              </button>
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-pill border border-dashed border-warning/40 px-4 text-sm font-medium text-warning transition-colors hover:bg-warning-soft/30"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                인터벌 블록 추가
+              </button>
+            </div>
           )}
         </div>
       )}
