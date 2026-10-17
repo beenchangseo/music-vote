@@ -2,10 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useDialog } from "./DialogProvider";
-import { addIntervalItem } from "@/actions/setlist";
+import { addOriginalItem } from "@/actions/setlist";
 import type { SetlistItem } from "@/lib/types";
 
-interface AddIntervalFormProps {
+interface AddOriginalFormProps {
   playlistId: string;
   shareCode: string;
   nextPosition: number;
@@ -14,7 +14,7 @@ interface AddIntervalFormProps {
   onCancel: () => void;
 }
 
-export default function AddIntervalForm({ playlistId, shareCode, nextPosition, adminToken, onAdded, onCancel }: AddIntervalFormProps) {
+export default function AddOriginalForm({ playlistId, shareCode, nextPosition, adminToken, onAdded, onCancel }: AddOriginalFormProps) {
   const [label, setLabel] = useState("");
   const [description, setDescription] = useState("");
   const [minutes, setMinutes] = useState("");
@@ -36,7 +36,7 @@ export default function AddIntervalForm({ playlistId, shareCode, nextPosition, a
 
     startTransition(async () => {
       try {
-        const item = await addIntervalItem(playlistId, adminToken, {
+        const item = await addOriginalItem(playlistId, adminToken, {
           label: label.trim(),
           description,
           duration_seconds: durationSeconds,
@@ -50,14 +50,14 @@ export default function AddIntervalForm({ playlistId, shareCode, nextPosition, a
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-yellow-900/10 rounded-xl border border-yellow-700/30 p-4 space-y-3">
+    <form onSubmit={handleSubmit} className="bg-primary/10 rounded-xl border border-primary/30 p-4 space-y-3">
       <input
         type="text"
         value={label}
         onChange={(e) => setLabel(e.target.value)}
-        placeholder="블록 이름 (예: 기타 셋업 변경)"
-        maxLength={50}
-        className="w-full px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+        placeholder="자작곡 이름"
+        maxLength={100}
+        className="w-full px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm focus:outline-none focus:ring-2 focus:ring-primary"
       />
       <textarea
         value={description}
@@ -65,7 +65,7 @@ export default function AddIntervalForm({ playlistId, shareCode, nextPosition, a
         placeholder="설명 (선택)"
         maxLength={200}
         rows={2}
-        className="w-full resize-none rounded-lg border border-border bg-surface-hover px-3 py-2 text-sm text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-yellow-500"
+        className="w-full resize-none rounded-lg border border-border bg-surface-hover px-3 py-2 text-sm text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-primary"
       />
       <div className="flex items-center gap-2">
         <input
@@ -75,7 +75,7 @@ export default function AddIntervalForm({ playlistId, shareCode, nextPosition, a
           placeholder="분"
           min="0"
           step="1"
-          className="w-20 px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm text-center focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-20 px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary"
         />
         <span className="text-text-subtle">:</span>
         <input
@@ -86,7 +86,7 @@ export default function AddIntervalForm({ playlistId, shareCode, nextPosition, a
           min="0"
           max="59"
           step="1"
-          className="w-20 px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm text-center focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-20 px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary"
         />
         <div className="flex-1" />
         <button type="button" onClick={onCancel} className="px-3 py-2 text-sm text-text-muted hover:text-text transition-colors">
@@ -95,7 +95,7 @@ export default function AddIntervalForm({ playlistId, shareCode, nextPosition, a
         <button
           type="submit"
           disabled={!label.trim() || isPending}
-          className="px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white text-sm font-medium disabled:opacity-50 transition-colors"
+          className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-hover text-white text-sm font-medium disabled:opacity-50 transition-colors"
         >
           {isPending ? "추가 중..." : "추가"}
         </button>
