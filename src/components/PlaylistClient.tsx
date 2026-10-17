@@ -108,6 +108,7 @@ export default function PlaylistClient({
       const found = myPlaylists.find(
         (p: { id?: string; shareCode?: string }) => p.id === playlist.id || p.shareCode === shareCode
       );
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage는 마운트 후에만 읽을 수 있음
       setAdminToken(found?.adminToken || null);
     } catch { /* ignore */ }
   // eslint-disable-next-line react-hooks/exhaustive-deps

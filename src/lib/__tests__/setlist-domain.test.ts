@@ -22,6 +22,21 @@ describe("setlist domain", () => {
     expect(summarizeSetlist(items, [song, { id: "song-2", duration_seconds: null }])).toEqual({ songCount: 2, totalRuntime: 210, missingDurationCount: 1 });
   });
 
+  it("counts original songs and includes their time", () => {
+    const items: SetlistItem[] = [
+      base,
+      { ...base, id: "original", item_type: "original", song_id: null, label: "자작곡", duration_seconds: 240 },
+    ];
+    expect(summarizeSetlist(items, [song])).toEqual({ songCount: 2, totalRuntime: 420, missingDurationCount: 0 });
+  });
+
+  it("counts an original song with no time as missing", () => {
+    const items: SetlistItem[] = [
+      { ...base, id: "original-empty", item_type: "original", song_id: null, label: "시간 모름", duration_seconds: 0 },
+    ];
+    expect(summarizeSetlist(items, [song])).toEqual({ songCount: 1, totalRuntime: 0, missingDurationCount: 1 });
+  });
+
   it("formats totals over an hour", () => expect(formatRuntime(3723)).toBe("1:02:03"));
 });
 
@@ -29,7 +44,7 @@ describe("cumulativeStarts", () => {
   const song = (id: string, duration_seconds: number | null) => ({ id, duration_seconds });
   const item = (
     id: string,
-    item_type: "song" | "interval",
+    item_type: "song" | "interval" | "original",
     extra: Partial<SetlistItem> = {},
   ) => ({
     id,
@@ -60,6 +75,16 @@ describe("cumulativeStarts", () => {
     ];
     const songs = [song("a", 200), song("b", 100)];
     expect(cumulativeStarts(items, songs)).toEqual([0, 200, 500]);
+  });
+
+  it("자작곡 시간도 누적에 넣는다", () => {
+    const items = [
+      item("a", "song"),
+      item("o", "original", { duration_seconds: 240 }),
+      item("b", "song"),
+    ];
+    const songs = [song("a", 200), song("b", 100)];
+    expect(cumulativeStarts(items, songs)).toEqual([0, 200, 440]);
   });
 
   it("시간을 모르는 곡은 0으로 세고 이후 누적이 어긋난다", () => {

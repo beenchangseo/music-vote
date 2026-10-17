@@ -13,11 +13,28 @@ export interface IntervalInput {
   position: number;
 }
 
+export type OriginalInput = IntervalInput;
+
 function validateInterval(item: IntervalInput) {
   const label = item.label.trim();
   const description = item.description.trim();
   if (!label || label.length > 50) {
     throw new Error("블록 이름은 1~50자여야 합니다.");
+  }
+  if (description.length > 200) {
+    throw new Error("설명은 200자 이내여야 합니다.");
+  }
+  if (!Number.isInteger(item.duration_seconds) || item.duration_seconds < 0) {
+    throw new Error("시간은 0 이상의 정수여야 합니다.");
+  }
+  return { label, description: description || null };
+}
+
+function validateOriginal(item: OriginalInput) {
+  const label = item.label.trim();
+  const description = item.description.trim();
+  if (!label || label.length > 100) {
+    throw new Error("곡 이름은 1~100자여야 합니다.");
   }
   if (description.length > 200) {
     throw new Error("설명은 200자 이내여야 합니다.");
@@ -126,6 +143,62 @@ export async function updateIntervalItem(
     .select("*")
     .single();
   if (error || !data) throw new Error("인터벌 블록 수정에 실패했습니다.");
+  revalidatePath(`/playlist/${shareCode}`);
+  return data as SetlistItem;
+}
+
+export async function addOriginalItem(
+  playlistId: string,
+  adminToken: string | null,
+  item: OriginalInput,
+  shareCode: string,
+): Promise<SetlistItem> {
+  await assertSetlistEditor(playlistId, adminToken);
+  const clean = validateOriginal(item);
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("setlist_items")
+    .insert({
+      playlist_id: playlistId,
+      position: item.position,
+      item_type: "original",
+      song_id: null,
+      label: clean.label,
+      description: clean.description,
+      duration_seconds: item.duration_seconds,
+      title_override: null,
+      duration_override_seconds: null,
+    })
+    .select("*")
+    .single();
+  if (error || !data) throw new Error("자작곡 추가에 실패했습니다.");
+  revalidatePath(`/playlist/${shareCode}`);
+  return data as SetlistItem;
+}
+
+export async function updateOriginalItem(
+  playlistId: string,
+  adminToken: string | null,
+  itemId: string,
+  item: Omit<OriginalInput, "position">,
+  shareCode: string,
+): Promise<SetlistItem> {
+  await assertSetlistEditor(playlistId, adminToken);
+  const clean = validateOriginal({ ...item, position: 0 });
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("setlist_items")
+    .update({
+      label: clean.label,
+      description: clean.description,
+      duration_seconds: item.duration_seconds,
+    })
+    .eq("id", itemId)
+    .eq("playlist_id", playlistId)
+    .eq("item_type", "original")
+    .select("*")
+    .single();
+  if (error || !data) throw new Error("자작곡 수정에 실패했습니다.");
   revalidatePath(`/playlist/${shareCode}`);
   return data as SetlistItem;
 }
