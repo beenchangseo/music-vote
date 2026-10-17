@@ -186,6 +186,53 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
                 </li>
               );
             }
+            if (item.item_type === "original") {
+              const originalDuration = item.duration_seconds > 0 ? item.duration_seconds : null;
+              const originalBody = (
+                <>
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-primary/15 text-primary">
+                    <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+                      <path d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </span>
+                  <span className="min-w-0 flex-1 text-left">
+                    <span className="line-clamp-2 block text-body font-medium leading-snug text-text">{item.label || "자작곡"}</span>
+                    <span className="mt-0.5 block truncate text-sm text-text-muted">{item.description || "자작곡"}</span>
+                  </span>
+                </>
+              );
+              return (
+                <li key={item.id} className="flex items-center gap-3 py-2">
+                  {showEditControls ? (
+                    <button onClick={() => remove(item.id)} className="-ml-1 flex h-11 w-11 shrink-0 items-center justify-center text-danger print:hidden" aria-label="삭제">
+                      <MinusCircle />
+                    </button>
+                  ) : (
+                    <span className="w-10 shrink-0 text-right">
+                      <span className="block text-caption font-semibold leading-none tabular-nums text-text">{formatRuntime(starts[index])}</span>
+                      <span className="mt-1 block text-[10px] leading-none tabular-nums text-text-subtle">{songNumbers[index]}</span>
+                    </span>
+                  )}
+                  {showEditControls ? (
+                    <button type="button" onClick={() => setEditing(item)} className="flex min-w-0 flex-1 items-center gap-3" aria-label="자작곡 수정">
+                      {originalBody}
+                    </button>
+                  ) : (
+                    <span className="flex min-w-0 flex-1 items-center gap-3">{originalBody}</span>
+                  )}
+                  {showEditControls ? (
+                    <span className="flex shrink-0 items-center print:hidden">
+                      <MoveButton direction="up" disabled={index === 0} onClick={() => move(index, -1)} />
+                      <MoveButton direction="down" disabled={index === sortedItems.length - 1} onClick={() => move(index, 1)} />
+                    </span>
+                  ) : (
+                    <span className={`shrink-0 text-caption tabular-nums ${originalDuration != null ? "text-text-muted" : "text-warning"}`}>
+                      {originalDuration != null ? formatRuntime(originalDuration) : "시간 없음"}
+                    </span>
+                  )}
+                </li>
+              );
+            }
             const song = item.song_id ? songMap.get(item.song_id) : null;
             if (!song) return null;
             const duration = effectiveSetlistDuration(item, song);
