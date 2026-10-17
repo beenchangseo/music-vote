@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
+import { redirectToCanonicalHost } from "@/lib/canonical-host";
 
 // Simple in-memory rate limiter (resets on cold start, sufficient for Vercel serverless)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -25,6 +26,10 @@ function cleanup() {
 }
 
 export async function proxy(request: NextRequest) {
+  // Pages on the public vercel.app alias belong on plypick.kr (duplicate in search results).
+  const canonical = redirectToCanonicalHost(request);
+  if (canonical) return canonical;
+
   // Rate limit POST (server actions) before doing session work
   if (request.method === "POST") {
     if (Date.now() - lastCleanup > 60000) {
