@@ -1,9 +1,21 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
+import { DEFAULT_OG_IMAGE } from "@/lib/seo";
 import { formatShowDate } from "@/lib/team-domain";
 
 export const runtime = "edge";
+// The project's function region (vercel.json `regions`: icn1). On "auto" it ran in sin1.
+export const preferredRegion = "home";
+
+// A card is drawn from its query string alone, so the CDN keeps each URL for a week (a deploy
+// also clears it). Kakao's scraper gives up on a slow image and caches the card without one.
+// A bad card can be purged alone: `vercel cache invalidate --tag og-card`.
+const CACHE_HEADERS = {
+  "Cache-Control": "public, max-age=86400",
+  "Vercel-CDN-Cache-Control": "max-age=604800",
+  "Vercel-Cache-Tag": "og-card",
+};
 
 // Pretendard via CDN — satori(ImageResponse)는 OTF/TTF 만 지원, WOFF2 불가
 // (이전: woff2-subset → 매 요청 "Unsupported OpenType signature wO" 로 빈 PNG 반환)
@@ -17,6 +29,8 @@ async function loadFont(weight: 700 | 800): Promise<ArrayBuffer> {
     cf: { cacheTtl: 31536000 },
     next: { revalidate: 31536000 },
   } as RequestInit);
+  // Fail the request instead of drawing a fontless card the CDN would then keep.
+  if (!res.ok) throw new Error(`Pretendard ${weight} fetch failed: ${res.status}`);
   return res.arrayBuffer();
 }
 
@@ -87,7 +101,7 @@ export async function GET(request: NextRequest) {
     body = <HomeView title={title} subtitle={subtitle} />;
   }
 
-  return new ImageResponse(
+  const card = new ImageResponse(
     (
       <div
         style={{
@@ -111,6 +125,19 @@ export async function GET(request: NextRequest) {
       ],
     },
   );
+
+  // ImageResponse sends 200 before it draws. Draw the whole PNG first so a render error is a
+  // 500 the CDN won't keep, not a 200 whose body breaks off.
+  const png = await card.arrayBuffer();
+  // Only the site's own card belongs in image search; the others carry room and band names.
+  const isSiteCard = `${request.nextUrl.pathname}${request.nextUrl.search}` === DEFAULT_OG_IMAGE.url;
+  return new Response(png, {
+    headers: {
+      "Content-Type": "image/png",
+      ...CACHE_HEADERS,
+      ...(isSiteCard ? {} : { "X-Robots-Tag": "noindex" }),
+    },
+  });
 }
 
 // ─── Variants ───────────────────────────────────────────────

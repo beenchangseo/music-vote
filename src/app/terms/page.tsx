@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/terms",
   title: "이용약관 - Plypick",
   description: "Plypick(plypick.kr) 서비스 이용약관",
-  alternates: { canonical: "/terms" },
-};
+});
 
 export default function TermsPage() {
   return (

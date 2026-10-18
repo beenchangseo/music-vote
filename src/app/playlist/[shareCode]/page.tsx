@@ -5,6 +5,7 @@ import { createAdminClient, createServerSupabaseClient } from "@/lib/supabase/se
 import { getCurrentUser } from "@/lib/auth";
 import { shouldExposeVoters } from "@/lib/vote-domain";
 import { BAND_PROMPT_COOKIE, parseDismissals } from "@/lib/prompt-dismissals";
+import { BASE_OPEN_GRAPH } from "@/lib/seo";
 import { getMyTeams, type MyTeam } from "@/actions/team";
 import PlaylistClient from "@/components/PlaylistClient";
 import type { Metadata } from "next";
@@ -120,9 +121,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     // Rooms are private links shared in group chats; keep them out of search results.
     robots: { index: false },
     openGraph: {
+      ...BASE_OPEN_GRAPH,
       title: metaTitle,
       description,
-      type: "website",
       images: [`/api/og?title=${encodeURIComponent(playlist.title)}&songs=${songCount}&participants=${participantCount}`],
     },
     twitter: {

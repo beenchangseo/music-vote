@@ -18,14 +18,16 @@ import { getCurrentUser, hasAuthCookie } from "@/lib/auth";
 import { BAND_PROMPT_COOKIE, parseDismissals } from "@/lib/prompt-dismissals";
 import { getMyPlaylists, type MyPlaylistDbEntry } from "@/actions/playlist";
 import { getMyTeams } from "@/actions/team";
-import { HOME_DESCRIPTION, HOME_TITLE, homeJsonLd, jsonLdScript } from "@/lib/seo";
+import { HOME_DESCRIPTION, HOME_TITLE, homeJsonLd, jsonLdScript, pageMetadata } from "@/lib/seo";
 
 // `?left=1` and other query variants are the same page.
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/",
   title: HOME_TITLE,
   description: HOME_DESCRIPTION,
-  alternates: { canonical: "/" },
-};
+  // The landing's H1: short enough for a Kakao card.
+  ogTitle: "밴드 합주곡, 투표로 5분 컷",
+});
 
 interface HomeProps {
   searchParams: Promise<{ left?: string | string[] }>;

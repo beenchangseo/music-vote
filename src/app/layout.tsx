@@ -6,6 +6,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Suspense } from "react";
 import DialogProvider from "@/components/DialogProvider";
 import AuthButton from "@/components/AuthButton";
+import { BASE_OPEN_GRAPH, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
 // Pretendard dynamic subset: only the glyphs a page uses get downloaded. Pinned to a version so
@@ -27,35 +28,21 @@ export const viewport: Viewport = {
   interactiveWidget: "resizes-content",
 };
 
+// Fallback for pages without their own metadata (/new, 404, band home). No og:url here: a
+// page that inherits one would tell scrapers it is the home.
+const DEFAULT_TITLE = "Plypick - 밴드 곡 투표";
+const DEFAULT_DESCRIPTION = "밴드 멤버들과 후보곡을 투표로 고르고 공연 셋리스트까지 정해요.";
+
 export const metadata: Metadata = {
-  title: "Plypick - 밴드 곡 투표",
-  description: "밴드 구성원들과 함께 다음 공연 곡을 투표로 선정하세요",
-  metadataBase: new URL("https://plypick.kr"),
+  title: DEFAULT_TITLE,
+  description: DEFAULT_DESCRIPTION,
+  metadataBase: new URL(SITE_URL),
   // 네이버 서치어드바이저 소유 확인. 지우면 확인이 풀린다.
   verification: {
     other: { "naver-site-verification": "0a1d9805c1590ab9e13934bfad6eb790dcd561c5" },
   },
-  openGraph: {
-    title: "Plypick - 밴드 곡 투표",
-    description: "밴드 멤버들과 다음 공연 셋리스트를 투표로 정하세요",
-    url: "https://plypick.kr",
-    siteName: "Plypick",
-    type: "website",
-    locale: "ko_KR",
-    images: [
-      {
-        url: "/api/og?title=Plypick&subtitle=밴드 멤버들과 셋리스트를 투표로 정하세요",
-        width: 1200,
-        height: 630,
-        alt: "Plypick - 밴드 곡 투표 서비스",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Plypick - 밴드 곡 투표",
-    description: "밴드 멤버들과 다음 공연 셋리스트를 투표로 정하세요",
-  },
+  openGraph: { ...BASE_OPEN_GRAPH, title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION },
+  twitter: { card: "summary_large_image", title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION },
 };
 
 export default function RootLayout({

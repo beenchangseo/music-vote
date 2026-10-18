@@ -1,5 +1,34 @@
 import { describe, expect, it } from "vitest";
-import { HOME_DESCRIPTION, homeJsonLd, jsonLdScript } from "../seo";
+import { BASE_OPEN_GRAPH, DEFAULT_OG_IMAGE, HOME_DESCRIPTION, homeJsonLd, jsonLdScript, pageMetadata } from "../seo";
+
+describe("pageMetadata", () => {
+  it("leaves og:url out of the shared fields, so a page never inherits the home's", () => {
+    expect(BASE_OPEN_GRAPH).not.toHaveProperty("url");
+  });
+
+  it("points the share card at the page itself and keeps the site-wide fields", () => {
+    const meta = pageMetadata({ path: "/guide", title: "셋리스트 정하는 방법 - Plypick", description: "설명" });
+
+    expect(meta.alternates).toEqual({ canonical: "/guide" });
+    expect(meta.openGraph).toMatchObject({
+      url: "/guide",
+      title: "셋리스트 정하는 방법 - Plypick",
+      description: "설명",
+      siteName: "Plypick",
+      locale: "ko_KR",
+      images: [DEFAULT_OG_IMAGE],
+    });
+    expect(meta.twitter).toMatchObject({ title: "셋리스트 정하는 방법 - Plypick", description: "설명" });
+  });
+
+  it("uses the short card title on the card only", () => {
+    const meta = pageMetadata({ path: "/", title: "긴 검색 제목 - Plypick", description: "설명", ogTitle: "짧은 제목" });
+
+    expect(meta.title).toBe("긴 검색 제목 - Plypick");
+    expect(meta.openGraph?.title).toBe("짧은 제목");
+    expect(meta.twitter?.title).toBe("짧은 제목");
+  });
+});
 
 describe("homeJsonLd", () => {
   const faq = [{ question: "무료인가요?", answer: "네, 무료예요." }];
