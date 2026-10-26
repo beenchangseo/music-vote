@@ -134,6 +134,7 @@ supabase-migration-v18.sql    # 공개 anon 키 조회 차단 + playlists 직접
 supabase-migration-v19.sql    # 밴드(teams·team_members) + playlists.team_id·team_linked_via (코드 배포 전 실행)
 supabase-migration-v20.sql    # 앱이 쓰지 않는 공개 키 쓰기 권한 회수 (코드와 독립, 언제든)
 supabase-migration-v21.sql    # teams.created_via 밴드 출처 (코드 배포 전 실행)
+supabase-migration-v22.sql    # setlist_items.item_type 에 'original'(자작곡) 허용
 ```
 
 기존 운영 DB는 이미 실행한 마이그레이션을 건너뛸 수 있도록 모두 `IF NOT EXISTS`/`ADD COLUMN IF NOT EXISTS` 패턴 사용.
