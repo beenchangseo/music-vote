@@ -1,266 +1,133 @@
 # Plypick
 
-밴드 곡을 투표로 결정하세요. YouTube 링크를 붙이면 멤버들이 카카오 로그인 한 번으로 5분 안에 다음 합주 곡을 정합니다.
+밴드 곡을 투표로 정해요. YouTube 링크를 붙이면 멤버들이 카카오 로그인 한 번으로 5분 안에 다음 합주 곡을 정합니다.
 
 **Live:** [plypick.kr](https://plypick.kr)
 
 > *"카톡 단톡방에서 '다음 주에 정하기로' 끝나던 곡 결정을, 5분 만에 끝내는 밴드 투표 도구."*
 
----
+## 무엇을 하나
 
-## Features
+- **투표.** 카카오 로그인 한 번으로 찬성·반대. 자유 투표 또는 방장이 정하는 투표권 할당(1~99), 익명·기명 모드
+- **곡 추가.** 링크를 붙이거나 곡 이름으로 YouTube 를 검색해 미리 듣고 추가. 제목·아티스트·썸네일·재생시간은 자동
+- **곡 메타와 필터.** 키, BPM(탭 템포), 길이, 난이도, 장르로 고르고 거른다
+- **실시간.** 같은 플레이리스트를 연 화면끼리 바뀌었다는 알림을 받고 다시 읽는다
+- **셋리스트.** 마감 뒤 매일 KST 자정에 상위 곡을 자동 확정하거나 방장이 바로 확정. 곡·인터벌·자작곡 블록과 토탈 시간
+- **합주 탭.** 메트로놈, 악보 사이트 바로가기, 곡별 댓글
+- **밴드.** 밴드 홈, 초대 링크, 공연 날짜, 플레이리스트 묶기
+- **공유.** 카톡 리치 카드(OG 5종: home·playlist·decided·setlist·band), Kakao → Web Share → 클립보드 순서로 시도,
+  셋리스트 세로 이미지(1080×1920)와 PDF
 
-### 코어
-- **5분 컷 투표** — 카카오 로그인 한 번으로 업/다운 투표, 토글·방향 전환 지원 (닉네임은 카카오 프로필 자동)
-- **곡 이름으로 검색 추가** — 링크는 바로 추가, 그 외에는 YouTube 검색 후 미리듣고 추가
-- **YouTube 자동 메타** — 제목·아티스트·썸네일에 더해 재생시간까지 자동 (Data API)
-- **5중 제약 곡 메타** — 키(C~B + Major/minor), BPM, 길이, 난이도(1~5★), 장르 12종
-- **5축 필터** — BPM 구간 / 메타 유무 / 키 / 난이도 ≤ / 장르 다중 선택
-- **실시간 정렬** — 점수순 자동 정렬 + auto-animate
-- **실시간 반영** — 같은 합주방을 연 화면끼리 broadcast 알림 후 각자 서버에서 재조회
-- **댓글** — 곡당 1인 1댓글 + 카드 표면 카운트 배지
-- **익명/기명 모드 토글** — 방장 admin 권한, 기명 시에만 voter 닉네임이 조회 뷰에 나타남
-- **투표권 할당** — 방장이 참여자별 투표권(1~99)을 정하고, 같은 후보곡에 반복 투표 가능
-- **다른 버전** — 후보곡마다 참고용 YouTube 링크 + 100자 설명 등록
-
-### 셋리스트
-- **마감 후 자동 확정** — Vercel Cron 매시간 상위 N곡 자동 셋리스트 등록
-- **수동 확정** — 방장이 즉시 확정 가능
-- **인터벌 블럭** — 합주 사이 휴식 시간 삽입 + 러닝타임 자동 계산
-- **합주 모드** — 메트로놈 + 자동 진행
-
-### 공유 & Export
-- **카카오톡 리치 카드** — 4-variant OG (home/playlist/decided/setlist), Pretendard ExtraBold
-- **3-fallback 공유 체인** — Kakao Share → Web Share → Clipboard
-- **셋리스트 포트레이트 이미지** — 1080×1920 PNG (모바일 갤러리 저장 + 카톡)
-- **셋리스트 공유·저장** — 링크 공유, 세로 이미지, 전체 항목 PDF 다운로드
-- **셋리스트 편집** — 곡·인터벌 블록 수정, 권한 토글, 토탈 시간과 공유 파일
-- **외부 악보 단축** — Ultimate Guitar / Chordify / 뮤직노트 / 악보바다
-
-### 디자인
-- **Pretendard Variable** 동적 서브셋 (한국어 가독성)
-- **시맨틱 컬러 토큰** (`text-text-muted`, `bg-surface-hover` 등)
-- **모바일 터치 영역 ≥44px** + safe-area-inset 지원
-- **UI primitives**: Button / Input / Card / Modal
-
-### 운영
-- **분석 이벤트** — 셋리스트 링크 공유와 이미지·PDF 저장을 포함한 타입 안전 이벤트
-- **UTM 자동 부착** — 카톡 공유 시 variant별 추적
-
----
-
-## Tech Stack
+## 기술 스택
 
 | 영역 | 기술 |
 |---|---|
-| Framework | Next.js 16 App Router |
-| Runtime | React 19 |
-| Language | TypeScript |
-| Styling | Tailwind CSS v4 (@theme inline) |
-| Font | Pretendard Variable (CDN dynamic subset) |
+| Framework | Next.js 16 App Router, React 19, TypeScript |
+| Styling | Tailwind CSS v4 (`@theme inline`), Pretendard Variable |
 | Database | Supabase Postgres + RLS (서울 `ap-northeast-2`) |
-| Auth | Kakao OAuth (Supabase Auth) — 로그인 이전 합주방은 읽기 전용 보관 |
-| Image | next/image + next/og (Edge) |
-| Analytics | @vercel/analytics + Speed Insights |
-| Cron | Vercel Cron (icn1 region) |
-| Realtime | Supabase Realtime (broadcast 알림) |
-| Animation | @formkit/auto-animate |
+| Auth | Kakao OAuth (Supabase Auth) |
+| Realtime | Supabase Realtime broadcast |
+| Hosting | Vercel (서울 `icn1`), Vercel Cron, Analytics, Speed Insights |
+| Test | Vitest + Testing Library, Playwright(로컬 e2e 게이트) |
 
----
+## 로컬에서 띄우기
 
-## Getting Started
+필요한 것: Node.js 20 이상(`npm run e2e:auth` 는 22.18 이상), Supabase 프로젝트, Kakao Developers 앱.
 
-### Prerequisites
-- Node.js 20+
-- Supabase 프로젝트 ([supabase.com](https://supabase.com))
-- Kakao Developers 앱 (필수 — 로그인 + 카톡 공유)
+1. 의존성을 설치한다.
 
-### Installation
-```bash
-git clone https://github.com/YOUR_USERNAME/music-vote.git
-cd music-vote
-npm install
-```
+   ```bash
+   npm install
+   ```
 
-### Environment Variables
+2. 환경변수 파일을 만들고 값을 채운다. 각 변수의 뜻은 파일 안에 있다.
 
-`.env.local`:
-```
-# Supabase (필수) — Settings → API Keys
-NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
-SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
+   ```bash
+   cp .env.example .env.local
+   ```
 
-# Vercel Cron 인증 (프로덕션에서 권장)
-CRON_SECRET=randomly-generated-32-char-hex
+3. Supabase SQL Editor 에서 `supabase/migrations/v01.sql` 부터 `v22.sql` 까지 차례로 실행한다.
+   순서와 규칙은 [`supabase/README.md`](supabase/README.md).
+4. 개발 서버를 켠다.
 
-# YouTube Data API v3 (선택)
-# 곡 추가 시 재생시간 자동 + 임베드 가능 여부 검사. 없으면 그 둘만 건너뛴다.
-YOUTUBE_API_KEY=your_youtube_data_api_key
-```
+   ```bash
+   npm run dev
+   ```
 
-> Supabase 키는 새 형식(publishable·secret)을 쓴다. 변수 이름은 레거시 `anon`·`service_role` 키를 쓰던
-> 때 그대로이고 값만 바뀌었다 — `..._ANON_KEY` 에 publishable 키, `..._SERVICE_ROLE_KEY` 에 secret 키.
-> secret 키는 RLS 를 우회하므로 서버에서만 쓰고 `NEXT_PUBLIC_` 를 붙이지 않는다(브라우저에서 오면 Supabase 가 401 로 막는다).
-> 레거시 JWT 키도 아직 동작하지만 Supabase 가 2026년 말에 없앤다.
+   http://localhost:3000 에서 열린다.
 
-> `YOUTUBE_API_KEY` 는 서버에서만 쓴다. `NEXT_PUBLIC_` 접두사를 붙이지 말 것 —
-> 붙이면 브라우저 번들에 그대로 실려 아무나 쿼터를 쓸 수 있다.
+Kakao JavaScript SDK 키는 `src/components/share/KakaoInit.tsx` 에 들어 있다. Kakao 앱의 Web 플랫폼 도메인에
+`http://localhost:3000` 을 등록해야 공유와 로그인이 된다.
 
-> Kakao JavaScript SDK 키는 현재 `src/app/layout.tsx`에 인라인. 별도 환경변수화는 향후 작업.
+## 명령
 
-### Database Setup
+| 명령 | 하는 일 |
+|---|---|
+| `npm run dev` | 개발 서버 |
+| `npm run check` | typecheck · lint · test (약 8초). 커밋 전 기본 게이트 |
+| `npm test` | vitest 만 |
+| `npm run test:e2e` | Playwright 배포 전 게이트. 운영 DB 에 붙는다 ([`e2e/README.md`](e2e/README.md)) |
+| `npm run db:new -- "제목"` | 다음 번호 마이그레이션 파일을 템플릿으로 만든다 |
+| `npm run audit:anon` | 공개 키로 열린 읽기·쓰기 경로를 점검한다 |
+| `npm run metrics:teams` | 밴드 성공 지표 (읽기 전용) |
 
-Supabase SQL Editor에서 순서대로 실행:
-```
-supabase/migrations/v01.sql           # v1 베이스 스키마
-supabase/migrations/v02.sql     # admin_token 분리
-supabase/migrations/v03.sql     # 댓글 + 셋리스트
-supabase/migrations/v04.sql     # creator_nickname + 공지사항
-supabase/migrations/v05.sql     # 5중 제약 메타 (key_root/mode, difficulty, genre)
-supabase/migrations/v06.sql     # 익명/기명 투표 모드
-supabase/migrations/v07.sql     # Kakao OAuth 계정 연동
-supabase/migrations/v08.sql     # 로그인 모드 RLS
-supabase/migrations/v09.sql     # 기존 공연 포스터 URL(운영 이력, v10에서 제거)
-supabase/migrations/v10.sql    # 투표권·다른 버전·셋리스트 편집, 포스터 완전 제거
-supabase/migrations/v11.sql    # 투표 설정 일괄 저장
-supabase/migrations/v12.sql    # 할당 모드 후보곡 중복 투표
-supabase/migrations/v13.sql    # 로그인 중복 투표를 막는 legacy 닉네임 제약 분리
-supabase/migrations/v14.sql    # votes(song_id) 인덱스 복구 + 통계 집계 뷰
-supabase/migrations/v15.sql    # 공개 anon 키 쓰기 경로 차단 + 투표 조회 뷰
-supabase/migrations/v16.sql    # 집계 뷰에 playlist_id 추가 (왕복 축소)
-supabase/migrations/v17.sql    # YouTube 검색 결과 캐시
-supabase/migrations/v18.sql    # 공개 anon 키 조회 차단 + playlists 직접 생성 차단 (코드 배포 후 실행)
-supabase/migrations/v19.sql    # 밴드(teams·team_members) + playlists.team_id·team_linked_via (코드 배포 전 실행)
-supabase/migrations/v20.sql    # 앱이 쓰지 않는 공개 키 쓰기 권한 회수 (코드와 독립, 언제든)
-supabase/migrations/v21.sql    # teams.created_via 밴드 출처 (코드 배포 전 실행)
-supabase/migrations/v22.sql    # setlist_items.item_type 에 'original'(자작곡) 허용
-```
+## 배포
 
-기존 운영 DB는 이미 실행한 마이그레이션을 건너뛸 수 있도록 모두 `IF NOT EXISTS`/`ADD COLUMN IF NOT EXISTS` 패턴 사용.
-
-### Development
-```bash
-npm run dev
-```
-http://localhost:3000
-
-### Deployment
-
-`main` 브랜치에 push 하면 Vercel 이 프로덕션으로 자동 배포한다. 다른 브랜치는 배포하지 않는다.
+`main` push 가 곧 Vercel 프로덕션 배포다. 다른 브랜치는 배포하지 않고 Preview 배포도 없다.
+DB 마이그레이션이 있는 변경은 **마이그레이션의 배포 순서를 먼저 확인한다**(`supabase/README.md` 의 표).
 
 ```bash
+npm run check
 git switch main && git merge --no-ff <branch> && git push origin main
 ```
 
-수동 배포가 필요하면 `vercel --prod`.
+`vercel.json` 이 정하는 것:
 
-`vercel.json` 설정:
-```json
-{
-  "regions": ["icn1"],
-  "crons": [
-    { "path": "/api/cron/auto-confirm-setlist", "schedule": "0 15 * * *" }
-  ],
-  "git": {
-    "deploymentEnabled": { "*": false, "main": true }
-  }
-}
-```
+- `regions: ["icn1"]`: 서울에서 함수를 실행한다
+- `crons`: 매일 15:00 UTC(KST 자정)에 `/api/cron/auto-confirm-setlist` 로 셋리스트를 자동 확정한다
+- `git.deploymentEnabled`: `main` 만 배포한다. 환경변수가 Production 스코프에만 있어 Preview 는 끈다
 
-- `regions` — 서울(`icn1`)
-- `crons` — 매일 15:00 UTC(= KST 자정) 셋리스트 자동 확정
-- `git.deploymentEnabled` — `main` 만 배포. 환경변수가 Production 스코프에만 있어 Preview 배포는 끈다.
-  Preview 를 켜려면 먼저 Preview 스코프 환경변수를 채울 것.
+Vercel 환경변수는 `printf '%s' "$VAL" | vercel env add NAME production --force --yes` 로 넣는다.
+`echo` 는 값 끝에 줄바꿈을 붙인다. 전체 절차는 `.claude/skills/prod-deploy/SKILL.md`.
 
-Vercel Dashboard에서 환경변수(`CRON_SECRET`) 설정 후 첫 배포 시 Crons 탭에서 활성화 확인.
-
-**DB 마이그레이션이 있는 배포는 반드시 마이그레이션 먼저.** `main` push 는 즉시 프로덕션이다.
-
----
-
-## Project Structure
+## 구조
 
 ```
 src/
-├── app/
-│   ├── page.tsx                              # 랜딩 (5분 컷 후킹)
-│   ├── new/page.tsx                          # 전용 생성 페이지 (URL fallback)
-│   ├── about/, guide/, privacy/, terms/      # 법적/안내 페이지
-│   ├── global-error.tsx, not-found.tsx       # 명시적 에러/404
-│   ├── playlist/[shareCode]/
-│   │   ├── page.tsx                          # 플리 서버 컴포넌트 (스코어·댓글 카운트 join)
-│   │   └── metronome/                        # 메트로놈
-│   ├── band/[teamId]/                        # 밴드 홈 (멤버 전용)
-│   ├── join/[inviteCode]/                    # 밴드 초대 링크
-│   └── api/
-│       ├── og/                               # 4-variant OG 이미지
-│       ├── setlist-image/[shareCode]/        # 1080×1920 포트레이트 PNG
-│       ├── setlist-pdf/[shareCode]/          # 전체 셋리스트 다중 페이지 PDF
-│       └── cron/auto-confirm-setlist/        # Vercel Cron 자동 확정
-├── actions/                                  # Server Actions
-│   ├── playlist.ts                           # 생성·삭제·공지·투표 모드
-│   ├── song.ts                               # 추가·삭제·메타 업데이트
-│   ├── vote.ts                               # 투표 cast/toggle
-│   ├── comment.ts                            # 댓글
-│   ├── setlist.ts                            # 셋리스트 항목·순서
-│   └── team.ts                               # 밴드 만들기·가입·밴드 홈·멤버 관리
-├── components/
-│   ├── ui/                                   # Primitives
-│   │   ├── Button.tsx, Input.tsx, Card.tsx, Modal.tsx
-│   ├── PlaylistClient.tsx                    # 메인 클라이언트 컴포넌트
-│   ├── PlaylistHeader.tsx, NavigationBar.tsx
-│   ├── AddSongForm.tsx, SongCard.tsx, SongMeta.tsx
-│   ├── VoteButtons.tsx, FilterBar.tsx
-│   ├── KakaoShareButton.tsx                  # 3-fallback 공유
-│   ├── HeroCTA.tsx, LivePreview.tsx          # 랜딩 후킹
-│   ├── SetlistView.tsx, SetlistItemEditModal.tsx, RehearsalView.tsx
-│   ├── VotingSettingsButton.tsx, SongVersionModal.tsx
-│   ├── SheetMusicLinks.tsx                   # 외부 악보 검색
-│   ├── VotingModeToggle.tsx                  # 익명/기명 토글
-│   ├── CommentSection.tsx, CommentModal.tsx
-│   └── DialogProvider.tsx, Toast.tsx, MetronomeClient.tsx, MiniPlayer.tsx
-├── lib/
-│   ├── supabase/                             # Server / Client / Admin
-│   ├── youtube.ts, youtube-iframe.ts         # oEmbed + IFrame API
-│   ├── song-meta.ts                          # KEY_ROOTS / GENRES + format / validate
-│   ├── analytics.ts                          # 타입 안전 track() wrapper
-│   ├── youtube-data.ts                       # Data API (재생시간·임베드·검색)
-│   ├── team-domain.ts                        # 밴드 순수 로직 (공연 D-day·이름·날짜·초대 코드 검사)
-│   ├── team-messages.ts                      # 밴드 액션 reason 코드 → 한국어 문구
-│   └── types.ts
-└── proxy.ts                                  # Rate limiting + 세션 갱신 (Next 16 의 middleware)
-
-e2e/                                          # Playwright 로컬 배포 전 게이트 (e2e/README.md)
-scripts/
-├── audit-anon-access.mjs                     # npm run audit:anon — 공개 키 접근 점검
-└── team-metrics.mjs                          # npm run metrics:teams — 밴드 성공 지표 (읽기 전용)
+├── app/          라우트와 API route
+├── actions/      Server Action
+├── domain/       순수 규칙과 엔티티 타입 (외부 의존 없음, eslint 로 강제)
+├── lib/          Supabase·YouTube·Kakao·분석 연결, 서버 헬퍼
+├── components/   ui/ 와 화면별 폴더 (playlist·setlist·rehearsal·band·home·auth·share)
+└── hooks/        클라이언트 훅
+supabase/         마이그레이션과 적용 규칙
+e2e/              Playwright 로컬 게이트
+scripts/          운영 스크립트
+verification/     TLA+ 형식 검증 (투표권 동시성)
+docs/             ADR, 계획, 결과 기록
 ```
 
----
+폴더별 역할, 의존 방향, 새 코드를 둘 곳은 [`AGENTS.md`](AGENTS.md) "구조와 의존 방향".
 
-## Analytics Events
+## 문서
 
-`src/lib/analytics.ts`의 `track()`은 타입 안전. Vercel Analytics 대시보드에서 다음 이벤트 자동 노출:
-
-| Event | Properties |
+| 문서 | 내용 |
 |---|---|
-| `playlist_created` | `has_deadline`, `setlist_count` |
-| `song_added` | `has_thumbnail` |
-| `vote_cast` / `vote_toggled` / `vote_changed` | `vote_type` / `from`+`to` |
-| `kakao_shared` | `variant` (playlist/decided/setlist) |
-| `setlist_confirmed` | `song_count`, `auto` |
-| `setlist_exported` | `format` (image/pdf) |
-| `setlist_shared` | `method` (link) |
-| `meta_edited` | `field` (key/bpm/difficulty/genre/...) |
-| `filter_applied` | `type` (bpm/meta_only/key/difficulty/genre) |
+| [`AGENTS.md`](AGENTS.md) | 코드 규칙·구조·컨벤션·주의 사항. `CLAUDE.md` 가 이 파일을 불러온다 |
+| [`CONTEXT.md`](CONTEXT.md) | 도메인 용어집 (플레이리스트, 투표권, 셋리스트 블록, 밴드) |
+| [`TODOS.md`](TODOS.md) | 미룬 작업과 재개 조건 |
+| [`supabase/README.md`](supabase/README.md) | 마이그레이션 적용 순서와 쓰는 규칙 |
+| [`e2e/README.md`](e2e/README.md) | 로컬 e2e 게이트 설정 |
+| `docs/adr/` | 결정 기록 (왜 이렇게 만들었나) |
+| `docs/plans/`, `docs/results/` | 기획·구현 계획과 결과 |
 
-UTM은 모든 카톡 공유 URL에 자동 부착:
-```
-?utm_source=kakao&utm_medium=share&utm_campaign={shareCode}&variant=decided
-```
+## 분석 이벤트
 
----
+이벤트 목록과 속성의 원본은 `src/lib/analytics.ts` 의 `EventMap` 이다. 카톡 공유 URL 에는 UTM 이 붙는다.
+
+```
+?utm_source=kakao&utm_medium=share&utm_campaign={shareCode}&variant={variant}
+```
 
 ## License
 

@@ -1,5 +1,9 @@
 # Plypick — Release Checklist
 
+> 출시 준비 때(2026-05) 만든 체크리스트로, 2026-09-20 판(v17·싱가포르 리전)에서 멈춘 기록이다. 출시 공지 카피도 여기 있다.
+> 2026-10-31 저장소 루트의 `RELEASE.md` 에서 옮겼다.
+> 지금의 배포 절차는 `.claude/skills/prod-deploy/SKILL.md`, DB 순서는 `supabase/README.md`.
+
 ship 직전 마지막 점검표. 출시 시점에 한 번 위에서부터 통과시키며 진행.
 
 ---
@@ -171,5 +175,3 @@ plypick.kr
 - **한국어 카피 톤** — "스마트", "AI 추천" 류 마케팅 수사 금지
 
 ---
-
-`/RELEASE.md`는 git tracked. 정책 변경 시 함께 업데이트.
