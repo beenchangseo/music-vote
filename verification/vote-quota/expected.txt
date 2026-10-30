@@ -1,0 +1,18 @@
+# scenario property result — what check.sh must see on the current code.
+# "fail" rows are known findings F1 (#15) and F2 (#16) in the skill, not noise:
+# when a fix lands they turn to "pass", and this file changes with the fix.
+voters     QuotaHolds           pass
+voters     FreeOneVotePerSong   pass
+voters     VotesMatchMode       pass
+save       QuotaHolds           fail
+save       FreeOneVotePerSong   fail
+save       VotesMatchMode       fail
+configure  QuotaHolds           fail
+configure  FreeOneVotePerSong   fail
+configure  VotesMatchMode       fail
+setLimit   QuotaHolds           fail
+setLimit   FreeOneVotePerSong   pass
+setLimit   VotesMatchMode       pass
+applyAll   QuotaHolds           fail
+applyAll   FreeOneVotePerSong   pass
+applyAll   VotesMatchMode       pass

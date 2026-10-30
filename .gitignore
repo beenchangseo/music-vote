@@ -67,3 +67,7 @@ docs/*
 
 # Agent worktrees (Claude Code isolation)
 /.claude/worktrees/
+
+# Formal verification tools and TLC output (verification/*/check.sh)
+/.tools/
+/verification/*/out/
