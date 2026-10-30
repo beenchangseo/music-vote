@@ -57,6 +57,7 @@ docs/*
 !docs/plans/*.md
 !docs/results/
 !docs/results/*.md
+!docs/results/*.tsv
 .env*.local
 .gstack/
 .migration/
