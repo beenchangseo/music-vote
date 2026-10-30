@@ -28,7 +28,7 @@ export async function registerPlaylistMember(
   return getMyVoteAllowance(playlistId);
 }
 
-export async function getMyVoteAllowance(
+async function getMyVoteAllowance(
   playlistId: string,
 ): Promise<VoteAllowance | null> {
   const user = await getCurrentUser();
@@ -166,55 +166,6 @@ export async function saveVotingSettings(
   });
 
   if (error) actionError(error, "투표 설정 변경에 실패했습니다.");
-  revalidatePath(`/playlist/${shareCode}`);
-  return { success: true };
-}
-
-export async function configureVoting(
-  playlistId: string,
-  mode: VotingMode,
-  defaultVoteLimit: number,
-  shareCode: string,
-) {
-  const supabase = await createServerSupabaseClient();
-  const { error } = await supabase.rpc("configure_playlist_voting", {
-    p_playlist_id: playlistId,
-    p_mode: mode,
-    p_default_limit: defaultVoteLimit,
-  });
-  if (error) actionError(error, "투표 설정 변경에 실패했습니다.");
-  revalidatePath(`/playlist/${shareCode}`);
-  return { success: true };
-}
-
-export async function updateMemberVoteLimit(
-  playlistId: string,
-  userId: string,
-  voteLimit: number,
-  shareCode: string,
-) {
-  const supabase = await createServerSupabaseClient();
-  const { error } = await supabase.rpc("set_member_vote_limit", {
-    p_playlist_id: playlistId,
-    p_user_id: userId,
-    p_vote_limit: voteLimit,
-  });
-  if (error) actionError(error, "투표권 변경에 실패했습니다.");
-  revalidatePath(`/playlist/${shareCode}`);
-  return { success: true };
-}
-
-export async function applyVoteLimitToAll(
-  playlistId: string,
-  voteLimit: number,
-  shareCode: string,
-) {
-  const supabase = await createServerSupabaseClient();
-  const { error } = await supabase.rpc("apply_vote_limit_to_all", {
-    p_playlist_id: playlistId,
-    p_vote_limit: voteLimit,
-  });
-  if (error) actionError(error, "일괄 변경에 실패했습니다.");
   revalidatePath(`/playlist/${shareCode}`);
   return { success: true };
 }

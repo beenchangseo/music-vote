@@ -1,11 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   applyVotePress,
-  canReduceVoteLimit,
   isValidDefaultVoteLimit,
   assignRanks,
   remainingVotes,
-  scoreRatio,
   shouldExposeVoters,
 } from "../vote-domain";
 
@@ -13,11 +11,6 @@ describe("vote allocation domain", () => {
   it("shows only allocated-mode remaining votes", () => {
     expect(remainingVotes({ mode: "allocated", voteLimit: 5, usedVotes: 2 })).toBe(3);
     expect(remainingVotes({ mode: "free", voteLimit: 5, usedVotes: 2 })).toBeNull();
-  });
-
-  it("does not allow a limit below current usage", () => {
-    expect(canReduceVoteLimit(3, 2)).toBe(false);
-    expect(canReduceVoteLimit(3, 3)).toBe(true);
   });
 
   it("accepts only integer defaults from 1 through 99", () => {
@@ -97,17 +90,5 @@ describe("assignRanks", () => {
 
   it("빈 목록을 견딘다", () => {
     expect(assignRanks([])).toEqual([]);
-  });
-});
-
-describe("scoreRatio", () => {
-  it("최고점 대비 비율을 돌려준다", () => {
-    expect(scoreRatio(5, 5)).toBe(1);
-    expect(scoreRatio(2, 4)).toBe(0.5);
-  });
-
-  it("음수 점수와 0점 기준을 견딘다", () => {
-    expect(scoreRatio(-3, 5)).toBe(0);
-    expect(scoreRatio(3, 0)).toBe(0);
   });
 });

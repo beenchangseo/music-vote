@@ -71,10 +71,6 @@ export function remainingVotes(allowance: VoteAllowance): number | null {
   return Math.max(0, allowance.voteLimit - allowance.usedVotes);
 }
 
-export function canReduceVoteLimit(usedVotes: number, nextLimit: number): boolean {
-  return Number.isInteger(nextLimit) && nextLimit >= usedVotes && nextLimit <= 99;
-}
-
 export function isValidDefaultVoteLimit(value: number): boolean {
   return Number.isInteger(value) && value >= 1 && value <= 99;
 }
@@ -106,7 +102,3 @@ export function assignRanks(scores: number[]): number[] {
 }
 
 /** 최고점 대비 비율(0~1). 점수가 숫자로만 있으면 박빙인지 압도적인지 안 읽힌다. */
-export function scoreRatio(score: number, topScore: number): number {
-  if (topScore <= 0) return 0;
-  return Math.max(0, Math.min(1, score / topScore));
-}

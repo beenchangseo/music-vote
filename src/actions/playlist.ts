@@ -9,27 +9,6 @@ import { roomCoverThumbs } from "@/lib/team-domain";
 import type { SetlistEditMode, VotingMode } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
-/**
- * 홈 페이지 하단 통계용 카운트.
- * Cache 는 호출부에서 react cache() or revalidate 로.
- */
-export async function getHomeStats(): Promise<{
-  playlists: number;
-  users: number;
-  songs: number;
-}> {
-  const admin = createAdminClient();
-  const { data } = await admin
-    .from("home_stats")
-    .select("playlist_count, song_count, participant_count")
-    .single();
-  return {
-    playlists: data?.playlist_count ?? 0,
-    users: data?.participant_count ?? 0,
-    songs: data?.song_count ?? 0,
-  };
-}
-
 export interface MyPlaylistDbEntry {
   id: string;
   shareCode: string;
@@ -204,23 +183,6 @@ export async function createPlaylist(
   return { id: result.id, shareCode: result.shareCode, adminToken: result.adminToken };
 }
 
-export async function updateCreatorNickname(
-  playlistId: string,
-  creatorNickname: string,
-  shareCode: string,
-  adminToken: string | null = null,
-) {
-  await assertPlaylistAdmin(playlistId, adminToken);
-  const admin = createAdminClient();
-  const { error } = await admin
-    .from("playlists")
-    .update({ creator_nickname: creatorNickname })
-    .eq("id", playlistId);
-  if (error) throw new Error("닉네임 저장에 실패했습니다.");
-  revalidatePath(`/playlist/${shareCode}`);
-  return { success: true };
-}
-
 export async function updateAnnouncementPublic(
   playlistId: string,
   announcement: string,
@@ -236,44 +198,6 @@ export async function updateAnnouncementPublic(
     .eq("id", playlistId);
 
   if (error) throw new Error("공지사항 저장에 실패했습니다.");
-
-  revalidatePath(`/playlist/${shareCode}`);
-  return { success: true };
-}
-
-export async function updateAnnouncement(
-  playlistId: string,
-  adminToken: string | null,
-  announcement: string,
-  shareCode: string
-) {
-  await assertPlaylistAdmin(playlistId, adminToken);
-  const admin = createAdminClient();
-  const { error } = await admin
-    .from("playlists")
-    .update({ announcement: announcement || null })
-    .eq("id", playlistId);
-
-  if (error) throw new Error("공지사항 저장에 실패했습니다.");
-
-  revalidatePath(`/playlist/${shareCode}`);
-  return { success: true };
-}
-
-export async function updateVotingMode(
-  playlistId: string,
-  adminToken: string | null,
-  votesAnonymous: boolean,
-  shareCode: string,
-) {
-  await assertPlaylistAdmin(playlistId, adminToken);
-  const admin = createAdminClient();
-  const { error } = await admin
-    .from("playlists")
-    .update({ votes_anonymous: votesAnonymous })
-    .eq("id", playlistId);
-
-  if (error) throw new Error("투표 모드 변경에 실패했습니다.");
 
   revalidatePath(`/playlist/${shareCode}`);
   return { success: true };

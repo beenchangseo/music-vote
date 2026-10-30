@@ -9,7 +9,6 @@ const removeSong = vi.fn();
 vi.mock("@/actions/song", () => ({ removeSong: (...args: unknown[]) => removeSong(...args) }));
 vi.mock("../DialogProvider", () => ({ useDialog: () => ({ showDanger: vi.fn().mockResolvedValue(true), showAlert: vi.fn() }) }));
 vi.mock("next/image", () => ({ default: (props: { alt: string }) => <span aria-label={props.alt} /> }));
-vi.mock("../YouTubePlayer", () => ({ default: () => null }));
 vi.mock("../VoteButtons", () => ({ default: () => null }));
 vi.mock("../CommentModal", () => ({ default: () => null }));
 vi.mock("../SongVersionModal", () => ({ default: () => null }));
