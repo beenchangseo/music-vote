@@ -3,8 +3,8 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { usePlaylistVotes } from "../usePlaylistVotes";
-import VoteButtons from "@/components/VoteButtons";
-import type { SongWithScore, VoteAllowance, VotingMode } from "@/lib/types";
+import VoteButtons from "@/components/playlist/VoteButtons";
+import type { SongWithScore, VoteAllowance, VotingMode } from "@/domain/types";
 
 const castVote = vi.fn();
 const onError = vi.fn();

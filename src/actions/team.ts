@@ -32,7 +32,7 @@ import { nanoid } from "nanoid";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistWritable } from "@/lib/playlist-access";
-import { ARCHIVED_PLAYLIST_MESSAGE } from "@/lib/playlist-archive";
+import { ARCHIVED_PLAYLIST_MESSAGE } from "@/domain/playlist-archive";
 import { insertRoom } from "@/lib/room-insert";
 import { createAdminClient } from "@/lib/supabase/server";
 import { nestedRows } from "@/lib/supabase/nested";
@@ -45,9 +45,10 @@ import {
   sortMembersForDisplay,
   validateNextShowDate,
   validateTeamName,
-} from "@/lib/team-domain";
+} from "@/domain/team";
+import { isValidDefaultVoteLimit } from "@/domain/vote";
 import type { TeamReason } from "@/lib/team-messages";
-import type { ActionResult, TeamRole, VotingMode } from "@/lib/types";
+import type { ActionResult, TeamRole, VotingMode } from "@/domain/types";
 
 // ============================================================
 // 반환 타입
@@ -949,7 +950,7 @@ export async function createBandPlaylist(
   // Same rules as createPlaylist, returned instead of thrown.
   if (!title || title.length > 100) return fail("invalid_title");
   if (votingMode !== "free" && votingMode !== "allocated") return fail("invalid_voting_mode");
-  if (!Number.isInteger(defaultVoteLimit) || defaultVoteLimit < 1 || defaultVoteLimit > 99) {
+  if (!isValidDefaultVoteLimit(defaultVoteLimit)) {
     return fail("invalid_vote_limit");
   }
   if (!isTeamIdFormat(teamId)) return fail("team_not_found");

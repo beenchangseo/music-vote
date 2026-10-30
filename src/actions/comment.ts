@@ -4,7 +4,7 @@ import { createAdminClient, createServerSupabaseClient } from "@/lib/supabase/se
 import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistWritableBySong } from "@/lib/playlist-access";
 import { revalidatePath } from "next/cache";
-import type { Comment } from "@/lib/types";
+import type { Comment } from "@/domain/types";
 
 export async function getComments(playlistId: string): Promise<Comment[]> {
   // songs and comments are closed to the public key (v18).

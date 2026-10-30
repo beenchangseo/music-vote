@@ -1,9 +1,10 @@
 import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import BandInviteScreen from "@/components/BandInviteScreen";
+import BandInviteScreen from "@/components/band/BandInviteScreen";
 import { getTeamInvite } from "@/actions/team";
-import { bandShareDescription, shareableShowDate } from "@/lib/team-domain";
+import { BASE_OPEN_GRAPH } from "@/lib/seo";
+import { bandShareDescription, shareableShowDate } from "@/domain/team";
 
 // generateMetadata and the page read the same invite once per request.
 const loadInvite = cache((inviteCode: string) => getTeamInvite(inviteCode));
@@ -33,7 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     robots: { index: false },
-    openGraph: { title, description, type: "website", images: [`/api/og?${og.toString()}`] },
+    openGraph: { ...BASE_OPEN_GRAPH, title, description, images: [`/api/og?${og.toString()}`] },
     twitter: { card: "summary_large_image", title, description },
   };
 }

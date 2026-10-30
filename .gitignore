@@ -30,8 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files. .env.example is the committed template with placeholders only.
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -56,6 +57,7 @@ docs/*
 !docs/plans/*.md
 !docs/results/
 !docs/results/*.md
+!docs/results/*.tsv
 .env*.local
 .gstack/
 .migration/
@@ -67,3 +69,7 @@ docs/*
 
 # Agent worktrees (Claude Code isolation)
 /.claude/worktrees/
+
+# Formal verification tools and TLC output (verification/*/check.sh)
+/.tools/
+/verification/*/out/

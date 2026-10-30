@@ -250,12 +250,12 @@ song_catalog (신규) — 공유 가능한 값만 담는다
      이 수정 없이 버튼만 넣으면 복사된 멤버가 방을 발견할 경로가 없다
    - "이 멤버로 새 방" 버튼 (`playlist_members` 복사)
    - **백필은 만들지 않는다.** `registerPlaylistMember` 가 방 진입 시 이미 멤버를
-     등록한다(`src/actions/member.ts:14-29`, `src/components/PlaylistClient.tsx:96`).
+     등록한다(`src/actions/member.ts:14-29`, `src/components/playlist/PlaylistClient.tsx:96`).
      6개월간 돌아온 경로다
 
 **2. 탭 템포** — CC ~2시간, 마이그레이션 없음
 
-   `src/lib/tap-tempo.ts` 로 순수 함수 분리 후 `useMetronome` 옆에 붙인다.
+   `src/domain/tap-tempo.ts` 로 순수 함수 분리 후 `useMetronome` 옆에 붙인다.
    4회 탭으로 BPM 산출 → `songs.tempo_bpm` 저장.
    **key_root 1개 문제를 직격하는 유일한 즉시 수단이다.** 카탈로그는 이걸 대신할 수
    없다(자동 주입 가능 곡 3개).
@@ -272,7 +272,7 @@ song_catalog (신규) — 공유 가능한 값만 담는다
 
 `playlist_members` 는 고립된 테이블이 아니다. 실측:
 
-- v10 RLS 정책 3곳 (`supabase-migration-v10.sql:88, 111, 134`)
+- v10 RLS 정책 3곳 (`supabase/migrations/v10.sql:88, 111, 134`)
 - v10 SECURITY DEFINER 함수 7곳 (`183, 190, 244, 345, 387, 425, 438`) —
   `cast_playlist_vote`, 투표권 할당 로직 포함
 - v11, v12 도 참조
@@ -350,7 +350,7 @@ song_catalog (신규) — 공유 가능한 값만 담는다
 
 **0. 공개 키 접근 차단 (T1·T2·T3)** — 팀 작업보다 먼저 배포한다. 스펙 리뷰로 한 가지가 늘었다:
 
-- **`playlists_insert WITH CHECK (true)` 제거.** `supabase-schema.sql:52` 의 이 정책은 이후 어느
+- **`playlists_insert WITH CHECK (true)` 제거.** `supabase/migrations/v01.sql:52` 의 이 정책은 이후 어느
   마이그레이션도 바꾸지 않았다. 지금도 공개 키와 세션만 있으면 아무 `creator_user_id`(v19 뒤에는 아무
   `team_id`)를 단 방을 REST 로 넣을 수 있다. ADR 0013 "공개 키로는 쓰기 경로를 열지 않는다"와 어긋난다.
   또 T1 이 SELECT 를 닫으면 `createPlaylist` 의 anon `insert().select()` 가 깨진다. v18 에서 정책을
@@ -389,7 +389,7 @@ song_catalog (신규) — 공유 가능한 값만 담는다
   한다. T1 과 같은 배포. 빼기 전에 Search Console 에서 `/playlist/` 의 최근 28일 클릭 수를 **기준선으로
   기록만 하고 진행한다.** 방장은 D12 에서 "검색 유입이 있었다면 닫힌다"는 위험을 보고 A 를 골랐다
 
-**1. 팀 스키마 (T7)** — `supabase-migration-v19.sql`, idempotent
+**1. 팀 스키마 (T7)** — `supabase/migrations/v19.sql`, idempotent
 
 ```
 teams
@@ -559,7 +559,7 @@ id 로 중복 제거, `created_at` 내림차순. RLS 를 닫은 뒤이므로 ser
   내림차순, 항목은 `position` 순. 셋리스트가 빈 방은 숨긴다. 전부 비면 "셋리스트를 짜면 여기에 쌓여요"
 - **E2 다음 공연 D-day** (S, 사람 ~반나절 / CC ~30분): 멤버 누구나 `teams.next_show_at` 을 정하고
   지운다 (`updateTeamNextShow`, 행 수 확인). 입력은 `YYYY-MM-DD` 형식만 받고 KST 오늘보다 이전
-  날짜는 거부한다. D-day 계산은 `src/lib/team-domain.ts` 의 순수 함수 `showDday(nextShowAt, now)` 로, KST 날짜 기준 (eng D2). 당일은
+  날짜는 거부한다. D-day 계산은 `src/domain/team.ts` 의 순수 함수 `showDday(nextShowAt, now)` 로, KST 날짜 기준 (eng D2). 당일은
   "공연 D-DAY". 날짜가 지나면 **"공연 끝" 상태 (디자인 리뷰 8A)**: 날짜 타일 자리에 "10월 16일 공연 끝 · 수고했어요" + 버튼 "다음 공연 날짜 정하기"(주 버튼은 1A 규칙을 따름). 공연일로부터 14일이 지나면 "공연 날짜 정하기" 빈 상태로 돌아간다. 카드·접두어(팀 방 카드, 홈 "내 밴드" 줄, 방 경로 줄)에서는 지난 날짜를 표시하지 않는다. D-day 표시 위치는 밴드 홈 맨 위·방 경로 줄·홈 "내 밴드" 줄이고, 카드(`band`, 팀 방 `playlist` 카드 설명 앞)에는
   날짜 접두어 `10월 16일 공연 ·` 를 붙인다(25A). 방 화면의 주 공유 버튼은 `KakaoShareButton` 이 아니라
   `PlaylistHeader.tsx:42-70` 의 인라인 `handleKakaoShare` 이므로 거기에 접두어를 넣는다(완료 화면은
@@ -680,7 +680,7 @@ CC 기준 시간. 사람 기준은 대략 ×8.
      └───────┬────────────────┬────────────────┘                     │
              │ 방 insert 헬퍼  │ 팀 조회                              │
      ┌───────▼────────┐ ┌─────▼──────────────┐  ┌────────────────────▼─┐
-     │ playlist.ts    │ │ song.ts addSong    │  │ lib/team-domain.ts   │
+     │ playlist.ts    │ │ song.ts addSong    │  │ domain/team.ts   │
      │ getMyPlaylists │ │  + E4 팀 안 조회    │  │ [신규, 순수, now 주입]│
      │ (3집합, admin) │ └─────┬──────────────┘  └──────────────────────┘
      └───────┬────────┘       │
@@ -857,7 +857,7 @@ supabase-js 는 대부분 throw 하지 않고 `{ data, error }` 를 돌려준다
   → **eng D3 로 변경**: 공용 파일은 만들지 않는다. `team.ts` 안 로컬 헬퍼 `withFreshInviteCode` 를 밴드 만들기·링크 교체가 쓰고,
   `createPlaylist` 의 share_code 루프는 그대로 둔다
 - **이름**: 코드·DB 는 `team`, 화면은 "밴드". 문서 첫머리에 이 대응을 적어 둔다
-- **에러 계약 혼재**: `createPlaylist` 는 throw, 팀 액션은 반환값. `src/lib/types.ts` 에 `ActionResult<T>` 타입 하나로 고정 (모양은 `castVote` 와 같은 `success`/`reason`, eng Section 2)
+- **에러 계약 혼재**: `createPlaylist` 는 throw, 팀 액션은 반환값. `src/domain/types.ts` 에 `ActionResult<T>` 타입 하나로 고정 (모양은 `castVote` 와 같은 `success`/`reason`, eng Section 2)
 - **복잡도 WARNING**: `createTeamFromPlaylist` 는 분기가 7개를 넘는다. 검증(`team-domain.ts` 의 `canPromote` → 에러 문구 | null, eng D2)과
   쓰기 단계로 나눈다
 - **과설계 없음**: 역할은 owner/member 둘, 감사 테이블 없음, RPC 없음
@@ -1131,7 +1131,7 @@ F3 sitemap 만 되돌리기 ── 커밋 revert (noindex 가 남으면 색인 �
 
 ## Dependencies
 
-- 마이그레이션 `supabase-migration-v18.sql`(RLS 닫기) → `supabase-migration-v19.sql`(팀) 순서.
+- 마이그레이션 `supabase/migrations/v18.sql`(RLS 닫기) → `supabase/migrations/v19.sql`(팀) 순서.
   둘 다 idempotent. README 실행 순서 갱신 필요.
 - **코드와 SQL 중 무엇이 먼저인가**
   - v18: **코드 먼저.** admin 읽기·admin insert 를 배포한 뒤 SQL 을 돌린다. 반대로 하면 SQL 을 돌린
@@ -1198,22 +1198,22 @@ F3 sitemap 만 되돌리기 ── 커밋 revert (noindex 가 남으면 색인 �
 
 | 이미 있는 것 | 위치 | 계획이 쓰는가 |
 |---|---|---|
-| 방 진입 시 멤버 자동 등록 | `src/actions/member.ts:14-29` → `register_playlist_member` RPC, `src/components/PlaylistClient.tsx:96` | **재사용.** 리뷰 전에는 백필을 새로 만들려 했다. 이게 자가치유 경로다 |
+| 방 진입 시 멤버 자동 등록 | `src/actions/member.ts:14-29` → `register_playlist_member` RPC, `src/components/playlist/PlaylistClient.tsx:96` | **재사용.** 리뷰 전에는 백필을 새로 만들려 했다. 이게 자가치유 경로다 |
 | 곡·점수·코멘트 병렬 조회 | `src/app/playlist/[shareCode]/page.tsx:111-130` (`songs` + `song_vote_summary` + `song_engagement_counts`) | **재사용.** 팀 방이면 `teams` 조회(service_role)가 네 번째로 합류. ~~카탈로그 신호 뷰~~ 는 보류 |
-| anon 쓰기 차단 + 뷰 패턴 | `supabase-migration-v15.sql` (votes), v16 (뷰) | **재사용.** 이슈 1 수정이 같은 패턴을 따른다 |
-| service_role 전용 테이블 패턴 | `supabase-migration-v17.sql` (`youtube_search_cache`, `REVOKE ALL FROM anon`) | **재사용.** 신규 테이블이 따를 틀 |
+| anon 쓰기 차단 + 뷰 패턴 | `supabase/migrations/v15.sql` (votes), v16 (뷰) | **재사용.** 이슈 1 수정이 같은 패턴을 따른다 |
+| service_role 전용 테이블 패턴 | `supabase/migrations/v17.sql` (`youtube_search_cache`, `REVOKE ALL FROM anon`) | **재사용.** 신규 테이블이 따를 틀 |
 | 메트로놈 오디오 엔진 | `src/hooks/useMetronome.ts` | **재사용.** 탭 템포가 그 옆에 붙는다 |
 | 서버 액션 테스트 틀 | `src/actions/__tests__/vote.test.ts` | **재사용.** Supabase 모킹 패턴이 이미 있다 |
 | 공개 키 접근 감사 | `scripts/audit-anon-access.mjs` | **확장.** 지금 `votes`·`playlists.id` 만 본다 |
-| 순수 도메인 로직 분리 | `src/lib/vote-domain.ts`, `setlist-domain.ts`, `song-meta.ts` | **따른다.** `tap-tempo.ts` 가 같은 자리 |
+| 순수 도메인 로직 분리 | `src/domain/vote.ts`, `setlist-domain.ts`, `song-meta.ts` | **따른다.** `tap-tempo.ts` 가 같은 자리 |
 | YouTube duration 조회 | `src/lib/youtube-data.ts:59-90` | 이미 자동. 카탈로그는 호출 절감일 뿐 |
 | 방 복제 / 멤버 복사 | **없음** | ~~새로 만든다~~ T5 폐기로 만들지 않는다. `song-version.ts:37 duplicateKind` 는 중복 곡 감지지 복제가 아님 |
 | 방 만들기 + 방장 토큰 + 첫 멤버 등록 | `src/actions/playlist.ts:57-131` `createPlaylist` | **재사용.** insert 부분을 비공개 헬퍼로 빼서 admin 클라이언트로 옮기고(v18 이 anon insert 를 닫는다), `createPlaylist`(throw 계약 유지)와 `createBandPlaylist`(반환값 계약)가 함께 쓴다. 생성 로직은 한 곳 |
 | share_code 충돌 재시도 | `createPlaylist` 의 `nanoid(8)` + `23505` 3회 재시도 | **재사용.** `invite_code` 생성이 같은 틀 |
-| 카톡 카드 variant | `src/components/KakaoShareButton.tsx` `variantContent` (playlist/decided/setlist) | **확장.** `band` variant 하나 추가 |
-| 홈 "내 합주방" 목록 | `src/components/MyPlaylists.tsx` (DB + localStorage 병합) | **확장.** 위에 "내 밴드" 목록 |
+| 카톡 카드 variant | `src/components/share/KakaoShareButton.tsx` `variantContent` (playlist/decided/setlist) | **확장.** `band` variant 하나 추가 |
+| 홈 "내 합주방" 목록 | `src/components/home/MyPlaylists.tsx` (DB + localStorage 병합) | **확장.** 위에 "내 밴드" 목록 |
 | 보관 방 쓰기 차단 | `src/lib/playlist-access.ts` `assertPlaylistWritable` | **재사용.** 기존 합주방에 쓰는 밴드 만들기(와 방 넣기)가 지난다. 팀 자체에 대한 쓰기는 팀 멤버 검사 |
-| 방 설정 모달 | `src/components/RoomSettingsButton.tsx` | **확장.** "이 멤버로 밴드 만들기" 행 |
+| 방 설정 모달 | `src/components/playlist/RoomSettingsButton.tsx` | **확장.** "이 멤버로 밴드 만들기" 행 |
 
 ## Failure modes
 
@@ -1256,15 +1256,15 @@ CEO 리뷰 범위(B) 기준으로 갱신 (2026-10-04).
 
 | 단계 | 건드리는 모듈 | 의존 |
 |---|---|---|
-| T1·T2 RLS 닫기 + 감사 | `supabase-migration-v18.sql`, `src/actions/`, `src/app/`, `scripts/`, `package.json` | — |
-| T7 팀 스키마 | `supabase-migration-v19.sql`, `src/lib/types.ts`, `scripts/audit-anon-access.mjs` | T1 (v18 다음 번호, 감사 스크립트 공유) |
+| T1·T2 RLS 닫기 + 감사 | `supabase/migrations/v18.sql`, `src/actions/`, `src/app/`, `scripts/`, `package.json` | — |
+| T7 팀 스키마 | `supabase/migrations/v19.sql`, `src/domain/types.ts`, `scripts/audit-anon-access.mjs` | T1 (v18 다음 번호, 감사 스크립트 공유) |
 | T4 getMyPlaylists | `src/actions/playlist.ts` | T7 (팀 방 집합) |
 | T8 팀 액션 | `src/actions/team.ts`, `src/actions/playlist.ts` (방 insert 헬퍼) | T7 |
-| T17·T18 Modal·확인창 포커스, 카카오 토큰 | `src/components/ui/`, `src/components/DialogProvider.tsx`, `src/app/globals.css`, 카카오 버튼 3곳 | — (T9 보다 먼저) |
-| T9 밴드 홈·초대·밴드 만들기 UI | `src/app/band/`, `src/app/join/`, `src/app/auth/callback/`, `src/components/`, `src/components/KakaoShareButton.tsx` | T8, T17 |
+| T17·T18 Modal·확인창 포커스, 카카오 토큰 | `src/components/ui/`, `src/components/ui/DialogProvider.tsx`, `src/app/globals.css`, 카카오 버튼 3곳 | — (T9 보다 먼저) |
+| T9 밴드 홈·초대·밴드 만들기 UI | `src/app/band/`, `src/app/join/`, `src/app/auth/callback/`, `src/components/`, `src/components/share/KakaoShareButton.tsx` | T8, T17 |
 | T13·T14 멤버 관리·기존 방 넣기 | `src/actions/team.ts`, `BandHomeClient`, `RoomSettingsButton` | T9 |
 | T10·T11·T12 E1·E2·E4 | `src/actions/team.ts`, `src/actions/song.ts`, 밴드 홈 컴포넌트 | T9 |
-| T6 탭 템포 | `src/lib/`, `src/hooks/`, `src/components/RehearsalView.tsx` | — |
+| T6 탭 템포 | `src/lib/`, `src/hooks/`, `src/components/rehearsal/RehearsalView.tsx` | — |
 | T3 Playwright | `playwright.config.ts`, `e2e/`, `package.json` | — (설정), T1 (회귀 내용), T9 (밴드 흐름) |
 
 ```
@@ -1289,7 +1289,7 @@ finding above. Run with Claude Code or Codex; checkbox as you ship.
 > **1차 보안 배포 완료 (2026-10-05)**: 코드 `cd475f2`(main) 배포 → 프로덕션 확인 → 운영 Supabase 에 v18 실행 → `npm run audit:anon` 전부 통과(6개 테이블 42501, playlists INSERT 42501, 뷰 5개 열림) → 로컬 게이트 11/11 통과(운영 DB). 세션 `songs` INSERT 는 되고 SELECT 는 42501. 고정 테스트 방 `qDPJnh1d`, account-a 는 운영자 실사용 계정(정리는 `[e2e]` 접두어만).
 - [x] **T1 (P1, human: ~2일 / CC: ~3시간)** — db/rls — 공개 anon 키로 읽히는 6개 테이블(`playlists`·`playlist_members`·`songs`·`comments`·`setlist_items`·`song_versions`) SELECT 를 닫고 서버 읽기·댓글 쓰기를 service_role 로 돌린다
   - Surfaced by: Architecture 이슈1 — 라이브 프로브로 `playlists` 39행(share_code 포함)·`playlist_members` 29행 조회 성공
-  - Files: `supabase-migration-v18.sql`, `src/actions/playlist.ts`, `src/app/playlist/[shareCode]/page.tsx`, `src/actions/comment.ts`, `src/actions/setlist.ts`, `src/app/api/`
+  - Files: `supabase/migrations/v18.sql`, `src/actions/playlist.ts`, `src/app/playlist/[shareCode]/page.tsx`, `src/actions/comment.ts`, `src/actions/setlist.ts`, `src/app/api/`
   - **스펙 리뷰 추가 (2026-10-04)**: v18 에서 `playlists_insert WITH CHECK (true)` 제거, `createPlaylist` insert 를 `createAdminClient()` 로 이전, `song_versions` SELECT 차단, `comment.ts` 조회·수정·삭제를 admin + `user_id = 나` + 행 수 확인으로, `src/app/playlist/[shareCode]/metronome/page.tsx`·`/api/setlist-image` 읽기 이전, `auth.uid()` 뷰는 세션 클라이언트 유지, `getPlaylistByShareCode` 에러 로그
   - **CEO-F3**: `src/app/sitemap.ts` 에서 방 URL 제거, 방 페이지 `generateMetadata` 에 `robots: { index: false }`
   - Verify: `npm run audit:anon` + Playwright 로컬 게이트 (방 만들기·댓글 수정/삭제 포함) + **`createPlaylist` 회귀 액션 테스트 (CRITICAL, eng Section 3: 제목·투표 방식 검증 / 23505 재시도 / 토큰·멤버 insert 실패 시 방 삭제 / admin 클라이언트 사용)** + `comment.ts` 액션 테스트 (수정이 23505 없이 덮어씀 / 남의 댓글 0행 / 삭제 행 수)
@@ -1322,39 +1322,39 @@ finding above. Run with Claude Code or Codex; checkbox as you ship.
 - [x] ~~**T5** — "이 멤버로 새 방" 버튼~~ — **폐기 (CEO-D2).** T8·T9 의 "밴드에서 새 합주방" 이 대체
 - [x] **T7 (P1, human: ~반나절 / CC: ~30분)** — db — v19 팀 스키마
   - Surfaced by: CEO-D2 (B 팀 우선 최소판), eng 이슈 3 (얕은 결합)
-  - Files: `supabase-migration-v19.sql`, `README.md` (실행 순서 + 디렉터리 트리: `middleware.ts`→`src/proxy.ts` 정정, `band/`·`team.ts`·`team-domain.ts`·`e2e/`·`team-metrics.mjs` 추가), `src/lib/types.ts` (`Team`·`TeamMember`·`ActionResult<T>`), `scripts/audit-anon-access.mjs` (`teams`·`team_members` 추가)
+  - Files: `supabase/migrations/v19.sql`, `README.md` (실행 순서 + 디렉터리 트리: `middleware.ts`→`src/proxy.ts` 정정, `band/`·`team.ts`·`team-domain.ts`·`e2e/`·`team-metrics.mjs` 추가), `src/domain/types.ts` (`Team`·`TeamMember`·`ActionResult<T>`), `scripts/audit-anon-access.mjs` (`teams`·`team_members` 추가)
   - Verify: 마이그레이션 두 번 실행해도 무해 / `npm run audit:anon` 이 두 테이블 차단 확인
   - eng 3회차 R13 (D11 A): v19 에 `playlists.team_linked_via text CHECK (IN ('promote','band','attach'))` 추가. 쓰기는 T8(`createTeamFromPlaylist`·`createBandPlaylist`)·T14(`attachPlaylistToTeam`)가 같은 UPDATE/insert 에서
 - [x] **T8 (P1, human: ~2일 / CC: ~2시간)** — actions — `src/actions/team.ts`: `createTeamFromPlaylist`·`joinTeam`·`getTeamHome`·`getMyTeams`·`createBandPlaylist`, `playlist.ts` 방 insert 비공개 헬퍼
   - Surfaced by: CEO-D2, CEO-D4 (합주방에서 밴드로 올리기)
   - Files: `src/actions/team.ts` (로컬 `withFreshInviteCode`: nanoid(10) + 23505 3회 재시도, 밴드 만들기·링크 교체가 씀 — eng D3), `src/actions/playlist.ts`, `src/actions/__tests__/team.test.ts`, `src/lib/analytics.ts`, `docs/adr/0014-bands-sit-shallow-on-rooms.md` (신규), `docs/adr/0013-anon-key-has-no-write-path.md` (v18 에서 `playlists_insert` 를 닫았다는 한 줄), `AGENTS.md` (팀 테이블은 anon 0, service_role + 코드 권한 검사)
-  - 구조 (eng D2): 순수 검사는 `src/lib/team-domain.ts`(+ `__tests__/team-domain.test.ts`)에 둔다 — `showDday`·`validateTeamName`·`validateNextShowDate`·`isInviteCodeFormat`·`canPromote`. `createTeamFromPlaylist` 는 `canPromote` 로 검증한 뒤 쓰기 단계만 한다. `createBandPlaylist` 는 insert 뒤 멤버십을 다시 확인해 아니면 방을 지운다 (Section 4)
+  - 구조 (eng D2): 순수 검사는 `src/domain/team.ts`(+ `__tests__/team-domain.test.ts`)에 둔다 — `showDday`·`validateTeamName`·`validateNextShowDate`·`isInviteCodeFormat`·`canPromote`. `createTeamFromPlaylist` 는 `canPromote` 로 검증한 뒤 쓰기 단계만 한다. `createBandPlaylist` 는 insert 뒤 멤버십을 다시 확인해 아니면 방을 지운다 (Section 4)
   - Verify: 액션 테스트 (방장 아님 / 보관 방 / 이미 팀 있음 / 이름 51자 거부·50자 통과 / `team_members` insert 실패 시 롤백 / 조건부 UPDATE 0행 시 롤백 / 중복 가입 / 비멤버의 팀 방 생성 거부 / 비로그인·비멤버에게 방 목록·4번째부터의 멤버 이름 미노출, 앞 3명은 owner 먼저·가입 순 (디자인 2A) / 없는 코드 / `getMyTeams` 비로그인 빈 배열 / 롤백 delete 실패 시 `console.error` 에 team_id / `createBandPlaylist` 사후 멤버십 확인 실패 → 방 삭제 / 초대 코드 형식이 아니면 조회 안 함)
 - [x] **T9 (P1, human: ~2일 / CC: ~2시간)** — UI — `/band/[teamId]` 밴드 홈 + `/join/[inviteCode]` 초대 (eng R10), 방 설정 "이 멤버로 밴드 만들기", 홈 "내 밴드", 팀 방 "밴드 홈" 링크, `band` 카톡 카드
   - Surfaced by: CEO-D2, CEO-D4
-  - Files: `src/lib/team-domain.ts` (+ `__tests__/team-domain.test.ts`, eng D2. 밴드 홈 비로그인 뷰와 `band` 카드가 `showDday` 를 쓰므로 T8 에서 만든다), `src/app/band/[inviteCode]/page.tsx` (+ `generateMetadata`, `robots: { index: false }`), `src/components/BandHomeClient.tsx`, `src/components/RoomSettingsButton.tsx`, `src/app/page.tsx`, `src/components/MyPlaylists.tsx`, `src/app/playlist/[shareCode]/page.tsx`, `src/components/PlaylistClient.tsx`, `src/components/PlaylistHeader.tsx`, `src/app/new/page.tsx`, `src/components/CreatePlaylistForm.tsx`, `src/components/KakaoShareButton.tsx` (`linkPath` prop), `src/app/api/og/route.tsx` (`band` 분기), `src/lib/analytics.ts` (`kakao_shared.variant` 에 `band`)
+  - Files: `src/domain/team.ts` (+ `__tests__/team-domain.test.ts`, eng D2. 밴드 홈 비로그인 뷰와 `band` 카드가 `showDday` 를 쓰므로 T8 에서 만든다), `src/app/band/[inviteCode]/page.tsx` (+ `generateMetadata`, `robots: { index: false }`), `src/components/band/BandHomeClient.tsx`, `src/components/playlist/RoomSettingsButton.tsx`, `src/app/page.tsx`, `src/components/home/MyPlaylists.tsx`, `src/app/playlist/[shareCode]/page.tsx`, `src/components/playlist/PlaylistClient.tsx`, `src/components/playlist/PlaylistHeader.tsx`, `src/app/new/page.tsx`, `src/components/home/CreatePlaylistForm.tsx`, `src/components/share/KakaoShareButton.tsx` (`linkPath` prop), `src/app/api/og/route.tsx` (`band` 분기), `src/lib/analytics.ts` (`kakao_shared.variant` 에 `band`)
   - Verify: `team-domain` 유닛 테스트 (`showDday`: KST 자정 경계 / 당일 "공연 D-DAY" / 1~14일 지남 → "공연 끝" 상태, 15일째 → 없음 (디자인 8A); 이름 0·1·50·51자; 날짜 형식·과거; 초대 코드 형식; `canPromote` 각 거부 사유) + Playwright 로컬 게이트 (밴드 만들기 → 초대 링크 → 두 번째 계정 가입 → 밴드에서 새 방 → 두 번째 계정 홈 목록에 표시 / 비멤버에게 팀 방 "밴드 홈" 링크 미노출 / 비로그인으로 `/new?band=` → 로그인 뒤 밴드 칩 유지 / 무효 코드·비멤버의 `/new?band=` 에 폼이 안 뜸 / 비로그인으로 `/band/{code}` → 로그인 뒤 같은 밴드로 복귀) / 빈 상태(방 0·이력 0·홈 내 밴드 0) / 방 목록 5개 + 더 보기 / **`KakaoShareButton` variant 별 링크 테스트(기존 3종 `/playlist/{code}` 유지, band `/band/{code}`)** / `RoomSettingsButton.test.tsx` 에 밴드 행 케이스 / 터치 영역 ≥44px / 카드 `Kakao.isInitialized()` / 프로덕션 빌드에서 `{ success: false, reason }` 의 한국어 메시지가 보이는지
 - [x] **T10 (P2, human: ~반나절 / CC: ~30분)** — E1 우리가 했던 곡
   - Surfaced by: CEO-E1
-  - Files: `src/actions/team.ts` (`getTeamHome` 이력), `src/components/BandHomeClient.tsx`
+  - Files: `src/actions/team.ts` (`getTeamHome` 이력), `src/components/band/BandHomeClient.tsx`
   - Verify: 액션 테스트 (셋리스트 빈 방 숨김 / interval 제외 / 삭제된 곡 `song_id NULL` 제외)
 - [x] **T11 (P2, human: ~반나절 / CC: ~30분)** — E2 다음 공연 D-day
   - Surfaced by: CEO-E2
-  - Files: `src/actions/team.ts` (`updateTeamNextShow` 는 여기서만 만든다), `src/components/BandHomeClient.tsx` (날짜 입력), `src/components/PlaylistHeader.tsx` (`handleKakaoShare` 접두어), `src/components/KakaoShareButton.tsx`, `src/app/api/og/route.tsx`. `showDday` 는 T8 의 `team-domain.ts` 에 이미 있다
+  - Files: `src/actions/team.ts` (`updateTeamNextShow` 는 여기서만 만든다), `src/components/band/BandHomeClient.tsx` (날짜 입력), `src/components/playlist/PlaylistHeader.tsx` (`handleKakaoShare` 접두어), `src/components/share/KakaoShareButton.tsx`, `src/app/api/og/route.tsx`. `showDday` 는 T8 의 `team-domain.ts` 에 이미 있다
   - Verify: 액션 테스트 (비멤버 거부 / 형식 오류·과거 날짜 거부 / 지우기 / 행 수 확인) + 방 화면 공유 카드에 접두어
 - [x] **T12 (P2, human: ~반나절 / CC: ~30분)** — E4 키·BPM 이어받기
   - Surfaced by: CEO-E4
-  - Files: `src/actions/song.ts` (`addSong`), `src/components/AddSongForm.tsx` (폼 아래 문구), `src/actions/__tests__/song.test.ts`
+  - Files: `src/actions/song.ts` (`addSong`), `src/components/playlist/AddSongForm.tsx` (폼 아래 문구), `src/actions/__tests__/song.test.ts`
   - Verify: 액션 테스트 (같은 팀 이어받음 / **다른 팀 곡은 절대 안 가져옴** / 팀 없는 방은 조회 안 함 / 네 필드가 모두 null 인 행은 건너뜀 / 가장 최근 행의 네 값을 섞지 않고 복사 / **조회 실패해도 곡은 추가됨** + `console.error`)
 - [x] **T13 (P1, human: ~반나절 / CC: ~40분)** — 멤버 관리 (CEO-F1)
   - Surfaced by: 스펙 리뷰 완결성 1·범위 2 → D10 A
-  - Files: `src/actions/team.ts` (`removeTeamMember`·`regenerateInviteCode`), `src/components/BandHomeClient.tsx`, `src/actions/__tests__/team.test.ts`
+  - Files: `src/actions/team.ts` (`removeTeamMember`·`regenerateInviteCode`), `src/components/band/BandHomeClient.tsx`, `src/actions/__tests__/team.test.ts`
   - Verify: 액션 테스트 (owner 만 / 자기 자신 거부 / 행 수 확인 / 새 코드 뒤 옛 코드로 `getTeamHome` 이 없음 / 내보낸 사람의 `getMyPlaylists` 에서 팀 방 집합만 빠짐 / **"링크도 새로 만들기" 를 켜면 교체가 삭제보다 먼저** / 교체 실패 시 부분 성공 문구)
   - eng 3회차 R7 (D5 A, R10 으로 정리): 두 액션이 성공 시 새 `inviteCode` 를 돌려줌. 추가 Verify: 액션 테스트(새 코드 반환) + 컴포넌트 테스트(성공 뒤 초대 시트 링크가 `/join/{새 코드}`, owner 주소 `/band/{teamId}` 그대로)
   - eng 3회차 R12 (D10 A): `leaveTeam(teamId)` — owner 가 아닌 멤버가 스스로 나감(자기 행만, 행 수 확인, owner 는 거부). **입구 (디자인 2회차 1A)**: 밴드 홈 맨 아래(멤버 목록 다음, 구분선 아래) "밴드 나가기" 텍스트 버튼 한 줄(`text-sm text-text-muted`, 44px). 내 행 ⋮ 는 만들지 않는다. owner 화면에는 이 행을 렌더하지 않는다(디자인 2회차 8A, 서버는 R12 대로 owner 거부) → 위험 확인창 → 홈. **확인창 문구 (디자인 2회차 5A)**: 제목 "{밴드 이름}에서 나갈까요?" / 본문 "홈의 '내 밴드'와 멤버 목록에서 빠져요. 이미 들어간 합주방은 그대로 남아요. 초대 링크가 있으면 다시 들어올 수 있어요." / 버튼 "나가기"(danger) + "취소"(첫 포커스, R11). **나간 뒤 (디자인 2회차 6A)**: 홈 `/?left=1` 로 가고 홈 맨 위에 "{밴드 이름}에서 나왔어요"(`role="status"`, 닫기)를 한 번. 쿼리는 첫 마운트에 지운다(11A 와 같은 규칙). 이름은 이동 직전 `sessionStorage` 에 담고(try/catch) 없으면 "밴드에서 나왔어요". 실패는 "밴드 나가기" 버튼 아래 문구(6A) 추가 Verify: 액션 테스트(owner 거부 / 멤버 자기 행 삭제 / 비멤버 거부 / 0행)
 - [x] **T14 (P2, human: ~반나절 / CC: ~30분)** — 기존 방을 밴드에 넣기 (CEO-F2)
   - Surfaced by: 스펙 리뷰 완결성 3 → D11 A
-  - Files: `src/actions/team.ts` (`attachPlaylistToTeam`), `src/components/RoomSettingsButton.tsx`, `src/actions/__tests__/team.test.ts`
+  - Files: `src/actions/team.ts` (`attachPlaylistToTeam`), `src/components/playlist/RoomSettingsButton.tsx`, `src/actions/__tests__/team.test.ts`
   - eng 3회차 정정 (13A): 완료 화면 한 줄을 위해 `src/app/new/page.tsx` 가 기존 `Promise.all` 에 `getMyTeams()` 를 더해 `CreatePlaylistForm` 에 넘긴다(밴드 칩으로 만든 방에는 안 띄움)
   - Verify: 액션 테스트 (방장 아님 / 밴드 비멤버 / 보관 방 / 이미 다른 밴드 → 조건부 UPDATE 0행 / 정상 → E1 이력에 그 방 셋리스트가 나타남)
 - [x] **T15 (P2, human: ~반나절 / CC: ~30분)** — 성공 지표 측정 스크립트 (CEO-F5)
@@ -1365,12 +1365,12 @@ finding above. Run with Claude Code or Codex; checkbox as you ship.
 - [x] **T16 (P1, human: ~반나절 / CC: ~30분)** — 밴드 만들기 안내 카드 (CEO-F7)
   - Surfaced by: Section 11 발견성 — 버밴동이 ⋮ 안 "셋리스트에 추가"를 못 찾고 떠난 실측 → D17 A
   - 자리 (디자인 리뷰 27A): 후보곡 탭에서만, `ScreenToolbar` 아래·곡 목록 위. 만든 뒤 (D30 A): 방에 머물고 카드가 "밴드를 만들었어요 · 카톡으로 알리기 · 밴드 홈" 성공 카드로 한 번 바뀜 + 경로 줄(5A)
-  - Files: `src/components/BandPromptCard.tsx`, `src/components/PlaylistClient.tsx` (후보곡 탭 조건부 렌더만, 로직은 카드 안), `src/lib/analytics.ts` (`team_created.source`)
+  - Files: `src/components/band/BandPromptCard.tsx`, `src/components/playlist/PlaylistClient.tsx` (후보곡 탭 조건부 렌더만, 로직은 카드 안), `src/lib/analytics.ts` (`team_created.source`)
   - Verify: 방장·팀 없음·로그인 멤버 ≥2 일 때만 보임 / 후보곡 탭에만 보이고 셋리스트·합주 탭에는 없음 / 멤버 1명 방·비방장·팀 방에는 안 보임 / 닫은 뒤 새로고침해도 안 보임 / `localStorage` 가 막혀도 렌더 / 카드에서 만들면 URL 이 바뀌지 않고 성공 카드 + 경로 줄이 뜸 / 터치 영역 ≥44px
   - eng 3회차 R6 (D4 A): `createTeamFromPlaylist` 는 `revalidatePath`, 성공 상태 `justCreatedTeam` 은 `PlaylistClient` 에. 추가 Verify: 성공 뒤 팀이 있는 props 로 다시 렌더돼도 성공 카드 유지 / 새로 마운트하면 성공 카드 없음
 - [x] **T6 (P2, human: ~반나절 / CC: ~40분)** — lib/hooks — 탭 템포를 순수 함수로 분리하고 합주 모드에 붙인다
   - Surfaced by: Test 다이어그램 + 외부 보이스 — `key_root` 가 v5 부터 있었는데 133곡 중 1개
-  - Files: `src/lib/tap-tempo.ts`, `src/lib/__tests__/tap-tempo.test.ts`, `src/hooks/useMetronome.ts`, `src/components/RehearsalView.tsx`
+  - Files: `src/domain/tap-tempo.ts`, `src/domain/__tests__/tap-tempo.test.ts`, `src/hooks/useMetronome.ts`, `src/components/rehearsal/RehearsalView.tsx`
   - Verify: 유닛 테스트 (4회 균등 / 2회 미만 / 범위 밖 / 이상치)
 
 _No new tasks from Performance review — 이슈 8(카탈로그 N+1)은 3단계와 함께 보류._
@@ -1391,7 +1391,7 @@ _No new tasks from Performance review — 이슈 8(카탈로그 N+1)은 3단계�
 | 범위를 바꾸지 않는 수리 (일관성 8, 명확성 4, 완결성 6, 실현성 6, 범위 3 중 일부) | 27 | 문서에 반영. 대표: v18 의 `playlists_insert` 제거와 `createPlaylist` admin 이전, 밴드 만들기 조건부 UPDATE·전 단계 롤백, FK, 카톡 카드 `linkPath`·OG `band` 분기, 팀 방 페이지 데이터, `/new?band=`, 측정 지표를 DB 행동 기록으로 교체, 비멤버에게 `invite_code` 미노출 |
 | 범위를 넓히는 결정 | 2 | **CEO-F1** 멤버 관리(내보내기·초대 링크 새로 만들기, `role` 컬럼의 쓰임), **CEO-F2** 기존 방을 밴드에 넣기 → 결정 원장 참고 |
 
-**눈에 띈 사실 하나:** `playlists_insert WITH CHECK (true)` (`supabase-schema.sql:52`) 는 팀과 무관하게
+**눈에 띈 사실 하나:** `playlists_insert WITH CHECK (true)` (`supabase/migrations/v01.sql:52`) 는 팀과 무관하게
 지금도 열려 있다. ADR 0013 이 "공개 키로는 쓰기 경로를 열지 않는다"고 적은 상태와 실제 DB 가 다르다.
 
 ### eng-review 스펙 리뷰 (2026-10-03, 기록)
@@ -1589,7 +1589,7 @@ Target: `docs/plans/2026-09-21-teams-and-shared-catalog.md` — "구현 범위 �
   검색: Supabase 리프레시 토큰은 쓸 때마다 교체되고 재사용 감지(기본 10초)가 계열 전체를 폐기한다 → storageState 되쓰기 +
   계정별 직렬 실행 [Layer 1]. TODOS: 막는 것 없음. 배포 경로: 새 배포 산출물 없음
 - **B scope record**: feature answers: 축소 제안 없음 (CEO D2~D17 승인 범위 유지); structure: **Smaller arrangement (eng D2)**;
-  accepted scope: CEO-B 범위 그대로, 순수 검사를 `src/lib/team-domain.ts` 하나로(`show-dday.ts` 는 만들지 않음);
+  accepted scope: CEO-B 범위 그대로, 순수 검사를 `src/domain/team.ts` 하나로(`show-dday.ts` 는 만들지 않음);
   pending remedies: unique-code 헬퍼 추출(Code Quality) → eng D3 로 해결, 섹션 발견 사항
 - **결과**: scope accepted as-is (배치만 작게)
 
@@ -1654,11 +1654,11 @@ CODE PATHS                                                   USER FLOWS
   ├── removeTeamMember        [GAP→T13] 교체→삭제 순서          ├── [GAP→T9] 기존 3종 링크 /playlist/{code} 유지
   ├── regenerateInviteCode    [GAP→T13]                         └── [GAP→T9/T11] band 카드·날짜 접두어 (디자인 25A)
   └── withFreshInviteCode     [GAP→T8/T13] 23505 재시도 (eng D3)
-[+] src/lib/team-domain.ts (eng D2)                            [+] 측정
+[+] src/domain/team.ts (eng D2)                            [+] 측정
   └── [GAP→T8] showDday·검증 5종 표 기반 유닛                   └── [GAP→T15] 정의대로 6개 값, 테스트 계정 제외
 [+] src/actions/song.ts addSong E4  [GAP→T12] 팀 안·밖·실패
 [+] src/actions/comment.ts (T1)      [GAP→T1] admin + user_id + 행 수
-[+] src/lib/tap-tempo.ts             [GAP→T6] 4회·2회 미만·범위·이상치
+[+] src/domain/tap-tempo.ts             [GAP→T6] 4회·2회 미만·범위·이상치
 
 COVERAGE: 0/38 경로가 지금 테스트됨 (전부 새 코드거나 바뀌는 코드) | 계획된 테스트가 38/38 을 덮음
 QUALITY(기존 관련 테스트): ★★★ playlist-access.test.ts(보관 판정), ★★ vote.test.ts(반환값 에러 1건)
@@ -1671,7 +1671,7 @@ GAPS: 38 → 전부 T1~T16 Verify 에 배정. E2E 표시 9건은 로컬 게이�
   `playlist_members` insert 실패 → 방 삭제 / insert 가 admin 클라이언트로 감
 - `KakaoShareButton` 의 `shareCode` → `linkPath` → 첫 eng 리뷰 Critical Path 5("팀 초대 링크가 생겨도 방 공유 카드가 깨지지 않는다")가 승인된
   회귀 계약. T9 에 variant 별 링크 테스트(playlist·decided·setlist → `/playlist/{code}`, band → `/join/{code}`, eng R10)
-- `RoomSettingsButton` 은 기존 테스트(`src/components/__tests__/RoomSettingsButton.test.tsx`)가 있다. 같은 파일에 밴드 행 케이스를 더한다
+- `RoomSettingsButton` 은 기존 테스트(`src/components/playlist/__tests__/RoomSettingsButton.test.tsx`)가 있다. 같은 파일에 밴드 행 케이스를 더한다
   (팀 없는 방의 방장 → 만들기·넣기, 팀 방 멤버 → 밴드 홈 링크, 비멤버 방장 → 글자만). F2·F7·페이로드 표의 승인된 동작
 - 방 화면 읽기 경로 → eng 첫 리뷰의 [REGRESSION, 질문 없이 필수] + CEO 스펙 리뷰가 더한 화면(메트로놈·PDF·댓글·내 표)을 로컬 게이트로
 
@@ -1831,9 +1831,9 @@ eng 리뷰에서 새로 미룬 일은 없다. 만들지 않기로 한 설계 두
 | 반환값 에러 선례 `CastVoteResult` | `src/actions/vote.ts:8-16` | **따른다.** 팀 액션의 `success`/`reason` |
 | 순차 왕복 2번 구조 | `src/app/playlist/[shareCode]/page.tsx:97-136` (`d9332cf`) | **지킨다.** 팀 조회는 두 번째 `Promise.all` (eng D4) |
 | 액션 테스트 mock 틀 | `src/actions/__tests__/vote.test.ts` | **재사용.** team·playlist·comment·song 액션 테스트 |
-| 순수 도메인 모듈 + 표 테스트 | `src/lib/vote-domain.ts`, `src/lib/__tests__/vote-domain.test.ts` | **따른다.** `team-domain.ts` (eng D2) |
+| 순수 도메인 모듈 + 표 테스트 | `src/domain/vote.ts`, `src/domain/__tests__/vote.test.ts` | **따른다.** `team-domain.ts` (eng D2) |
 | Supabase FK 중첩 select | supabase-js 내장 | **사용.** `getMyPlaylists` 1왕복 (eng D5) |
-| 기존 RoomSettingsButton 테스트 | `src/components/__tests__/RoomSettingsButton.test.tsx` | **확장.** 밴드 행 케이스 |
+| 기존 RoomSettingsButton 테스트 | `src/components/playlist/__tests__/RoomSettingsButton.test.tsx` | **확장.** 밴드 행 케이스 |
 
 ### Diagrams (eng)
 테스트 커버리지 다이어그램은 Section 3. 코드 안에 짧은 ASCII 주석이 필요한 곳: `src/actions/team.ts` 의 `createTeamFromPlaylist`(팀 insert →
@@ -1859,7 +1859,7 @@ Lane B(T6 탭 템포, 병렬), Lane C(T3 설정 → 회귀 스펙 → 밴드 흐
 - **T1** — Section 3 회귀 규칙: `createPlaylist` 회귀 액션 테스트 (CRITICAL). Section 1: v18 코드 배포 전 service_role 키 점검
 - **T3** — Scope Challenge C: 계정별 프로젝트, `fullyParallel: false`, `workers: 1`
 - **T4** — eng D5: FK 중첩 select 로 1왕복, 홈은 `getMyPlaylists`·`getMyTeams` 를 같은 `Promise.all`. 중첩 응답 펼치기 테스트
-- **T8** — eng D2: `src/lib/team-domain.ts` (+ 표 테스트). eng D3: 로컬 `withFreshInviteCode`. Section 2: `success`/`reason` 반환
+- **T8** — eng D2: `src/domain/team.ts` (+ 표 테스트). eng D3: 로컬 `withFreshInviteCode`. Section 2: `success`/`reason` 반환
 - **T9** — eng D4: 방 페이지 팀 조회는 두 번째 `Promise.all`. Section 3: `KakaoShareButton` variant 별 링크 테스트, `RoomSettingsButton.test.tsx` 밴드 행
 - **T13** — eng D3: 링크 교체도 `withFreshInviteCode`
 
@@ -1939,7 +1939,7 @@ Target: 같은 문서의 밴드 화면 — 밴드 홈·초대 화면·밴드 만
 | 토큰 | `src/app/globals.css` `@theme inline` (radius-control/card/pill, text-display~caption, primary, accent-play) | **쓴다.** 새 토큰은 18A 카카오 4개뿐 (20A 표) |
 | primitives | `src/components/ui/` Button·Card·Chip·IconButton·Input·Modal·ScreenToolbar | **쓴다.** `Chip` 은 `aria-pressed` 버튼이라 정적 표시엔 안 씀(17A) |
 | `Modal` | `src/components/ui/Modal.tsx:13-24` (ESC·스크롤 잠금) | **고친다.** 21A 포커스 관리 → T17 |
-| `useDialog` | `src/components/DialogProvider.tsx:12-22` (글자·버튼만) | **되돌릴 수 없는 실패 알림만.** 폼은 못 담아서 19A 는 `Modal` |
+| `useDialog` | `src/components/ui/DialogProvider.tsx:12-22` (글자·버튼만) | **되돌릴 수 없는 실패 알림만.** 폼은 못 담아서 19A 는 `Modal` |
 | 전역 포커스 링 | `globals.css:198-200` `:focus-visible` primary 2px | **그대로.** 새 버튼에 따로 넣지 않음 |
 | 날짜 입력 선례 | `CreatePlaylistForm.tsx:310` (`min`, `colorScheme: "dark"`) | **따른다.** 22A 시트 |
 | 방 화면 툴바 | `PlaylistHeader.tsx` (제목 text-h2 + 아이콘 4개) | **경로 줄(5A)을 제목 위에.** 아이콘은 그대로 |
@@ -1954,7 +1954,7 @@ Target: 같은 문서의 밴드 화면 — 밴드 홈·초대 화면·밴드 만
   4A 홈 "내 밴드" / 5A 경로 줄(멤버만) / 6A `reason` → 한국어 문구 맵 + 그 자리 오류 문구 / 7A `src/app/band/[teamId]/loading.tsx`·`error.tsx`·`not-found.tsx` + `src/app/join/[inviteCode]/page.tsx`·`not-found.tsx`(무효 초대 문구) (eng R10) /
   9A·10A `CreateBandSheet` / 11A `?created=1`·`?joined=1` 배너 / 12A `next=/join/{code}?join=1` 자동 가입(마운트 시, eng R5·R10) / 14A 행 목록 /
   15A 기타 선 아이콘 / 17A `/new` 정적 span / 23A 랜드마크·`aria-label` / **D31 AGENTS.md 디자인 시스템 절에 6A·14A·15A·18A·21A 규칙 5줄**
-  - 추가 Files: `src/components/CreateBandSheet.tsx`, `src/components/BandInviteSheet.tsx`, `src/components/BandInviteScreen.tsx`, `src/app/band/[teamId]/{loading,error,not-found}.tsx`, `src/app/join/[inviteCode]/{page,not-found}.tsx` (eng R10), `src/lib/team-messages.ts`(reason → 문구, eng 3회차 D1 A 로 파일 유지), `AGENTS.md`
+  - 추가 Files: `src/components/band/CreateBandSheet.tsx`, `src/components/band/BandInviteSheet.tsx`, `src/components/band/BandInviteScreen.tsx`, `src/app/band/[teamId]/{loading,error,not-found}.tsx`, `src/app/join/[inviteCode]/{page,not-found}.tsx` (eng R10), `src/lib/team-messages.ts`(reason → 문구, eng 3회차 D1 A 로 파일 유지), `AGENTS.md`
   - Next 16 규약 (eng 3회차 정정): `error.tsx` 는 `'use client'` 이고 props 가 `{ error, unstable_retry }` 다(`reset` 아님, `node_modules/next/dist/docs/01-app/01-getting-started/10-error-handling.md:212-221`). "다시 시도"는 `unstable_retry()`
   - 추가 Verify: 초대 화면에 방 목록·멤버 전체 이름이 없음(앞 3명만) / `?join=1` 은 서버 렌더에서 쓰지 않음(prefetch 로 가입 안 됨) / **`?join=1` 자동 가입은 `plypick_join` 쿠키 코드가 같을 때만 (표시 없음·다른 코드 → `joinTeam` 안 부름, 쓴 뒤 쿠키 지움 — eng R5)** / 옛 링크 → 밴드 전용 not-found 문구 / 배너는 한 번, 닫으면 쿼리 지움 / 빈 이름이면 "밴드 만들기" 비활성 / 경로 줄은 비멤버에게 없음
   - eng 3회차 R5 구현 메모: 쿠키는 `BandInviteScreen` 이 `LoginButton` 을 감싼 요소의 `onClickCapture` 에서 심는다. 공용 `LoginButton`(호출처 4곳)은 바꾸지 않는다
@@ -1973,13 +1973,13 @@ Target: 같은 문서의 밴드 화면 — 밴드 홈·초대 화면·밴드 만
 
 - [x] **T17 (P1, human: ~반나절 / CC: ~30분)** — ui/Modal — `Modal` primitive 에 포커스 관리를 넣는다
   - Surfaced by: Pass 6 — 21A. `Modal.tsx:13-24` 는 ESC·스크롤 잠금만. 새 시트 4개(만들기·초대·내보내기·날짜)가 모두 이 위에 선다
-  - Files: `src/components/ui/Modal.tsx`, `src/components/DialogProvider.tsx`, `src/components/ui/__tests__/Modal.test.tsx`, 기존 `Modal` 사용처 5곳(HeroCTA·RoomSettingsButton·SetlistItemEditModal·SetlistShareButton·SongVersionModal) 확인
+  - Files: `src/components/ui/Modal.tsx`, `src/components/ui/DialogProvider.tsx`, `src/components/ui/__tests__/Modal.test.tsx`, 기존 `Modal` 사용처 5곳(HeroCTA·RoomSettingsButton·SetlistItemEditModal·SetlistShareButton·SongVersionModal) 확인
   - 내용 (eng 3회차 R4, D2 A): `role="dialog"`·`aria-modal`·`aria-label` 은 이미 있다(`Modal.tsx:32-35`). 열릴 때 `initialFocus` 또는 children 안의 첫 포커스 가능 요소(닫기 버튼은 건너뜀, `Modal.tsx:49` 가 children 앞이라), Tab 가두기, 닫으면 연 요소로 복원. **층 규칙**: `DialogProvider` 오버레이(`DialogProvider.tsx:91`)에 `data-dialog-layer` 를 달고, 그게 떠 있으면 `Modal` 의 Tab 가두기·ESC 가 비켜선다. **`DialogProvider` 모달 계약 (eng R11, D9 A)**: `role="alertdialog"`·`aria-modal`·`aria-labelledby`, 확인창 안 Tab 순환, ESC = 취소(확인창만 닫음), 첫 포커스는 `showDanger` → 취소·`showConfirm`/`showAlert` → 확인, 닫으면 복원. **버튼 이름 (디자인 2회차 7A)**: `showDanger(message, { title?, confirmLabel? })` 선택 인자를 더한다(기존 호출 3곳은 기본값 "삭제 확인"/"삭제" 그대로). 밴드 나가기는 `confirmLabel: "나가기"`, 링크 교체는 `"새로 만들기"`. 테스트 1건(라벨 전달·기본값 유지) 모양 변경 없음, 새 의존성 없음
   - Verify: 컴포넌트 테스트(열림 포커스 / `initialFocus` / Tab·Shift+Tab 순환 / ESC 뒤 복원 / **`Modal` 위에 `useDialog` 확인창이 뜨면 Tab 이 확인창 버튼에 닿고 ESC 가 확인창만 닫음**) + 기존 모달 5곳 수동 확인. T9·T11·T13 시트보다 먼저
   - **회귀 계약 (CRITICAL, eng 3회차 R9 D7 A)**: `Modal.test.tsx` 에 기존 동작 4건 — ESC 닫힘 / 배경 클릭 닫힘·안쪽 클릭 안 닫힘 / 열린 동안 스크롤 잠금, 닫거나 언마운트하면 원래 값 / 닫기 버튼으로 닫힘. `DialogProvider` 테스트(역할 / Tab 순환 / ESC 취소 / `showDanger` 는 취소·나머지는 확인에 첫 포커스 / 복원 / `data-dialog-layer` — eng R11). 기존 `RoomSettingsButton.test.tsx`·`SetlistShareButton.test.tsx` 통과. `SetlistItemEditModal` "초기화" 확인창을 키보드로 수동 확인
 - [x] **T18 (P2, human: ~1시간 / CC: ~10분)** — design tokens — 카카오 색 토큰 4개를 만들고 리터럴을 바꾼다
   - Surfaced by: Pass 5 — 18A. hover 가 `#FDD800`·`#FFE000` 으로 갈라져 있음
-  - Files: `src/app/globals.css`, `src/components/PlaylistHeader.tsx:95`, `src/components/KakaoShareButton.tsx:108`, `src/components/LoginButton.tsx:48` (eng 3회차 정정: 리터럴이 세 곳)
+  - Files: `src/app/globals.css`, `src/components/playlist/PlaylistHeader.tsx:95`, `src/components/share/KakaoShareButton.tsx:108`, `src/components/auth/LoginButton.tsx:48` (eng 3회차 정정: 리터럴이 세 곳)
   - Verify: `grep -rn "FEE500\|FDD800\|FFE000\|191919\|E5CC00" src` 가 `globals.css` 만 / 기존 카톡 버튼 세 곳 모양 그대로
 
 _Pass 4 (흔한 UI 패턴)는 새 태스크 없이 T9·T10 규칙으로만 들어갔다._
@@ -2078,7 +2078,7 @@ Dispositions: 셋 다 승인된 동작(6A·22A·13A)의 필수 구현·증명이
 
 ### Section 3 · Test review (eng 3회차)
 
-프레임워크: vitest + jsdom 29 (`package.json:35`), 컴포넌트 테스트 선례 `src/components/__tests__/RoomSettingsButton.test.tsx`. Playwright 는 T3 로컬 게이트.
+프레임워크: vitest + jsdom 29 (`package.json:35`), 컴포넌트 테스트 선례 `src/components/playlist/__tests__/RoomSettingsButton.test.tsx`. Playwright 는 T3 로컬 게이트.
 
 ```
 CODE PATHS                                                   USER FLOWS
@@ -2147,7 +2147,7 @@ TODOS.md: 새로 제안할 항목 없음. 이번 회차의 처분은 모두 승�
 ## Decision ledger (eng 리뷰 3회차)
 
 ### R4: T17 포커스 관리를 어떤 방식으로, 겹친 확인창과 어떻게 함께 둘까
-Finding: S1, [P1] (confidence: 9/10) `src/components/ui/Modal.tsx:14-26` + `src/components/DialogProvider.tsx:91` + `src/components/SetlistItemEditModal.tsx:51`, Scope Challenge 검색 점검 + Architecture, reviewer: Claude (eng 3회차)
+Finding: S1, [P1] (confidence: 9/10) `src/components/ui/Modal.tsx:14-26` + `src/components/ui/DialogProvider.tsx:91` + `src/components/setlist/SetlistItemEditModal.tsx:51`, Scope Challenge 검색 점검 + Architecture, reviewer: Claude (eng 3회차)
 Plan baseline: 디자인 21A (D23 A) — `Modal` primitive 에 첫 포커스(또는 `initialFocus`)·Tab 가두기·닫으면 복원, 새 의존성 없이 직접 구현, "기존 모달 사용처도 같이 확인". T17 은 `Modal.tsx` 만 고친다
 Runtime evidence: `Modal` 은 `document` 에 keydown(ESC) 리스너를 단다(`Modal.tsx:16-19`). `useDialog` 확인창은 포털 없이 앱 루트에 `fixed inset-0 z-[100]` 로 그려진다(`DialogProvider.tsx:91`). `SetlistItemEditModal` 은 `Modal` 안에서 `showConfirm`·`showAlert` 를 부른다(`:28`, `:51`). 계획 3A 도 초대 시트(`Modal`) 안에서 "링크 새로 만들기" 를 `useDialog` danger 로 확인한다. `Modal` 의 닫기 버튼이 children 보다 앞에 있어(`Modal.tsx:49`) "첫 포커스 가능 요소"는 항상 닫기 버튼이다. 10A 이름 입력 자동 포커스는 `initialFocus` 가 있어야 된다. jsdom 29 (`package.json:35`) 는 `HTMLDialogElement.showModal` 을 구현하지 않는다(미확인, 구현 시 확인)
 Comparison grid:
@@ -2349,7 +2349,7 @@ Accepted scope: `src/app/auth/callback/route.ts` 가 `next` 를 `/` 로 시작�
 History: 없음
 
 ### R9: T17 이 건드리는 기존 모달·확인창의 회귀 계약
-Finding: T1, [P1] CRITICAL (confidence: 9/10) `src/components/ui/Modal.tsx:14-75` (호출처 5곳: HeroCTA·RoomSettingsButton·SetlistItemEditModal·SetlistShareButton·SongVersionModal) + `src/components/DialogProvider.tsx:86-91` (`useDialog` 전 호출처), Test review 회귀 규칙, reviewer: Claude (eng 3회차)
+Finding: T1, [P1] CRITICAL (confidence: 9/10) `src/components/ui/Modal.tsx:14-75` (호출처 5곳: HeroCTA·RoomSettingsButton·SetlistItemEditModal·SetlistShareButton·SongVersionModal) + `src/components/ui/DialogProvider.tsx:86-91` (`useDialog` 전 호출처), Test review 회귀 규칙, reviewer: Claude (eng 3회차)
 Plan baseline: R4 (D2 A) — 직접 구현 + 층 규칙, jsdom 컴포넌트 테스트로 겹침 규칙 고정. T17 Verify 의 새 동작 테스트(열림 포커스·`initialFocus`·Tab 순환·복원·층 규칙)는 승인됨. 기존 동작을 지키는 회귀 단언은 아직 정하지 않음
 Runtime evidence: `Modal` 의 기존 동작 — ESC 로 닫힘(`:16-19`), 배경 클릭으로 닫히고 안쪽 클릭은 막힘(`:37`, `:41`), 열린 동안 `body.style.overflow = "hidden"` 이고 닫히면 원래 값(`:20-25`), 닫기 버튼 `aria-label="닫기"` 44px(`:49-53`), 제목 `h2`(`:45`). `Modal` 전용 테스트는 없다(`src/components/ui/__tests__` 없음). `RoomSettingsButton.test.tsx`·`SetlistShareButton.test.tsx` 가 `Modal` 을 렌더한다
 Comparison grid:
@@ -2434,7 +2434,7 @@ Accepted scope: 멤버 밴드 홈 `/band/[teamId]`(비멤버·비로그인은 "�
 History: 없음
 
 ### R11: 확인창(`DialogProvider`)의 모달 계약을 어디까지 채울까
-Finding: O4, [P1] (confidence: 9/10) `src/components/DialogProvider.tsx:86-91` (ESC·keydown·role·aria·focus 처리 없음) + T17 Verify "ESC 가 확인창만 닫음", Outside Voice (Codex) 4번, 근거 확인: Claude
+Finding: O4, [P1] (confidence: 9/10) `src/components/ui/DialogProvider.tsx:86-91` (ESC·keydown·role·aria·focus 처리 없음) + T17 Verify "ESC 가 확인창만 닫음", Outside Voice (Codex) 4번, 근거 확인: Claude
 Plan baseline: R4 (D2 A) — `Modal` 은 `data-dialog-layer` 가 있으면 Tab 가두기·ESC 를 비켜서고, `DialogProvider` 는 열릴 때 **확인 버튼**에 포커스, 닫으면 복원. R9 (D7 A) 는 그 테스트를 요구
 Runtime evidence: `DialogProvider` 오버레이(`:91`)에는 ESC 처리·Tab 가두기·`role`·`aria-modal` 이 없다(파일에서 Escape/keydown/role/aria/focus 검색 0건). R4 대로 `Modal` 이 비켜서면 확인창이 떠 있는 동안 ESC 를 처리하는 곳이 없고(T17 Verify 의 "ESC 가 확인창만 닫음"을 만들 코드가 없음), Tab 은 확인창 밖으로 빠진다. `showDanger`(되돌릴 수 없는 작업 확인)에서 확인 버튼에 먼저 포커스가 가면 Enter 한 번에 실행된다
 Comparison grid:
@@ -2478,7 +2478,7 @@ Accepted scope: `DialogProvider` 오버레이에 `role="alertdialog"`·`aria-mod
 History: R4 (D2 A) 의 "DialogProvider 첫 포커스 = 확인 버튼"을 Codex 지적(위험 확인창)과 코드 확인(ESC·Tab·역할 없음)으로 다시 연다
 
 ### R12: 멤버 스스로 "밴드 나가기"
-Finding: O1, [P1] (confidence: 9/10) `src/components/PlaylistClient.tsx:94-98` (로그인한 채 방을 열면 `registerPlaylistMember` 로 자동 등록) + 계획 §3 "`playlist_members` 전원 … 이 멤버가 되고" + CEO 비목표 "owner 이전·탈퇴", Outside Voice (Codex) 1번, 근거 확인: Claude
+Finding: O1, [P1] (confidence: 9/10) `src/components/playlist/PlaylistClient.tsx:94-98` (로그인한 채 방을 열면 `registerPlaylistMember` 로 자동 등록) + 계획 §3 "`playlist_members` 전원 … 이 멤버가 되고" + CEO 비목표 "owner 이전·탈퇴", Outside Voice (Codex) 1번, 근거 확인: Claude
 Plan baseline: CEO-D4 (방에서 밴드로 올릴 때 `playlist_members` 전원이 멤버) 승인, 디자인 9A 시트가 owner 에게 이름 목록을 보여줌. 탈퇴는 CEO 비목표. 멤버를 빼는 길은 owner 의 내보내기(F1)뿐. 현재 처분: 제외(비목표)
 Runtime evidence: 방을 한 번 열어 본 로그인 사용자도 `playlist_members` 에 들어가므로(`PlaylistClient.tsx:94-98`), 밴드로 올리면 그 사람도 멤버가 된다. 그 사람은 홈 "내 밴드"에 밴드가 뜨고 닉네임이 다른 멤버에게 보이며, 2A 로 앞 3명이면 초대 링크를 가진 누구에게나 보인다. 스스로 빠질 방법이 없다. 복사 규칙 자체(CEO-D4)는 다시 열지 않는다: 자동 등록은 eng 1회차에 이미 확인된 사실이라 새 근거가 아니다
 Comparison grid:

@@ -3,12 +3,13 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { createAdminClient, createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
-import { shouldExposeVoters } from "@/lib/vote-domain";
+import { shouldExposeVoters } from "@/domain/vote";
 import { BAND_PROMPT_COOKIE, parseDismissals } from "@/lib/prompt-dismissals";
+import { BASE_OPEN_GRAPH } from "@/lib/seo";
 import { getMyTeams, type MyTeam } from "@/actions/team";
-import PlaylistClient from "@/components/PlaylistClient";
+import PlaylistClient from "@/components/playlist/PlaylistClient";
 import type { Metadata } from "next";
-import type { Playlist, RoomTeam, SetlistItem, Song, SongWithScore } from "@/lib/types";
+import type { Playlist, RoomTeam, SetlistItem, Song, SongWithScore } from "@/domain/types";
 
 /** song_vote_summary 뷰. 점수와 내 표만 담고 다른 사람의 신원은 담지 않는다. */
 type VoteSummaryRow = {
@@ -120,9 +121,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     // Rooms are private links shared in group chats; keep them out of search results.
     robots: { index: false },
     openGraph: {
+      ...BASE_OPEN_GRAPH,
       title: metaTitle,
       description,
-      type: "website",
       images: [`/api/og?title=${encodeURIComponent(playlist.title)}&songs=${songCount}&participants=${participantCount}`],
     },
     twitter: {
@@ -205,7 +206,7 @@ export default async function PlaylistPage({ params }: PageProps) {
   // 뷰가 없으면 점수가 전부 0 으로 보인다. 배포 순서를 틀렸을 때 바로 알아채도록 남긴다.
   if (summaryResult.error) {
     console.error(
-      "[playlist] song_vote_summary 조회 실패 — supabase-migration-v16.sql 적용 여부 확인:",
+      "[playlist] song_vote_summary 조회 실패 — supabase/migrations/v16.sql 적용 여부 확인:",
       summaryResult.error.message,
     );
   }

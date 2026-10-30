@@ -1,0 +1,27 @@
+ts	phase	decision	why	evidence	result
+2026-10-30T15:39:15Z	frame	작업을 main 에서 갈라 chore/project-cleanup 브랜치에서 한다	main push 는 곧 프로덕션 배포라 정리 작업은 브랜치에서 검토받아야 한다	README.md Deployment 절	branch created
+2026-10-30T15:39:15Z	frame	바꾸기 전 기준선을 잡았다: typecheck 0, lint 0 error 1 warning, vitest 49 파일 546 통과, drift none	정리 뒤 같은 값이 나오는지 비교하려고	scratchpad/baseline/*.txt	baseline recorded
+2026-10-30T15:39:15Z	frame	import 그래프 스크립트로 죽은 파일과 쓰이지 않는 export 를 찾았다	손으로 훑으면 놓치고, 스크립트는 다시 돌려 검증할 수 있다	scratchpad/tools/graph.mjs	DeadlinePicker·Toast 무참조, member.ts 액션 4개 무참조 의심
+2026-10-30T15:44:59Z	subtract	참조 0 인 server action 6개·컴포넌트 2개·svg 5개·테스트 전용 함수 3개를 지웠다	use server export 는 공개 엔드포인트라 죽은 액션은 공격면만 넓힌다. 남은 코드를 옮기기 전에 먼저 줄인다	commit c9bc1f1	typecheck 0, lint 0, vitest 541/541
+2026-10-30T15:45:07Z	subtract	참조 0 인 server action 6개·컴포넌트 2개·svg 5개·테스트 전용 함수 3개를 지웠다	use server export 는 공개 엔드포인트라 죽은 액션은 공격면만 넓힌다. 남은 코드를 옮기기 전에 먼저 줄인다	commit 84a30dc	typecheck 0, lint 0, vitest 541/541
+2026-10-30T15:47:45Z	domain	순수 규칙 7개 파일을 src/domain 으로 옮기고 eslint 로 import 경계를 걸었다	audit 결과 이미 순수했다. 폴더가 곧 규칙이 되면 다음 사람이 위치만 보고 따른다. 글보다 lint 가 강하다	commit 5273cc9, eslint.config.mjs	typecheck 0, lint 0, vitest 541; probe 파일로 3규칙 발화 확인
+2026-10-30T15:47:45Z	domain	feature 단위 vertical slice(features/vote/...) 대신 레이어 구조를 유지하고 domain 만 분리했다	ADR·스킬·계획 문서가 src/actions·src/lib 경로를 가리키고, PlaylistClient 처럼 기능이 서로 얽혀 slice 경계가 새기 때문	audit 보고서(components 그룹 표의 2+ 그룹 공유 8개)	chosen
+2026-10-30T15:49:17Z	components	컴포넌트를 playlist·setlist·rehearsal·band·home·auth·share·ui 로 나눴다	플레이리스트 화면의 세 탭과 밴드 개념이 그대로 폴더가 되게. 여러 화면이 쓰는 밴드 부품은 쓰는 곳이 아니라 개념(band/)에 둔다	commit e3ae322, scratchpad/tools/components-map.json	rename 68, 로직 0줄, vitest 541, vi.mock 111/111 resolve, build 기준선과 동일
+2026-10-30T15:51:13Z	db	마이그레이션을 supabase/migrations/vNN.sql 로 옮기고 SQL 바이트는 원본 그대로 되돌렸다	codemod 가 SQL 주석 속 옛 이름까지 고쳤는데, 운영에 적용된 파일은 바꾸지 않는 게 원칙이라 순수 rename 으로 만들었다. 옛 이름 규칙은 supabase/README.md 에 적었다	commit 7c73032, git diff -M --summary 22x 100%	drift none, vitest 541
+2026-10-30T15:51:13Z	db	폴더 이름을 db/ 가 아니라 supabase/ 로 했다	어디에 DB 가 있는지 이름만 보고 알 수 있다. CLI 는 config.toml 이 없으면 프로젝트로 보지 않고, 리전 이전 스크립트는 이미 빈 임시 폴더에서 돈다(2b8952f)	scripts/migrate-supabase-region.sh	chosen
+2026-10-30T16:03:18Z	tooling	hook 4개(bash guard, migration guard, 편집 lint, Stop 때 npm run check)와 스킬 3개를 뒀다	AGENTS.md 의 사고 기록(echo 로 env 넣기, main push=배포, 0행 UPDATE)을 글이 아니라 장치로 막는다	commit 581d732, .claude/hooks/*.mjs	hook 표 테스트 13/13, 세션 안 발화 확인
+2026-10-30T16:03:18Z	tooling	guard-bash 가 내 커밋 메시지 속 설명 문자열을 명령으로 보고 거부했다. heredoc·따옴표를 데이터로 빼고 명령 위치만 보게 고쳤다	오탐이면 매 커밋이 막혀 hook 을 끄게 된다. 같은 실수가 돌아오지 않게 표 테스트로 고정했다	.claude/hooks/__tests__/guard-bash.test.mjs	19 케이스 통과 후 테스트 13개로 고정
+2026-10-30T16:03:18Z	tooling	CONTRIBUTING.md 는 만들지 않았다	stash@{0} 메모에 10-11 CONTRIBUTING 가이드를 10-17 요청으로 되돌린 기록이 있다. 문서는 README·AGENTS·CONTEXT 셋에 둔다	git stash list	chosen
+2026-10-30T16:03:18Z	tooling	deploy 스킬 이름을 prod-deploy 로 바꿨다	vercel 플러그인 deploy 와 이름이 겹쳐 스킬 목록에 뜨지 않았다	.claude/skills/prod-deploy	목록에 나타남
+2026-10-30T16:08:25Z	docs	문서를 README(사람), AGENTS(규칙·구조·컨벤션), CONTEXT(용어), supabase/README(DB) 로 나눠 한 뜻은 한 곳에 뒀다	같은 규칙이 README·AGENTS·RELEASE 에 따로 있어 서로 어긋났다(크론 주기, OG 수, 합주방/플레이리스트)	commit 8d3c96f	npm run check 통과
+2026-10-30T16:08:25Z	docs	AGENTS.md 끝의 시스템 프롬프트 조각(이메일·날짜 2026-05-11)을 지웠다	에이전트가 매 세션 읽는 파일에 틀린 날짜와 개인 정보가 들어 있었다	AGENTS.md 이전 판 끝 4줄	removed
+2026-10-30T16:08:25Z	docs	song-version 의 보관 플레이리스트 쓰기 구멍은 고치지 않고 TODOS 와 보고에 올렸다	동작을 바꾸는 수정이라 동작 보존 정리 PR 과 섞지 않는다	src/actions/song-version.ts:81-87	open
+2026-10-30T16:08:25Z	docs	team.ts 의 서버 전용 읽기 분리는 하지 않고 후속으로 남겼다	Next 가 클라이언트가 참조하지 않는 액션 ID 를 번들에서 빼므로(node_modules/next/dist/docs data-security) 지금 열린 엔드포인트는 아닐 것으로 보고, 1285줄 테스트를 같이 나눠야 하는 비용이 크다	TODOS.md 코드 정리 후속	deferred
+2026-10-30T16:09:40Z	verify	읽기 전용 e2e(anon 5개)를 globalSetup 없이 로컬 dev 서버로 돌렸다	globalSetup 은 운영 DB 에서 e2e 잔여 행을 지운다. 승인 없는 운영 삭제를 피하고 화면이 실제로 그려지는지만 본다. 쓰기 스펙(account-a 는 운영자 실계정)은 돌리지 않았다	scratchpad/e2e-anon.txt	5/5 passed
+2026-10-30T16:17:27Z	audit	5행의 근거 c9bc1f1 은 틀렸다. 첫 커밋 시도가 pathspec 오류로 실패한 직후 기록해 HEAD 가 그대로였다. 실제 커밋은 84a30dc 이고 6행이 같은 결정을 맞게 적었다	로그는 지우지 않고 새 행으로 바로잡는다	git show --stat 84a30dc	superseded
+2026-10-30T16:17:27Z	audit	근거가 scratchpad/ 인 행(기준선·도구·e2e 로그)은 세션 임시 폴더라 나중에 열리지 않는다. 같은 수치는 각 커밋 메시지에 옮겨 두었다	리뷰어가 따라갈 수 있는 근거는 커밋 메시지다	git log main..HEAD	noted
+2026-10-30T16:17:27Z	review	Fable 로 브랜치 전체를 독립 검토했다. 블로커 0, 고칠 것 4(guard-bash 누락 경로, Stop hook 의 WIP 처리, supabase/README 재실행 문장, 임시 e2e 설정 파일)	같은 맥락에서 쓴 사람이 스스로 승인하지 않게	commit b9f1294	3개 수정, 임시 파일은 검토 시점 뒤에 이미 지워져 있었다
+2026-10-30T16:17:27Z	review	README 의 License MIT 는 그대로 두고 LICENSE 파일은 만들지 않았다	공개 저장소의 라이선스는 방장이 정할 일이다. 옛 README 문장을 옮긴 것이다	README.md License 절	open
+2026-10-30T16:17:27Z	ship	브랜치를 push 하거나 PR 을 열지 않고 로컬에 두었다	공개 저장소이고, 브랜치에 아직 push 하지 않은 main 의 커밋 2개(c9bc1f1, ad7207d)가 딸려 나간다. 밖으로 나가는 동작이라 방장에게 묻는다	gh repo view: PUBLIC, git status: main ahead 2	awaiting owner
+2026-10-30T16:17:43Z	audit	빠진 결정 보충: 여러 모델로 설계안을 겨루는 architect 절차는 돌리지 않고 두 안(레이어 유지+domain 분리, 기능별 vertical slice)을 직접 비교해 골랐다	디렉터리 이동은 codemod 로 되돌릴 수 있고, 문서·스킬이 가리키는 경로가 많아 slice 안의 비용이 컸다	7행, AGENTS.md 구조와 의존 방향	chosen
+2026-10-30T16:17:43Z	audit	빠진 결정 보충: 추적되지 않던 .env.example(옛 싱가포르 anon·service_role 키 포함)을 .env.example.legacy-singapore 로 옮겨 로컬에만 두고 자리표시자 템플릿을 새로 추적했다	공개 저장소에 키를 올리지 않으면서 원본을 잃지 않는다. 옛 키는 방장이 Supabase 에서 끄고 파일을 지우면 된다	commit 581d732, .gitignore !.env.example	open: 옛 키 폐기

@@ -9,10 +9,12 @@
     "lint": "eslint",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm run lint && npm test",
     "test:e2e": "playwright test",
     "e2e:auth": "node e2e/save-auth.mts",
     "audit:anon": "node scripts/audit-anon-access.mjs",
-    "metrics:teams": "node scripts/team-metrics.mjs"
+    "metrics:teams": "node scripts/team-metrics.mjs",
+    "db:new": "node scripts/new-migration.mjs"
   },
   "dependencies": {
     "@formkit/auto-animate": "^0.9.0",

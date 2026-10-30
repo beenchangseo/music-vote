@@ -20,7 +20,7 @@ test.describe("account-a + account-b: band flow", () => {
   test("room → band → invite → join → band room → home list → new link → leave", async ({ page, browser, baseURL, cleanup }) => {
     test.setTimeout(240_000);
     const { error: schemaError } = await adminClient().from("teams").select("id").limit(1);
-    test.skip(schemaError !== null, "teams 테이블이 없어요 (supabase-migration-v19.sql 적용 전)");
+    test.skip(schemaError !== null, "teams 테이블이 없어요 (supabase/migrations/v19.sql 적용 전)");
 
     const ownerId = readAccountUserId("account-a")!;
     const stamp = Date.now().toString(36);

@@ -1,0 +1,26 @@
+{
+  "cast_playlist_vote": {
+    "file": "supabase/migrations/v12.sql",
+    "sha256": "7ba0a927cdd7f6d716cdb28a3b8bbeafbd06ce404d3c55783cb1592de7a97904"
+  },
+  "register_playlist_member": {
+    "file": "supabase/migrations/v10.sql",
+    "sha256": "666a48d8eb4da787eb96ea4aa035de69839429784080f0e1d27b7c600fd9cad3"
+  },
+  "save_playlist_voting_settings": {
+    "file": "supabase/migrations/v11.sql",
+    "sha256": "f426229462c00401571d80d38915b2e2f4a6d29319b098a10a1e1820724a093e"
+  },
+  "configure_playlist_voting": {
+    "file": "supabase/migrations/v10.sql",
+    "sha256": "eb2c91c7a9150ec4fd99e70842ea527082df36196a7f7b6c7c74c38317817272"
+  },
+  "set_member_vote_limit": {
+    "file": "supabase/migrations/v10.sql",
+    "sha256": "f60080a83c3a0aaf0b28aa20d312beb8af53e3cf000c10c8b4a0f2d152c26d3b"
+  },
+  "apply_vote_limit_to_all": {
+    "file": "supabase/migrations/v10.sql",
+    "sha256": "19f80bfd7f8a80296ecf450124dfb37346e9b586c12e8b42975343da7731f065"
+  }
+}

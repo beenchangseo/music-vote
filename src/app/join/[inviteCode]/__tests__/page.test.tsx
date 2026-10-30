@@ -11,7 +11,7 @@ const state = vi.hoisted(() => ({
 
 vi.mock("@/actions/team", () => ({ getTeamInvite: state.getTeamInvite }));
 vi.mock("@/lib/auth", () => ({ getCurrentUser: state.getCurrentUser }));
-vi.mock("@/components/BandInviteScreen", () => ({ default: () => null }));
+vi.mock("@/components/band/BandInviteScreen", () => ({ default: () => null }));
 vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");

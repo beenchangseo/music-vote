@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import CreatePlaylistForm from "@/components/CreatePlaylistForm";
-import MyPlaylists from "@/components/MyPlaylists";
-import LoginButton from "@/components/LoginButton";
-import GuitarIcon from "@/components/GuitarIcon";
+import CreatePlaylistForm from "@/components/home/CreatePlaylistForm";
+import MyPlaylists from "@/components/home/MyPlaylists";
+import LoginButton from "@/components/auth/LoginButton";
+import GuitarIcon from "@/components/ui/GuitarIcon";
 import { buttonClassName } from "@/components/ui/Button";
 import { getCurrentUser } from "@/lib/auth";
 import { getMyPlaylists } from "@/actions/playlist";

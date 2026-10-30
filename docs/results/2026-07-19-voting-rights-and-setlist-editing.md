@@ -45,7 +45,7 @@
 
 ## 데이터베이스 적용 순서
 
-1. 배포 전에 Supabase SQL Editor에서 `supabase-migration-v10.sql`을 실행한다.
+1. 배포 전에 Supabase SQL Editor에서 `supabase/migrations/v10.sql`을 실행한다.
 2. 신규 컬럼·테이블·함수·RLS 정책 생성과 `poster_url` 컬럼 제거를 확인한다.
 3. 애플리케이션을 배포한다.
 4. 자유/할당 합주방을 각각 하나 만들고 투표, 다른 버전, 셋리스트 편집 토글을 도그푸딩한다.

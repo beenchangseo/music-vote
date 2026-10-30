@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/guide",
   title: "셋리스트 정하는 방법 - Plypick 사용 가이드",
   description:
-    "Plypick로 밴드 셋리스트를 투표로 정하는 방법을 단계별로 안내해요. 플레이리스트 만들기부터 결과 공유까지.",
-  alternates: { canonical: "/guide" },
-};
+    "Plypick으로 밴드 셋리스트를 투표로 정하는 방법을 단계별로 안내해요. 플레이리스트 만들기부터 결과 공유까지.",
+  ogTitle: "셋리스트 정하는 방법 - Plypick",
+});
 
 export default function GuidePage() {
   return (
@@ -16,7 +18,7 @@ export default function GuidePage() {
           셋리스트 정하는 방법
         </h1>
         <p className="text-text-muted mb-8">
-          Plypick를 활용한 밴드 셋리스트 투표 가이드
+          후보곡을 모으고 투표해서 결과를 공유하기까지, 순서대로 알려 드려요
         </p>
 
         <div className="space-y-10 text-text-muted leading-relaxed">
@@ -54,11 +56,11 @@ export default function GuidePage() {
             </div>
             <p>
               YouTube에서 연주하고 싶은 곡을 검색하고, URL을 붙여넣으면 돼요.
-              곡 제목, 아티스트, 썸네일이 자동으로 가져와집니다.
+              곡 제목, 아티스트, 썸네일이 자동으로 채워져요.
             </p>
             <p className="mt-2 text-text-muted">
               팁: YouTube Music, 일반 YouTube, Shorts URL 모두 지원돼요.
-              누가 추가했는지 표시되므로, 각 멤버가 자유롭게 곡을 추가하세요.
+              누가 추가했는지 표시되니 멤버마다 직접 올리면 돼요.
             </p>
           </section>
 
@@ -94,7 +96,7 @@ export default function GuidePage() {
             <p>
               각 곡에 찬성(+1) 또는 반대(-1) 투표를 해요.
               같은 버튼을 다시 누르면 투표가 취소되고,
-              반대 버튼을 누르면 방향이 바뀝니다.
+              반대 버튼을 누르면 방향이 바뀌어요.
             </p>
             <p className="mt-2">
               곡 목록은 점수순으로 실시간 정렬돼요.
@@ -127,7 +129,7 @@ export default function GuidePage() {
               <li>• 곡 후보는 10곡 이내로 추리면 투표가 빨라져요</li>
               <li>• 마감일을 설정하면 미루는 멤버도 참여하게 돼요</li>
               <li>• 각 멤버가 직접 곡을 추가하면 참여도가 높아져요</li>
-              <li>• 컴팩트 보기로 빠르게 훑고, 카드 보기로 곡을 미리 들어보세요</li>
+              <li>• 리스트 보기로 빠르게 훑고, 카드 보기로 곡을 미리 들어봐요</li>
             </ul>
           </section>
 

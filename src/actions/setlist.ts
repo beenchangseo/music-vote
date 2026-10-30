@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
 import { assertSetlistEditor } from "@/lib/setlist-permissions";
 import { revalidatePath } from "next/cache";
-import type { SetlistItem } from "@/lib/types";
+import type { SetlistItem } from "@/domain/types";
 
 export interface IntervalInput {
   label: string;

@@ -1,6 +1,6 @@
 # 밴드(팀)는 합주방 위에 얕게 얹는다
 
-밴드는 합주방들을 묶는 이름표다. 합주방의 권한과 투표 규칙은 그대로 방 단위에 두고, `playlists`에 nullable `team_id` 하나만 더한다(`supabase-migration-v19.sql`). 방장 권한·투표권·셋리스트 편집 권한은 지금처럼 그 방의 `creator_user_id`·`playlist_members`가 정하고, 밴드 멤버라고 남의 방에서 더 할 수 있는 일은 없다. v10의 RLS와 `cast_playlist_vote` 같은 함수는 밴드를 모른다.
+밴드는 합주방들을 묶는 이름표다. 합주방의 권한과 투표 규칙은 그대로 방 단위에 두고, `playlists`에 nullable `team_id` 하나만 더한다(`supabase/migrations/v19.sql`). 방장 권한·투표권·셋리스트 편집 권한은 지금처럼 그 방의 `creator_user_id`·`playlist_members`가 정하고, 밴드 멤버라고 남의 방에서 더 할 수 있는 일은 없다. v10의 RLS와 `cast_playlist_vote` 같은 함수는 밴드를 모른다.
 
 코드와 DB에서는 `team`, 화면에서는 "밴드"라고 부른다.
 

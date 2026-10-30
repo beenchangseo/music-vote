@@ -8,7 +8,7 @@
 ### 여러 밴드일 때 넣기 UI (CEO2-F)
 
 - **무엇**: 플레이리스트 설정과 새 플레이리스트 완료 화면의 "{밴드}에 넣기"가 속한 밴드 수만큼 버튼으로 쌓인다
-  (`RoomSettingsButton.tsx:369`, `CreatePlaylistForm.tsx:254`). 밴드 고르는 시트 하나로 바꾼다
+  (`src/components/playlist/RoomSettingsButton.tsx:369`, `src/components/home/CreatePlaylistForm.tsx:254`). 밴드 고르는 시트 하나로 바꾼다
 - **왜 미뤘나**: 밴드 2개 이상 속한 계정이 0명이고, 새로 넣는 길(밴드 홈, CEO2-E)은 밴드를 고를 일이 없다
   (/plan-ceo-review 2026-10-06, 방장 답변 "TODOS.md 로 미루기")
 - **재개 조건**: 밴드 2개 이상 속한 외부 계정 ≥ 1
@@ -47,31 +47,13 @@
 
 - **무엇**: `Button` 이 모서리 토큰(`rounded-control` 10px) 대신 `rounded-lg`/`rounded-xl` 을 쓰고 `sm` 이 36px 라
   호출하는 곳이 `min-h-11` 로 땜질한다(저장소에 `rounded-xl` 78곳). 홈 상태 B 알약 버튼은 `Button` 을 안 거치고
-  `text-white` · 포커스 링 없이 직접 그린다(`HeroCTA.tsx`). 카카오 버튼과 주 버튼이 높이 · 모서리가 다르다.
-  닫을 수 있는 안내 카드가 카드마다 모양이 다르다(`BandPromptCard` outline vs 밴드 홈 멤버 부르기 elevated).
+  `text-white` · 포커스 링 없이 직접 그린다(`src/components/home/HeroCTA.tsx`). 카카오 버튼과 주 버튼이 높이 · 모서리가 다르다.
+  닫을 수 있는 안내 카드가 카드마다 모양이 다르다(`band/BandPromptCard` outline vs 밴드 홈 멤버 부르기 elevated).
   할 일: `Button` 에 모서리 토큰 · `sm` 44px · 알약 모양 · 카카오 변형 · `on-primary` 색 토큰, 안내 상자 · 안내 카드
   공통 부품 하나씩, 그 위로 화면 옮기기
 - **왜 미뤘나**: 화면 리뷰 범위(유저 플로우 1·2차 화면) 밖의 저장소 전체 정리다 (/design-review 2026-10-06, high/medium, spacing)
 - **재개 조건**: 다음 화면 작업에서 `min-h-11` 땜질을 또 하게 될 때, 또는 위 대비 결정과 같이
 - **규모**: M (사람 ~1일 / CC ~1시간 + 화면 스크린샷 비교)
-
-## 인프라
-
-### Supabase 리전을 싱가포르에서 서울로 옮기기
-
-- **무엇**: Supabase 프로젝트를 서울(ap-northeast-2)에 새로 만들고 옮긴다. Vercel 함수는 이미 서울(`vercel.json`
-  `regions: ["icn1"]`)이라, 지금은 Supabase 호출마다 서울↔싱가포르를 오간다
-- **왜 미뤘나**: 얻는 것이 작고 드는 것이 크다(2026-10-06 측정·판단, 방장 답변 "TODO에 리전 이동을 기록한다").
-  - 얻는 것: Supabase 한 번에 약 40~50ms(한국에서 Auth 서버 상태 확인, 5회 측정). 플레이리스트 화면은 3~4번 차례로
-    왕복하므로 화면당 약 0.1~0.15초(추정). 네트워크 탭의 2~8초는 서버가 식은 상태에서 타일 미리 불러오기 14건이
-    몰린 탓으로 보고, 미리 불러오기를 끄는 것(`prefetch={false}`)으로 따로 줄였다
-  - 드는 것: 리전은 바꿀 수 없어 새 프로젝트로 옮겨야 한다(Supabase 문서 "Change Project Region"). DB(v1~v21 · RLS ·
-    함수 · 뷰)와 Auth 사용자 이전, 모두 한 번 로그아웃, 카카오 Redirect URI · 키 재설정, Vercel 환경 변수 3개
-    (`printf` 규칙), 실시간 · 크론 확인, 짧은 중단, E2E 로그인 다시 저장. 반나절 이상
-- **재개 조건**: 미리 불러오기를 끈 뒤에도 화면이 느리다는 말이 나오면, 먼저 서버에서 DB 시간을 잰다(요청당 Supabase
-  호출 시간 합). 그 합이 응답 시간의 절반을 넘으면 옮긴다. 사용자가 늘수록 이전 비용(로그아웃 영향 · 데이터 양)이
-  커지므로, 옮길 거라면 이른 편이 싸다
-- **규모**: L (사람 ~1일 / CC ~2시간 + 방장 작업: 카카오 콘솔 · Supabase 대시보드 · 짧은 중단 공지)
 
 ## 사용자 연락
 
@@ -82,3 +64,44 @@
 - **왜 미뤘나**: 채널이 E5 와 같은 결정에 묶여 있다. 구현 착수 조건에서는 뺐다 (CEO 리뷰 메모)
 - **재개 조건**: E5 채널 결정 시, 또는 공지사항 한 줄로 먼저 시도할 때
 - **규모**: 공지 한 줄이면 S
+
+## 코드 정리 후속 (2026-10-31 구조 정리에서 찾음)
+
+동작을 바꾸지 않는 정리 PR 범위 밖이라 남긴다. 줄 번호는 정리 직후 기준이다.
+
+### throw 하는 액션을 `{ success: false, reason }` 으로 옮기기
+
+- **무엇**: song·setlist·comment·playlist·member·song-version 액션은 예상된 실패를 throw 한다. 프로덕션 빌드는 throw 된
+  메시지를 가리므로 `err.message` 를 띄우는 화면(예: `CommentModal`)은 운영에서 한국어 문구 대신 일반 오류를 보일 수 있다
+  (Next 동작과 `src/lib/team-messages.ts` 주석에서 추론, 운영에서 재현하지 않음). team·vote 는 이미 옮겼다
+- **왜 미뤘나**: 화면 문구와 테스트가 함께 바뀌는 동작 변경이다
+- **재개 조건**: 운영에서 일반 오류 문구가 한 번이라도 확인되면 전체를, 아니면 해당 액션을 고칠 때마다 하나씩
+  (`server-action` 스킬 5번)
+- **규모**: M
+
+### 서버 페이지만 부르는 읽기를 `"use server"` 밖으로
+
+- **무엇**: `getMyPlaylists`(`actions/playlist.ts`), `getMyTeams`·`getTeamHome`·`getTeamInvite`·`teamExists`
+  (`actions/team.ts`)는 서버 페이지만 부른다. `"use server"` 파일의 export 라 엔드포인트가 될 수 있다.
+  Next 는 클라이언트가 참조하지 않는 액션의 ID 를 번들에서 빼므로 지금 열려 있지는 않을 것으로 본다. `src/lib/` 의
+  읽기 모듈로 옮기면 `room-insert.ts` 가 적어 둔 규칙과 맞고 `team.ts`(약 1190줄)도 360줄쯤 줄어든다
+- **왜 미뤘나**: `team.ts` 의 비공개 헬퍼와 1285줄짜리 테스트를 같이 나눠야 하는 별도 리팩터링이다
+- **재개 조건**: `team.ts` 를 다음에 크게 고칠 때
+- **규모**: M
+
+### 큰 화면 컴포넌트 쪼개기
+
+- **무엇**: `playlist/PlaylistClient.tsx`(827줄), `band/BandHomeClient.tsx`(660줄), `playlist/RoomSettingsButton.tsx`(616줄).
+  상태·콜백을 훅으로(모드 전환, 필터, 재생, 설정 저장), 섹션을 하위 컴포넌트로. 직접 그린 모달·버튼·입력도 `ui/` 로
+- **왜 미뤘나**: 화면 스크린샷 비교가 필요한 UI 리팩터링이다. 위 "UI 기본 부품 정리"와 겹친다
+- **재개 조건**: 해당 화면에 다음 기능을 넣을 때 그 화면부터
+- **규모**: M (화면당)
+
+### 셋리스트 자동 확정이 확정 로직을 다시 구현한다
+
+- **무엇**: `src/app/api/cron/auto-confirm-setlist/route.ts` 가 점수 정렬과 셋리스트 삽입을 직접 한다.
+  `src/actions/setlist.ts` 의 `confirmSetlist` 와 규칙이 갈라질 수 있다
+- **왜 미뤘나**: 크론은 운영에서 매일 돈다. 바꾸면 운영 데이터로 확인해야 한다
+- **재개 조건**: 셋리스트 확정 규칙(곡 수, 동점 처리)을 바꿀 때
+- **규모**: S
+

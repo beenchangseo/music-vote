@@ -2,30 +2,32 @@ import { Suspense, type ReactNode } from "react";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import HeroCTA from "@/components/HeroCTA";
-import HomeSkeleton from "@/components/HomeSkeleton";
+import HeroCTA from "@/components/home/HeroCTA";
+import HomeSkeleton from "@/components/home/HomeSkeleton";
 import LandingVoteDemo from "@/components/home/LandingVoteDemo";
 import LandingSetlistPoster from "@/components/home/LandingSetlistPoster";
 import { LandingShareChat, LandingShareSteps } from "@/components/home/LandingShareCard";
 import LandingFaq, { LANDING_FAQ } from "@/components/home/LandingFaq";
-import MyPlaylists from "@/components/MyPlaylists";
-import MyBands from "@/components/MyBands";
-import LeftBandNotice from "@/components/LeftBandNotice";
-import { HomeBandCard } from "@/components/BandPromptCard";
+import MyPlaylists from "@/components/home/MyPlaylists";
+import MyBands from "@/components/home/MyBands";
+import LeftBandNotice from "@/components/band/LeftBandNotice";
+import { HomeBandCard } from "@/components/band/BandPromptCard";
 import { buttonClassName } from "@/components/ui/Button";
-import type { BandCandidate } from "@/components/CreateBandSheet";
+import type { BandCandidate } from "@/components/band/CreateBandSheet";
 import { getCurrentUser, hasAuthCookie } from "@/lib/auth";
 import { BAND_PROMPT_COOKIE, parseDismissals } from "@/lib/prompt-dismissals";
 import { getMyPlaylists, type MyPlaylistDbEntry } from "@/actions/playlist";
 import { getMyTeams } from "@/actions/team";
-import { HOME_DESCRIPTION, HOME_TITLE, homeJsonLd, jsonLdScript } from "@/lib/seo";
+import { HOME_DESCRIPTION, HOME_TITLE, homeJsonLd, jsonLdScript, pageMetadata } from "@/lib/seo";
 
 // `?left=1` and other query variants are the same page.
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/",
   title: HOME_TITLE,
   description: HOME_DESCRIPTION,
-  alternates: { canonical: "/" },
-};
+  // The landing's H1: short enough for a Kakao card.
+  ogTitle: "밴드 합주곡, 투표로 5분 컷",
+});
 
 interface HomeProps {
   searchParams: Promise<{ left?: string | string[] }>;

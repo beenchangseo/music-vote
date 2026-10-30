@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { addTap, bpmFromTaps, TAP_RESET_MS, TAPS_TO_FILL } from "@/lib/tap-tempo";
+import { addTap, bpmFromTaps, TAP_RESET_MS, TAPS_TO_FILL } from "@/domain/tap-tempo";
 
 /** 100ms 앞까지 미리 예약한다. setInterval 지터를 오디오 클럭으로 흡수한다. */
 const SCHEDULE_AHEAD = 0.1;

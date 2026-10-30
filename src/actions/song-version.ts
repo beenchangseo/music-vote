@@ -1,9 +1,11 @@
 "use server";
 
 import { getCurrentUser } from "@/lib/auth";
+import { assertPlaylistWritableBySong } from "@/lib/playlist-access";
 import { createAdminClient } from "@/lib/supabase/server";
 import { extractVideoId, fetchVideoMetadata } from "@/lib/youtube";
-import type { SongVersion } from "@/lib/types";
+import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/domain/playlist-archive";
+import type { SongVersion } from "@/domain/types";
 import { revalidatePath } from "next/cache";
 
 type DuplicateKind = "original" | "version";
@@ -18,20 +20,15 @@ function validateDescription(description: string): string | null {
   return trimmed || null;
 }
 
-async function getSongContext(songId: string) {
+async function getSongVideoId(songId: string): Promise<string> {
   const admin = createAdminClient();
   const { data } = await admin
     .from("songs")
-    .select("id, playlist_id, youtube_video_id, playlists!inner(creator_user_id)")
+    .select("youtube_video_id")
     .eq("id", songId)
-    .single<{
-      id: string;
-      playlist_id: string;
-      youtube_video_id: string;
-      playlists: { creator_user_id: string | null };
-    }>();
+    .single<{ youtube_video_id: string }>();
   if (!data) throw new Error("곡을 찾을 수 없습니다.");
-  return data;
+  return data.youtube_video_id;
 }
 
 async function duplicateKind(
@@ -67,31 +64,17 @@ export async function addSongVersion(
   songId: string,
   youtubeUrl: string,
   description: string,
-  nickname: string,
   shareCode: string,
   force = false,
 ): Promise<SaveResult> {
   const videoId = extractVideoId(youtubeUrl);
   if (!videoId) throw new Error("올바른 YouTube 링크를 입력해주세요.");
   const cleanDescription = validateDescription(description);
-  const context = await getSongContext(songId);
+  await assertPlaylistWritableBySong(songId);
   const user = await getCurrentUser();
+  if (!user) throw new Error("로그인이 필요합니다.");
 
-  let addedByUserId: string | null = null;
-  let addedByNickname = nickname.trim();
-  if (context.playlists.creator_user_id) {
-    if (!user) throw new Error("로그인이 필요합니다.");
-    addedByUserId = user.id;
-    addedByNickname = user.nickname;
-  } else if (!addedByNickname) {
-    throw new Error("닉네임이 필요합니다.");
-  }
-
-  const duplicate = await duplicateKind(
-    songId,
-    videoId,
-    context.youtube_video_id,
-  );
+  const duplicate = await duplicateKind(songId, videoId, await getSongVideoId(songId));
   if (duplicate && !force) {
     return { success: false, needsConfirmation: true, duplicateKind: duplicate };
   }
@@ -107,8 +90,8 @@ export async function addSongVersion(
       title: metadata?.title || youtubeUrl,
       thumbnail_url: metadata?.thumbnail_url || `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
       description: cleanDescription,
-      added_by_user_id: addedByUserId,
-      added_by_nickname: addedByNickname,
+      added_by_user_id: user.id,
+      added_by_nickname: user.nickname,
     })
     .select("*")
     .single();
@@ -117,42 +100,28 @@ export async function addSongVersion(
   return { success: true, version: data as SongVersion };
 }
 
-async function assertVersionManager(
-  versionId: string,
-  adminToken: string | null,
-) {
+async function assertVersionManager(versionId: string) {
   const admin = createAdminClient();
   const { data } = await admin
     .from("song_versions")
-    .select("id, song_id, added_by_user_id, songs!inner(playlist_id, youtube_video_id, playlists!inner(creator_user_id))")
+    .select("id, song_id, added_by_user_id, songs!inner(youtube_video_id, playlists!inner(creator_user_id))")
     .eq("id", versionId)
     .single<{
       id: string;
       song_id: string;
       added_by_user_id: string | null;
       songs: {
-        playlist_id: string;
         youtube_video_id: string;
         playlists: { creator_user_id: string | null };
       };
     }>();
   if (!data) throw new Error("다른 버전을 찾을 수 없습니다.");
 
-  const creatorUserId = data.songs.playlists.creator_user_id;
-  if (creatorUserId) {
-    const user = await getCurrentUser();
-    if (!user) throw new Error("로그인이 필요합니다.");
-    if (user.id !== creatorUserId && user.id !== data.added_by_user_id) {
-      throw new Error("이 링크를 수정할 권한이 없습니다.");
-    }
-  } else {
-    if (!adminToken) throw new Error("방장만 수정할 수 있습니다.");
-    const { data: tokenRow } = await admin
-      .from("playlist_admin")
-      .select("admin_token")
-      .eq("playlist_id", data.songs.playlist_id)
-      .single();
-    if (tokenRow?.admin_token !== adminToken) throw new Error("방장만 수정할 수 있습니다.");
+  if (isArchivedPlaylist(data.songs.playlists)) throw new Error(ARCHIVED_PLAYLIST_MESSAGE);
+  const user = await getCurrentUser();
+  if (!user) throw new Error("로그인이 필요합니다.");
+  if (user.id !== data.songs.playlists.creator_user_id && user.id !== data.added_by_user_id) {
+    throw new Error("이 링크를 수정할 권한이 없습니다.");
   }
 
   return data;
@@ -162,14 +131,13 @@ export async function updateSongVersion(
   versionId: string,
   youtubeUrl: string,
   description: string,
-  adminToken: string | null,
   shareCode: string,
   force = false,
 ): Promise<SaveResult> {
   const videoId = extractVideoId(youtubeUrl);
   if (!videoId) throw new Error("올바른 YouTube 링크를 입력해주세요.");
   const cleanDescription = validateDescription(description);
-  const current = await assertVersionManager(versionId, adminToken);
+  const current = await assertVersionManager(versionId);
 
   const duplicate = await duplicateKind(
     current.song_id,
@@ -201,12 +169,8 @@ export async function updateSongVersion(
   return { success: true, version: data as SongVersion };
 }
 
-export async function deleteSongVersion(
-  versionId: string,
-  adminToken: string | null,
-  shareCode: string,
-) {
-  await assertVersionManager(versionId, adminToken);
+export async function deleteSongVersion(versionId: string, shareCode: string) {
+  await assertVersionManager(versionId);
   const admin = createAdminClient();
   const { error } = await admin.from("song_versions").delete().eq("id", versionId);
   if (error) throw new Error("다른 버전 삭제에 실패했습니다.");

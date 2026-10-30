@@ -30,23 +30,23 @@ vi.mock("@/lib/auth", async (importOriginal) => ({
 }));
 vi.mock("@/actions/playlist", () => ({ getMyPlaylists: state.getMyPlaylists }));
 vi.mock("@/actions/team", () => ({ getMyTeams: state.getMyTeams }));
-vi.mock("@/components/HeroCTA", () => ({
+vi.mock("@/components/home/HeroCTA", () => ({
   default: (props: Record<string, unknown>) => {
     state.heroProps.push(props);
     return <div data-testid="hero" data-variant={String(props.variant)} />;
   },
 }));
-vi.mock("@/components/MyBands", () => ({ default: () => <div data-testid="my-bands" /> }));
-vi.mock("@/components/MyPlaylists", () => ({ default: () => <div data-testid="my-playlists" /> }));
-vi.mock("@/components/LeftBandNotice", () => ({ default: () => null }));
-vi.mock("@/components/BandPromptCard", () => ({
+vi.mock("@/components/home/MyBands", () => ({ default: () => <div data-testid="my-bands" /> }));
+vi.mock("@/components/home/MyPlaylists", () => ({ default: () => <div data-testid="my-playlists" /> }));
+vi.mock("@/components/band/LeftBandNotice", () => ({ default: () => null }));
+vi.mock("@/components/band/BandPromptCard", () => ({
   HomeBandCard: ({ candidate }: { candidate: { id: string } }) => <div data-testid="home-card" data-target={candidate.id} />,
 }));
 // The vote demo animates with auto-animate (needs browser APIs jsdom lacks); it has its own test.
 vi.mock("@/components/home/LandingVoteDemo", () => ({ default: () => null }));
 
 import Home from "../page";
-import HomeSkeleton from "@/components/HomeSkeleton";
+import HomeSkeleton from "@/components/home/HomeSkeleton";
 
 const ME = { id: "u-me", nickname: "보컬", avatarUrl: null };
 const SESSION_COOKIE = "sb-abcdef-auth-token";

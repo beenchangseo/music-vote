@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useRef, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import DialogProvider, { useDialog } from "../../DialogProvider";
+import DialogProvider, { useDialog } from "../DialogProvider";
 import Modal from "../Modal";
 
 /** Opener button + sheet with two focusable children, like the real sheets. */

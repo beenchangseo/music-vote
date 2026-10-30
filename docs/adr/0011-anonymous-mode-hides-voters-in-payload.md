@@ -10,4 +10,4 @@
 
 - 로그인 합주방에서 내 표는 서버가 계정 기준으로 계산해 내려보낸다. 클라이언트는 더 이상 투표 행에서 내 표를 찾지 않는다.
 - 실시간 갱신도 같은 제약을 받는다. `votes` 변경을 그대로 흘리는 구독 대신 [ADR 0010](./0010-realtime-by-broadcast-notification.md)의 내용 없는 알림을 쓴다.
-- 앱 페이로드를 막는 것만으로는 부족하다. `votes` 테이블 자체의 SELECT 권한을 좁히는 작업은 `supabase-migration-v15.sql`에서 한다.
+- 앱 페이로드를 막는 것만으로는 부족하다. `votes` 테이블 자체의 SELECT 권한을 좁히는 작업은 `supabase/migrations/v15.sql`에서 한다.

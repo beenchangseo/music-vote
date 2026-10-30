@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/about",
   title: "밴드 투표 서비스란? - Plypick",
   description:
-    "밴드 곡 투표 서비스 Plypick(plypick.kr)를 소개해요. 밴드 멤버들과 다음 공연 셋리스트를 투표로 정하세요.",
-  alternates: { canonical: "/about" },
-};
+    "단톡방 대신 투표로 합주곡과 공연 셋리스트를 정하는 무료 웹 서비스 Plypick을 소개해요.",
+  ogTitle: "밴드 곡 투표 서비스 Plypick",
+});
 
 export default function AboutPage() {
   return (
@@ -37,17 +39,17 @@ export default function AboutPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-text mb-3">
-              Plypick가 해결해요
+              Plypick으로 이렇게 정해요
             </h2>
             <p>
-              Plypick(plypick.kr)는 밴드 멤버들이 다음 공연이나 합주에서 연주할 곡을
+              Plypick은 밴드 멤버들이 다음 공연이나 합주에서 연주할 곡을
               투표로 선정할 수 있는 무료 웹 서비스예요.
             </p>
             <ul className="mt-4 space-y-3">
               {[
                 {
                   title: "YouTube로 바로 확인",
-                  desc: "곡 후보를 YouTube URL로 추가하면, 제목과 썸네일이 자동으로 불러와집니다. 투표 전에 곡을 미리 들어볼 수 있어요.",
+                  desc: "곡 후보를 YouTube URL로 추가하면, 제목과 썸네일이 자동으로 채워져요. 투표 전에 곡을 미리 들어볼 수 있어요.",
                 },
                 {
                   title: "공평한 투표",
@@ -87,7 +89,7 @@ export default function AboutPage() {
 
           <section className="bg-surface border border-border rounded-2xl p-6 text-center">
             <p className="text-lg font-semibold text-text mb-2">
-              지금 바로 시작하세요
+              다음 합주곡, 투표로 정해요
             </p>
             <p className="text-sm text-text-muted mb-4">
               무료예요. 카카오 로그인 한 번이면 30초 만에 플레이리스트를 만들 수 있어요.

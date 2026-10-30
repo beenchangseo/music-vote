@@ -49,7 +49,7 @@ async function deleteTestRooms(
   return error ? [`playlists: ${error.message}`] : [];
 }
 
-// Before supabase-migration-v19.sql the teams table does not exist: nothing to clean, not a failure.
+// Before supabase/migrations/v19.sql the teams table does not exist: nothing to clean, not a failure.
 const MISSING_TABLE = new Set(["42P01", "PGRST205"]);
 
 async function deleteTestTeams(
