@@ -21,8 +21,18 @@ describe("guard-bash", () => {
     ["ask", "git push origin HEAD:main"],
     ["allow", "git push -u origin chore/project-cleanup"],
     ["allow", "git push origin main-fix"],
+    ["ask", 'git push origin "main"'],
+    ["ask", "git push origin refs/heads/main"],
+    ["ask", "git push origin +main"],
+    ["ask", "git -C /tmp/x push origin main"],
+    ["ask", "FOO=1 git push origin main"],
+    ["allow", "git push origin feature/main-menu"],
+    ["ask", "gh pr merge 12 --merge"],
+    ["allow", "gh pr view 12"],
     ["ask", "vercel --prod"],
     ["ask", "npx vercel deploy --prod --yes"],
+    ["ask", "vercel promote https://plypick-abc.vercel.app"],
+    ["ask", "vercel rollback"],
     ["allow", "vercel deploy"],
   ])("%s: %s", (want, command) => {
     expect(decision(command)).toBe(want);

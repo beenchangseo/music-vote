@@ -5,8 +5,9 @@
 
 ## 적용 순서
 
-새 환경은 `v01` 부터 `v22` 까지 차례로 SQL Editor(또는 DataGrip)에서 실행한다. 모두 다시 실행해도 안전하게
-`IF NOT EXISTS`·`CREATE OR REPLACE` 로 써 있다.
+새 환경은 `v01` 부터 `v22` 까지 차례로 SQL Editor(또는 DataGrip)에서 실행한다. `v01`·`v03` 은 `CREATE TABLE`·
+`CREATE POLICY` 를 조건 없이 써서 새 환경에서 한 번만 돌릴 수 있다. 다시 돌리면 "already exists" 로 멈춘다.
+나머지 파일은 `IF NOT EXISTS`·`CREATE OR REPLACE`·`DROP … IF EXISTS` 뒤 다시 만들기로 써 있어 다시 돌려도 안전하다.
 
 | 파일 | 내용 | 코드 배포와의 순서 |
 |---|---|---|

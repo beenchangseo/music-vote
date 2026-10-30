@@ -21,20 +21,22 @@ const hash = createHash("sha256").update(diff);
 for (const f of untracked) hash.update(f).update(readFileSync(join(root, f)));
 const fingerprint = hash.digest("hex");
 
-const cache = join(root, "node_modules/.cache/claude-check-pass");
+// A tree is checked once: a pass is not re-run, and a failure is reported once, not on every later turn
+// (the owner may leave work in progress broken on purpose).
+const cache = join(root, "node_modules/.cache/claude-check-seen");
 if (existsSync(cache) && readFileSync(cache, "utf8") === fingerprint) process.exit(0);
+mkdirSync(dirname(cache), { recursive: true });
+writeFileSync(cache, fingerprint);
 
 const run = spawnSync("npm", ["run", "check", "--silent"], { cwd: root, encoding: "utf8" });
-if (run.status === 0) {
-  mkdirSync(dirname(cache), { recursive: true });
-  writeFileSync(cache, fingerprint);
-  process.exit(0);
-}
+if (run.status === 0) process.exit(0);
 
 const tail = `${run.stdout}${run.stderr}`.trim().split("\n").slice(-40).join("\n");
 console.log(
   JSON.stringify({
     decision: "block",
-    reason: `커밋하지 않은 코드 변경이 npm run check(typecheck · lint · test)를 통과하지 못했다. 고치거나, 고치지 못하면 사용자에게 실패를 그대로 보고한다.\n${tail}`,
+    reason:
+      "커밋하지 않은 코드 변경이 npm run check(typecheck · lint · test)를 통과하지 못했다. 이번 작업에서 네가 만든 변경이 " +
+      `원인이면 고친다. 사용자가 만들어 둔 변경이 원인이면 고치지 말고 실패를 그대로 보고한다.\n${tail}`,
   }),
 );
