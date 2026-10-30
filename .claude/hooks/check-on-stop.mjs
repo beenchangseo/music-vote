@@ -25,10 +25,10 @@ const fingerprint = hash.digest("hex");
 // (the owner may leave work in progress broken on purpose).
 const cache = join(root, "node_modules/.cache/claude-check-seen");
 if (existsSync(cache) && readFileSync(cache, "utf8") === fingerprint) process.exit(0);
-mkdirSync(dirname(cache), { recursive: true });
-writeFileSync(cache, fingerprint);
 
 const run = spawnSync("npm", ["run", "check", "--silent"], { cwd: root, encoding: "utf8" });
+mkdirSync(dirname(cache), { recursive: true });
+writeFileSync(cache, fingerprint);
 if (run.status === 0) process.exit(0);
 
 const tail = `${run.stdout}${run.stderr}`.trim().split("\n").slice(-40).join("\n");

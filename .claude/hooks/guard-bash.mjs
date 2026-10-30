@@ -39,13 +39,15 @@ const currentBranch = () => {
 const pushArgs = [...code.matchAll(at(String.raw`git(?:\s+-[Cc]\s+\S+)*\s+push\b([^;&|\n]*)`, "g"))].map((m) => m[1]);
 const pushesMain = pushArgs.some((args) => {
   const positional = args.trim().split(/\s+/).filter((a) => a && !a.startsWith("-"));
-  if (positional.length >= 2) return positional.slice(1).some((ref) => /^(\+|.*:)?(refs\/heads\/)?main$/.test(ref));
-  return currentBranch() === "main";
+  if (positional.length < 2) return currentBranch() === "main";
+  return positional.slice(1).some(
+    (ref) => /^(\+|.*:)?(refs\/heads\/)?main$/.test(ref) || (/^\+?(HEAD|@)$/.test(ref) && currentBranch() === "main"),
+  );
 });
 const changesProduction =
   pushesMain ||
   at(String.raw`gh\s+pr\s+merge\b`).test(code) ||
-  at(String.raw`(?:npx\s+)?vercel\b[^;&|\n]*\s--prod\b`).test(code) ||
+  at(String.raw`(?:npx\s+)?vercel\b[^;&|\n]*\s(?:--prod\b|--target[=\s]+production\b)`).test(code) ||
   at(String.raw`(?:npx\s+)?vercel\s+(?:promote|rollback)\b`).test(code);
 
 if (changesProduction) {

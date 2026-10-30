@@ -100,5 +100,3 @@ export function assignRanks(scores: number[]): number[] {
     return lastRank;
   });
 }
-
-/** 최고점 대비 비율(0~1). 점수가 숫자로만 있으면 박빙인지 압도적인지 안 읽힌다. */

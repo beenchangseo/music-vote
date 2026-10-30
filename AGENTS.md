@@ -114,7 +114,7 @@ verification/     TLA+ 형식 검증 (verify-vote-quota 스킬)
 
 - main 에 들어간 `supabase/migrations/vNN.sql` 은 고치지 않는다. 다음 번호 파일을 만든다(`npm run db:new`).
 - 새 테이블은 권한을 기본값에 기대지 않고 `REVOKE`·`GRANT` 로 적는다(v22 부터).
-- 운영 DB 적용은 방장의 승인을 받고, 적용 뒤 `npm run audit:anon` 을 돌린다.
+- 운영 DB 적용은 운영자의 승인을 받고, 적용 뒤 `npm run audit:anon` 을 돌린다.
 
 ## 주의 사항
 

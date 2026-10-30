@@ -28,7 +28,7 @@ description: Supabase 스키마·RLS·권한·SQL 함수를 바꿀 때 쓴다. �
 
 ## 운영 적용
 
-운영 DB 에 SQL 을 실행하는 것은 되돌리기 어렵다. **방장(사용자)의 명시적인 승인을 받고** 진행한다.
+운영 DB 에 SQL 을 실행하는 것은 되돌리기 어렵다. **운영자의 명시적인 승인을 받고** 진행한다.
 
 - 경로: DataGrip `postgres@plypick`(서울) 연결, 또는 Supabase SQL Editor
 - 배포 **전** 마이그레이션이면 적용 → 머지·push. 배포 **후** 면 머지·push → 배포 확인 → 적용

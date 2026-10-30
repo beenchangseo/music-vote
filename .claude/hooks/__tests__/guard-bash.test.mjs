@@ -33,6 +33,8 @@ describe("guard-bash", () => {
     ["ask", "npx vercel deploy --prod --yes"],
     ["ask", "vercel promote https://plypick-abc.vercel.app"],
     ["ask", "vercel rollback"],
+    ["ask", "vercel deploy --target=production"],
+    ["ask", "vercel deploy --target production"],
     ["allow", "vercel deploy"],
   ])("%s: %s", (want, command) => {
     expect(decision(command)).toBe(want);
@@ -49,7 +51,10 @@ describe("guard-bash", () => {
     execFileSync("git", ["init", "-q", "-b", "main", repo]);
     expect(decision("git push", repo)).toBe("ask");
     expect(decision("git push -u origin feature-x", repo)).toBe("allow");
+    expect(decision("git push origin HEAD", repo)).toBe("ask");
+    expect(decision("git push origin @", repo)).toBe("ask");
     execFileSync("git", ["-C", repo, "switch", "-q", "-c", "feature-x"]);
     expect(decision("git push", repo)).toBe("allow");
+    expect(decision("git push origin HEAD", repo)).toBe("allow");
   });
 });

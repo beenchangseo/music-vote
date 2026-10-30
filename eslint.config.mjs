@@ -26,7 +26,7 @@ const eslintConfig = defineConfig([
         {
           patterns: [
             {
-              regex: "^(?!\\.{1,2}/|@/domain/)",
+              regex: "^(?!\\./|@/domain/)",
               message: "src/domain 은 순수 규칙만 둔다. 프레임워크·DB·네트워크가 필요하면 호출부(actions·lib)에서 값을 넘겨받는다.",
             },
           ],
