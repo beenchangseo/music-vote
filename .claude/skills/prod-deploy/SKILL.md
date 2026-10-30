@@ -16,8 +16,8 @@ description: Plypick 을 프로덕션에 내보낼 때 쓴다. main 에 머지·
    - `npm run check` (typecheck · lint · test)
    - 화면·액션을 바꿨다면 e2e 게이트: `npm run test:e2e` (운영 DB 에 붙는다. 설정은 `e2e/README.md`)
    - 투표 경로를 바꿨다면 `verify-vote-quota` 스킬
-   - 로컬 `next build` 는 Next 16.2.1 의 `_global-error` prerender 회귀로 실패한다. "Compiled successfully" 와
-     page data 수집까지 통과하면 된다
+   - `NODE_ENV=production npx next build` 가 끝까지 통과해야 한다. `NODE_ENV` 를 빼면 셸의 development 값 때문에
+     `/_global-error` prerender 에서 실패한다(AGENTS.md "주의 사항")
 2. **마이그레이션 순서를 지킨다** (`db-migration` 스킬). 배포 전 마이그레이션은 머지 전에 운영에 적용한다
 3. **머지하고 push 한다.** `git switch main && git merge --no-ff <branch> && git push origin main`
 4. **배포를 확인한다.**
