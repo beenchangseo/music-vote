@@ -9,7 +9,7 @@ import {
   getSongVersions,
   updateSongVersion,
 } from "@/actions/song-version";
-import type { SongVersion } from "@/lib/types";
+import type { SongVersion } from "@/domain/types";
 
 interface Props {
   songId: string;

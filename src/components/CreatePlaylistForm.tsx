@@ -11,7 +11,7 @@ import { teamMessage } from "@/lib/team-messages";
 import KakaoShareButton from "./KakaoShareButton";
 import GuitarIcon from "./GuitarIcon";
 import Button from "./ui/Button";
-import type { VotingMode } from "@/lib/types";
+import type { VotingMode } from "@/domain/types";
 
 interface CreatedPlaylist {
   id: string;

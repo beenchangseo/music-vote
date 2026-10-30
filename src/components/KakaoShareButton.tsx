@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { track } from "@/lib/analytics";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
-import { bandShareDescription, roomSharePrefix, shareableShowDate } from "@/lib/team-domain";
+import { bandShareDescription, roomSharePrefix, shareableShowDate } from "@/domain/team";
 
 declare global {
   interface Window {

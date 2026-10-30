@@ -5,8 +5,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
 import { insertRoom } from "@/lib/room-insert";
 import { nestedRows } from "@/lib/supabase/nested";
-import { roomCoverThumbs } from "@/lib/team-domain";
-import type { SetlistEditMode, VotingMode } from "@/lib/types";
+import { roomCoverThumbs } from "@/domain/team";
+import { isValidDefaultVoteLimit } from "@/domain/vote";
+import type { SetlistEditMode, VotingMode } from "@/domain/types";
 import { revalidatePath } from "next/cache";
 
 export interface MyPlaylistDbEntry {
@@ -160,7 +161,7 @@ export async function createPlaylist(
   if (votingMode !== "free" && votingMode !== "allocated") {
     throw new Error("올바른 투표 방식을 선택해주세요.");
   }
-  if (!Number.isInteger(defaultVoteLimit) || defaultVoteLimit < 1 || defaultVoteLimit > 99) {
+  if (!isValidDefaultVoteLimit(defaultVoteLimit)) {
     throw new Error("기본 투표권은 1~99개여야 합니다.");
   }
   // The insert steps (room → admin token → creator as first member, with

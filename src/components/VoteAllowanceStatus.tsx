@@ -1,5 +1,5 @@
-import { remainingVotes } from "@/lib/vote-domain";
-import type { VoteAllowance } from "@/lib/types";
+import { remainingVotes } from "@/domain/vote";
+import type { VoteAllowance } from "@/domain/types";
 
 /**
  * 남은 투표권. 화면 상단 툴바의 캡션 줄 안에 인라인으로 들어간다.

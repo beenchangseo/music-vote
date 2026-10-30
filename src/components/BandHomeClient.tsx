@@ -18,7 +18,7 @@ import RemoveMemberModal from "./RemoveMemberModal";
 import { LEFT_BAND_STORAGE_KEY } from "./LeftBandNotice";
 import { leaveTeam, type TeamHomeMember, type TeamHomeView, type TeamRoom } from "@/actions/team";
 import { track } from "@/lib/analytics";
-import { aggregatePlayedSongs, formatShowDate, showDday, type PlayedSong, type ShowDday } from "@/lib/team-domain";
+import { aggregatePlayedSongs, formatShowDate, showDday, type PlayedSong, type ShowDday } from "@/domain/team";
 import { teamMessage } from "@/lib/team-messages";
 
 type MemberView = Extract<TeamHomeView, { access: "member" }>;

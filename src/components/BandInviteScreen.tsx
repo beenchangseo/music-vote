@@ -8,7 +8,7 @@ import LoginButton from "./LoginButton";
 import ShowDateTile from "./ShowDateTile";
 import { joinTeam } from "@/actions/team";
 import { track } from "@/lib/analytics";
-import { showDday } from "@/lib/team-domain";
+import { showDday } from "@/domain/team";
 import { teamMessage } from "@/lib/team-messages";
 
 /*

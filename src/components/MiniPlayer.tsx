@@ -5,8 +5,8 @@ import Image from "next/image";
 import type { PlayerState, PlayerActions } from "@/hooks/usePlayerQueue";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
 import { trapTabKey } from "./ui/focus-trap";
-import { displayArtist } from "@/lib/song-meta";
-import type { SongWithScore } from "@/lib/types";
+import { displayArtist } from "@/domain/song-meta";
+import type { SongWithScore } from "@/domain/types";
 
 interface MiniPlayerProps {
   state: PlayerState;

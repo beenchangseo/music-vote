@@ -8,7 +8,7 @@ import Input from "./ui/Input";
 import { createTeam, createTeamFromPlaylist } from "@/actions/team";
 import { getVotingSettings } from "@/actions/member";
 import { track } from "@/lib/analytics";
-import { TEAM_NAME_MAX } from "@/lib/team-domain";
+import { TEAM_NAME_MAX } from "@/domain/team";
 import { teamMessage } from "@/lib/team-messages";
 
 /** 방에서 막 만든 밴드. 방에 머무는 성공 카드와 초대 시트가 쓴다 (D30A·R6). */

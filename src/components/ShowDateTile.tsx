@@ -1,5 +1,5 @@
 import Card from "./ui/Card";
-import { showDateParts, formatShowDate, showDdayLabel, type ShowDday } from "@/lib/team-domain";
+import { showDateParts, formatShowDate, showDdayLabel, type ShowDday } from "@/domain/team";
 
 type UpcomingDday = Extract<ShowDday, { state: "upcoming" | "today" }>;
 

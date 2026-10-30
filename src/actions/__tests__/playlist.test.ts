@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { VotingMode } from "@/lib/types";
+import type { VotingMode } from "@/domain/types";
 import { createFakeClient, type FakeOp, type FakeResult } from "./fake-supabase";
 
 const state = vi.hoisted(() => ({

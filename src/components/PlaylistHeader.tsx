@@ -9,7 +9,7 @@ import AnnouncementButton from "./AnnouncementButton";
 import AuthMenu from "./AuthMenu";
 import GuitarIcon from "./GuitarIcon";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
-import { roomSharePrefix, showDday, showDdayLabel } from "@/lib/team-domain";
+import { roomSharePrefix, showDday, showDdayLabel } from "@/domain/team";
 
 declare global {
   interface Window {

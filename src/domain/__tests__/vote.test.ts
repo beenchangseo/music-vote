@@ -5,7 +5,7 @@ import {
   assignRanks,
   remainingVotes,
   shouldExposeVoters,
-} from "../vote-domain";
+} from "../vote";
 
 describe("vote allocation domain", () => {
   it("shows only allocated-mode remaining votes", () => {

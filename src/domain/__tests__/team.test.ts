@@ -16,8 +16,8 @@ import {
   showDdayLabel,
   validateNextShowDate,
   validateTeamName,
-} from "../team-domain";
-import { teamMessage, TEAM_FALLBACK_MESSAGE } from "../team-messages";
+} from "../team";
+import { teamMessage, TEAM_FALLBACK_MESSAGE } from "../../lib/team-messages";
 import { ARCHIVED_PLAYLIST_MESSAGE } from "../playlist-archive";
 
 // 2026-10-04 12:00 KST

@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Chip from "./ui/Chip";
-import { GENRES, KEY_ROOTS, KEY_MODES, GENRE_LABEL } from "@/lib/song-meta";
-import type { KeyRoot, KeyMode, Genre } from "@/lib/types";
+import { GENRES, KEY_ROOTS, KEY_MODES, GENRE_LABEL } from "@/domain/song-meta";
+import type { KeyRoot, KeyMode, Genre } from "@/domain/types";
 
 export type BpmBucket = "all" | "lt100" | "100-130" | "130-160" | "gt160";
 

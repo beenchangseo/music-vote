@@ -977,7 +977,7 @@ finding above. Run with Claude Code or Codex; checkbox as you ship.
   - Verify: 컴포넌트 테스트(밴드 1 → 토글 켬 · createBandPlaylist, 끄면 createPlaylist, 밴드 0 · 2+ → 토글 없음)
 - [ ] **DT6 (P2, human: ~1시간 / CC: ~10min)** — share — 멤버 1명 밴드의 카톡 카드 문구 · OG 멤버 수 숨김(DR13)
   - Surfaced by: Pass 3 — DR13
-  - Files: `src/lib/team-domain.ts`, `src/app/api/og/route.tsx`, `src/app/join/[inviteCode]/page.tsx`
+  - Files: `src/domain/team.ts`, `src/app/api/og/route.tsx`, `src/app/join/[inviteCode]/page.tsx`
   - Verify: `team-domain` 단위 테스트(1명 · 날짜 유무), OG 이미지 확인
 
 ### Completion Summary (디자인 리뷰)
@@ -1199,7 +1199,7 @@ Legend: ★★★ behavior + edge + error | ★★ happy path | ★ smoke check 
 | `src/components/__tests__/CreatePlaylistForm.band.test.tsx` (확장) | 밴드 1 → 토글 켬 → createBandPlaylist / 끔 → createPlaylist + 제안 없음 / 0 · 2+ → 토글 없음 | unit | DR12 · E3 |
 | `src/components/__tests__/HomeBands.test.tsx` (확장) | HeroCTA 로그인 목적지 "/" | unit | CEO2-A |
 | `src/app/auth/logout/__tests__/route.test.ts` (새) | `signOut({ scope: "local" })` + 303 → `/` | unit | CEO2-C |
-| `src/lib/__tests__/team-domain.test.ts` (확장) | 1명 → "{닉네임}님이 밴드를 만들었어요 · …" · 날짜 있는 1명 / 2명+ 유지 | unit | DR13 |
+| `src/domain/__tests__/team.test.ts` (확장) | 1명 → "{닉네임}님이 밴드를 만들었어요 · …" · 날짜 있는 1명 / 2명+ 유지 | unit | DR13 |
 | `scripts/__tests__/team-metrics.test.ts` (확장) | 홈에서 만든 밴드 수 · 7일 방치 수 | unit | CEO2-G |
 | `e2e/account-a/band-home.spec.ts` (새) | 홈 → 새 밴드 → 멤버 없이 → `[e2e]` 이름 → 시작 영역(초대 입구 하나) → 주 버튼 확인 · `cleanup.team`. 실제 플레이리스트 넣기 금지 | E2E | CEO2-A · DR1 |
 | `e2e/account-b/home.spec.ts` (새) | 상태 A 제목 · 두 선택지(읽기만). 시작 전 0/0 이 아니면 원인 문구로 실패 | E2E | DR2 |
@@ -1401,7 +1401,7 @@ finding above. Run with Claude Code or Codex; checkbox as you ship.
   - Verify: `npm test` — 밴드 1 켬/끔 · 끄면 완료 화면 제안 없음 · 0 · 2+ 토글 없음
 - [x] **T14 (P2, human: ~2h / CC: ~15min)** — share — 멤버 1명 밴드의 카톡 카드를 만든 사람 이름으로 바꾼다
   - Surfaced by: DR13; Outside Voice #4c
-  - Files: `src/lib/team-domain.ts`, `src/components/BandInviteSheet.tsx`, `src/components/KakaoShareButton.tsx`, `src/components/BandHomeClient.tsx`, `src/app/join/[inviteCode]/page.tsx`, `src/app/api/og/route.tsx` + 테스트
+  - Files: `src/domain/team.ts`, `src/components/BandInviteSheet.tsx`, `src/components/KakaoShareButton.tsx`, `src/components/BandHomeClient.tsx`, `src/app/join/[inviteCode]/page.tsx`, `src/app/api/og/route.tsx` + 테스트
   - Verify: `npm test` team-domain(1명 · 날짜 유무 · 2명+ 그대로), OG 이미지 눈으로 확인
 
 ### Unresolved Decisions (eng 리뷰)

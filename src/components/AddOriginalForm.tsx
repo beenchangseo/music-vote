@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useDialog } from "./DialogProvider";
 import { addOriginalItem } from "@/actions/setlist";
-import type { SetlistItem } from "@/lib/types";
+import type { SetlistItem } from "@/domain/types";
 
 interface AddOriginalFormProps {
   playlistId: string;

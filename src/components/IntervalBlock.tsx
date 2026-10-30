@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import type { SetlistItem } from "@/lib/types";
+import type { SetlistItem } from "@/domain/types";
 
 interface IntervalBlockProps {
   item: SetlistItem;

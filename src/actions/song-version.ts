@@ -3,7 +3,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { extractVideoId, fetchVideoMetadata } from "@/lib/youtube";
-import type { SongVersion } from "@/lib/types";
+import type { SongVersion } from "@/domain/types";
 import { revalidatePath } from "next/cache";
 
 type DuplicateKind = "original" | "version";

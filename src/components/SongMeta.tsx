@@ -14,8 +14,8 @@ import {
   formatKey,
   formatDifficulty,
   formatDuration,
-} from "@/lib/song-meta";
-import type { SongWithScore, KeyRoot, KeyMode, Genre } from "@/lib/types";
+} from "@/domain/song-meta";
+import type { SongWithScore, KeyRoot, KeyMode, Genre } from "@/domain/types";
 
 interface SongMetaProps {
   song: SongWithScore;

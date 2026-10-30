@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import BandInviteScreen from "@/components/BandInviteScreen";
 import { getTeamInvite } from "@/actions/team";
 import { BASE_OPEN_GRAPH } from "@/lib/seo";
-import { bandShareDescription, shareableShowDate } from "@/lib/team-domain";
+import { bandShareDescription, shareableShowDate } from "@/domain/team";
 
 // generateMetadata and the page read the same invite once per request.
 const loadInvite = cache((inviteCode: string) => getTeamInvite(inviteCode));

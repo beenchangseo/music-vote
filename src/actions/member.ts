@@ -4,7 +4,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
 import { isArchivedPlaylistId } from "@/lib/playlist-access";
 import { createAdminClient, createServerSupabaseClient } from "@/lib/supabase/server";
-import type { PlaylistMember, VoteAllowance, VotingMode } from "@/lib/types";
+import type { PlaylistMember, VoteAllowance, VotingMode } from "@/domain/types";
+import { isValidDefaultVoteLimit } from "@/domain/vote";
 import { revalidatePath } from "next/cache";
 
 function actionError(error: { message?: string } | null, fallback: string): never {
@@ -135,7 +136,7 @@ export async function saveVotingSettings(
   if (mode !== "free" && mode !== "allocated") {
     throw new Error("잘못된 투표 방식입니다.");
   }
-  if (!Number.isInteger(defaultVoteLimit) || defaultVoteLimit < 1 || defaultVoteLimit > 99) {
+  if (!isValidDefaultVoteLimit(defaultVoteLimit)) {
     throw new Error("기본 투표권은 1~99개여야 합니다.");
   }
   if (memberLimits.some(({ voteLimit }) => !Number.isInteger(voteLimit) || voteLimit < 0 || voteLimit > 99)) {

@@ -6,7 +6,7 @@
 // 권한 검사를 마친 액션만 부르는 일반 모듈로 둔다. 입력 검증과 권한 검사는 호출부의 몫이다.
 import { nanoid } from "nanoid";
 import { createAdminClient } from "@/lib/supabase/server";
-import type { TeamLinkedVia, VotingMode } from "@/lib/types";
+import type { TeamLinkedVia, VotingMode } from "@/domain/types";
 
 export interface RoomInsertInput {
   title: string;

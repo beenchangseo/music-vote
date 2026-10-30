@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { triggerKakaoLogin } from "@/lib/kakao-login";
-import type { VoteDirection } from "@/lib/vote-domain";
-import type { VotingMode } from "@/lib/types";
+import type { VoteDirection } from "@/domain/vote";
+import type { VotingMode } from "@/domain/types";
 
 interface VoteButtonsProps {
   score: number;

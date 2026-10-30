@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, summarizeSetlist } from "../setlist-domain";
+import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, summarizeSetlist } from "../setlist";
 import type { SetlistItem, SongWithScore } from "../types";
 
 const song = { id: "song-1", title: "원본 제목", duration_seconds: 180 } as SongWithScore;

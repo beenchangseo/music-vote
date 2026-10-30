@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import type { SongWithScore } from "@/lib/types";
+import type { SongWithScore } from "@/domain/types";
 
 type RepeatMode = "off" | "one";
 

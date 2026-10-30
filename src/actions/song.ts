@@ -3,7 +3,7 @@
 import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistWritable } from "@/lib/playlist-access";
-import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/lib/playlist-archive";
+import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/domain/playlist-archive";
 import { extractVideoId, fetchVideoMetadata } from "@/lib/youtube";
 import { fetchSingleVideoDetails } from "@/lib/youtube-data";
 import {
@@ -11,9 +11,10 @@ import {
   isValidKeyMode,
   isValidGenre,
   isValidDifficulty,
-} from "@/lib/song-meta";
+} from "@/domain/song-meta";
 import { nestedRows } from "@/lib/supabase/nested";
-import type { KeyRoot, KeyMode, Genre, Difficulty } from "@/lib/types";
+import { MAX_BPM, MIN_BPM } from "@/domain/tap-tempo";
+import type { KeyRoot, KeyMode, Genre, Difficulty } from "@/domain/types";
 import { revalidatePath } from "next/cache";
 
 type CarriedSongMeta = {
@@ -196,7 +197,7 @@ export async function updateSongMeta(
   if (data.tempoBpm !== undefined) {
     const bpm = data.tempoBpm;
     updateData.tempo_bpm =
-      bpm == null ? null : bpm >= 40 && bpm <= 300 ? bpm : null;
+      bpm == null ? null : bpm >= MIN_BPM && bpm <= MAX_BPM ? bpm : null;
   }
   if (data.durationSeconds !== undefined) {
     updateData.duration_seconds = data.durationSeconds;

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMetronome } from "@/hooks/useMetronome";
 import Link from "next/link";
-import type { Song } from "@/lib/types";
+import type { Song } from "@/domain/types";
 
 interface MetronomeClientProps {
   shareCode: string;

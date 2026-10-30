@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ARCHIVED_PLAYLIST_MESSAGE } from "@/lib/playlist-archive";
+import { ARCHIVED_PLAYLIST_MESSAGE } from "@/domain/playlist-archive";
 import { createFakeClient, type FakeOp, type FakeResult } from "./fake-supabase";
 
 const state = vi.hoisted(() => ({

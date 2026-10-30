@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
 import { DEFAULT_OG_IMAGE } from "@/lib/seo";
-import { formatShowDate } from "@/lib/team-domain";
+import { formatShowDate } from "@/domain/team";
 
 export const runtime = "edge";
 // The project's function region (vercel.json `regions`: icn1). On "auto" it ran in sin1.

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import GuitarIcon from "./GuitarIcon";
 import type { MyTeam } from "@/actions/team";
-import { showDday, showDdayLabel } from "@/lib/team-domain";
+import { showDday, showDdayLabel } from "@/domain/team";
 
 /**
  * 홈 "내 밴드" (디자인 리뷰 4A). "내 플레이리스트" 바로 위, 가로 선반(Spotify·YouTube Music 홈):

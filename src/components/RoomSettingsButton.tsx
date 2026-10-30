@@ -17,7 +17,7 @@ import { deletePlaylist, resetPlaylistVotes, updateSetlistEditMode } from "@/act
 import { attachPlaylistToTeam, type MyTeam } from "@/actions/team";
 import { track } from "@/lib/analytics";
 import { teamMessage } from "@/lib/team-messages";
-import type { RoomTeam, SetlistEditMode, VotingMode } from "@/lib/types";
+import type { RoomTeam, SetlistEditMode, VotingMode } from "@/domain/types";
 
 /** 헤더 ⋮ 시트처럼 다른 곳에서 설정을 열 때 쓴다. */
 export interface RoomSettingsHandle {

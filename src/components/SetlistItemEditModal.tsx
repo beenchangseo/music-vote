@@ -4,8 +4,8 @@ import { useState, useTransition } from "react";
 import Modal from "./ui/Modal";
 import { useDialog } from "./DialogProvider";
 import { resetSongSetlistItem, updateIntervalItem, updateOriginalItem, updateSongSetlistItem } from "@/actions/setlist";
-import { effectiveSetlistDuration, effectiveSetlistTitle } from "@/lib/setlist-domain";
-import type { SetlistItem, SongWithScore } from "@/lib/types";
+import { effectiveSetlistDuration, effectiveSetlistTitle } from "@/domain/setlist";
+import type { SetlistItem, SongWithScore } from "@/domain/types";
 
 interface Props {
   item: SetlistItem;

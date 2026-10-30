@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ComponentProps } from "react";
 import SongCard from "../SongCard";
-import type { SongWithScore } from "@/lib/types";
+import type { SongWithScore } from "@/domain/types";
 
 vi.mock("@/actions/song", () => ({ removeSong: vi.fn() }));
 vi.mock("../DialogProvider", () => ({ useDialog: () => ({ showDanger: vi.fn(), showAlert: vi.fn() }) }));

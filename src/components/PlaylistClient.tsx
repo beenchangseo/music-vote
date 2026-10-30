@@ -32,10 +32,11 @@ import type { CreatedBand } from "./CreateBandSheet";
 import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import type { ViewMode } from "./NavigationBar";
-import { isArchivedPlaylist } from "@/lib/playlist-archive";
+import { isArchivedPlaylist } from "@/domain/playlist-archive";
 import type { MyTeam } from "@/actions/team";
-import type { Playlist, RoomTeam, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/lib/types";
-import { displayTitle } from "@/lib/song-meta";
+import type { Playlist, RoomTeam, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/domain/types";
+import { displayTitle } from "@/domain/song-meta";
+import { assignRanks } from "@/domain/vote";
 
 interface PlaylistClientProps {
   playlist: Playlist;
@@ -247,12 +248,8 @@ export default function PlaylistClient({
   // Score rank for every row (디자인 C9). It comes from the whole list, so a filter never turns 4th into 1st.
   // Ties share a number (5,5,4 → 1,1,3): with a number on every row, 1,2,3 for equal scores would read as a ranking.
   const rankById = useMemo(() => {
-    const ranks = new Map<string, number>();
-    songsWithVotes.forEach((song, index) => {
-      const previous = songsWithVotes[index - 1];
-      ranks.set(song.id, previous && previous.score === song.score ? ranks.get(previous.id)! : index + 1);
-    });
-    return ranks;
+    const ranks = assignRanks(songsWithVotes.map((song) => song.score));
+    return new Map(songsWithVotes.map((song, index) => [song.id, ranks[index]]));
   }, [songsWithVotes]);
 
   const setlistSongIds = useMemo(

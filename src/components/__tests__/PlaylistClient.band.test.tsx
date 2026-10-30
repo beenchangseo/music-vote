@@ -2,7 +2,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Playlist, RoomTeam } from "@/lib/types";
+import type { Playlist, RoomTeam } from "@/domain/types";
 import PlaylistClient from "../PlaylistClient";
 
 // Everything around the band slot is stubbed: this file is about the prompt card (F7, 27A)

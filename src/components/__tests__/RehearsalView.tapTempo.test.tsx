@@ -3,8 +3,8 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import RehearsalView from "../RehearsalView";
-import { TAP_RESET_MS } from "@/lib/tap-tempo";
-import type { SetlistItem, SongWithScore } from "@/lib/types";
+import { TAP_RESET_MS } from "@/domain/tap-tempo";
+import type { SetlistItem, SongWithScore } from "@/domain/types";
 
 const updateSongMeta = vi.fn();
 const track = vi.fn();

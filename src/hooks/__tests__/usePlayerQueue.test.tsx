@@ -2,7 +2,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { usePlayerQueue } from "../usePlayerQueue";
-import type { SongWithScore } from "@/lib/types";
+import type { SongWithScore } from "@/domain/types";
 
 const songs = ["a", "b", "c"].map((id) => ({ id }) as SongWithScore);
 

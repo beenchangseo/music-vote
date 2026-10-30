@@ -11,9 +11,9 @@ import SetlistShareButton from "./SetlistShareButton";
 import ScreenToolbar from "./ui/ScreenToolbar";
 import { useDialog } from "./DialogProvider";
 import { addSongToSetlist, removeSetlistItem, updateSetlistOrder } from "@/actions/setlist";
-import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, summarizeSetlist } from "@/lib/setlist-domain";
-import { displayArtist, formatKey } from "@/lib/song-meta";
-import type { SetlistItem, SongWithScore } from "@/lib/types";
+import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, summarizeSetlist } from "@/domain/setlist";
+import { displayArtist, formatKey } from "@/domain/song-meta";
+import type { SetlistItem, SongWithScore } from "@/domain/types";
 
 /** "후보곡에서 넣기"는 점수 높은 5곡 + 더 보기. */
 const COLLAPSED_SUGGESTIONS = 5;

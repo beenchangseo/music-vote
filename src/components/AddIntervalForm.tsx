@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useDialog } from "./DialogProvider";
 import { addIntervalItem } from "@/actions/setlist";
-import type { SetlistItem } from "@/lib/types";
+import type { SetlistItem } from "@/domain/types";
 
 interface AddIntervalFormProps {
   playlistId: string;

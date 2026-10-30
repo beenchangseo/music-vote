@@ -3,13 +3,13 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { createAdminClient, createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
-import { shouldExposeVoters } from "@/lib/vote-domain";
+import { shouldExposeVoters } from "@/domain/vote";
 import { BAND_PROMPT_COOKIE, parseDismissals } from "@/lib/prompt-dismissals";
 import { BASE_OPEN_GRAPH } from "@/lib/seo";
 import { getMyTeams, type MyTeam } from "@/actions/team";
 import PlaylistClient from "@/components/PlaylistClient";
 import type { Metadata } from "next";
-import type { Playlist, RoomTeam, SetlistItem, Song, SongWithScore } from "@/lib/types";
+import type { Playlist, RoomTeam, SetlistItem, Song, SongWithScore } from "@/domain/types";
 
 /** song_vote_summary 뷰. 점수와 내 표만 담고 다른 사람의 신원은 담지 않는다. */
 type VoteSummaryRow = {

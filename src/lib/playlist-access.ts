@@ -1,7 +1,7 @@
 // 서버 전용. service_role 클라이언트를 쓰므로 화면에서 import 하지 않는다.
 // 화면이 필요한 순수 판정은 playlist-archive 에 있다.
 import { createAdminClient } from "@/lib/supabase/server";
-import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/lib/playlist-archive";
+import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/domain/playlist-archive";
 
 /** 합주방 id 로 보관 여부를 확인한다. */
 export async function isArchivedPlaylistId(playlistId: string): Promise<boolean> {

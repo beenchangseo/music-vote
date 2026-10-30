@@ -7,7 +7,7 @@
  *
  * 화면과 서버가 함께 쓰므로 서버 전용 모듈을 import 하지 않는다.
  */
-import { ARCHIVED_PLAYLIST_MESSAGE } from "@/lib/playlist-archive";
+import { ARCHIVED_PLAYLIST_MESSAGE } from "@/domain/playlist-archive";
 
 export type TeamReason =
   | "not_logged_in"

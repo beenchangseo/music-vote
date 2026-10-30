@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from "react";
 import { useDialog } from "./DialogProvider";
 import { addOrUpdateComment, deleteComment, getCommentsBySong } from "@/actions/comment";
-import type { Comment } from "@/lib/types";
+import type { Comment } from "@/domain/types";
 import LoginButton from "./LoginButton";
 
 interface CommentModalProps {

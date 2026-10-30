@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useDialog } from "./DialogProvider";
 import { addOrUpdateComment } from "@/actions/comment";
-import type { Comment } from "@/lib/types";
+import type { Comment } from "@/domain/types";
 
 interface CommentSectionProps {
   songId: string;

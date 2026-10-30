@@ -3,8 +3,8 @@
 import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import { castVote } from "@/actions/vote";
 import { track } from "@/lib/analytics";
-import { applyVotePress, type VoteDirection } from "@/lib/vote-domain";
-import type { SongWithScore, VoteAllowance, VotingMode } from "@/lib/types";
+import { applyVotePress, type VoteDirection } from "@/domain/vote";
+import type { SongWithScore, VoteAllowance, VotingMode } from "@/domain/types";
 
 export const VOTE_LIMIT_REACHED_MESSAGE =
   "투표권을 모두 사용했어요. 기존 표를 취소하면 다시 투표할 수 있어요.";

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/server";
 import MetronomeClient from "@/components/MetronomeClient";
-import type { Song } from "@/lib/types";
+import type { Song } from "@/domain/types";
 
 interface PageProps {
   params: Promise<{ shareCode: string }>;

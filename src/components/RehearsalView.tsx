@@ -9,9 +9,9 @@ import { useDialog } from "./DialogProvider";
 import { useMetronome, useTapTempo } from "@/hooks/useMetronome";
 import { updateSongMeta } from "@/actions/song";
 import { track } from "@/lib/analytics";
-import { displayArtist, formatKey } from "@/lib/song-meta";
-import { effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime } from "@/lib/setlist-domain";
-import type { SetlistItem, SongWithScore, Comment } from "@/lib/types";
+import { displayArtist, formatKey } from "@/domain/song-meta";
+import { effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime } from "@/domain/setlist";
+import type { SetlistItem, SongWithScore, Comment } from "@/domain/types";
 
 interface RehearsalViewProps {
   setlistItems: SetlistItem[];

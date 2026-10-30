@@ -7,9 +7,9 @@ import CommentModal from "./CommentModal";
 import SongVersionModal from "./SongVersionModal";
 import { useDialog } from "./DialogProvider";
 import { removeSong } from "@/actions/song";
-import type { VoteDirection } from "@/lib/vote-domain";
-import { displayArtist, displayTitle } from "@/lib/song-meta";
-import type { SongWithScore, VotingMode } from "@/lib/types";
+import type { VoteDirection } from "@/domain/vote";
+import { displayArtist, displayTitle } from "@/domain/song-meta";
+import type { SongWithScore, VotingMode } from "@/domain/types";
 
 interface SongCardProps {
   song: SongWithScore;

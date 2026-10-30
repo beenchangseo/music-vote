@@ -6,7 +6,7 @@ import Button from "./ui/Button";
 import Input from "./ui/Input";
 import { updateTeamNextShow } from "@/actions/team";
 import { track } from "@/lib/analytics";
-import { kstDateString } from "@/lib/team-domain";
+import { kstDateString } from "@/domain/team";
 import { teamMessage } from "@/lib/team-messages";
 
 interface BandDateSheetProps {
