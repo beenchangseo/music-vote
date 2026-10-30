@@ -272,7 +272,7 @@ song_catalog (신규) — 공유 가능한 값만 담는다
 
 `playlist_members` 는 고립된 테이블이 아니다. 실측:
 
-- v10 RLS 정책 3곳 (`supabase-migration-v10.sql:88, 111, 134`)
+- v10 RLS 정책 3곳 (`supabase/migrations/v10.sql:88, 111, 134`)
 - v10 SECURITY DEFINER 함수 7곳 (`183, 190, 244, 345, 387, 425, 438`) —
   `cast_playlist_vote`, 투표권 할당 로직 포함
 - v11, v12 도 참조
@@ -350,7 +350,7 @@ song_catalog (신규) — 공유 가능한 값만 담는다
 
 **0. 공개 키 접근 차단 (T1·T2·T3)** — 팀 작업보다 먼저 배포한다. 스펙 리뷰로 한 가지가 늘었다:
 
-- **`playlists_insert WITH CHECK (true)` 제거.** `supabase-schema.sql:52` 의 이 정책은 이후 어느
+- **`playlists_insert WITH CHECK (true)` 제거.** `supabase/migrations/v01.sql:52` 의 이 정책은 이후 어느
   마이그레이션도 바꾸지 않았다. 지금도 공개 키와 세션만 있으면 아무 `creator_user_id`(v19 뒤에는 아무
   `team_id`)를 단 방을 REST 로 넣을 수 있다. ADR 0013 "공개 키로는 쓰기 경로를 열지 않는다"와 어긋난다.
   또 T1 이 SELECT 를 닫으면 `createPlaylist` 의 anon `insert().select()` 가 깨진다. v18 에서 정책을
@@ -389,7 +389,7 @@ song_catalog (신규) — 공유 가능한 값만 담는다
   한다. T1 과 같은 배포. 빼기 전에 Search Console 에서 `/playlist/` 의 최근 28일 클릭 수를 **기준선으로
   기록만 하고 진행한다.** 방장은 D12 에서 "검색 유입이 있었다면 닫힌다"는 위험을 보고 A 를 골랐다
 
-**1. 팀 스키마 (T7)** — `supabase-migration-v19.sql`, idempotent
+**1. 팀 스키마 (T7)** — `supabase/migrations/v19.sql`, idempotent
 
 ```
 teams
@@ -1131,7 +1131,7 @@ F3 sitemap 만 되돌리기 ── 커밋 revert (noindex 가 남으면 색인 �
 
 ## Dependencies
 
-- 마이그레이션 `supabase-migration-v18.sql`(RLS 닫기) → `supabase-migration-v19.sql`(팀) 순서.
+- 마이그레이션 `supabase/migrations/v18.sql`(RLS 닫기) → `supabase/migrations/v19.sql`(팀) 순서.
   둘 다 idempotent. README 실행 순서 갱신 필요.
 - **코드와 SQL 중 무엇이 먼저인가**
   - v18: **코드 먼저.** admin 읽기·admin insert 를 배포한 뒤 SQL 을 돌린다. 반대로 하면 SQL 을 돌린
@@ -1200,8 +1200,8 @@ F3 sitemap 만 되돌리기 ── 커밋 revert (noindex 가 남으면 색인 �
 |---|---|---|
 | 방 진입 시 멤버 자동 등록 | `src/actions/member.ts:14-29` → `register_playlist_member` RPC, `src/components/playlist/PlaylistClient.tsx:96` | **재사용.** 리뷰 전에는 백필을 새로 만들려 했다. 이게 자가치유 경로다 |
 | 곡·점수·코멘트 병렬 조회 | `src/app/playlist/[shareCode]/page.tsx:111-130` (`songs` + `song_vote_summary` + `song_engagement_counts`) | **재사용.** 팀 방이면 `teams` 조회(service_role)가 네 번째로 합류. ~~카탈로그 신호 뷰~~ 는 보류 |
-| anon 쓰기 차단 + 뷰 패턴 | `supabase-migration-v15.sql` (votes), v16 (뷰) | **재사용.** 이슈 1 수정이 같은 패턴을 따른다 |
-| service_role 전용 테이블 패턴 | `supabase-migration-v17.sql` (`youtube_search_cache`, `REVOKE ALL FROM anon`) | **재사용.** 신규 테이블이 따를 틀 |
+| anon 쓰기 차단 + 뷰 패턴 | `supabase/migrations/v15.sql` (votes), v16 (뷰) | **재사용.** 이슈 1 수정이 같은 패턴을 따른다 |
+| service_role 전용 테이블 패턴 | `supabase/migrations/v17.sql` (`youtube_search_cache`, `REVOKE ALL FROM anon`) | **재사용.** 신규 테이블이 따를 틀 |
 | 메트로놈 오디오 엔진 | `src/hooks/useMetronome.ts` | **재사용.** 탭 템포가 그 옆에 붙는다 |
 | 서버 액션 테스트 틀 | `src/actions/__tests__/vote.test.ts` | **재사용.** Supabase 모킹 패턴이 이미 있다 |
 | 공개 키 접근 감사 | `scripts/audit-anon-access.mjs` | **확장.** 지금 `votes`·`playlists.id` 만 본다 |
@@ -1256,8 +1256,8 @@ CEO 리뷰 범위(B) 기준으로 갱신 (2026-10-04).
 
 | 단계 | 건드리는 모듈 | 의존 |
 |---|---|---|
-| T1·T2 RLS 닫기 + 감사 | `supabase-migration-v18.sql`, `src/actions/`, `src/app/`, `scripts/`, `package.json` | — |
-| T7 팀 스키마 | `supabase-migration-v19.sql`, `src/domain/types.ts`, `scripts/audit-anon-access.mjs` | T1 (v18 다음 번호, 감사 스크립트 공유) |
+| T1·T2 RLS 닫기 + 감사 | `supabase/migrations/v18.sql`, `src/actions/`, `src/app/`, `scripts/`, `package.json` | — |
+| T7 팀 스키마 | `supabase/migrations/v19.sql`, `src/domain/types.ts`, `scripts/audit-anon-access.mjs` | T1 (v18 다음 번호, 감사 스크립트 공유) |
 | T4 getMyPlaylists | `src/actions/playlist.ts` | T7 (팀 방 집합) |
 | T8 팀 액션 | `src/actions/team.ts`, `src/actions/playlist.ts` (방 insert 헬퍼) | T7 |
 | T17·T18 Modal·확인창 포커스, 카카오 토큰 | `src/components/ui/`, `src/components/ui/DialogProvider.tsx`, `src/app/globals.css`, 카카오 버튼 3곳 | — (T9 보다 먼저) |
@@ -1289,7 +1289,7 @@ finding above. Run with Claude Code or Codex; checkbox as you ship.
 > **1차 보안 배포 완료 (2026-10-05)**: 코드 `cd475f2`(main) 배포 → 프로덕션 확인 → 운영 Supabase 에 v18 실행 → `npm run audit:anon` 전부 통과(6개 테이블 42501, playlists INSERT 42501, 뷰 5개 열림) → 로컬 게이트 11/11 통과(운영 DB). 세션 `songs` INSERT 는 되고 SELECT 는 42501. 고정 테스트 방 `qDPJnh1d`, account-a 는 운영자 실사용 계정(정리는 `[e2e]` 접두어만).
 - [x] **T1 (P1, human: ~2일 / CC: ~3시간)** — db/rls — 공개 anon 키로 읽히는 6개 테이블(`playlists`·`playlist_members`·`songs`·`comments`·`setlist_items`·`song_versions`) SELECT 를 닫고 서버 읽기·댓글 쓰기를 service_role 로 돌린다
   - Surfaced by: Architecture 이슈1 — 라이브 프로브로 `playlists` 39행(share_code 포함)·`playlist_members` 29행 조회 성공
-  - Files: `supabase-migration-v18.sql`, `src/actions/playlist.ts`, `src/app/playlist/[shareCode]/page.tsx`, `src/actions/comment.ts`, `src/actions/setlist.ts`, `src/app/api/`
+  - Files: `supabase/migrations/v18.sql`, `src/actions/playlist.ts`, `src/app/playlist/[shareCode]/page.tsx`, `src/actions/comment.ts`, `src/actions/setlist.ts`, `src/app/api/`
   - **스펙 리뷰 추가 (2026-10-04)**: v18 에서 `playlists_insert WITH CHECK (true)` 제거, `createPlaylist` insert 를 `createAdminClient()` 로 이전, `song_versions` SELECT 차단, `comment.ts` 조회·수정·삭제를 admin + `user_id = 나` + 행 수 확인으로, `src/app/playlist/[shareCode]/metronome/page.tsx`·`/api/setlist-image` 읽기 이전, `auth.uid()` 뷰는 세션 클라이언트 유지, `getPlaylistByShareCode` 에러 로그
   - **CEO-F3**: `src/app/sitemap.ts` 에서 방 URL 제거, 방 페이지 `generateMetadata` 에 `robots: { index: false }`
   - Verify: `npm run audit:anon` + Playwright 로컬 게이트 (방 만들기·댓글 수정/삭제 포함) + **`createPlaylist` 회귀 액션 테스트 (CRITICAL, eng Section 3: 제목·투표 방식 검증 / 23505 재시도 / 토큰·멤버 insert 실패 시 방 삭제 / admin 클라이언트 사용)** + `comment.ts` 액션 테스트 (수정이 23505 없이 덮어씀 / 남의 댓글 0행 / 삭제 행 수)
@@ -1322,7 +1322,7 @@ finding above. Run with Claude Code or Codex; checkbox as you ship.
 - [x] ~~**T5** — "이 멤버로 새 방" 버튼~~ — **폐기 (CEO-D2).** T8·T9 의 "밴드에서 새 합주방" 이 대체
 - [x] **T7 (P1, human: ~반나절 / CC: ~30분)** — db — v19 팀 스키마
   - Surfaced by: CEO-D2 (B 팀 우선 최소판), eng 이슈 3 (얕은 결합)
-  - Files: `supabase-migration-v19.sql`, `README.md` (실행 순서 + 디렉터리 트리: `middleware.ts`→`src/proxy.ts` 정정, `band/`·`team.ts`·`team-domain.ts`·`e2e/`·`team-metrics.mjs` 추가), `src/domain/types.ts` (`Team`·`TeamMember`·`ActionResult<T>`), `scripts/audit-anon-access.mjs` (`teams`·`team_members` 추가)
+  - Files: `supabase/migrations/v19.sql`, `README.md` (실행 순서 + 디렉터리 트리: `middleware.ts`→`src/proxy.ts` 정정, `band/`·`team.ts`·`team-domain.ts`·`e2e/`·`team-metrics.mjs` 추가), `src/domain/types.ts` (`Team`·`TeamMember`·`ActionResult<T>`), `scripts/audit-anon-access.mjs` (`teams`·`team_members` 추가)
   - Verify: 마이그레이션 두 번 실행해도 무해 / `npm run audit:anon` 이 두 테이블 차단 확인
   - eng 3회차 R13 (D11 A): v19 에 `playlists.team_linked_via text CHECK (IN ('promote','band','attach'))` 추가. 쓰기는 T8(`createTeamFromPlaylist`·`createBandPlaylist`)·T14(`attachPlaylistToTeam`)가 같은 UPDATE/insert 에서
 - [x] **T8 (P1, human: ~2일 / CC: ~2시간)** — actions — `src/actions/team.ts`: `createTeamFromPlaylist`·`joinTeam`·`getTeamHome`·`getMyTeams`·`createBandPlaylist`, `playlist.ts` 방 insert 비공개 헬퍼
@@ -1391,7 +1391,7 @@ _No new tasks from Performance review — 이슈 8(카탈로그 N+1)은 3단계�
 | 범위를 바꾸지 않는 수리 (일관성 8, 명확성 4, 완결성 6, 실현성 6, 범위 3 중 일부) | 27 | 문서에 반영. 대표: v18 의 `playlists_insert` 제거와 `createPlaylist` admin 이전, 밴드 만들기 조건부 UPDATE·전 단계 롤백, FK, 카톡 카드 `linkPath`·OG `band` 분기, 팀 방 페이지 데이터, `/new?band=`, 측정 지표를 DB 행동 기록으로 교체, 비멤버에게 `invite_code` 미노출 |
 | 범위를 넓히는 결정 | 2 | **CEO-F1** 멤버 관리(내보내기·초대 링크 새로 만들기, `role` 컬럼의 쓰임), **CEO-F2** 기존 방을 밴드에 넣기 → 결정 원장 참고 |
 
-**눈에 띈 사실 하나:** `playlists_insert WITH CHECK (true)` (`supabase-schema.sql:52`) 는 팀과 무관하게
+**눈에 띈 사실 하나:** `playlists_insert WITH CHECK (true)` (`supabase/migrations/v01.sql:52`) 는 팀과 무관하게
 지금도 열려 있다. ADR 0013 이 "공개 키로는 쓰기 경로를 열지 않는다"고 적은 상태와 실제 DB 가 다르다.
 
 ### eng-review 스펙 리뷰 (2026-10-03, 기록)

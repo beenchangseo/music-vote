@@ -20,7 +20,7 @@ test.describe("account-b: band pages as a non-member", () => {
   test("members-only band home, refused /new?band=, invite screen, dead invite", async ({ page, browser, baseURL, cleanup }) => {
     const db = adminClient();
     const { error: schemaError } = await db.from("teams").select("id").limit(1);
-    test.skip(schemaError !== null, "teams 테이블이 없어요 (supabase-migration-v19.sql 적용 전)");
+    test.skip(schemaError !== null, "teams 테이블이 없어요 (supabase/migrations/v19.sql 적용 전)");
 
     const ownerId = readAccountUserId("account-a")!;
     const name = `${E2E_PREFIX} 손님 밴드 ${Date.now().toString(36)}`;

@@ -7,12 +7,12 @@
 (* READ COMMITTED (the Supabase default). Every step is one SQL statement *)
 (* of the function, and the comment on each step names its line:          *)
 (*                                                                         *)
-(*   cast_playlist_vote             supabase-migration-v12.sql            *)
-(*   register_playlist_member       supabase-migration-v10.sql (in cast)  *)
-(*   save_playlist_voting_settings  supabase-migration-v11.sql (UI path)  *)
-(*   configure_playlist_voting      supabase-migration-v10.sql            *)
-(*   set_member_vote_limit          supabase-migration-v10.sql            *)
-(*   apply_vote_limit_to_all        supabase-migration-v10.sql            *)
+(*   cast_playlist_vote             supabase/migrations/v12.sql            *)
+(*   register_playlist_member       supabase/migrations/v10.sql (in cast)  *)
+(*   save_playlist_voting_settings  supabase/migrations/v11.sql (UI path)  *)
+(*   configure_playlist_voting      supabase/migrations/v10.sql            *)
+(*   set_member_vote_limit          supabase/migrations/v10.sql            *)
+(*   apply_vote_limit_to_all        supabase/migrations/v10.sql            *)
 (*                                                                         *)
 (* READ COMMITTED: a statement sees the committed rows plus its own       *)
 (* transaction's writes. UPDATE, SELECT ... FOR UPDATE and                *)
@@ -88,7 +88,7 @@ TakePlaylistLock(p) == playlistLock \in {NONE, p} /\ playlistLock' = p
 Locals == <<seenMode, seenLimit, seenVote, ins, del, wMode, wLimit>>
 
 ----------------------------------------------------------------------------
-(* cast_playlist_vote, supabase-migration-v12.sql *)
+(* cast_playlist_vote, supabase/migrations/v12.sql *)
 
 (* l.41: SELECT s.playlist_id, p.voting_mode ... JOIN playlists p (no lock) *)
 VReadMode(p) ==
@@ -167,7 +167,7 @@ Voter(p) ==
     \/ VInsert(p) \/ VDelete(p) \/ VUpdate(p)
 
 ----------------------------------------------------------------------------
-(* save_playlist_voting_settings, supabase-migration-v11.sql (the settings
+(* save_playlist_voting_settings, supabase/migrations/v11.sql (the settings
    sheet calls it through saveVotingSettings in src/actions/member.ts).
    arg.member is the member's entry in p_member_limits, NONE when absent. *)
 
@@ -229,7 +229,7 @@ Save ==
     \/ SaveUpdateDefault \/ SaveUpdateMember
 
 ----------------------------------------------------------------------------
-(* configure_playlist_voting, supabase-migration-v10.sql *)
+(* configure_playlist_voting, supabase/migrations/v10.sql *)
 
 (* l.316-321: SELECT creator_user_id, voting_mode ... FROM playlists ... FOR UPDATE *)
 ConfLock ==
@@ -268,7 +268,7 @@ ConfUpdateDefault ==
 Configure == ConfLock \/ ConfCountAll \/ ConfUpdatePlaylist \/ ConfUpdateDefault
 
 ----------------------------------------------------------------------------
-(* set_member_vote_limit and apply_vote_limit_to_all, supabase-migration-v10.sql.
+(* set_member_vote_limit and apply_vote_limit_to_all, supabase/migrations/v10.sql.
    For one member both are "count without a lock, then UPDATE". *)
 
 (* set_member_vote_limit l.378-385: SELECT count( * ) INTO v_used ...;

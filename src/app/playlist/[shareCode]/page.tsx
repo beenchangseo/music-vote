@@ -206,7 +206,7 @@ export default async function PlaylistPage({ params }: PageProps) {
   // 뷰가 없으면 점수가 전부 0 으로 보인다. 배포 순서를 틀렸을 때 바로 알아채도록 남긴다.
   if (summaryResult.error) {
     console.error(
-      "[playlist] song_vote_summary 조회 실패 — supabase-migration-v16.sql 적용 여부 확인:",
+      "[playlist] song_vote_summary 조회 실패 — supabase/migrations/v16.sql 적용 여부 확인:",
       summaryResult.error.message,
     );
   }

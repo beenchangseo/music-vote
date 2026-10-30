@@ -1349,7 +1349,7 @@ finding above. Run with Claude Code or Codex; checkbox as you ship.
 
 - [x] **T1 (P1, human: ~1h / CC: ~10min)** — db — `teams.created_via` 를 v21 마이그레이션으로 추가한다
   - Surfaced by: Outside Voice #2 — O2 (D7)
-  - Files: `supabase-migration-v21.sql`, `README.md`(실행 순서)
+  - Files: `supabase/migrations/v21.sql`, `README.md`(실행 순서)
   - Verify: SQL 두 번 실행해도 무해. 운영 적용(방장 승인) 뒤 `created_via` 가 모두 'promote'
 - [x] **T2 (P1, human: ~1h / CC: ~10min)** — auth — `getCurrentUser` 를 React cache 로 감싸고 로그아웃을 이 기기만 끊게 한다
   - Surfaced by: Section 4 — E4 (D5); CEO2-C (C4)
@@ -1616,7 +1616,7 @@ Accepted scope: 핵심 밖 묶음(DR4 · DR5 · DR6 · DR8 · DR9 · DR11 · DR1
 History: —
 
 ### O2: (Codex #2) 밴드를 어디서 만들었는지 DB 에 남길지
-Finding: Codex P0 #2, `supabase-migration-v19.sql:37-46`(teams 에 출처 열 없음) · `src/actions/playlist.ts:288`(`deletePlaylist`) · `scripts/team-metrics.mjs:203`, reviewer: Codex gpt-5.6-sol (outside voice), 확인 Claude
+Finding: Codex P0 #2, `supabase/migrations/v19.sql:37-46`(teams 에 출처 열 없음) · `src/actions/playlist.ts:288`(`deletePlaylist`) · `scripts/team-metrics.mjs:203`, reviewer: Codex gpt-5.6-sol (outside voice), 확인 Claude
 Plan baseline: CEO2-G 승인 — "홈에서 만든 밴드 수(외부, promote 플레이리스트 없는 밴드) · 7일 지나도 owner 혼자 · 플레이리스트 0 인 밴드 수. DB 변경 없음"
 Runtime evidence: promote 로 만든 밴드도 방장이 원래 플레이리스트를 지우면(`deletePlaylist`) "promote 플레이리스트 없는 밴드"가 되어 홈 밴드로 잘못 센다. `track("team_created", { source })` 는 Vercel Analytics(`src/lib/analytics.ts:4`)로만 가고 지표 스크립트는 DB 만 읽는다.
 지금까지 만든 밴드는 모두 promote 로 만들어졌다(홈 만들기가 없었다) → 지금 채우면 정확하고, 홈 만들기를 배포한 뒤에는 다시 가를 수 없다. "7일 방치" 줄은 출처와 상관없이 셀 수 있다
@@ -1650,7 +1650,7 @@ D) Defer — 이 제안만 미루기
 
 State: approved
 Actual answer: A "Apply — teams.created_via 추가 (recommended)" (D7, 2026-10-06)
-Accepted scope: `supabase-migration-v21.sql`(idempotent): `teams.created_via text` + check('promote' | 'home') + 기존 행 'promote' 채움. `createTeam` 은 'home', `createTeamFromPlaylist` 는 'promote' 를 넣는다.
+Accepted scope: `supabase/migrations/v21.sql`(idempotent): `teams.created_via text` + check('promote' | 'home') + 기존 행 'promote' 채움. `createTeam` 은 'home', `createTeamFromPlaylist` 는 'promote' 를 넣는다.
 `scripts/team-metrics.mjs` 의 "홈에서 만든 밴드 수"는 이 열로 센다. 운영 SQL 은 코드 배포 전에 방장 승인으로 한 번(순서를 어기면 밴드 만들기 실패). README 실행 순서 목록 갱신.
 테스트: 두 액션이 값을 넣는지 + team-metrics 가 열로 세는지. CEO2-G 의 "DB 변경 없음"은 이 답으로 바뀐다
 History: —

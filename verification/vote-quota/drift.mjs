@@ -44,11 +44,12 @@ const TS_WRITES = [
 ];
 
 const version = (f) => Number(f.match(/v(\d+)/)[1]);
-const migrations = readdirSync(root)
-  .filter((f) => /^supabase-migration-v\d+\.sql$/.test(f))
-  .sort((a, b) => version(a) - version(b));
+const migrations = readdirSync(join(root, "supabase", "migrations"))
+  .filter((f) => /^v\d+\.sql$/.test(f))
+  .sort((a, b) => version(a) - version(b))
+  .map((f) => `supabase/migrations/${f}`);
 
-// The definition that wins is the last CREATE FUNCTION in README run order.
+// The definition that wins is the last CREATE FUNCTION in run order (supabase/README.md).
 const latest = new Map();
 for (const file of migrations) {
   const sql = readFileSync(join(root, file), "utf8");

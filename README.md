@@ -113,28 +113,28 @@ YOUTUBE_API_KEY=your_youtube_data_api_key
 
 Supabase SQL Editor에서 순서대로 실행:
 ```
-supabase-schema.sql           # v1 베이스 스키마
-supabase-migration-v2.sql     # admin_token 분리
-supabase-migration-v3.sql     # 댓글 + 셋리스트
-supabase-migration-v4.sql     # creator_nickname + 공지사항
-supabase-migration-v5.sql     # 5중 제약 메타 (key_root/mode, difficulty, genre)
-supabase-migration-v6.sql     # 익명/기명 투표 모드
-supabase-migration-v7.sql     # Kakao OAuth 계정 연동
-supabase-migration-v8.sql     # 로그인 모드 RLS
-supabase-migration-v9.sql     # 기존 공연 포스터 URL(운영 이력, v10에서 제거)
-supabase-migration-v10.sql    # 투표권·다른 버전·셋리스트 편집, 포스터 완전 제거
-supabase-migration-v11.sql    # 투표 설정 일괄 저장
-supabase-migration-v12.sql    # 할당 모드 후보곡 중복 투표
-supabase-migration-v13.sql    # 로그인 중복 투표를 막는 legacy 닉네임 제약 분리
-supabase-migration-v14.sql    # votes(song_id) 인덱스 복구 + 통계 집계 뷰
-supabase-migration-v15.sql    # 공개 anon 키 쓰기 경로 차단 + 투표 조회 뷰
-supabase-migration-v16.sql    # 집계 뷰에 playlist_id 추가 (왕복 축소)
-supabase-migration-v17.sql    # YouTube 검색 결과 캐시
-supabase-migration-v18.sql    # 공개 anon 키 조회 차단 + playlists 직접 생성 차단 (코드 배포 후 실행)
-supabase-migration-v19.sql    # 밴드(teams·team_members) + playlists.team_id·team_linked_via (코드 배포 전 실행)
-supabase-migration-v20.sql    # 앱이 쓰지 않는 공개 키 쓰기 권한 회수 (코드와 독립, 언제든)
-supabase-migration-v21.sql    # teams.created_via 밴드 출처 (코드 배포 전 실행)
-supabase-migration-v22.sql    # setlist_items.item_type 에 'original'(자작곡) 허용
+supabase/migrations/v01.sql           # v1 베이스 스키마
+supabase/migrations/v02.sql     # admin_token 분리
+supabase/migrations/v03.sql     # 댓글 + 셋리스트
+supabase/migrations/v04.sql     # creator_nickname + 공지사항
+supabase/migrations/v05.sql     # 5중 제약 메타 (key_root/mode, difficulty, genre)
+supabase/migrations/v06.sql     # 익명/기명 투표 모드
+supabase/migrations/v07.sql     # Kakao OAuth 계정 연동
+supabase/migrations/v08.sql     # 로그인 모드 RLS
+supabase/migrations/v09.sql     # 기존 공연 포스터 URL(운영 이력, v10에서 제거)
+supabase/migrations/v10.sql    # 투표권·다른 버전·셋리스트 편집, 포스터 완전 제거
+supabase/migrations/v11.sql    # 투표 설정 일괄 저장
+supabase/migrations/v12.sql    # 할당 모드 후보곡 중복 투표
+supabase/migrations/v13.sql    # 로그인 중복 투표를 막는 legacy 닉네임 제약 분리
+supabase/migrations/v14.sql    # votes(song_id) 인덱스 복구 + 통계 집계 뷰
+supabase/migrations/v15.sql    # 공개 anon 키 쓰기 경로 차단 + 투표 조회 뷰
+supabase/migrations/v16.sql    # 집계 뷰에 playlist_id 추가 (왕복 축소)
+supabase/migrations/v17.sql    # YouTube 검색 결과 캐시
+supabase/migrations/v18.sql    # 공개 anon 키 조회 차단 + playlists 직접 생성 차단 (코드 배포 후 실행)
+supabase/migrations/v19.sql    # 밴드(teams·team_members) + playlists.team_id·team_linked_via (코드 배포 전 실행)
+supabase/migrations/v20.sql    # 앱이 쓰지 않는 공개 키 쓰기 권한 회수 (코드와 독립, 언제든)
+supabase/migrations/v21.sql    # teams.created_via 밴드 출처 (코드 배포 전 실행)
+supabase/migrations/v22.sql    # setlist_items.item_type 에 'original'(자작곡) 허용
 ```
 
 기존 운영 DB는 이미 실행한 마이그레이션을 건너뛸 수 있도록 모두 `IF NOT EXISTS`/`ADD COLUMN IF NOT EXISTS` 패턴 사용.

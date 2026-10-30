@@ -15,7 +15,7 @@ test.describe("account-a: a new band from the home page", () => {
   test("home → 새 밴드 → empty band → start area → first playlist link", async ({ page, cleanup }) => {
     test.setTimeout(120_000);
     const { error: schemaError } = await adminClient().from("teams").select("created_via").limit(1);
-    test.skip(schemaError !== null, "teams.created_via 가 없어요 (supabase-migration-v21.sql 적용 전)");
+    test.skip(schemaError !== null, "teams.created_via 가 없어요 (supabase/migrations/v21.sql 적용 전)");
 
     const ownerId = readAccountUserId("account-a")!;
     const bandName = `${E2E_PREFIX} 홈 밴드 ${Date.now().toString(36)}`;

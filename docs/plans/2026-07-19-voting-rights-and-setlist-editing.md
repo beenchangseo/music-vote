@@ -16,7 +16,7 @@
 
 ## 1. 데이터 마이그레이션
 
-`supabase-migration-v10.sql`을 멱등형으로 추가한다.
+`supabase/migrations/v10.sql`을 멱등형으로 추가한다.
 
 - `playlists`
   - `voting_mode`: `free | allocated`, 기본 `free`

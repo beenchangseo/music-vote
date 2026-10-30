@@ -22,12 +22,12 @@ TLC 로 끝까지 훑는다. 단위 테스트(`src/actions/__tests__/vote.test.t
 
 | 함수 | 파일 | 누가 부르나 |
 |---|---|---|
-| `cast_playlist_vote` | `supabase-migration-v12.sql` | `src/actions/vote.ts` `castVote` |
-| `register_playlist_member` | `supabase-migration-v10.sql` | `cast_playlist_vote` 안 (`src/actions/member.ts` 에서도) |
-| `save_playlist_voting_settings` | `supabase-migration-v11.sql` | 설정 시트 → `src/actions/member.ts` `saveVotingSettings` (service_role) |
-| `configure_playlist_voting` | `supabase-migration-v10.sql` | `src/actions/member.ts` (화면에서는 안 부름, `authenticated` 실행 권한은 열려 있음) |
-| `set_member_vote_limit` | `supabase-migration-v10.sql` | 같음 |
-| `apply_vote_limit_to_all` | `supabase-migration-v10.sql` | 같음 |
+| `cast_playlist_vote` | `supabase/migrations/v12.sql` | `src/actions/vote.ts` `castVote` |
+| `register_playlist_member` | `supabase/migrations/v10.sql` | `cast_playlist_vote` 안 (`src/actions/member.ts` 에서도) |
+| `save_playlist_voting_settings` | `supabase/migrations/v11.sql` | 설정 시트 → `src/actions/member.ts` `saveVotingSettings` (service_role) |
+| `configure_playlist_voting` | `supabase/migrations/v10.sql` | 앱 코드는 부르지 않는다(member.ts 의 래퍼는 2026-10-31 삭제). `authenticated` 실행 권한은 열려 있어 RPC 로 직접 부를 수 있다 |
+| `set_member_vote_limit` | `supabase/migrations/v10.sql` | 같음 |
+| `apply_vote_limit_to_all` | `supabase/migrations/v10.sql` | 같음 |
 
 **마지막 동기화 커밋: `c8bc72f`** — 이 커밋의 코드가 모델과 같다고 확인했다. 위 함수들의 정의 해시는
 `verification/vote-quota/covered.json` 에 있다.

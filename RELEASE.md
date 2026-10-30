@@ -16,7 +16,7 @@ ship 직전 마지막 점검표. 출시 시점에 한 번 위에서부터 통과
 ## 2. 데이터베이스 (Supabase)
 
 - [ ] Production 프로젝트 ID 확인 (`NEXT_PUBLIC_SUPABASE_URL` 매칭)
-- [ ] `supabase-schema.sql` 실행 (신규 환경만)
+- [ ] `supabase/migrations/v01.sql` 실행 (신규 환경만)
 - [ ] 마이그레이션 v2 → … → v15 → v16 → v17 순서대로 실행
 - [ ] RLS 확인 (v15 기준):
       - `playlists` SELECT/INSERT public, **UPDATE 정책 없음**
