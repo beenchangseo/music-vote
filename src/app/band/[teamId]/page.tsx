@@ -2,9 +2,9 @@ import { cache, Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import BandHomeClient from "@/components/BandHomeClient";
-import BandHomeSkeleton from "@/components/BandHomeSkeleton";
-import LoginButton from "@/components/LoginButton";
+import BandHomeClient from "@/components/band/BandHomeClient";
+import BandHomeSkeleton from "@/components/band/BandHomeSkeleton";
+import LoginButton from "@/components/auth/LoginButton";
 import { buttonClassName } from "@/components/ui/Button";
 import { getTeamHome, teamExists, type TeamHomeView } from "@/actions/team";
 

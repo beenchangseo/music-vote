@@ -7,7 +7,7 @@ import { shouldExposeVoters } from "@/domain/vote";
 import { BAND_PROMPT_COOKIE, parseDismissals } from "@/lib/prompt-dismissals";
 import { BASE_OPEN_GRAPH } from "@/lib/seo";
 import { getMyTeams, type MyTeam } from "@/actions/team";
-import PlaylistClient from "@/components/PlaylistClient";
+import PlaylistClient from "@/components/playlist/PlaylistClient";
 import type { Metadata } from "next";
 import type { Playlist, RoomTeam, SetlistItem, Song, SongWithScore } from "@/domain/types";
 

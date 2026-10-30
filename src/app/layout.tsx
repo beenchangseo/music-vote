@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
-import KakaoInit from "@/components/KakaoInit";
+import KakaoInit from "@/components/share/KakaoInit";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Suspense } from "react";
-import DialogProvider from "@/components/DialogProvider";
-import AuthButton from "@/components/AuthButton";
+import DialogProvider from "@/components/ui/DialogProvider";
+import AuthButton from "@/components/auth/AuthButton";
 import { BASE_OPEN_GRAPH, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 

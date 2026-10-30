@@ -1,7 +1,7 @@
 import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import BandInviteScreen from "@/components/BandInviteScreen";
+import BandInviteScreen from "@/components/band/BandInviteScreen";
 import { getTeamInvite } from "@/actions/team";
 import { BASE_OPEN_GRAPH } from "@/lib/seo";
 import { bandShareDescription, shareableShowDate } from "@/domain/team";

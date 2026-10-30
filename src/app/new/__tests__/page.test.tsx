@@ -14,14 +14,14 @@ const state = vi.hoisted(() => ({
 vi.mock("@/lib/auth", () => ({ getCurrentUser: state.getCurrentUser }));
 vi.mock("@/actions/playlist", () => ({ getMyPlaylists: state.getMyPlaylists }));
 vi.mock("@/actions/team", () => ({ getMyTeams: state.getMyTeams, getTeamHome: state.getTeamHome }));
-vi.mock("@/components/MyPlaylists", () => ({ default: () => null }));
-vi.mock("@/components/CreatePlaylistForm", () => ({
+vi.mock("@/components/home/MyPlaylists", () => ({ default: () => null }));
+vi.mock("@/components/home/CreatePlaylistForm", () => ({
   default: (props: unknown) => {
     state.formProps.push(props);
     return <form aria-label="플레이리스트 만들기 폼" />;
   },
 }));
-vi.mock("@/components/LoginButton", () => ({
+vi.mock("@/components/auth/LoginButton", () => ({
   default: ({ next }: { next: string }) => (
     <button type="button" data-next={next}>
       카카오로 시작하기

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/server";
-import MetronomeClient from "@/components/MetronomeClient";
+import MetronomeClient from "@/components/rehearsal/MetronomeClient";
 import type { Song } from "@/domain/types";
 
 interface PageProps {

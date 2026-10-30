@@ -957,23 +957,23 @@ finding above. Run with Claude Code or Codex; checkbox as you ship.
 
 - [ ] **DT1 (P1, human: ~1일 / CC: ~40min)** — home — 상태별 홈: 상태 A 두 선택지(DR2), 상태 B 버튼 줄 [새 플레이리스트][새 밴드](DR3), 경계 규칙(DR15), 조회 실패 화면(DR7), 홈 전용 뼈대(DR10)
   - Surfaced by: Pass 1 · 2 · 7 — DR2, DR3, DR7, DR10, DR15
-  - Files: `src/app/page.tsx`, `src/components/HeroCTA.tsx`, `src/components/MyBands.tsx`, `src/components/MyPlaylists.tsx`, 새 홈 뼈대 컴포넌트
+  - Files: `src/app/page.tsx`, `src/components/home/HeroCTA.tsx`, `src/components/home/MyBands.tsx`, `src/components/home/MyPlaylists.tsx`, 새 홈 뼈대 컴포넌트
   - Verify: 컴포넌트 테스트(0/0 → 상태 A, 참여 방만 → B, `?left=1` → B, 조회 실패 → B + 오류 문구), E2E account-b 처음 홈
 - [ ] **DT2 (P1, human: ~반나절 / CC: ~30min)** — sheet — 새 밴드 시트 홈 모드: 첫 단계 "같이 투표한 멤버로 만들기" 목록 + "멤버 없이 새 밴드로 시작"(DR3), 참여자 한 줄 알림(DR11), 빈 밴드 문구 · "나중에" 제거(DR14)
   - Surfaced by: Pass 1 · 3 · 5 — DR3, DR11, DR14
-  - Files: `src/components/CreateBandSheet.tsx`, `src/lib/analytics.ts`(source home · home_card)
+  - Files: `src/components/band/CreateBandSheet.tsx`, `src/lib/analytics.ts`(source home · home_card)
   - Verify: 컴포넌트 테스트(대상 있음/없음, 참여만 한 방 → 한 줄, 빈 밴드 → 미리보기 대신 한 줄)
 - [ ] **DT3 (P1, human: ~반나절 / CC: ~30min)** — card — 홈 카드: 밴드 0개 방장만(DR4), 최근 하나 · 대체 안 함 · 문구(DR5), 쿠키 닫힘 + 서버 판정 + 버튼 줄 아래(DR6)
   - Surfaced by: Pass 1 — DR4, DR5, DR6
-  - Files: `src/components/BandPromptCard.tsx`, `src/app/page.tsx`, `src/components/PlaylistClient.tsx`(쿠키 공유)
+  - Files: `src/components/band/BandPromptCard.tsx`, `src/app/page.tsx`, `src/components/playlist/PlaylistClient.tsx`(쿠키 공유)
   - Verify: 컴포넌트 테스트(밴드 있음 → 없음, 닫힌 최근 대상 → 없음 · 예전 후보로 대체 안 함), localStorage → 쿠키 이전 테스트
 - [ ] **DT4 (P1, human: ~1일 / CC: ~40min)** — band home — 빈 밴드 시작 영역(DR1), 넣기 시트(DR8), 넣은 뒤 혼자 카드 문구(DR9), 0개 밴드 joined 배너(DR16)
   - Surfaced by: Pass 1 · 2 · 7 — DR1, DR8, DR9, DR16
-  - Files: `src/components/BandHomeClient.tsx`, 새 넣기 시트 컴포넌트, `src/actions/team.ts`(owner 넣기 개수 · 목록 — eng 리뷰 확인)
+  - Files: `src/components/band/BandHomeClient.tsx`, 새 넣기 시트 컴포넌트, `src/actions/team.ts`(owner 넣기 개수 · 목록 — eng 리뷰 확인)
   - Verify: 컴포넌트 테스트(혼자 · 0개 → 시작 영역 하나 · 초대 입구 1개, 넣기 연속 · 행 실패 · 모두 넣음, 넣은 뒤 문구), E2E 홈 → 새 밴드 → 시작 영역
 - [ ] **DT5 (P2, human: ~반나절 / CC: ~20min)** — create — 밴드 1개면 "{밴드}에 만들기" 토글 기본 켬(DR12)
   - Surfaced by: Pass 3 — DR12
-  - Files: `src/components/CreatePlaylistForm.tsx`, `src/app/new/page.tsx`
+  - Files: `src/components/home/CreatePlaylistForm.tsx`, `src/app/new/page.tsx`
   - Verify: 컴포넌트 테스트(밴드 1 → 토글 켬 · createBandPlaylist, 끄면 createPlaylist, 밴드 0 · 2+ → 토글 없음)
 - [ ] **DT6 (P2, human: ~1시간 / CC: ~10min)** — share — 멤버 1명 밴드의 카톡 카드 문구 · OG 멤버 수 숨김(DR13)
   - Surfaced by: Pass 3 — DR13
@@ -1071,9 +1071,9 @@ Dispositions: E1 approved (D2). 나머지 3건은 승인된 결정(DR3 · DR4 ·
 
 ### Section 2: Code quality
 
-- [P2] (8/10) `src/components/BandHomeClient.tsx` 583줄 — DR1 · DR9 · DR16 · 넣기 타일이 더해지면 약 650줄(추정) → **E2 approved (D3)**: `BandStartArea.tsx` 로 분리.
+- [P2] (8/10) `src/components/band/BandHomeClient.tsx` 583줄 — DR1 · DR9 · DR16 · 넣기 타일이 더해지면 약 650줄(추정) → **E2 approved (D3)**: `BandStartArea.tsx` 로 분리.
   정정: D1 질문의 "Smaller 면 600줄을 넘는다"는 부정확(이미 583줄). D1 의 결정 근거(쿠키 모듈 위치)는 유효
-- [P2] (9/10) `src/components/CreateBandSheet.tsx:21-28` — `playlistId: string` 필수 · `source: "card" | "settings"` → 홈 모드(DR3 · DR14)를 받으려면
+- [P2] (9/10) `src/components/band/CreateBandSheet.tsx:21-28` — `playlistId: string` 필수 · `source: "card" | "settings"` → 홈 모드(DR3 · DR14)를 받으려면
   모드 판별 props(`{ kind: "promote", playlistId, adminToken } | { kind: "home", candidates, participantOnly }`)와 source `home` · `home_card` 가 필요. 승인된 결정의 필요 구현
 - [P3] (8/10) `src/actions/team.ts:295-297` 단계 주석은 `createTeamFromPlaylist` 를 바꾸지 않으므로 그대로 정확. 새 `createTeam` 에는 같은 형식의 짧은 단계 주석
   (검증 ─▶ teams insert(재시도) ─▶ owner 행 ─▶ 실패면 rollbackTeam)을 붙인다
@@ -1191,13 +1191,13 @@ Legend: ★★★ behavior + edge + error | ★★ happy path | ★ smoke check 
 | `src/app/__tests__/page.test.tsx` (새) | 판정 4분기 + 상태 A 아래 로컬 목록 + 홈 카드 4규칙(최근 하나 / 닫힌 최근 → 없음 · 대체 안 함 / 밴드 있음 → 없음 / 실패 → 없음) | unit(서버 컴포넌트 렌더, `/new` 페이지 테스트와 같은 방식) | DR2~DR7 · DR15 |
 | `src/app/new/__tests__/page.test.tsx` (확장) | failed → 밴드 없이 폼 | unit | E1 회귀 |
 | `src/lib/__tests__/prompt-dismissals.test.ts` (새) | 파싱 · 추가 · 50개 · localStorage 이전 | unit | DR6 |
-| `src/components/__tests__/PlaylistClient.band.test.tsx` (확장) | `:153` 쿠키 기준 · `:162` 유지 · 기존 localStorage 기록 이전 | unit | DR6 회귀 |
-| `src/components/__tests__/CreateBandSheet.test.tsx` (새) | home 대상 있음/없음 · 참여만 한 줄 · "나중에" 없음 · 미리보기 대신 한 줄 · 실패 사유 · 두 번 눌러도 한 번 · source | unit | DR3 · DR11 · DR14 |
-| `src/components/__tests__/BandStartArea.test.tsx` (새) | 넣을 것 > 0 → 넣기 주 버튼 / 0 → `/new?band=` / 보조 버튼 → 초대 시트 | unit | DR1 · E2 |
-| `src/components/__tests__/BandHomeClient.test.tsx` (확장) | 혼자 · 0개 → 시작 영역 + 숨김 3가지 / `:124` · `:147` 픽스처 / DR9 / DR16 | unit | DR1 · DR9 · DR16 |
-| `src/components/__tests__/AttachPlaylistsSheet.test.tsx` (새) | 행 ✓ · 시트 유지 · 행 실패 + 다시 · 모두 넣었어요 · 목록 오류 · 닫으면 갱신 · `role="status"` | unit | DR8 |
-| `src/components/__tests__/CreatePlaylistForm.band.test.tsx` (확장) | 밴드 1 → 토글 켬 → createBandPlaylist / 끔 → createPlaylist + 제안 없음 / 0 · 2+ → 토글 없음 | unit | DR12 · E3 |
-| `src/components/__tests__/HomeBands.test.tsx` (확장) | HeroCTA 로그인 목적지 "/" | unit | CEO2-A |
+| `src/components/playlist/__tests__/PlaylistClient.band.test.tsx` (확장) | `:153` 쿠키 기준 · `:162` 유지 · 기존 localStorage 기록 이전 | unit | DR6 회귀 |
+| `src/components/band/__tests__/CreateBandSheet.test.tsx` (새) | home 대상 있음/없음 · 참여만 한 줄 · "나중에" 없음 · 미리보기 대신 한 줄 · 실패 사유 · 두 번 눌러도 한 번 · source | unit | DR3 · DR11 · DR14 |
+| `src/components/band/__tests__/BandStartArea.test.tsx` (새) | 넣을 것 > 0 → 넣기 주 버튼 / 0 → `/new?band=` / 보조 버튼 → 초대 시트 | unit | DR1 · E2 |
+| `src/components/band/__tests__/BandHomeClient.test.tsx` (확장) | 혼자 · 0개 → 시작 영역 + 숨김 3가지 / `:124` · `:147` 픽스처 / DR9 / DR16 | unit | DR1 · DR9 · DR16 |
+| `src/components/band/__tests__/AttachPlaylistsSheet.test.tsx` (새) | 행 ✓ · 시트 유지 · 행 실패 + 다시 · 모두 넣었어요 · 목록 오류 · 닫으면 갱신 · `role="status"` | unit | DR8 |
+| `src/components/home/__tests__/CreatePlaylistForm.band.test.tsx` (확장) | 밴드 1 → 토글 켬 → createBandPlaylist / 끔 → createPlaylist + 제안 없음 / 0 · 2+ → 토글 없음 | unit | DR12 · E3 |
+| `src/components/home/__tests__/HomeBands.test.tsx` (확장) | HeroCTA 로그인 목적지 "/" | unit | CEO2-A |
 | `src/app/auth/logout/__tests__/route.test.ts` (새) | `signOut({ scope: "local" })` + 303 → `/` | unit | CEO2-C |
 | `src/domain/__tests__/team.test.ts` (확장) | 1명 → "{닉네임}님이 밴드를 만들었어요 · …" · 날짜 있는 1명 / 2명+ 유지 | unit | DR13 |
 | `scripts/__tests__/team-metrics.test.ts` (확장) | 홈에서 만든 밴드 수 · 7일 방치 수 | unit | CEO2-G |
@@ -1338,7 +1338,7 @@ Critical gap 0 — 테스트도 오류 처리도 없이 조용히 실패하는 �
 - **Parallel lanes (배포 1)**: Lane A: T1 → T4 → T3 → T8 (`src/actions/` · DB · scripts) / Lane B: T2, T10 (auth · 문서) / Lane C: T7 → T6 (`src/components/`, T6 은 T4 시그니처만 기다림)
 - **Parallel lanes (배포 2)**: Lane D: T11 / Lane E: T12 → T14 (둘 다 `BandHomeClient.tsx`) / Lane F: T13
 - **Execution order**: A + B + C 동시 → 합치기 → T5 → T9 → 방장 승인으로 v21 운영 SQL → 배포 1 → D + E + F 동시 → 합치기 → E2E → 배포 2
-- **Conflict flags**: `src/actions/team.ts`(T4 · T3 · T12), `src/components/BandHomeClient.tsx`(T7 · T12 · T14), `src/app/page.tsx`(T5 · T11), `src/app/new/page.tsx`(T3 · T13)
+- **Conflict flags**: `src/actions/team.ts`(T4 · T3 · T12), `src/components/band/BandHomeClient.tsx`(T7 · T12 · T14), `src/app/page.tsx`(T5 · T11), `src/app/new/page.tsx`(T3 · T13)
 
 ## Implementation Tasks (eng 리뷰)
 Synthesized from this review's findings. Each task derives from a specific
@@ -1365,15 +1365,15 @@ finding above. Run with Claude Code or Codex; checkbox as you ship.
   - Verify: `npm test` — 비로그인 · 50/51자 · owner 1명 + 초대 코드 · owner 행 실패 → rollback · `created_via` 'home' / 'promote'
 - [x] **T5 (P1, human: ~1d / CC: ~40min)** — home — 상태별 홈과 쿠키로 먼저 가르는 홈 뼈대를 만든다
   - Surfaced by: DR2 · DR3 · DR7 · DR10 · DR15, O4 (D9), CEO2-A(HeroCTA 로그인 → `/`)
-  - Files: `src/app/page.tsx`, `src/components/HeroCTA.tsx`, `src/components/MyBands.tsx`, `src/components/MyPlaylists.tsx`, `src/components/HomeSkeleton.tsx`(새), `src/app/__tests__/page.test.tsx`(새), `src/components/__tests__/HomeBands.test.tsx`
+  - Files: `src/app/page.tsx`, `src/components/home/HeroCTA.tsx`, `src/components/home/MyBands.tsx`, `src/components/home/MyPlaylists.tsx`, `src/components/home/HomeSkeleton.tsx`(새), `src/app/__tests__/page.test.tsx`(새), `src/components/home/__tests__/HomeBands.test.tsx`
   - Verify: `npm test` — 판정 4분기 · 로컬 목록 · 쿠키 두 행 · HeroCTA 목적지
 - [x] **T6 (P1, human: ~4h / CC: ~30min)** — sheet — 새 밴드 시트에 홈 모드를 더한다
   - Surfaced by: Section 2 `CreateBandSheet.tsx:21-28`; DR3 · DR11 · DR14; Section 8(CEO) source
-  - Files: `src/components/CreateBandSheet.tsx`, `src/lib/analytics.ts`, `src/components/__tests__/CreateBandSheet.test.tsx`(새)
+  - Files: `src/components/band/CreateBandSheet.tsx`, `src/lib/analytics.ts`, `src/components/band/__tests__/CreateBandSheet.test.tsx`(새)
   - Verify: `npm test` — 대상 있음/없음 · 참여만 한 줄 · "나중에" 없음 · 두 번 눌러도 한 번 · source
 - [x] **T7 (P1, human: ~4h / CC: ~30min)** — band home — 빈 밴드 시작 영역을 별도 컴포넌트로 만든다
   - Surfaced by: Section 2 — E2 (D3); DR1 · DR16
-  - Files: `src/components/BandStartArea.tsx`(새), `src/components/BandHomeClient.tsx` + 테스트
+  - Files: `src/components/band/BandStartArea.tsx`(새), `src/components/band/BandHomeClient.tsx` + 테스트
   - Verify: `npm test` — 혼자 · 0개 → 시작 영역 하나 · 숨김 3가지, `:124` · `:147` 픽스처, DR16
 - [x] **T8 (P2, human: ~1h / CC: ~10min)** — metrics — 홈에서 만든 밴드와 7일 방치된 빈 밴드를 센다
   - Surfaced by: CEO2-G; O2 (D7)
@@ -1389,19 +1389,19 @@ finding above. Run with Claude Code or Codex; checkbox as you ship.
   - Verify: ADR 에 "홈에서 빈 밴드" 경로, README 에 account-b 한 줄
 - [x] **T11 (P2, human: ~4h / CC: ~30min)** — card — 닫힘 쿠키와 서버가 정하는 홈 카드를 만든다
   - Surfaced by: DR4 · DR5 · DR6, Section 1 쿠키 형식, O5 (D10)
-  - Files: `src/lib/prompt-dismissals.ts`(새), `src/components/BandPromptCard.tsx`, `src/components/PlaylistClient.tsx`, `src/app/page.tsx`, `src/app/playlist/[shareCode]/page.tsx` + 테스트
+  - Files: `src/lib/prompt-dismissals.ts`(새), `src/components/band/BandPromptCard.tsx`, `src/components/playlist/PlaylistClient.tsx`, `src/app/page.tsx`, `src/app/playlist/[shareCode]/page.tsx` + 테스트
   - Verify: `npm test` — prompt-dismissals · 홈 카드 4규칙 · `:153` · `:162` · 이전
 - [x] **T12 (P2, human: ~1d / CC: ~40min)** — attach — 밴드 홈에서 있던 플레이리스트를 넣는 시트를 만든다
   - Surfaced by: DR8 · DR9, Section 1 `getAttachablePlaylists`, Section 4 개수 조회, Outside Voice #4b
-  - Files: `src/actions/team.ts`, `src/components/AttachPlaylistsSheet.tsx`(새), `src/components/BandStartArea.tsx`, `src/components/BandHomeClient.tsx` + 테스트
+  - Files: `src/actions/team.ts`, `src/components/band/AttachPlaylistsSheet.tsx`(새), `src/components/band/BandStartArea.tsx`, `src/components/band/BandHomeClient.tsx` + 테스트
   - Verify: `npm test` — 행 ✓ · 행 실패 · 모두 넣음 · 목록 오류 · 갱신 · `participantCount` · DR9
 - [x] **T13 (P2, human: ~4h / CC: ~20min)** — create — 밴드 1개면 "{밴드}에 만들기"를 기본으로 켠다
   - Surfaced by: DR12; Section 3 — E3 (D4)
-  - Files: `src/components/CreatePlaylistForm.tsx`, `src/app/new/page.tsx`, `src/components/__tests__/CreatePlaylistForm.band.test.tsx`
+  - Files: `src/components/home/CreatePlaylistForm.tsx`, `src/app/new/page.tsx`, `src/components/home/__tests__/CreatePlaylistForm.band.test.tsx`
   - Verify: `npm test` — 밴드 1 켬/끔 · 끄면 완료 화면 제안 없음 · 0 · 2+ 토글 없음
 - [x] **T14 (P2, human: ~2h / CC: ~15min)** — share — 멤버 1명 밴드의 카톡 카드를 만든 사람 이름으로 바꾼다
   - Surfaced by: DR13; Outside Voice #4c
-  - Files: `src/domain/team.ts`, `src/components/BandInviteSheet.tsx`, `src/components/KakaoShareButton.tsx`, `src/components/BandHomeClient.tsx`, `src/app/join/[inviteCode]/page.tsx`, `src/app/api/og/route.tsx` + 테스트
+  - Files: `src/domain/team.ts`, `src/components/band/BandInviteSheet.tsx`, `src/components/share/KakaoShareButton.tsx`, `src/components/band/BandHomeClient.tsx`, `src/app/join/[inviteCode]/page.tsx`, `src/app/api/og/route.tsx` + 테스트
   - Verify: `npm test` team-domain(1명 · 날짜 유무 · 2명+ 그대로), OG 이미지 눈으로 확인
 
 ### Unresolved Decisions (eng 리뷰)
@@ -1470,7 +1470,7 @@ Accepted scope: `getMyPlaylists()` → `{ playlists, failed }`, `getMyTeams()` �
 History: —
 
 ### E2: 빈 밴드 시작 영역을 별도 컴포넌트로 뺄지
-Finding: CQ1, P2, confidence 8/10, `src/components/BandHomeClient.tsx` (583줄, `wc -l`), reviewer: Claude (eng Section 2)
+Finding: CQ1, P2, confidence 8/10, `src/components/band/BandHomeClient.tsx` (583줄, `wc -l`), reviewer: Claude (eng Section 2)
 Plan baseline: D1 "Original arrangement" — 새 파일 3개(AttachPlaylistsSheet · HomeSkeleton · prompt-dismissals). 시작 영역 위치는 정하지 않음.
 **정정**: D1 질문의 "Smaller arrangement 면 BandHomeClient 가 600줄을 넘는다"는 부정확했다 — 이미 583줄이라 Original 에서도 DR1 · DR9 · DR16 을 넣으면 약 650줄(추정). D1 의 결정 근거(쿠키 모듈은 "use client" 밖)는 그대로라 D1 은 유효
 Runtime evidence: `BandHomeClient.tsx` 583줄. DR1 시작 영역 · DR9 문구 · DR16 배너 · 넣기 타일이 이 파일에 더해진다
@@ -1478,7 +1478,7 @@ Comparison grid:
 
 | Choice | Current | A | B |
 |---|---|---|---|
-| E2 시작 영역 위치 | 미정 | 새 파일 `src/components/BandStartArea.tsx`(혼자 · 플레이리스트 0 일 때만 렌더, 주 버튼 · 보조 버튼 · 넣기 입구) | BandHomeClient 안에 그대로 |
+| E2 시작 영역 위치 | 미정 | 새 파일 `src/components/band/BandStartArea.tsx`(혼자 · 플레이리스트 0 일 때만 렌더, 주 버튼 · 보조 버튼 · 넣기 입구) | BandHomeClient 안에 그대로 |
 | BandHomeClient 크기 | 583줄 | 약 600줄(추정) | 약 650줄(추정) |
 | 테스트 | — | BandStartArea 단위 테스트 + BandHomeClient 의 숨김 규칙 테스트 | BandHomeClient 테스트에 추가 |
 | D1 범위(새 파일 3개) | 승인 | 새 파일 1개 더(총 4개) | 그대로 |
@@ -1494,18 +1494,18 @@ Net: 파일 하나를 더 만들어 밴드 홈을 600줄 근처로 묶어 둘지
 Header: 시작 영역
 Options:
 A) 별도 컴포넌트로 (recommended)
-src/components/BandStartArea.tsx 를 새로 만들어 혼자 · 플레이리스트 0 일 때만 렌더해요(첫 플레이리스트 주 버튼, 카톡으로 멤버 부르기, 넣기 입구). BandHomeClient 는 조건과 콜백만 넘겨요. 노력 human ~2h / CC ~10min, 위험 low, 유지 쉬움. ✅ 밴드 홈 파일이 약 600줄에 머물러 다음 수정 범위가 좁아요 ✅ 시작 영역의 숨김 · 순서 규칙을 따로 단위 테스트할 수 있어요 ❌ 새 파일이 하나 늘어 D1 의 3개에서 4개가 돼요
+src/components/band/BandStartArea.tsx 를 새로 만들어 혼자 · 플레이리스트 0 일 때만 렌더해요(첫 플레이리스트 주 버튼, 카톡으로 멤버 부르기, 넣기 입구). BandHomeClient 는 조건과 콜백만 넘겨요. 노력 human ~2h / CC ~10min, 위험 low, 유지 쉬움. ✅ 밴드 홈 파일이 약 600줄에 머물러 다음 수정 범위가 좁아요 ✅ 시작 영역의 숨김 · 순서 규칙을 따로 단위 테스트할 수 있어요 ❌ 새 파일이 하나 늘어 D1 의 3개에서 4개가 돼요
 B) BandHomeClient 안에 그대로
 시작 영역을 BandHomeClient 안의 조건부 JSX 로 둬요. 노력 human ~2h / CC ~10min, 위험 low, 유지 보통. ✅ 파일과 import 가 늘지 않아요 ✅ 밴드 홈의 모든 상태를 한 파일에서 볼 수 있어요 ❌ 밴드 홈 파일이 약 650줄이 돼 다음 수정과 테스트가 무거워져요
 
 State: approved
 Actual answer: A "별도 컴포넌트로 (recommended)" (D3, 2026-10-06)
-Accepted scope: 새 파일 `src/components/BandStartArea.tsx` — 혼자 · 플레이리스트 0 일 때만 렌더(첫 플레이리스트 주 버튼, 카톡으로 멤버 부르기, 넣기 입구).
+Accepted scope: 새 파일 `src/components/band/BandStartArea.tsx` — 혼자 · 플레이리스트 0 일 때만 렌더(첫 플레이리스트 주 버튼, 카톡으로 멤버 부르기, 넣기 입구).
 BandHomeClient 는 조건과 콜백만 넘긴다. BandStartArea 단위 테스트 + BandHomeClient 숨김 규칙 테스트. 새 파일은 D1 의 3개 + 1 = 4개
 History: —
 
 ### E3: 밴드 1개인 사람이 "{밴드}에 만들기"를 끄고 만든 뒤 완료 화면
-Finding: T1 (REGRESSION), P2, confidence 9/10, `src/components/__tests__/CreatePlaylistForm.band.test.tsx:63` ("offers my band for a room made without ?band=", 밴드 1개 픽스처), reviewer: Claude (eng Section 3)
+Finding: T1 (REGRESSION), P2, confidence 9/10, `src/components/home/__tests__/CreatePlaylistForm.band.test.tsx:63` ("offers my band for a room made without ?band=", 밴드 1개 픽스처), reviewer: Claude (eng Section 3)
 Plan baseline: DR12 — 밴드 1개면 토글 기본 켬, 켜면 밴드 안, 끄면 밴드 밖. "밴드 0개 · 2개 이상은 지금처럼(완료 화면 넣기)". 밴드 1개 + 끔 뒤의 완료 화면은 정하지 않음
 Runtime evidence: 지금 밴드 1개인 사람은 만든 뒤 완료 화면에서 "이 플레이리스트를 밴드에 넣을까요?" + [{밴드}에 넣기]를 본다(13A, `CreatePlaylistForm.tsx:254`). DR12 뒤에는 기본이 밴드 안이라 이 화면은 토글을 끈 사람에게만 남는다
 Comparison grid:
@@ -1733,7 +1733,7 @@ Accepted scope: `src/app/page.tsx` 가 먼저 `await cookies()` 로 Supabase 로
 History: —
 
 ### O5: (Codex #7) 예전에 닫은 카드(localStorage)를 쿠키로 옮길 때의 깜빡임
-Finding: Codex P1 #7, `src/components/BandPromptCard.tsx:11,38,47` · DR6, reviewer: Codex gpt-5.6-sol (outside voice), 확인 Claude
+Finding: Codex P1 #7, `src/components/band/BandPromptCard.tsx:11,38,47` · DR6, reviewer: Codex gpt-5.6-sol (outside voice), 확인 Claude
 Plan baseline: DR6 "닫힘을 쿠키로 저장해 서버가 카드 여부를 정한다 — 하이드레이션 밀림 없음" + "기존 localStorage 기록은 한 번 읽어 쿠키로 옮긴다". 테스트 계획 Edge Case 에 "첫 방문에 한 번 깜빡일 수 있음"을 적어 둠
 Runtime evidence: 서버는 브라우저의 localStorage 를 볼 수 없다. 배포 뒤 첫 방문에서 예전에 닫은 사람은 서버가 카드를 그린 HTML 을 먼저 보고, 스크립트가 돌아 기록을 옮긴 뒤 카드가 사라진다(한 번 밀림).
 DR6 의 두 약속은 이 사람들에게 동시에 지킬 수 없다. 대상: 플레이리스트 안 카드를 볼 수 있는 방장 최대 5명(흐름 지도 3장), 각자 한 번

@@ -1,0 +1,123 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useDialog } from "../ui/DialogProvider";
+import { addOrUpdateComment } from "@/actions/comment";
+import type { Comment } from "@/domain/types";
+
+interface CommentSectionProps {
+  songId: string;
+  comments: Comment[];
+  nickname: string;
+  shareCode: string;
+  onCommentsChange: (comments: Comment[]) => void;
+  allComments: Comment[];
+}
+
+export default function CommentSection({ songId, comments, nickname, shareCode, onCommentsChange, allComments }: CommentSectionProps) {
+  const myComment = nickname ? comments.find((c) => c.nickname.toLowerCase() === nickname.toLowerCase()) : null;
+  const [content, setContent] = useState(myComment?.content || "");
+  const [isEditing, setIsEditing] = useState(false);
+  const [showAllComments, setShowAllComments] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const { showAlert } = useDialog();
+
+  function handleSubmit() {
+    if (!nickname || !content.trim() || isPending) return;
+
+    startTransition(async () => {
+      try {
+        await addOrUpdateComment(songId, content.trim(), shareCode);
+        // Optimistic update
+        const now = new Date().toISOString();
+        if (myComment) {
+          const updated = allComments.map((c) =>
+            c.id === myComment.id ? { ...c, content: content.trim(), updated_at: now } : c
+          );
+          onCommentsChange(updated);
+        } else {
+          onCommentsChange([...allComments, {
+            id: crypto.randomUUID(),
+            song_id: songId,
+            nickname,
+            content: content.trim(),
+            created_at: now,
+            updated_at: now,
+          }]);
+        }
+        setIsEditing(false);
+      } catch (err) {
+        showAlert(err instanceof Error ? err.message : "댓글 저장에 실패했습니다.");
+      }
+    });
+  }
+
+  return (
+    <div className="px-3 py-2">
+      {/* Other comments — show max 2, expandable */}
+      {(() => {
+        const others = comments.filter((c) => c.nickname.toLowerCase() !== nickname.toLowerCase());
+        const visible = showAllComments ? others : others.slice(0, 2);
+        return (
+          <>
+            {visible.map((c) => (
+              <div key={c.id} className="mb-2">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-caption font-medium text-primary/70 truncate max-w-[120px]">{c.nickname}</span>
+                  <span className="text-[10px] text-text-subtle">{new Date(c.updated_at).toLocaleDateString("ko-KR")}</span>
+                </div>
+                <p className="text-caption text-text-muted whitespace-pre-wrap">{c.content}</p>
+              </div>
+            ))}
+            {others.length > 2 && !showAllComments && (
+              <button onClick={() => setShowAllComments(true)} className="text-caption text-primary/70 hover:text-primary mb-1">
+                댓글 {others.length - 2}개 더보기
+              </button>
+            )}
+          </>
+        );
+      })()}
+
+      {/* My comment */}
+      {nickname && (
+        <div className="mt-2">
+          {myComment && !isEditing ? (
+            <div className="bg-surface-hover/50 rounded-lg p-2">
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-caption font-medium text-primary">{nickname} (나)</span>
+                <button onClick={() => setIsEditing(true)} className="text-[10px] text-text-subtle hover:text-text-muted">수정</button>
+              </div>
+              <p className="text-caption text-text-muted whitespace-pre-wrap">{myComment.content}</p>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder={`${nickname}의 메모를 남겨보세요 (1000자)`}
+                maxLength={1000}
+                rows={2}
+                className="w-full px-2 py-1.5 rounded-lg bg-surface-hover border border-border text-caption text-text placeholder-text-subtle resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-text-subtle">{content.length}/1000</span>
+                <div className="flex gap-2">
+                  {isEditing && (
+                    <button onClick={() => { setIsEditing(false); setContent(myComment?.content || ""); }} className="inline-flex min-h-11 items-center px-2 text-caption text-text-subtle">취소</button>
+                  )}
+                  <button
+                    onClick={handleSubmit}
+                    disabled={!content.trim() || isPending}
+                    className="inline-flex min-h-11 items-center px-3 rounded-control bg-primary hover:bg-primary-hover text-white text-caption font-medium disabled:opacity-50 transition-colors"
+                  >
+                    {isPending ? "저장 중..." : myComment ? "수정" : "작성"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

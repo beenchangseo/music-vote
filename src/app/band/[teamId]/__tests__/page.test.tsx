@@ -7,8 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const state = vi.hoisted(() => ({ getTeamHome: vi.fn(), teamExists: vi.fn() }));
 
 vi.mock("@/actions/team", () => ({ getTeamHome: state.getTeamHome, teamExists: state.teamExists }));
-vi.mock("@/components/BandHomeClient", () => ({ default: () => null }));
-vi.mock("@/components/LoginButton", () => ({
+vi.mock("@/components/band/BandHomeClient", () => ({ default: () => null }));
+vi.mock("@/components/auth/LoginButton", () => ({
   default: ({ label, next }: { label: string; next: string }) => (
     <button type="button" data-next={next}>
       {label}
@@ -22,7 +22,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 import BandPage, { generateMetadata } from "../page";
-import BandHomeSkeleton from "@/components/BandHomeSkeleton";
+import BandHomeSkeleton from "@/components/band/BandHomeSkeleton";
 
 const TEAM = "11111111-1111-4111-8111-111111111111";
 const props = (query: Record<string, string> = {}) => ({
