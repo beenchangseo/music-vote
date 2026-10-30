@@ -69,15 +69,6 @@
 
 동작을 바꾸지 않는 정리 PR 범위 밖이라 남긴다. 줄 번호는 정리 직후 기준이다.
 
-### 보관 플레이리스트에 다른 버전이 써진다 (버그)
-
-- **무엇**: `src/actions/song-version.ts` 의 다른 버전 추가는 `assertPlaylistWritable` 을 거치지 않는다.
-  `creator_user_id` 가 없는 플레이리스트(보관 상태, ADR 0012)에서는 로그인 없이 닉네임만으로 추가된다(`:81-87`).
-  코드를 읽어 확인했고 실제로 불러 보지는 않았다
-- **왜 미뤘나**: 쓰기 경로를 막는 동작 변경이라 구조 정리와 섞지 않았다
-- **재개 조건**: 바로. 막는 테스트를 먼저 쓰고(`src/actions/__tests__`), 다른 버전 수정·삭제 경로도 같이 본다
-- **규모**: S
-
 ### throw 하는 액션을 `{ success: false, reason }` 으로 옮기기
 
 - **무엇**: song·setlist·comment·playlist·member·song-version 액션은 예상된 실패를 throw 한다. 프로덕션 빌드는 throw 된

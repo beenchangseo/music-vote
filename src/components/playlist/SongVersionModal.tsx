@@ -14,11 +14,9 @@ import type { SongVersion } from "@/domain/types";
 interface Props {
   songId: string;
   songTitle: string;
-  nickname: string;
   shareCode: string;
   currentUserId?: string | null;
   isAdmin: boolean;
-  adminToken: string | null;
   loginGate?: boolean;
   onCountChange?: (count: number) => void;
   onClose: () => void;
@@ -53,8 +51,8 @@ export default function SongVersionModal(props: Props) {
 
   async function persist(force = false) {
     const result = editingId
-      ? await updateSongVersion(editingId, url, description, props.adminToken, props.shareCode, force)
-      : await addSongVersion(props.songId, url, description, props.nickname, props.shareCode, force);
+      ? await updateSongVersion(editingId, url, description, props.shareCode, force)
+      : await addSongVersion(props.songId, url, description, props.shareCode, force);
 
     if (!result.success) {
       const duplicate = result.duplicateKind === "original" ? "원곡과 같은 링크예요." : "이미 등록된 다른 버전이에요.";
@@ -91,7 +89,7 @@ export default function SongVersionModal(props: Props) {
     if (!ok) return;
     startTransition(async () => {
       try {
-        await deleteSongVersion(version.id, props.adminToken, props.shareCode);
+        await deleteSongVersion(version.id, props.shareCode);
         const next = versions.filter((item) => item.id !== version.id);
         setVersions(next);
         props.onCountChange?.(next.length);

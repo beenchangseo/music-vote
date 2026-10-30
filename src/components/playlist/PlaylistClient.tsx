@@ -644,7 +644,6 @@ export default function PlaylistClient({
                       shareCode={shareCode}
                       playlistId={playlist.id}
                       isAdmin={isAdmin}
-                      adminToken={adminToken}
                       viewMode={viewMode}
                       rank={rankById.get(song.id)}
                       expanded={expandedSongId === song.id}

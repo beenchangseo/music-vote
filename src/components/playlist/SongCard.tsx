@@ -18,7 +18,6 @@ interface SongCardProps {
   shareCode: string;
   playlistId: string;
   isAdmin: boolean;
-  adminToken: string | null;
   viewMode: "card" | "compact";
   /** 점수 순위 (1부터, 동점은 같은 번호). 목록 보기에서 행 맨 앞 칸에 그린다. */
   rank?: number;
@@ -51,7 +50,6 @@ export default function SongCard({
   shareCode,
   playlistId,
   isAdmin,
-  adminToken,
   viewMode,
   rank,
   expanded = false,
@@ -316,7 +314,7 @@ export default function SongCard({
           />
         )}
         {showVersions && (
-          <SongVersionModal songId={song.id} songTitle={title} nickname={nickname} shareCode={shareCode} currentUserId={currentUserId} isAdmin={isAdmin} adminToken={adminToken} loginGate={loginGate} onCountChange={setVersionCount} onClose={() => setShowVersions(false)} />
+          <SongVersionModal songId={song.id} songTitle={title} shareCode={shareCode} currentUserId={currentUserId} isAdmin={isAdmin} loginGate={loginGate} onCountChange={setVersionCount} onClose={() => setShowVersions(false)} />
         )}
       </div>
     );
@@ -427,7 +425,7 @@ export default function SongCard({
         />
       )}
       {showVersions && (
-        <SongVersionModal songId={song.id} songTitle={song.title} nickname={nickname} shareCode={shareCode} currentUserId={currentUserId} isAdmin={isAdmin} adminToken={adminToken} loginGate={loginGate} onCountChange={setVersionCount} onClose={() => setShowVersions(false)} />
+        <SongVersionModal songId={song.id} songTitle={song.title} shareCode={shareCode} currentUserId={currentUserId} isAdmin={isAdmin} loginGate={loginGate} onCountChange={setVersionCount} onClose={() => setShowVersions(false)} />
       )}
     </div>
   );
