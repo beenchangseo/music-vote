@@ -152,6 +152,18 @@ describe("usePlaylistVotes", () => {
     expect(screen.getByRole("status")).toHaveTextContent("0");
   });
 
+  it("tells the voter that voting has closed and rolls back when the deadline has passed", async () => {
+    castVote.mockResolvedValueOnce({ success: false, reason: "voting_closed" });
+
+    render(<Harness song={makeSong()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "찬성표 추가" }));
+    expect(screen.getByRole("status")).toHaveTextContent("1");
+
+    await waitFor(() => expect(onError).toHaveBeenCalledWith("투표가 마감됐어요."));
+    expect(screen.getByRole("status")).toHaveTextContent("0");
+  });
+
   it("drops the optimistic value once the server reports a different score", async () => {
     const { rerender } = render(<Harness song={makeSong()} />);
 
