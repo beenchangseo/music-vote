@@ -130,7 +130,7 @@ Variable(한국어) + Geist(영문) 폴백.
 - 입력: `Field`(라벨 위, 도움말·오류 아래, aria 를 이어 준다) 안에 `Input`·`Textarea`.
 - `Modal` 은 모바일 시트다(surface 바탕, 그래버, 위 모서리 24, `shadow-float`). 시트 안 묶음·칸은 `surface-hover` 로
   한 단계 올린다. `useDialog()`(`DialogProvider`): alert·confirm·danger 확인창.
-- `Card`: variant `default`·`elevated`·`outline`, 그림자 없음. `IconButton`: tone `default`·`danger`·`brand`, `bare`, 44px,
+- `Card`: variant `default`·`elevated`·`outline`·`selected`(목록에서 지금 고른 한 장, `border-primary-fg`), 그림자 없음. `IconButton`: tone `default`·`danger`·`brand`, `bare`, 44px,
   `aria-label` 필수. `ScreenToolbar`: 후보곡·셋리스트·합주 상단의 숫자와 동작. 동작은 `ToolbarButton`(44px, `compact` 면
   640px 아래에서 아이콘만)으로만 그린다.
 - 크기는 prop 이 정한다. `Button`·`IconButton`·`Chip` 의 className 에 높이·폭·여백·모서리·글자 크기를 덧칠하면 eslint 가

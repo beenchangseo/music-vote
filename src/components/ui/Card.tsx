@@ -1,6 +1,6 @@
 import { HTMLAttributes, forwardRef } from "react";
 
-type Variant = "default" | "elevated" | "outline";
+type Variant = "default" | "elevated" | "outline" | "selected";
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: Variant;
@@ -11,6 +11,7 @@ const variantClasses: Record<Variant, string> = {
   default: "bg-surface border border-border",
   elevated: "bg-surface-elevated border border-border-strong",
   outline: "bg-transparent border border-border",
+  selected: "bg-surface border border-primary-fg",
 };
 
 const paddingClasses = {

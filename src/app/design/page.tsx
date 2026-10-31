@@ -209,7 +209,7 @@ export default function DesignPage() {
 
       <Section title="Card">
         <div className="space-y-3">
-          {(["default", "elevated", "outline"] as const).map((variant) => (
+          {(["default", "elevated", "outline", "selected"] as const).map((variant) => (
             <Card key={variant} variant={variant}>
               <p className="text-sm font-semibold text-text">{variant}</p>
               <p className="text-sm text-text-muted">단톡방에 초대 링크를 보내면 바로 들어와요</p>
