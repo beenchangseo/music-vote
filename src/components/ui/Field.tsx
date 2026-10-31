@@ -31,7 +31,7 @@ export default function Field({ label, help, error, children, className = "" }: 
       {cloneElement(children, {
         id,
         invalid: !!error || children.props.invalid,
-        "aria-describedby": note ? noteId : children.props["aria-describedby"],
+        "aria-describedby": [note && noteId, children.props["aria-describedby"]].filter(Boolean).join(" ") || undefined,
       })}
       {note && (
         <p id={noteId} className={`text-caption ${error ? "text-danger-fg" : "text-text-muted"}`}>

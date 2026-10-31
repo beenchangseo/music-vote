@@ -33,6 +33,8 @@ const STEP: Record<string, 1 | -1> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -
  */
 export default function SegmentedControl<T extends string>({ options, value, onChange, className = "", ...labelling }: SegmentedControlProps<T>) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const checkedIndex = options.findIndex((o) => o.value === value && !o.disabled);
+  const tabStop = checkedIndex >= 0 ? checkedIndex : options.findIndex((o) => !o.disabled);
 
   function onKeyDown(e: KeyboardEvent, from: number) {
     const step = STEP[e.key];
@@ -60,7 +62,7 @@ export default function SegmentedControl<T extends string>({ options, value, onC
             type="button"
             role="radio"
             aria-checked={checked}
-            tabIndex={checked ? 0 : -1}
+            tabIndex={i === tabStop ? 0 : -1}
             disabled={option.disabled}
             onClick={() => !checked && onChange(option.value)}
             onKeyDown={(e) => onKeyDown(e, i)}

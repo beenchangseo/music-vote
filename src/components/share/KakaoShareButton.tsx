@@ -218,7 +218,7 @@ export default function KakaoShareButton({
   }
 
   return (
-    <Button variant="kakao" size={size} onClick={handleClick} aria-label={ariaLabel || "카카오톡으로 공유"} className={className}>
+    <Button type="button" variant="kakao" size={size} onClick={handleClick} aria-label={ariaLabel || "카카오톡으로 공유"} className={className}>
       {copied ? "링크 복사됨!" : children || "카카오톡으로 공유"}
     </Button>
   );

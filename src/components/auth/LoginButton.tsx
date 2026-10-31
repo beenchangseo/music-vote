@@ -41,7 +41,7 @@ export default function LoginButton({ next, className, label = "카카오로 시
   };
 
   return (
-    <Button variant={variant} size={size} fullWidth={fullWidth} loading={loading} onClick={handleLogin} className={className}>
+    <Button type="button" variant={variant} size={size} fullWidth={fullWidth} loading={loading} onClick={handleLogin} className={className}>
       {loading ? "이동 중…" : label}
     </Button>
   );

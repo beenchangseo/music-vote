@@ -3,7 +3,7 @@
 import { ButtonHTMLAttributes, ReactNode, useId } from "react";
 import { touchTarget44 } from "./Button";
 
-interface SwitchProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onChange" | "type" | "role"> {
+interface SwitchProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onChange" | "onClick" | "type" | "role"> {
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
   /** With a label the whole row toggles (DR12). Without one, give `aria-label`. */

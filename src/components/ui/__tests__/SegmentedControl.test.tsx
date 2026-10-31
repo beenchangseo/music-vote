@@ -81,6 +81,12 @@ describe("SegmentedControl", () => {
     expect(screen.getByRole("radio", { name: "순위 투표" })).toHaveFocus();
   });
 
+  it("stays reachable by Tab when the checked option is disabled", () => {
+    render(<Controlled disabled={["free"]} />);
+    expect(screen.getByRole("radio", { name: "자유 투표" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "투표권 할당" })).toHaveAttribute("tabindex", "0");
+  });
+
   it("does not submit the form it sits in", () => {
     const onSubmit = vi.fn((e: React.FormEvent) => e.preventDefault());
     render(

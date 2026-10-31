@@ -17,8 +17,8 @@ export default function EmptyState({ icon, title, description, action, size = "s
       <div className={`flex items-center gap-2 py-3 text-sm text-text-muted ${className}`}>
         {icon && <span className="shrink-0 text-text-subtle">{icon}</span>}
         <div className="min-w-0 flex-1">
-          {title && <p className="text-text">{title}</p>}
-          {description && <p>{description}</p>}
+          {title && <div className="text-text">{title}</div>}
+          {description && <div>{description}</div>}
         </div>
         {action}
       </div>

@@ -48,7 +48,9 @@ export function SongRow({ cover, rank, topRank = false, trailing, className = ""
   return (
     <div className={`flex min-h-row-song items-center gap-2.5 max-[359px]:gap-2 ${className}`} {...rest}>
       {rank != null && <RankNumber rank={rank} top={topRank} />}
-      <div className="relative size-12 shrink-0 overflow-hidden rounded-control bg-surface-elevated max-[359px]:size-10">{cover}</div>
+      <div className="relative size-12 shrink-0 overflow-hidden rounded-control bg-surface-elevated has-focus-visible:ring-2 has-focus-visible:ring-focus-ring has-focus-visible:ring-offset-2 has-focus-visible:ring-offset-bg max-[359px]:size-10">
+        {cover}
+      </div>
       <div className="min-w-0 flex-1">{children}</div>
       {trailing && <div className="shrink-0">{trailing}</div>}
     </div>

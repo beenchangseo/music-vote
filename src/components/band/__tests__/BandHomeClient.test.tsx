@@ -166,7 +166,9 @@ describe("BandHomeClient primary action (1A)", () => {
   it("closes the call-members card and keeps it closed for this band in this browser", () => {
     const lone = ownerView({ members: [ownerView().members[0]], rooms: [room()] });
     renderHome(lone);
-    const card = screen.getByText("멤버를 불러야 같이 투표해요").closest("div")!.parentElement!;
+    // The nearest box around the card's text that also holds its close button.
+    let card = screen.getByText("멤버를 불러야 같이 투표해요").parentElement!;
+    while (!within(card).queryByRole("button", { name: "안내 닫기" })) card = card.parentElement!;
     fireEvent.click(within(card).getByRole("button", { name: "안내 닫기" }));
     expect(screen.queryByText("멤버를 불러야 같이 투표해요")).not.toBeInTheDocument();
     expect(window.localStorage.getItem(`plypick:band-invite-card-dismissed:${TEAM}`)).toBe("1");
