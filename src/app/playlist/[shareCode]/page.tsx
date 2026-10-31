@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { shouldExposeVoters } from "@/domain/vote";
 import { BAND_PROMPT_COOKIE, parseDismissals } from "@/lib/prompt-dismissals";
 import { BASE_OPEN_GRAPH } from "@/lib/seo";
+import { inviteCardParams, inviteDescription, inviteSongs } from "@/domain/invite-card";
 import { getMyTeams, type MyTeam } from "@/actions/team";
 import PlaylistClient from "@/components/playlist/PlaylistClient";
 import type { Metadata } from "next";
@@ -97,6 +98,11 @@ const getPlaylistStats = cache(async (playlistId: string) => {
   return (data as { song_count: number; participant_count: number }) ?? null;
 });
 
+/** 링크 미리보기와 페이지가 같은 곡 목록을 쓴다. songs 는 공개 키로 못 읽는다 (v18). */
+const getPlaylistSongs = cache(async (playlistId: string) =>
+  createAdminClient().from("songs").select("*").eq("playlist_id", playlistId).order("created_at", { ascending: true }),
+);
+
 interface PageProps {
   params: Promise<{ shareCode: string }>;
 }
@@ -106,14 +112,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const playlist = await getPlaylistByShareCode(shareCode);
   if (!playlist) return { title: "Plypick", robots: { index: false } };
 
-  const stats = await getPlaylistStats(playlist.id);
-  const songCount = stats?.song_count ?? 0;
+  const [stats, songsResult] = await Promise.all([getPlaylistStats(playlist.id), getPlaylistSongs(playlist.id)]);
   const participantCount = stats?.participant_count ?? 0;
+  // A pasted link unfurls as the same vote invite card the share button sends.
+  const songs = inviteSongs((songsResult.data ?? []) as Song[]);
 
   const metaTitle = `${playlist.title} - Plypick`;
-  const description = participantCount > 0
-    ? `${songCount}곡 등록 · ${participantCount}명 참여 중`
-    : `${songCount}곡 등록 | 밴드 곡 투표에 참여하세요!`;
+  const description = inviteDescription(songs, participantCount);
 
   return {
     title: metaTitle,
@@ -124,7 +129,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ...BASE_OPEN_GRAPH,
       title: metaTitle,
       description,
-      images: [`/api/og?title=${encodeURIComponent(playlist.title)}&songs=${songCount}&participants=${participantCount}`],
+      images: [`/api/og?${inviteCardParams(playlist.title, participantCount, songs)}`],
     },
     twitter: {
       card: "summary_large_image",
@@ -160,11 +165,7 @@ export default async function PlaylistPage({ params }: PageProps) {
   // 밴드 조회도 같은 Promise.all 에 넣어 순차 왕복 2번을 유지한다 (eng D4).
   const [songsResult, stats, summaryResult, votersResult, engagementResult, band, myTeams, memberCountResult, setlistResult] =
     await Promise.all([
-      admin
-        .from("songs")
-        .select("*")
-        .eq("playlist_id", playlist.id)
-        .order("created_at", { ascending: true }),
+      getPlaylistSongs(playlist.id),
       getPlaylistStats(playlist.id),
       supabase
         .from("song_vote_summary")

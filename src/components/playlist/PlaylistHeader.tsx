@@ -10,6 +10,7 @@ import AuthMenu from "../auth/AuthMenu";
 import GuitarIcon from "../ui/GuitarIcon";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
 import { roomSharePrefix, showDday, showDdayLabel } from "@/domain/team";
+import { inviteCardParams, inviteDescription, type InviteSongs } from "@/domain/invite-card";
 
 declare global {
   interface Window {
@@ -25,7 +26,8 @@ declare global {
 interface PlaylistHeaderProps {
   playlistId: string;
   title: string;
-  songCount: number;
+  /** 투표 초대 카드에 싣는 곡. 올라온 순서다. */
+  inviteSongs: InviteSongs;
   shareCode: string;
   participantCount?: number;
   announcement?: string | null;
@@ -55,7 +57,7 @@ interface PlaylistHeaderProps {
 export default function PlaylistHeader({
   playlistId,
   title,
-  songCount,
+  inviteSongs,
   shareCode,
   participantCount = 0,
   announcement,
@@ -77,9 +79,7 @@ export default function PlaylistHeader({
   async function handleKakaoShare() {
     const url = `${window.location.origin}/playlist/${shareCode}?utm_source=kakao&utm_medium=share&utm_campaign=${shareCode}`;
     // "10월 16일 공연 · " only while the show is ahead; never a D-day number on a card (25A).
-    const description = roomSharePrefix(showDate, new Date()) + (participantCount > 0
-      ? `${songCount}곡 등록 · ${participantCount}명 참여 중`
-      : `${songCount}곡 등록 | 밴드 곡 투표에 참여하세요!`);
+    const description = roomSharePrefix(showDate, new Date()) + inviteDescription(inviteSongs, participantCount);
 
     try {
       if (window.Kakao?.isInitialized()) {
@@ -88,7 +88,7 @@ export default function PlaylistHeader({
           content: {
             title: `🎵 ${title}`,
             description,
-            imageUrl: `${window.location.origin}/api/og?title=${encodeURIComponent(title)}&songs=${songCount}&participants=${participantCount}`,
+            imageUrl: `${window.location.origin}/api/og?${inviteCardParams(title, participantCount, inviteSongs)}`,
             imageWidth: OG_IMAGE_WIDTH,
             imageHeight: OG_IMAGE_HEIGHT,
             link: { mobileWebUrl: url, webUrl: url },
