@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, summarizeSetlist } from "../setlist";
+import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, setlistRows, summarizeSetlist } from "../setlist";
 import type { SetlistItem, SongWithScore } from "../types";
+import { FIXTURE_SONG_COUNT, FIXTURE_TOTAL_SECONDS, fixtureItems, fixtureSongs } from "./setlist-fixture";
 
 const song = { id: "song-1", title: "원본 제목", duration_seconds: 180 } as SongWithScore;
 const base = { id: "item-1", playlist_id: "p", position: 0, item_type: "song", song_id: song.id, label: null, description: null, duration_seconds: 0, title_override: null, duration_override_seconds: null, created_at: "" } as SetlistItem;
@@ -13,28 +14,16 @@ describe("setlist domain", () => {
     expect(song.title).toBe("원본 제목");
   });
 
-  it("counts only song blocks and includes interval time", () => {
-    const items: SetlistItem[] = [
-      base,
-      { ...base, id: "interval", item_type: "interval", song_id: null, label: "멘트", duration_seconds: 30 },
-      { ...base, id: "missing", song_id: "song-2" },
-    ];
-    expect(summarizeSetlist(items, [song, { id: "song-2", duration_seconds: null }])).toEqual({ songCount: 2, totalRuntime: 210, missingDurationCount: 1 });
-  });
-
-  it("counts original songs and includes their time", () => {
-    const items: SetlistItem[] = [
-      base,
-      { ...base, id: "original", item_type: "original", song_id: null, label: "자작곡", duration_seconds: 240 },
-    ];
-    expect(summarizeSetlist(items, [song])).toEqual({ songCount: 2, totalRuntime: 420, missingDurationCount: 0 });
-  });
-
-  it("counts an original song with no time as missing", () => {
-    const items: SetlistItem[] = [
-      { ...base, id: "original-empty", item_type: "original", song_id: null, label: "시간 모름", duration_seconds: 0 },
-    ];
-    expect(summarizeSetlist(items, [song])).toEqual({ songCount: 1, totalRuntime: 0, missingDurationCount: 1 });
+  it.each([
+    ["곡은 셋리스트에서 고친 시간이 먼저다", { duration_override_seconds: 200 }, 180, { songCount: 1, totalRuntime: 200, missingDurationCount: 0 }],
+    ["시간 모르는 곡은 곡 수에 들고 시간 미입력으로 센다", {}, null, { songCount: 1, totalRuntime: 0, missingDurationCount: 1 }],
+    ["시간 모르는 곡도 셋리스트에서 고친 시간이 있으면 그 시간이다", { duration_override_seconds: 150 }, null, { songCount: 1, totalRuntime: 150, missingDurationCount: 0 }],
+    ["자작곡은 곡 수와 시간에 든다", { item_type: "original", song_id: null, duration_seconds: 225 }, 180, { songCount: 1, totalRuntime: 225, missingDurationCount: 0 }],
+    ["시간 없는 자작곡은 시간 미입력이다", { item_type: "original", song_id: null, duration_seconds: 0 }, 180, { songCount: 1, totalRuntime: 0, missingDurationCount: 1 }],
+    ["인터벌은 시간에만 든다", { item_type: "interval", song_id: null, duration_seconds: 180 }, 180, { songCount: 0, totalRuntime: 180, missingDurationCount: 0 }],
+  ] as const)("%s", (_, fields, songDuration, expected) => {
+    const items = [{ ...base, ...fields } as SetlistItem];
+    expect(summarizeSetlist(items, [{ ...song, duration_seconds: songDuration }])).toEqual(expected);
   });
 
   it("formats totals over an hour", () => expect(formatRuntime(3723)).toBe("1:02:03"));
@@ -101,5 +90,28 @@ describe("cumulativeStarts", () => {
 
   it("빈 셋리스트를 견딘다", () => {
     expect(cumulativeStarts([], [])).toEqual([]);
+  });
+});
+
+describe("한 셋리스트는 셋리스트 탭과 내보내기에서 같은 곡 수와 총 시간이다", () => {
+  it("셋리스트 탭은 곡·자작곡·인터벌을 더해 4곡 14:28 이다", () => {
+    expect(summarizeSetlist(fixtureItems, fixtureSongs)).toEqual({
+      songCount: FIXTURE_SONG_COUNT,
+      totalRuntime: FIXTURE_TOTAL_SECONDS,
+      missingDurationCount: 1,
+    });
+    expect(formatRuntime(FIXTURE_TOTAL_SECONDS)).toBe("14:28");
+  });
+
+  it("이미지·PDF 는 자작곡까지 셋리스트 탭과 같은 번호와 시간으로 그린다", () => {
+    const rows = setlistRows(fixtureItems, fixtureSongs);
+    expect(rows).toEqual([
+      { kind: "song", number: 1, title: "첫 곡", artist: "첫 곡 밴드", bpm: null, duration: 200 },
+      { kind: "interval", title: "기타 셋업 변경", description: null, duration: 180 },
+      { kind: "song", number: 2, title: "시간 모르는 곡", artist: "시간 모르는 곡 밴드", bpm: null, duration: null },
+      { kind: "original", number: 3, title: "우리 노래", description: "첫 자작곡", duration: 225 },
+      { kind: "song", number: 4, title: "끝 곡", artist: "끝 곡 밴드", bpm: null, duration: 263 },
+    ]);
+    expect(rows.reduce((sum, row) => sum + (row.duration ?? 0), 0)).toBe(FIXTURE_TOTAL_SECONDS);
   });
 });
