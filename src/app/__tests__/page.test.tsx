@@ -120,6 +120,12 @@ describe("home without a login cookie", () => {
     expect(marked).toEqual(shown);
     expect(marked.length).toBeGreaterThan(0);
   });
+
+  it("links to the support page from the footer", async () => {
+    state.cookieNames = [];
+    await renderHome();
+    expect(screen.getByRole("link", { name: "문의하기" })).toHaveAttribute("href", "/support");
+  });
 });
 
 describe("home with a login cookie", () => {
@@ -168,6 +174,11 @@ describe("home with a login cookie", () => {
       participantOnlyTitle: "보컬님의 합주",
       bandCandidates: [{ id: "mine", title: "방 mine", memberCount: 4, memberPreview: ["기타", "드럼", "베이스"] }],
     });
+  });
+
+  it("links to the support page from the footer", async () => {
+    await renderHome();
+    expect(screen.getByRole("link", { name: "문의하기" })).toHaveAttribute("href", "/support");
   });
 
   it("stays in state B right after leaving a band, even with nothing left (DR15b)", async () => {

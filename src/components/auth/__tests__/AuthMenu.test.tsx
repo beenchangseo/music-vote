@@ -12,13 +12,17 @@ vi.mock("next/navigation", () => ({ usePathname: () => "/" }));
 const assign = vi.fn();
 const reload = vi.fn();
 
-function pressDelete() {
+function openMenu() {
   render(
     <DialogProvider>
       <AuthMenu nickname="보컬" avatarUrl={null} />
     </DialogProvider>,
   );
   fireEvent.click(screen.getByRole("button", { name: "보컬 계정 메뉴" }));
+}
+
+function pressDelete() {
+  openMenu();
   fireEvent.click(screen.getByRole("button", { name: "탈퇴하기" }));
 }
 
@@ -38,6 +42,20 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+});
+
+describe("AuthMenu 문의하기", () => {
+  it("links to /support and closes the menu on the way out", () => {
+    openMenu();
+
+    const link = screen.getByRole("link", { name: "문의하기" });
+    expect(link).toHaveAttribute("href", "/support");
+
+    // jsdom cannot load another document; the menu closing is what this test watches.
+    link.addEventListener("click", (event) => event.preventDefault());
+    fireEvent.click(link);
+    expect(screen.queryByRole("link", { name: "문의하기" })).not.toBeInTheDocument();
+  });
 });
 
 describe("AuthMenu 탈퇴하기", () => {
@@ -124,5 +142,17 @@ describe("AuthMenu 탈퇴하기", () => {
     expect(alert).toHaveTextContent("아무것도 지우지 않았어요");
     expect(alert).not.toHaveTextContent("잠시 후");
     expect(assign).not.toHaveBeenCalled();
+  });
+
+  it("points to 문의하기 when deletion is unavailable, and the link is still in the menu after the alert", async () => {
+    actions.deleteAccount.mockResolvedValue({ success: false, reason: "not_available" });
+    fireEvent.click(within(await openDeleteConfirm()).getByRole("button", { name: "탈퇴하기" }));
+
+    const alert = await screen.findByRole("alertdialog");
+    expect(alert).toHaveTextContent("'문의하기'");
+    fireEvent.click(within(alert).getByRole("button", { name: "확인" }));
+
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+    expect(screen.getByRole("link", { name: "문의하기" })).toHaveAttribute("href", "/support");
   });
 });

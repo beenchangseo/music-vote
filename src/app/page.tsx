@@ -145,6 +145,7 @@ async function SignedInHome({
           <a href="/about" className="inline-flex min-h-11 items-center transition-colors hover:text-text-muted">소개</a>
           <a href="/privacy" className="inline-flex min-h-11 items-center transition-colors hover:text-text-muted">개인정보처리방침</a>
           <a href="/terms" className="inline-flex min-h-11 items-center transition-colors hover:text-text-muted">이용약관</a>
+          <a href="/support" className="inline-flex min-h-11 items-center transition-colors hover:text-text-muted">문의하기</a>
         </nav>
       </div>
     </main>
@@ -343,6 +344,7 @@ function Landing({ left }: { left: boolean }) {
               { href: "/about", label: "소개" },
               { href: "/privacy", label: "개인정보처리방침" },
               { href: "/terms", label: "이용약관" },
+              { href: "/support", label: "문의하기" },
             ].map((link) => (
               <a key={link.href} href={link.href} className="inline-flex min-h-11 items-center text-sm text-text-subtle transition-colors hover:text-text-muted">
                 {link.label}

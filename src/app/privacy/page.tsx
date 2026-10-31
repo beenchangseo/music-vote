@@ -8,6 +8,14 @@ export const metadata: Metadata = pageMetadata({
   description: "Plypick(plypick.kr) 개인정보처리방침",
 });
 
+function SupportLink() {
+  return (
+    <Link href="/support" className="font-semibold text-primary-fg underline-offset-2 hover:underline">
+      문의하기
+    </Link>
+  );
+}
+
 export default function PrivacyPage() {
   return (
     <main className="min-h-full bg-bg">
@@ -95,13 +103,18 @@ export default function PrivacyPage() {
               있어요. 마감이 지난 투표와 보관된 플레이리스트의 기록은 지울 수 없고, 탈퇴하면 그 투표와 댓글도
               지워져요.
             </p>
-            <p className="mt-2">문의는 서비스 운영자에게 연락해 주세요.</p>
+            <p className="mt-2">
+              문의할 곳은 <SupportLink /> 페이지에서 안내해요.
+            </p>
           </section>
 
           <section>
             <h2 className="text-lg font-semibold text-text mb-2">6. 개인정보 보호책임자</h2>
             <p>
               서비스 운영자: plypick.kr 관리자
+            </p>
+            <p>
+              연락처: <SupportLink /> 페이지에서 안내해요.
             </p>
           </section>
 

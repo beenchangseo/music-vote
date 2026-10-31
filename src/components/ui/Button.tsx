@@ -85,7 +85,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
 
 export default Button;
 
-function KakaoMark() {
+/** `buttonClassName({ variant: "kakao" })` 로 칠한 링크가 Button 과 같은 말풍선을 붙일 때 쓴다. */
+export function KakaoMark() {
   return (
     <svg aria-hidden className="size-4.5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
       <path d="M12 3C6.48 3 2 6.48 2 10.8c0 2.79 1.86 5.24 4.66 6.6l-1.18 4.32c-.1.36.31.64.61.43L11.2 19.4c.26.02.53.04.8.04 5.52 0 10-3.48 10-7.8S17.52 3 12 3z" />
