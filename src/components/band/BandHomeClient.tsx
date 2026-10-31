@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Card from "../ui/Card";
 import IconButton from "../ui/IconButton";
 import Button, { buttonClassName } from "../ui/Button";
+import NoticeCard from "../ui/NoticeCard";
 import { useDialog } from "../ui/DialogProvider";
 import GuitarIcon from "../ui/GuitarIcon";
 import { showDateSpokenLabel } from "./ShowDateTile";
@@ -223,57 +224,55 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
         )}
 
         {banner && !starting && (
-          <Card role="status" className="mt-4 flex items-start gap-3">
-            <svg className="mt-0.5 h-5 w-5 shrink-0 text-success" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-            </svg>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-text">
-                {banner === "created"
-                  ? `밴드를 만들었어요. 멤버 ${members.length}명이 함께해요`
-                  : `${team.name} 밴드에 들어왔어요`}
-              </p>
-              {/* DR16: nothing to vote on yet, so say what to wait for instead of offering a button. */}
-              {banner === "joined" && rooms.length === 0 && (
-                <p className="mt-1 text-sm text-text-muted">방장이 첫 플레이리스트를 만들면 여기에 떠요</p>
-              )}
-              {banner === "created" && (
-                <Button variant="kakao" onClick={() => setInviteOpen(true)} className="mt-3">
+          <NoticeCard
+            role="status"
+            className="mt-4"
+            tone="success"
+            icon={
+              <svg className="size-4.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            }
+            title={banner === "created" ? `밴드를 만들었어요. 멤버 ${members.length}명이 함께해요` : `${team.name} 밴드에 들어왔어요`}
+            onDismiss={() => setBanner(null)}
+            dismissLabel="닫기"
+            actions={
+              banner === "created" ? (
+                <Button variant="kakao" onClick={() => setInviteOpen(true)}>
                   카톡으로 알리기
                 </Button>
-              )}
-              {banner === "joined" && activeRoom && (
-                <Link
-                  href={`/playlist/${activeRoom.shareCode}`}
-                  className={buttonClassName({ variant: "tonal", size: "md", className: "mt-3" })}
-                >
-                  지금 플레이리스트 가기
-                </Link>
-              )}
-            </div>
-            <CloseButton onClick={() => setBanner(null)} />
-          </Card>
+              ) : (
+                activeRoom && (
+                  <Link href={`/playlist/${activeRoom.shareCode}`} className={buttonClassName({ variant: "tonal", size: "md" })}>
+                    지금 플레이리스트 가기
+                  </Link>
+                )
+              )
+            }
+          >
+            {/* DR16: nothing to vote on yet, so say what to wait for instead of offering a button. */}
+            {banner === "joined" && rooms.length === 0 && "방장이 첫 플레이리스트를 만들면 여기에 떠요"}
+          </NoticeCard>
         )}
 
         {/* 1A: a band of one needs members before anything else. Closable; the invite icon stays. */}
         {alone && !starting && !inviteCardStoredClosed && !inviteCardClosed && (
-          <Card variant="elevated" className="mt-5 motion-safe:animate-fade-in">
-            <div className="flex items-start gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="text-body font-semibold text-text">
-                  {roomWithGuests
-                    ? `「${roomWithGuests.title}」 참여자 ${roomWithGuests.participantCount}명은 아직 밴드 멤버가 아니에요`
-                    : "멤버를 불러야 같이 투표해요"}
-                </p>
-                <p className="mt-1 text-sm text-text-muted">단톡방에 초대 링크를 보내면 바로 들어와요</p>
-              </div>
-              {/* A prompt card, like BandPromptCard's: "안내 닫기". Status banners keep plain "닫기". */}
-              <CloseButton label="안내 닫기" onClick={dismissInviteCard} />
-            </div>
-            <Button variant="kakao" onClick={() => setInviteOpen(true)} fullWidth className="mt-4">
-              카톡으로 멤버 부르기
-            </Button>
-          </Card>
+          <NoticeCard
+            className="mt-5 motion-safe:animate-fade-in"
+            title={
+              roomWithGuests
+                ? `「${roomWithGuests.title}」 참여자 ${roomWithGuests.participantCount}명은 아직 밴드 멤버가 아니에요`
+                : "멤버를 불러야 같이 투표해요"
+            }
+            onDismiss={dismissInviteCard}
+            actions={
+              <Button variant="kakao" onClick={() => setInviteOpen(true)} fullWidth>
+                카톡으로 멤버 부르기
+              </Button>
+            }
+          >
+            단톡방에 초대 링크를 보내면 바로 들어와요
+          </NoticeCard>
         )}
 
         {activeRoom && <NowRoomCard room={activeRoom} />}
@@ -441,11 +440,8 @@ function roomStatus(room: TeamRoom): string {
 /** 지금 합주방 (YouTube Music 추천 플레이리스트 카드): 커버 + 제목 + 상태 + 흰 재생 버튼. */
 function NowRoomCard({ room }: { room: TeamRoom }) {
   return (
-    <section aria-label="지금 플레이리스트" className="mt-6">
-      <Link
-        href={`/playlist/${room.shareCode}`}
-        className="block overflow-hidden rounded-card bg-gradient-to-br from-primary-tint/80 via-surface to-surface p-4 ring-1 ring-white/5 transition-transform active:scale-[0.99]"
-      >
+    <Card padding="none" role="region" aria-label="지금 플레이리스트" className="mt-6 transition-transform active:scale-[0.99]">
+      <Link href={`/playlist/${room.shareCode}`} className="block rounded-card p-4">
         <span className="flex items-center gap-4">
           <RoomCover thumbs={room.coverThumbs} sizes="88px" className="h-22 w-22 shrink-0 shadow-lg" />
           <span className="min-w-0 flex-1">
@@ -465,7 +461,7 @@ function NowRoomCard({ room }: { room: TeamRoom }) {
           </span>
         </span>
       </Link>
-    </section>
+    </Card>
   );
 }
 
@@ -577,16 +573,6 @@ function PlayedSongs({ songs }: { songs: PlayedSong[] }) {
         </>
       )}
     </section>
-  );
-}
-
-function CloseButton({ onClick, label = "닫기" }: { onClick: () => void; label?: string }) {
-  return (
-    <IconButton bare aria-label={label} onClick={onClick} className="-my-2 -mr-2">
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </IconButton>
   );
 }
 
