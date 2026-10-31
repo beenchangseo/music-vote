@@ -403,7 +403,7 @@ export default function RoomSettingsButton({
                   aria-pressed={votesAnonymous}
                   className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors ${
                     votesAnonymous
-                      ? "border-primary bg-primary/15 text-primary-fg"
+                      ? "border-primary-fg bg-primary/15 text-primary-fg"
                       : "border-border bg-surface text-text-muted"
                   }`}
                 >
@@ -415,7 +415,7 @@ export default function RoomSettingsButton({
                   aria-pressed={!votesAnonymous}
                   className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors ${
                     !votesAnonymous
-                      ? "border-primary bg-primary/15 text-primary-fg"
+                      ? "border-primary-fg bg-primary/15 text-primary-fg"
                       : "border-border bg-surface text-text-muted"
                   }`}
                 >
@@ -441,7 +441,7 @@ export default function RoomSettingsButton({
                       onClick={() => value !== mode && persist({ mode: value })}
                       className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors disabled:opacity-40 ${
                         mode === value
-                          ? "border-primary bg-primary/15 text-primary-fg"
+                          ? "border-primary-fg bg-primary/15 text-primary-fg"
                           : "border-border bg-surface text-text-muted"
                       }`}
                     >
@@ -556,7 +556,7 @@ export default function RoomSettingsButton({
                     aria-pressed={shownEditMode === value}
                     className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors disabled:opacity-40 ${
                       shownEditMode === value
-                        ? "border-primary bg-primary/15 text-primary-fg"
+                        ? "border-primary-fg bg-primary/15 text-primary-fg"
                         : "border-border bg-surface text-text-muted"
                     }`}
                   >

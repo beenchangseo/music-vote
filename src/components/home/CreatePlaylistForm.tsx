@@ -385,7 +385,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
             onClick={() => setVotingMode("free")}
             className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors ${
               votingMode === "free"
-                ? "border-primary bg-primary/15 text-primary-fg"
+                ? "border-primary-fg bg-primary/15 text-primary-fg"
                 : "border-border bg-surface-hover text-text-muted"
             }`}
           >
@@ -396,7 +396,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
             onClick={() => setVotingMode("allocated")}
             className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors ${
               votingMode === "allocated"
-                ? "border-primary bg-primary/15 text-primary-fg"
+                ? "border-primary-fg bg-primary/15 text-primary-fg"
                 : "border-border bg-surface-hover text-text-muted"
             }`}
           >

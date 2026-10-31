@@ -15,7 +15,7 @@ const Chip = forwardRef<HTMLButtonElement, ChipProps>(function Chip(
   ref,
 ) {
   const skin = selected
-    ? "border-primary bg-primary-tint text-on-primary-tint"
+    ? "border-primary-fg bg-primary-tint text-on-primary-tint"
     : "border-border bg-surface-hover text-text-muted hover:text-text";
 
   return (
