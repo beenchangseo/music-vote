@@ -84,7 +84,6 @@ export default function PlaylistClient({
   const [adminToken, setAdminToken] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
   const [allowance, setAllowance] = useState<VoteAllowance | null>(null);
-  const [votesAnonymous, setVotesAnonymous] = useState(playlist.votes_anonymous);
   // Band made from the prompt card (R6). Lives here, not in the card: the action's revalidatePath
   // re-renders the room with a band, the prompt condition turns false and the card unmounts.
   const [justCreatedTeam, setJustCreatedTeam] = useState<CreatedBand | null>(null);
@@ -364,10 +363,7 @@ export default function PlaylistClient({
       setlistEditMode={playlist.setlist_edit_mode}
       onSetlistEditModeChange={notifyChange}
       onAllowanceChange={(mode, usedVotes, voteLimit) => setAllowance({ mode, usedVotes, voteLimit })}
-      onVotesAnonymousChange={(next) => {
-        setVotesAnonymous(next);
-        notifyChange();
-      }}
+      onVotesAnonymousChange={notifyChange}
       onVotesReset={() => {
         resetVotes();
         notifyChange();
@@ -646,7 +642,7 @@ export default function PlaylistClient({
                       key={song.id}
                       song={song}
                       votingMode={playlist.voting_mode}
-                      votesAnonymous={votesAnonymous}
+                      votesAnonymous={playlist.votes_anonymous}
                       nickname={nickname}
                       shareCode={shareCode}
                       playlistId={playlist.id}
