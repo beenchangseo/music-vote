@@ -42,7 +42,7 @@ node "$here/drift.mjs" || drift_status=$?
 
 scenarios=("${@:-voters save configure setLimit applyAll}")
 read -r -a scenarios <<< "${scenarios[*]}"
-props=(QuotaHolds FreeOneVotePerSong VotesMatchMode)
+props=(QuotaHolds FreeOneVotePerSong VotesMatchMode NoWriteAfterDeadline)
 
 out="$here/out"
 rm -rf "$out"

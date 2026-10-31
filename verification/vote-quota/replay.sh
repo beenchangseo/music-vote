@@ -39,7 +39,8 @@ CREATE FUNCTION auth.uid() RETURNS UUID LANGUAGE sql STABLE
   AS $$ SELECT NULLIF(current_setting('request.jwt.claim.sub', true), '')::UUID $$;
 CREATE TABLE playlists (
   id UUID PRIMARY KEY, creator_user_id UUID, voting_mode TEXT NOT NULL,
-  default_vote_limit SMALLINT NOT NULL, votes_anonymous BOOLEAN NOT NULL DEFAULT false);
+  default_vote_limit SMALLINT NOT NULL, votes_anonymous BOOLEAN NOT NULL DEFAULT false,
+  deadline TIMESTAMPTZ);
 CREATE TABLE songs (id UUID PRIMARY KEY, playlist_id UUID REFERENCES playlists(id));
 CREATE TABLE playlist_members (
   playlist_id UUID REFERENCES playlists(id), user_id UUID, display_name TEXT,

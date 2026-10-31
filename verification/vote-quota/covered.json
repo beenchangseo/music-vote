@@ -1,7 +1,7 @@
 {
   "cast_playlist_vote": {
-    "file": "supabase/migrations/v23.sql",
-    "sha256": "4aa6a4bcb427e687bc5ed8f11b530568d33b1f476ce939d15489b289f6e84417"
+    "file": "supabase/migrations/v24.sql",
+    "sha256": "c8ab774a2eeedb34baba3b78d150eade869bf4ef05b3dc8ae0c3901ce5fdb1e3"
   },
   "register_playlist_member": {
     "file": "supabase/migrations/v10.sql",
