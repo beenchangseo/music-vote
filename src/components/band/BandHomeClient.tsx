@@ -8,6 +8,8 @@ import IconButton from "../ui/IconButton";
 import Button, { buttonClassName } from "../ui/Button";
 import NoticeCard from "../ui/NoticeCard";
 import Avatar, { AvatarStack } from "../ui/Avatar";
+import EmptyState from "../ui/EmptyState";
+import { SongRow } from "../ui/ListRow";
 import { useDialog } from "../ui/DialogProvider";
 import GuitarIcon from "../ui/GuitarIcon";
 import { showDateSpokenLabel } from "./ShowDateTile";
@@ -527,7 +529,7 @@ function PlayedSongs({ songs }: { songs: PlayedSong[] }) {
     <section aria-labelledby="band-played" className="mt-10">
       <SectionTitle id="band-played" title="우리가 했던 곡" count={songs.length} />
       {songs.length === 0 ? (
-        <p className="mt-2 text-sm text-text-muted">셋리스트를 짜면 여기에 쌓여요</p>
+        <EmptyState size="inline" description="셋리스트를 짜면 여기에 쌓여요" />
       ) : (
         <>
           <ol className="mt-3">
@@ -535,30 +537,25 @@ function PlayedSongs({ songs }: { songs: PlayedSong[] }) {
               <li key={song.key}>
                 <Link
                   href={`/playlist/${song.latestShareCode}`}
-                  className="-mx-2 flex min-h-16 items-center gap-3 rounded-control px-2 py-2 transition-colors hover:bg-surface-hover"
+                  className="-mx-2 block rounded-control px-2 transition-colors hover:bg-surface-hover"
                 >
-                  <SongThumb src={song.thumbnailUrl} className="h-12 w-12" />
-                  <span className="min-w-0 flex-1">
+                  <SongRow
+                    cover={<SongThumb src={song.thumbnailUrl} />}
+                    trailing={
+                      song.times > 1 && <span className="text-sm font-bold text-primary-fg tabular-nums">{song.times}번</span>
+                    }
+                  >
                     <span className="block truncate text-body text-text">{song.title}</span>
                     {song.artist && <span className="block truncate text-sm text-text-muted">{song.artist}</span>}
-                  </span>
-                  {song.times > 1 && (
-                    <span className="shrink-0 text-sm font-bold text-primary-fg tabular-nums">
-                      {song.times}번
-                    </span>
-                  )}
+                  </SongRow>
                 </Link>
               </li>
             ))}
           </ol>
           {!showAll && songs.length > COLLAPSED_SONGS && (
-            <button
-              type="button"
-              onClick={() => setShowAll(true)}
-              className="mt-2 inline-flex min-h-11 items-center rounded-pill border border-border px-4 text-sm font-semibold text-text transition-colors hover:bg-surface-hover"
-            >
+            <Button variant="tonal" size="sm" className="mt-2" onClick={() => setShowAll(true)}>
               더 보기 ({songs.length - COLLAPSED_SONGS}곡)
-            </button>
+            </Button>
           )}
         </>
       )}
