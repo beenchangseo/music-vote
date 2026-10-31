@@ -10,25 +10,27 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
 }
 
+/** 채운 보라(primary)는 화면에 하나. 나란한 보조 동작은 tonal, 덜 중요한 동작은 ghost. */
 const variantClasses: Record<Variant, string> = {
   primary:
-    "bg-primary hover:bg-primary-hover text-white disabled:bg-primary/50",
+    "bg-primary hover:bg-primary-hover active:bg-primary-pressed text-on-primary disabled:bg-primary/50",
   tonal:
-    "bg-surface-hover hover:bg-border-strong text-text border border-border",
+    "bg-surface-hover hover:bg-surface-elevated text-text",
   ghost:
     "bg-transparent hover:bg-surface-hover text-text-muted",
   danger:
-    "bg-danger hover:bg-red-600 text-white",
+    "bg-danger hover:bg-danger/90 text-on-danger",
   /** 카카오 로그인 버튼. 카카오 노랑 위 어두운 글자라 흰 글자 primary 보다 대비가 높다. */
   kakao:
     "bg-kakao hover:bg-kakao-hover text-kakao-text",
 };
 
 const sizeClasses: Record<Size, string> = {
-  sm: "h-9 px-3 text-sm rounded-lg",
-  md: "h-11 px-5 text-sm rounded-xl",
-  lg: "h-12 px-6 text-base rounded-xl",
-  icon: "h-11 w-11 rounded-xl",
+  // 36px to see, 44px to touch: the ::after hit area reaches past the visible edge.
+  sm: "relative h-control-sm px-3 text-sm after:absolute after:inset-x-0 after:top-1/2 after:h-control-md after:-translate-y-1/2",
+  md: "h-control-md px-5 text-sm",
+  lg: "h-control-lg px-6 text-body",
+  icon: "size-control-md",
 };
 
 /**
@@ -41,7 +43,7 @@ export function buttonClassName({
   fullWidth = false,
   className = "",
 }: { variant?: Variant; size?: Size; fullWidth?: boolean; className?: string } = {}) {
-  return `inline-flex items-center justify-center gap-2 font-semibold transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`;
+  return `inline-flex items-center justify-center gap-2 rounded-control font-semibold transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`;
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
@@ -61,14 +63,13 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
     <button
       ref={ref}
       disabled={disabled || loading}
+      aria-busy={loading || undefined}
       className={buttonClassName({ variant, size, fullWidth, className })}
       {...rest}
     >
       {loading ? (
-        <span
-          aria-hidden
-          className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
-        />
+        // currentColor, so the spinner reads on every variant (white on violet, dark on kakao yellow).
+        <span aria-hidden className="inline-block size-4 rounded-pill border-2 border-current border-t-transparent animate-spin" />
       ) : null}
       {children}
     </button>
