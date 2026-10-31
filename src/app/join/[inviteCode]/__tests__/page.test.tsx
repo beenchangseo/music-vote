@@ -99,7 +99,7 @@ describe("/join/[inviteCode] card for a band of one (DR13)", () => {
     });
     const meta = await generateMetadata(props());
     vi.useRealTimers();
-    expect(meta.description).toBe("보컬님이 밴드를 만들었어요 · 카카오 로그인 한 번이면 합류");
+    expect(meta.description).toBe("리더 보컬님의 밴드 · 카카오 로그인 한 번이면 합류");
   });
 });
 

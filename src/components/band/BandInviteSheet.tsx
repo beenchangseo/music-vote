@@ -16,7 +16,7 @@ interface BandInviteSheetProps {
   inviteCode: string;
   memberCount: number;
   nextShowAt: string | null;
-  /** 밴드를 만든 사람 이름. 혼자인 밴드의 카톡 카드 문구에 쓴다 (DR13). */
+  /** 밴드 리더(owner) 이름. 혼자인 밴드의 카톡 카드 문구에 쓴다 (DR13). */
   ownerName: string | null;
   /** owner 에게만 "링크 새로 만들기"를 보여준다. */
   isOwner: boolean;

@@ -101,7 +101,7 @@ export function shareableShowDate(nextShowAt: string | null | undefined, now: Da
 
 /**
  * band 카드 설명 (디자인 25A). 날짜가 주인공이고, 날짜가 없거나 지났으면 합류 안내.
- * 만든 사람 혼자인 밴드(홈에서 만든 빈 밴드)는 "멤버 1명" 대신 만든 사람 이름을 싣는다 (DR13).
+ * 리더(owner) 혼자인 밴드(홈에서 만든 빈 밴드)는 "멤버 1명" 대신 리더 이름을 싣는다 (DR13).
  */
 export function bandShareDescription(
   nextShowAt: string | null | undefined,
@@ -111,7 +111,7 @@ export function bandShareDescription(
 ): string {
   const date = shareableShowDate(nextShowAt, now);
   if (memberCount <= 1 && ownerName) {
-    return date ? `${formatShowDate(date)} 공연 · ${ownerName}님의 밴드` : `${ownerName}님이 밴드를 만들었어요 · 카카오 로그인 한 번이면 합류`;
+    return date ? `${formatShowDate(date)} 공연 · ${ownerName}님의 밴드` : `리더 ${ownerName}님의 밴드 · 카카오 로그인 한 번이면 합류`;
   }
   return date
     ? `${formatShowDate(date)} 공연 · 멤버 ${memberCount}명`
@@ -180,14 +180,42 @@ export function canPromote(
   return null;
 }
 
+// Postgres writes a timestamptz without a zero fraction ("…:00+00:00" next to "…:00.5+00:00"), and
+// localeCompare puts "." before "+", so the strings sort out of time order within one second.
+function compareJoinedAt(a: string | null, b: string | null): number {
+  const at = a ? Date.parse(a) : -Infinity;
+  const bt = b ? Date.parse(b) : -Infinity;
+  return at === bt ? 0 : at < bt ? -1 : 1;
+}
+
 /** 멤버 표시 순서: owner 먼저, 그다음 가입 순 (디자인 2A). 원본 배열은 바꾸지 않는다. */
 export function sortMembersForDisplay<T extends { role: TeamRole; joined_at: string | null }>(
   members: T[],
 ): T[] {
   return [...members].sort((a, b) => {
     if (a.role !== b.role) return a.role === "owner" ? -1 : 1;
-    return (a.joined_at ?? "").localeCompare(b.joined_at ?? "");
+    return compareJoinedAt(a.joined_at, b.joined_at);
   });
+}
+
+/**
+ * owner 가 탈퇴할 때 밴드를 누가 맡는지 (2026-10-31 운영자 결정: 가장 먼저 들어온 멤버).
+ * kept 는 앞선 탈퇴 시도가 이미 넘긴 경우라 다시 넘기지 않는다. empty 는 owner 없는 빈 밴드로 남는다.
+ */
+export type BandSuccession<T> = { kind: "promote"; owner: T } | { kind: "kept"; owner: T } | { kind: "empty" };
+
+export function bandOwnerAfterLeaving<T extends { user_id: string; role: TeamRole; joined_at: string }>(
+  members: T[],
+  leavingUserId: string,
+): BandSuccession<T> {
+  // A band promoted from a playlist inserts every member in one statement, so joined_at ties.
+  // user_id breaks the tie so the confirm dialog and the handover pick the same person.
+  const others = members
+    .filter((member) => member.user_id !== leavingUserId)
+    .sort((a, b) => compareJoinedAt(a.joined_at, b.joined_at) || a.user_id.localeCompare(b.user_id));
+  const owner = others.find((member) => member.role === "owner");
+  if (owner) return { kind: "kept", owner };
+  return others[0] ? { kind: "promote", owner: others[0] } : { kind: "empty" };
 }
 
 /**

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   aggregatePlayedSongs,
+  bandOwnerAfterLeaving,
   bandShareDescription,
   canPromote,
   formatShowDate,
@@ -14,6 +15,7 @@ import {
   showDateParts,
   showDday,
   showDdayLabel,
+  sortMembersForDisplay,
   validateNextShowDate,
   validateTeamName,
 } from "../team";
@@ -155,6 +157,69 @@ describe("previewMemberNames", () => {
   });
 });
 
+describe("sortMembersForDisplay", () => {
+  it("orders members who joined in the same second by the instant, though Postgres drops a zero fraction", () => {
+    const names = sortMembersForDisplay([
+      { display_name: "기타", role: "member", joined_at: "2026-10-02T00:00:00.5+00:00" },
+      { display_name: "베이스", role: "member", joined_at: "2026-10-02T00:00:00+00:00" },
+      { display_name: "보컬", role: "owner", joined_at: "2026-10-04T00:00:00+00:00" },
+    ]).map((member) => member.display_name);
+    expect(names).toEqual(["보컬", "베이스", "기타"]);
+  });
+});
+
+describe("bandOwnerAfterLeaving", () => {
+  const member = (user_id: string, role: "owner" | "member", joined_at: string) => ({
+    user_id,
+    display_name: `name-${user_id}`,
+    role,
+    joined_at,
+  });
+  const ME = member("u-me", "owner", "2026-10-01T00:00:00+00:00");
+
+  it.each([
+    ["no one else is in the band", [ME], { kind: "empty" }],
+    [
+      "the earliest-joined member takes over, whatever the row order",
+      [
+        member("u-late", "member", "2026-10-03T00:00:00+00:00"),
+        ME,
+        member("u-early", "member", "2026-10-02T00:00:00+00:00"),
+      ],
+      { kind: "promote", owner: member("u-early", "member", "2026-10-02T00:00:00+00:00") },
+    ],
+    [
+      "members who joined at the same moment (a promoted band) resolve by user id",
+      [
+        ME,
+        member("u-b", "member", "2026-10-02T00:00:00+00:00"),
+        member("u-a", "member", "2026-10-02T00:00:00+00:00"),
+      ],
+      { kind: "promote", owner: member("u-a", "member", "2026-10-02T00:00:00+00:00") },
+    ],
+    [
+      "a whole-second join is earlier than a fraction of the same second (Postgres drops a zero fraction)",
+      [
+        ME,
+        member("u-a", "member", "2026-10-02T00:00:00.5+00:00"),
+        member("u-b", "member", "2026-10-02T00:00:00+00:00"),
+      ],
+      { kind: "promote", owner: member("u-b", "member", "2026-10-02T00:00:00+00:00") },
+    ],
+    [
+      "an earlier try already handed the band over",
+      [
+        ME,
+        member("u-early", "member", "2026-10-02T00:00:00+00:00"),
+        member("u-handed", "owner", "2026-10-03T00:00:00+00:00"),
+      ],
+      { kind: "kept", owner: member("u-handed", "owner", "2026-10-03T00:00:00+00:00") },
+    ],
+  ])("%s", (_case, members, expected) => {
+    expect(bandOwnerAfterLeaving(members, ME.user_id)).toEqual(expected);
+  });
+});
+
 describe("teamMessage", () => {
   it("maps known reason codes to Korean copy", () => {
     expect(teamMessage("not_member")).toBe("밴드 멤버만 할 수 있어요");
@@ -208,10 +273,10 @@ describe("show date formatting (cards and screens)", () => {
   });
 
   it("names the owner instead of '멤버 1명' while the band is just them (DR13)", () => {
-    expect(bandShareDescription(null, 1, NOON_KST, "보컬")).toBe("보컬님이 밴드를 만들었어요 · 카카오 로그인 한 번이면 합류");
+    expect(bandShareDescription(null, 1, NOON_KST, "보컬")).toBe("리더 보컬님의 밴드 · 카카오 로그인 한 번이면 합류");
     expect(bandShareDescription("2026-10-16", 1, NOON_KST, "보컬")).toBe("10월 16일(금) 공연 · 보컬님의 밴드");
     // A past show is not put on the card (25A).
-    expect(bandShareDescription("2026-10-03", 1, NOON_KST, "보컬")).toBe("보컬님이 밴드를 만들었어요 · 카카오 로그인 한 번이면 합류");
+    expect(bandShareDescription("2026-10-03", 1, NOON_KST, "보컬")).toBe("리더 보컬님의 밴드 · 카카오 로그인 한 번이면 합류");
     // From two members on, the count is the news; without a name the old line stays.
     expect(bandShareDescription("2026-10-16", 2, NOON_KST, "보컬")).toBe("10월 16일(금) 공연 · 멤버 2명");
     expect(bandShareDescription(null, 1, NOON_KST, null)).toBe("멤버 1명 · 카카오 로그인 한 번이면 합류");
