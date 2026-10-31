@@ -17,11 +17,16 @@ interface SegmentedControlProps<T extends string> {
   className?: string;
 }
 
-/** Track and segment looks, shared with the bottom TabBar so both read as the same control. */
-export const segmentTrackClass = "flex gap-1 rounded-card bg-surface-hover p-1";
+const segmentTrackClass = "flex gap-1 rounded-card bg-surface-hover p-1";
+
+/**
+ * Segment look, shared with the bottom TabBar so both read as the same control.
+ * The tint alone is 1.13:1 on the dock track and 1.07:1 on this one, so the primary-fg border (5.4:1 and up) carries the selected state.
+ * Every cell keeps a 1px border so selecting one does not move the others.
+ */
 export function segmentItemClass(selected: boolean) {
-  return `flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-control px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-40 ${
-    selected ? "bg-surface-elevated text-text shadow-sm" : "text-text-muted hover:text-text"
+  return `flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-control border px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-40 ${
+    selected ? "border-primary-fg bg-primary-tint text-on-primary-tint" : "border-transparent text-text-muted hover:text-text"
   }`;
 }
 

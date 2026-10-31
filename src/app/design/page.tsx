@@ -243,7 +243,7 @@ export default function DesignPage() {
         <SwitchDemo />
       </Section>
 
-      <Section title="SegmentedControl" note="한 화면 안에서 하나를 고르는 라디오 묶음. 화살표 키로 옮기면 바로 골라져요.">
+      <Section title="SegmentedControl" note="한 화면 안에서 하나를 고르는 라디오 묶음. 화살표 키로 옮기면 바로 골라져요. 고른 칸은 primary-tint 바탕에 on-primary-tint 글자, primary-fg 테두리예요. tint 는 트랙과 1.1:1 이라 테두리가 3:1 을 넘겨요.">
         <SegmentedDemo />
       </Section>
 

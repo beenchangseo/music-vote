@@ -88,7 +88,7 @@ verification/     TLA+ 형식 검증 (verify-vote-quota 스킬)
 |---|---|
 | 주 버튼·켜진 스위치 바탕 | `bg-primary` + `text-on-primary`, hover `primary-hover`, 눌림 `primary-pressed` |
 | 어두운 표면 위 보라 글자·아이콘·순위 | `text-primary-fg` (hover 는 `on-primary-tint`) |
-| 선택 칩·tonal 보라·탭 표시자 바탕 | `bg-primary-tint` + `text-on-primary-tint` |
+| 선택 칩·세그먼트·하단 탭·tonal 보라 바탕 | `bg-primary-tint` + `text-on-primary-tint` |
 | 선택 상태 테두리 | `border-primary-fg` (`border-primary` 는 tint 위에서 3:1 이 안 나온다) |
 | 위험 버튼 바탕 | `bg-danger` + `text-on-danger`, hover `danger-hover` |
 | 주의 배지 바탕 | `bg-warning-tint` + `text-warning` (`warning-soft` 위 warning 글자는 4.22:1 이라 금지) |
