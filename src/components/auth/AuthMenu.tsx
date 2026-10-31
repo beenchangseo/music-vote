@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import Avatar from "../ui/Avatar";
 
 interface AuthMenuProps {
   nickname: string;
@@ -44,22 +45,15 @@ export default function AuthMenu({ nickname, avatarUrl, embedded = false }: Auth
         onClick={() => setOpen((v) => !v)}
         aria-label={`${nickname} 계정 메뉴`}
         aria-expanded={open}
-        className="block h-11 w-11 rounded-pill overflow-hidden border border-border bg-surface hover:border-border-strong transition-colors"
+        className="group block rounded-pill"
       >
-        {avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <span className="flex w-full h-full items-center justify-center bg-primary/20 text-primary-fg text-sm font-semibold">
-            {nickname.slice(0, 1)}
-          </span>
-        )}
+        <Avatar name={nickname} src={avatarUrl} size="md" className="ring-1 ring-border transition-shadow group-hover:ring-border-strong" />
       </button>
 
       {open && (
         // z-40: the playlist header renders this menu embedded (outside the fixed z-50 slot), and the
         // cover below it is positioned, so without a z-index the cover painted over the menu. Below sheets (z-[90]).
-        <div className="absolute right-0 top-11 z-40 w-44 rounded-xl border border-border bg-surface shadow-lg animate-fade-in overflow-hidden">
+        <div className="absolute right-0 top-11 z-40 w-44 rounded-control border border-border bg-surface shadow-float animate-fade-in overflow-hidden">
           <div className="px-3 py-2 border-b border-border">
             <p className="text-caption text-text-subtle">로그인됨</p>
             <p className="text-sm font-medium text-text truncate">{nickname}</p>
