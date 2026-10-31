@@ -23,7 +23,11 @@ vi.mock("@/lib/auth", () => ({ getCurrentUser: async () => null }));
 vi.mock("@/actions/team", () => ({ getMyTeams: async () => ({ teams: [] }) }));
 vi.mock("@/components/playlist/PlaylistClient", () => ({ default: () => null }));
 
-import { generateMetadata } from "../page";
+import type { Metadata } from "next";
+import type { ReactElement } from "react";
+import PlaylistPage, { generateMetadata } from "../page";
+import { readShareCard } from "@/lib/share-card";
+import type { PlaylistShareKit } from "@/components/playlist/PlaylistClient";
 
 const FIVE_SONGS = [
   { title: "[MV] 체리필터 - 낭만고양이 | Cherryfilter - Romantic Cat", youtube_video_id: "oSlqhkPa3no", created_at: "2026-10-01T10:00:00+00:00" },
@@ -40,35 +44,53 @@ afterEach(() => {
   db.creator = "u1";
 });
 
+/** The card the image route will draw for an og:image or share button URL. */
+const drawn = (image: unknown) => readShareCard(new URL(String(image), "https://plypick.kr").searchParams);
+const ogImage = (meta: Metadata) => (meta.openGraph?.images as string[])[0];
+
 describe("/playlist/[shareCode] link preview", () => {
   it("unfurls a pasted link as the same vote invite card the share button sends", async () => {
     db.songs = FIVE_SONGS;
     const meta = await generateMetadata(props);
     expect(meta.description).toBe("낭만고양이·벚꽃 엔딩 외 3곡 · 1명 참여 중");
-    const image = new URL(String((meta.openGraph?.images as string[])[0]), "https://plypick.kr");
-    expect(image.pathname).toBe("/api/og");
-    expect(image.searchParams.get("variant")).toBe("playlist");
-    expect(image.searchParams.get("songs")).toBe("5");
-    expect(image.searchParams.get("cover")).toBe("oSlqhkPa3no,tXV7dfvSefo,Ciea1ARtPzg,Ejc__vhP2U8");
-    expect(image.searchParams.getAll("name")).toEqual(["낭만고양이", "벚꽃 엔딩"]);
+    expect(new URL(ogImage(meta), "https://plypick.kr").pathname).toBe("/api/og");
+    await expect(drawn(ogImage(meta))).resolves.toEqual({
+      kind: "invite",
+      title: "UX 워크스루 테스트",
+      participants: 1,
+      songs: { cover: ["oSlqhkPa3no", "tXV7dfvSefo", "Ciea1ARtPzg", "Ejc__vhP2U8"], names: ["낭만고양이", "벚꽃 엔딩"], count: 5 },
+    });
+
+    const shareKit = ((await PlaylistPage(props)) as ReactElement<{ shareKit: PlaylistShareKit }>).props.shareKit;
+    expect(shareKit.invite).toEqual({ image: ogImage(meta), description: meta.description });
   });
 
   it("keeps the count line for an empty playlist", async () => {
     const meta = await generateMetadata(props);
     expect(meta.description).toBe("0곡 등록 | 밴드 곡 투표에 참여하세요!");
-    const image = new URL(String((meta.openGraph?.images as string[])[0]), "https://plypick.kr");
-    expect(image.searchParams.get("variant")).toBe("playlist");
-    expect(image.searchParams.get("cover")).toBeNull();
+    await expect(drawn(ogImage(meta))).resolves.toMatchObject({ kind: "invite", songs: { cover: [], names: [], count: 0 } });
   });
 
-  it("keeps the old card for an archived playlist, which takes no votes", async () => {
+  it("unfurls an archived playlist, which takes no votes, as the site card", async () => {
     db.songs = FIVE_SONGS;
     db.creator = null;
     const meta = await generateMetadata(props);
     expect(meta.description).toBe("5곡 등록 · 1명 참여 중");
-    // The same URL main sent before #11, so previews already shared stay as they are.
-    expect((meta.openGraph?.images as string[])[0]).toBe(
-      `/api/og?title=${encodeURIComponent("UX 워크스루 테스트")}&songs=5&participants=1`,
-    );
+    expect(ogImage(meta)).toBe("/api/og");
+  });
+});
+
+describe("/playlist/[shareCode] result share buttons", () => {
+  it("hands the banners the result and setlist cards the route will draw", async () => {
+    db.songs = FIVE_SONGS;
+    const shareKit = ((await PlaylistPage(props)) as ReactElement<{ shareKit: PlaylistShareKit }>).props.shareKit;
+    await expect(drawn(shareKit.decided)).resolves.toEqual({
+      kind: "decided",
+      title: "UX 워크스루 테스트",
+      participants: 1,
+      songs: 5,
+      top: { title: FIVE_SONGS[0].title, artist: "", score: 0 },
+    });
+    await expect(drawn(shareKit.setlist)).resolves.toEqual({ kind: "setlist", title: "UX 워크스루 테스트", participants: 1, setlistCount: 5 });
   });
 });

@@ -17,6 +17,7 @@ import Input from "../ui/Input";
 import SegmentedControl, { type SegmentOption } from "../ui/SegmentedControl";
 import Switch from "../ui/Switch";
 import type { VotingMode } from "@/domain/types";
+import type { CardImage } from "@/domain/share-card";
 
 const VOTING_MODE_OPTIONS: readonly SegmentOption<VotingMode>[] = [
   { value: "free", label: "자유 투표" },
@@ -29,6 +30,8 @@ interface CreatedPlaylist {
   adminToken: string;
   title: string;
   url: string;
+  /** 카톡 공유 카드 그림. 액션이 서명했다 (#35). */
+  shareImage: CardImage;
   /** 밴드 안에 만들었으면 그 밴드 (?band= 또는 DR12 토글). */
   band: { id: string; name: string; nextShowAt: string | null } | null;
 }
@@ -88,7 +91,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
     setLoading(true);
     setFormError(null);
     try {
-      let result: { id: string; shareCode: string; adminToken: string };
+      let result: { id: string; shareCode: string; adminToken: string; shareImage: CardImage };
       if (targetBand) {
         const created = await createBandPlaylist(
           targetBand.id,
@@ -138,6 +141,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
         adminToken: result.adminToken,
         title: title.trim(),
         url,
+        shareImage: result.shareImage,
         band: targetBand ? { id: targetBand.id, name: targetBand.name, nextShowAt: targetBand.nextShowAt } : null,
       });
     } catch (error) {
@@ -209,6 +213,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
             variant="playlist"
             title={created.title}
             showDate={created.band?.nextShowAt ?? null}
+            image={created.shareImage}
             size="lg"
             className="w-full mb-2"
           >

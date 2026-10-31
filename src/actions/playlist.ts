@@ -5,7 +5,10 @@ import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
 import { insertRoom } from "@/lib/room-insert";
 import { nestedRows } from "@/lib/supabase/nested";
+import { signShareCard } from "@/lib/share-card";
 import { roomCoverThumbs } from "@/domain/team";
+import { inviteSongs } from "@/domain/invite-card";
+import { playlistShareCard } from "@/domain/share-card";
 import { isValidDefaultVoteLimit } from "@/domain/vote";
 import type { SetlistEditMode, VotingMode } from "@/domain/types";
 import { revalidatePath } from "next/cache";
@@ -181,7 +184,9 @@ export async function createPlaylist(
     throw new Error("플레이리스트 생성에 실패했습니다.");
   }
 
-  return { id: result.id, shareCode: result.shareCode, adminToken: result.adminToken };
+  // The success screen's Kakao button sends this card; the browser cannot sign one (#35).
+  const shareImage = await signShareCard(playlistShareCard({ title, archived: false }, 0, inviteSongs([])).card);
+  return { id: result.id, shareCode: result.shareCode, adminToken: result.adminToken, shareImage };
 }
 
 export async function updateAnnouncementPublic(

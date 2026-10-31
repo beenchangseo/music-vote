@@ -3,7 +3,8 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Playlist, RoomTeam } from "@/domain/types";
-import PlaylistClient from "../PlaylistClient";
+import PlaylistClient, { type PlaylistShareKit } from "../PlaylistClient";
+import type { CardImage } from "@/domain/share-card";
 
 // Everything around the band slot is stubbed: this file is about the prompt card (F7, 27A),
 // the success card that must survive the action's revalidation (R6, D30A) and the list's own notices.
@@ -54,7 +55,7 @@ vi.mock("../../band/CreateBandSheet", () => ({
     open ? (
       <button
         type="button"
-        onClick={() => onCreated({ teamId: TEAM, name: "일코해제", inviteCode: "aB3_x-9Zq0", memberCount: 3 })}
+        onClick={() => onCreated({ teamId: TEAM, name: "일코해제", inviteCode: "aB3_x-9Zq0", memberCount: 3, shareImage: "/api/og?card=v1.band.signature" })}
       >
         시트에서 만들기
       </button>
@@ -93,12 +94,20 @@ const bandTeam: RoomTeam = { id: TEAM, name: "일코해제", nextShowAt: null, i
 
 type Props = Parameters<typeof PlaylistClient>[0];
 
+// The cards the page signed for the share buttons (src/app/playlist/[shareCode]/page.tsx).
+const SHARE_KIT: PlaylistShareKit = {
+  invite: { image: "/api/og?card=v1.invite.signature" as CardImage, description: "0곡 등록 | 밴드 곡 투표에 참여하세요!" },
+  decided: "/api/og?card=v1.decided.signature" as CardImage,
+  setlist: "/api/og?card=v1.setlist.signature" as CardImage,
+};
+
 function ui(overrides: Partial<Props> = {}) {
   return (
     <PlaylistClient
       playlist={playlist}
       songs={[]}
       shareCode="abc123"
+      shareKit={SHARE_KIT}
       participantCount={0}
       userNickname="보컬"
       currentUserId={OWNER}

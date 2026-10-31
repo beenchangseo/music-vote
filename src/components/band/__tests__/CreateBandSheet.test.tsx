@@ -44,7 +44,14 @@ function submitName(name: string) {
 beforeEach(() => {
   for (const fn of Object.values(state)) fn.mockReset();
   state.createTeam.mockResolvedValue({ success: true, teamId: TEAM });
-  state.createTeamFromPlaylist.mockResolvedValue({ success: true, teamId: TEAM, name: "일코해제", inviteCode: "c", memberCount: 5 });
+  state.createTeamFromPlaylist.mockResolvedValue({
+    success: true,
+    teamId: TEAM,
+    name: "일코해제",
+    inviteCode: "c",
+    memberCount: 5,
+    shareImage: "/api/og?card=v1.band.signature",
+  });
   state.getVotingSettings.mockResolvedValue({ members: [] });
 });
 
@@ -174,7 +181,15 @@ describe("CreateBandSheet from a playlist (promote, unchanged)", () => {
     expect(await screen.findByText("이 플레이리스트 참여자 2명이 멤버가 돼요")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "나중에" })).toBeInTheDocument();
     submitName("일코해제");
-    await waitFor(() => expect(onCreated).toHaveBeenCalledWith({ teamId: TEAM, name: "일코해제", inviteCode: "c", memberCount: 5 }));
+    await waitFor(() =>
+      expect(onCreated).toHaveBeenCalledWith({
+        teamId: TEAM,
+        name: "일코해제",
+        inviteCode: "c",
+        memberCount: 5,
+        shareImage: "/api/og?card=v1.band.signature",
+      }),
+    );
     expect(state.track).toHaveBeenCalledWith("team_created", { source: "settings" });
     expect(state.push).not.toHaveBeenCalled();
   });

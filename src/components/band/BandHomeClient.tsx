@@ -24,6 +24,7 @@ import { leaveTeam, type TeamHomeMember, type TeamHomeView, type TeamRoom } from
 import { track } from "@/lib/analytics";
 import { aggregatePlayedSongs, formatShowDate, showDday, type PlayedSong, type ShowDday } from "@/domain/team";
 import { teamMessage } from "@/lib/team-messages";
+import type { CardImage } from "@/domain/share-card";
 
 type MemberView = Extract<TeamHomeView, { access: "member" }>;
 
@@ -50,6 +51,8 @@ interface BandHomeClientProps {
   created: boolean;
   /** ?joined=1 (초대 링크로 막 들어왔다). */
   joined: boolean;
+  /** 초대 시트의 카톡 카드 그림. 페이지가 서명했다 (#35). */
+  inviteImage: CardImage;
 }
 
 /**
@@ -57,7 +60,7 @@ interface BandHomeClientProps {
  * 위에서부터 히어로(밴드 색 그림 + 이름 + 공연 날짜) / 액션 줄(멤버 아바타·초대·큰 재생 버튼) /
  * 지금 합주방 카드 / 합주방 가로 선반 / 우리가 했던 곡 / 멤버 / 맨 아래 "밴드 나가기"(owner 제외).
  */
-export default function BandHomeClient({ view, created, joined }: BandHomeClientProps) {
+export default function BandHomeClient({ view, created, joined, inviteImage }: BandHomeClientProps) {
   const router = useRouter();
   const { showDanger } = useDialog();
   const { team, myRole, rooms } = view;
@@ -339,6 +342,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
         memberCount={members.length}
         nextShowAt={nextShowAt}
         ownerName={members.find((member) => member.role === "owner")?.displayName ?? null}
+        image={inviteImage}
         isOwner={isOwner}
         onInviteCodeChange={setRotatedCode}
       />

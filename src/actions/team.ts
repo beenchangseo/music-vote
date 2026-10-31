@@ -34,6 +34,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistWritable } from "@/lib/playlist-access";
 import { ARCHIVED_PLAYLIST_MESSAGE } from "@/domain/playlist-archive";
 import { insertRoom } from "@/lib/room-insert";
+import { signShareCard } from "@/lib/share-card";
+import { bandCard, playlistShareCard, type CardImage } from "@/domain/share-card";
+import { inviteSongs } from "@/domain/invite-card";
 import { createAdminClient } from "@/lib/supabase/server";
 import { nestedRows } from "@/lib/supabase/nested";
 import {
@@ -56,7 +59,7 @@ import type { ActionResult, TeamRole, VotingMode } from "@/domain/types";
 
 export type CreateTeamFromPlaylistResult = ActionResult<
   /** `name`·`inviteCode` feed the room's success card and invite sheet (D30A); only the owner gets them. */
-  { teamId: string; name: string; inviteCode: string; memberCount: number },
+  { teamId: string; name: string; inviteCode: string; memberCount: number; shareImage: CardImage },
   | "not_logged_in"
   | "invalid_name"
   | "playlist_not_found"
@@ -78,7 +81,7 @@ export type JoinTeamResult = ActionResult<
 >;
 
 export type CreateBandPlaylistResult = ActionResult<
-  { id: string; shareCode: string; adminToken: string },
+  { id: string; shareCode: string; adminToken: string; shareImage: CardImage },
   | "not_logged_in"
   | "invalid_title"
   | "invalid_voting_mode"
@@ -414,7 +417,9 @@ export async function createTeamFromPlaylist(
   }
 
   revalidatePath(`/playlist/${room.share_code}`);
-  return { success: true, teamId, name: teamName, inviteCode: created.code, memberCount: memberRows.length };
+  // The success card's invite sheet sends this card; the browser cannot sign one (#35).
+  const shareImage = await signShareCard(bandCard(teamName, memberRows.length, null, new Date()));
+  return { success: true, teamId, name: teamName, inviteCode: created.code, memberCount: memberRows.length, shareImage };
 }
 
 // ============================================================
@@ -996,7 +1001,8 @@ export async function createBandPlaylist(
   }
 
   revalidatePath(`/band/${teamId}`);
-  return { success: true, id: room.id, shareCode: room.shareCode, adminToken: room.adminToken };
+  const shareImage = await signShareCard(playlistShareCard({ title, archived: false }, 0, inviteSongs([])).card);
+  return { success: true, id: room.id, shareCode: room.shareCode, adminToken: room.adminToken, shareImage };
 }
 
 // ============================================================

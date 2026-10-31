@@ -19,6 +19,7 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("nanoid", () => ({ nanoid: state.nanoid }));
 
 import { createPlaylist, getMyPlaylists } from "../playlist";
+import { readShareCard } from "@/lib/share-card";
 
 const USER = { id: "user-1", nickname: "드럼", avatarUrl: null };
 
@@ -88,10 +89,14 @@ describe("createPlaylist", () => {
       adminResponder({ inserts: [ok({ id: "pl-1", share_code: "code-1" })] }),
     );
 
-    await expect(createPlaylist("주말 합주", undefined, 12, "allocated", 5)).resolves.toEqual({
-      id: "pl-1",
-      shareCode: "code-1",
-      adminToken: "token-1",
+    const created = await createPlaylist("주말 합주", undefined, 12, "allocated", 5);
+    expect(created).toEqual({ id: "pl-1", shareCode: "code-1", adminToken: "token-1", shareImage: expect.any(String) });
+    // The success screen's Kakao button sends this picture; the route draws the new playlist's invite card.
+    await expect(readShareCard(new URL(created.shareImage, "https://plypick.kr").searchParams)).resolves.toEqual({
+      kind: "invite",
+      title: "주말 합주",
+      participants: 0,
+      songs: { cover: [], names: [], count: 0 },
     });
 
     const [insert] = opsFor(state.admin.ops, "playlists", "insert");
@@ -129,7 +134,7 @@ describe("createPlaylist", () => {
       }),
     );
 
-    await expect(createPlaylist("합주")).resolves.toEqual({
+    await expect(createPlaylist("합주")).resolves.toMatchObject({
       id: "pl-2",
       shareCode: "code-2",
       adminToken: "token-2",

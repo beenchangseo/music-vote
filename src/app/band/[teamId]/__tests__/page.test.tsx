@@ -23,6 +23,7 @@ vi.mock("next/navigation", () => ({
 
 import BandPage, { generateMetadata } from "../page";
 import BandHomeSkeleton from "@/components/band/BandHomeSkeleton";
+import { readShareCard } from "@/lib/share-card";
 
 const TEAM = "11111111-1111-4111-8111-111111111111";
 const props = (query: Record<string, string> = {}) => ({
@@ -91,10 +92,34 @@ describe("/band/[teamId]", () => {
   });
 
   it("passes the one-time banner flags to the member screen", async () => {
-    state.getTeamHome.mockResolvedValue({ access: "member", myRole: "owner", team: { id: TEAM, name: "일코해제" } });
+    state.getTeamHome.mockResolvedValue({
+      access: "member",
+      myRole: "owner",
+      team: { id: TEAM, name: "일코해제", nextShowAt: null },
+      members: [],
+    });
     const element = (await page({ created: "1" })).content as ReactElement<{ created: boolean; joined: boolean }>;
     expect(element.props.created).toBe(true);
     expect(element.props.joined).toBe(false);
+  });
+
+  it("hands the invite sheet the band card the route will draw", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-04T03:00:00Z"));
+    state.getTeamHome.mockResolvedValue({
+      access: "member",
+      myRole: "member",
+      team: { id: TEAM, name: "일코해제", nextShowAt: "2026-10-16" },
+      members: [{ displayName: "보컬" }, { displayName: "기타" }, { displayName: "드럼" }],
+    });
+    const element = (await page()).content as ReactElement<{ inviteImage: string }>;
+    vi.useRealTimers();
+    await expect(readShareCard(new URL(element.props.inviteImage, "https://plypick.kr").searchParams)).resolves.toEqual({
+      kind: "band",
+      name: "일코해제",
+      members: 3,
+      showDate: "2026-10-16",
+    });
   });
 
   it("keeps band pages out of search", async () => {
