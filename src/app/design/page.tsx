@@ -138,6 +138,14 @@ export default function DesignPage() {
         <Link href="/design" className={buttonClassName({ variant: "tonal", className: "mt-3" })}>
           Link 에 buttonClassName
         </Link>
+        <h3 className="mt-6 text-sm font-semibold text-text-muted">카카오 말풍선</h3>
+        <p className="mt-1 text-caption text-text-subtle">카카오로 넘어가는 버튼은 말풍선을 붙여요. 노랑이 이미 있는 화면의 로그인은 tonal 에 kakaoMark.</p>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <Button variant="kakao">카카오로 시작하기</Button>
+          <Button variant="tonal" size="sm" kakaoMark>
+            로그인
+          </Button>
+        </div>
       </Section>
 
       <Section title="Chip">

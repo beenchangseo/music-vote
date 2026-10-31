@@ -8,6 +8,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: Size;
   loading?: boolean;
   fullWidth?: boolean;
+  /** 카카오 말풍선을 글자 앞에 붙인다. kakao 변형은 기본으로 붙는다. */
+  kakaoMark?: boolean;
 }
 
 const variantClasses: Record<Variant, string> = {
@@ -19,7 +21,7 @@ const variantClasses: Record<Variant, string> = {
     "bg-transparent hover:bg-surface-hover text-text-muted",
   danger:
     "bg-danger hover:bg-danger-hover text-on-danger",
-  /** 카카오 로그인·공유. 말풍선 표시가 글자 앞에 붙는다. 카카오 노랑은 이 변형으로만 칠한다. */
+  /** 카카오 로그인·공유. 카카오 노랑은 이 변형으로만 칠한다. */
   kakao:
     "bg-kakao hover:bg-kakao-hover text-kakao-text",
 };
@@ -55,6 +57,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
     size = "md",
     loading = false,
     fullWidth = false,
+    kakaoMark = variant === "kakao",
     disabled,
     className = "",
     children,
@@ -72,7 +75,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
     >
       {loading ? (
         <span aria-hidden className="inline-block size-4 rounded-pill border-2 border-current border-t-transparent animate-spin" />
-      ) : variant === "kakao" ? (
+      ) : kakaoMark ? (
         <KakaoMark />
       ) : null}
       {children}
