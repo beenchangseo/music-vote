@@ -115,13 +115,20 @@ export function setlistBlocks<S extends RuntimeSong>(items: SetlistItem[], songs
   });
 }
 
+/**
+ * 그린 블록끼리만 순서를 바꾸고, 그리지 않은 블록은 제자리에 둔다.
+ * 그리지 않은 블록이 지워진 곡만은 아니다. 실시간 재조회 중에는 다른 멤버가 막 넣은 곡 블록이 후보곡 목록보다 먼저
+ * 도착해 잠깐 안 보인다. 그 사이 ▲▼ 로 그 블록을 옮기면 모두의 셋리스트에서 자리가 바뀐다.
+ */
 export function moveSetlistBlock(items: SetlistItem[], blocks: SetlistBlock<unknown>[], from: number, to: number): SetlistItem[] {
   const drawn = blocks.map((block) => block.item);
   const [picked] = drawn.splice(from, 1);
   drawn.splice(to, 0, picked);
   const drawnIds = new Set(drawn.map((item) => item.id));
-  const deletedSongBlocks = [...items].sort((a, b) => a.position - b.position).filter((item) => !drawnIds.has(item.id));
-  return [...drawn, ...deletedSongBlocks].map((item, position) => ({ ...item, position }));
+  let nextDrawn = 0;
+  return [...items]
+    .sort((a, b) => a.position - b.position)
+    .map((item, position) => ({ ...(drawnIds.has(item.id) ? drawn[nextDrawn++] : item), position }));
 }
 
 type RowItem = RuntimeItem & Pick<SetlistItem, "label" | "description" | "title_override">;

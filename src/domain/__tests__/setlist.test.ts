@@ -215,14 +215,41 @@ describe("setlistBlocks", () => {
       ["위 블록과 자리를 바꾼다", [a(0), interval(1), b(2)], 2, 1, [["item-0", 0], ["item-2", 1], ["item-1", 2]]],
       ["여러 칸을 건너 옮긴다", [a(0), interval(1), b(2)], 0, 2, [["item-1", 0], ["item-2", 1], ["item-0", 2]]],
       [
-        "지워진 곡 블록은 건너뛰고 그린 블록 뒤로 보낸다",
+        "그린 블록끼리만 자리를 바꾸고 지워진 곡 블록은 제자리에 둔다",
         [deleted(0), a(1), deleted(2), b(3)],
         1,
         0,
-        [["item-3", 0], ["item-1", 1], ["item-0", 2], ["item-2", 3]],
+        [["item-0", 0], ["item-3", 1], ["item-2", 2], ["item-1", 3]],
+      ],
+      [
+        "다른 멤버가 막 넣어 아직 후보곡 목록에 없는 곡 블록은 끝으로 밀리지 않는다",
+        [a(0), at(1, { song_id: "fresh" }), interval(2), b(3)],
+        1,
+        0,
+        [["item-2", 0], ["item-1", 1], ["item-0", 2], ["item-3", 3]],
+      ],
+      [
+        "숨은 블록 바로 뒤로 내려도 숨은 블록은 움직이지 않는다",
+        [a(0), at(1, { song_id: "fresh" }), b(2)],
+        0,
+        1,
+        [["item-2", 0], ["item-1", 1], ["item-0", 2]],
+      ],
+      [
+        "position 에 빈자리가 있어도 순서대로 0부터 다시 매긴다",
+        [at(4, { song_id: "a" }), at(9, { song_id: "fresh" }), at(7, { song_id: "b" })],
+        1,
+        0,
+        [["item-7", 0], ["item-4", 1], ["item-9", 2]],
       ],
     ])("%s", (_name, items, from, to, expected) => {
       expect(moved(items, from, to)).toEqual(expected);
+    });
+
+    it("숨은 블록까지 모든 항목을 한 번씩 돌려준다", () => {
+      const items = [deleted(0), a(1), at(2, { song_id: "fresh" }), interval(3), b(4)];
+      const ids = moveSetlistBlock(items, setlistBlocks(items, songs), 2, 0).map((item) => item.id);
+      expect([...ids].sort()).toEqual(items.map((item) => item.id).sort());
     });
   });
 });
