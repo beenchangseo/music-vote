@@ -70,7 +70,7 @@ export default function CommentSection({ songId, comments, nickname, shareCode, 
               </div>
             ))}
             {others.length > 2 && !showAllComments && (
-              <button onClick={() => setShowAllComments(true)} className="text-caption text-primary-fg hover:text-primary-fg mb-1">
+              <button onClick={() => setShowAllComments(true)} className="text-caption text-primary-fg hover:text-on-primary-tint mb-1">
                 댓글 {others.length - 2}개 더보기
               </button>
             )}

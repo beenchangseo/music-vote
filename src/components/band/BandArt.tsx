@@ -3,7 +3,7 @@ import { avatarInitial } from "@/lib/band-art";
 
 /**
  * 밴드 홈 히어로 뒤 그림 (Spotify Blend 의 겹친 원). 모든 밴드가 같은 기존 토큰 색
- * (primary-soft 배경 + primary · primary-hover 원)을 쓴다 — 2026-10-05 바이올렛 안으로 정함.
+ * (primary-tint 배경 + primary · primary-hover 원)을 쓴다 — 2026-10-05 바이올렛 안으로 정함.
  * 아래쪽은 bg 로 녹아서 그 위에 밴드 이름을 얹는다.
  */
 export function BandArt({ className = "" }: { className?: string }) {

@@ -280,8 +280,8 @@ export default function SongCard({
                   {showMenu && (
                     <div className="absolute right-2 top-11 z-20 w-44 overflow-hidden rounded-xl border border-border bg-surface-elevated shadow-lg">
                       {song.added_by && (
-                        <div className="truncate px-3 py-2 text-caption text-text-subtle">
-                          추가: <span className="text-text-muted">{song.added_by}</span>
+                        <div className="truncate px-3 py-2 text-caption text-text-muted">
+                          추가: <span className="text-text">{song.added_by}</span>
                         </div>
                       )}
                       {canRemove && (
