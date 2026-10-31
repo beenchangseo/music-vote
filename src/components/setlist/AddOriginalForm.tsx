@@ -57,7 +57,7 @@ export default function AddOriginalForm({ playlistId, shareCode, nextPosition, a
         onChange={(e) => setLabel(e.target.value)}
         placeholder="자작곡 이름"
         maxLength={100}
-        className="w-full px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        className="w-full px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm focus:outline-none focus:ring-2 focus:ring-focus-ring"
       />
       <textarea
         value={description}
@@ -65,7 +65,7 @@ export default function AddOriginalForm({ playlistId, shareCode, nextPosition, a
         placeholder="설명 (선택)"
         maxLength={200}
         rows={2}
-        className="w-full resize-none rounded-lg border border-border bg-surface-hover px-3 py-2 text-sm text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-primary"
+        className="w-full resize-none rounded-lg border border-border bg-surface-hover px-3 py-2 text-sm text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
       />
       <div className="flex items-center gap-2">
         <input
@@ -75,7 +75,7 @@ export default function AddOriginalForm({ playlistId, shareCode, nextPosition, a
           placeholder="분"
           min="0"
           step="1"
-          className="w-20 px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-20 px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm text-center focus:outline-none focus:ring-2 focus:ring-focus-ring"
         />
         <span className="text-text-subtle">:</span>
         <input
@@ -86,7 +86,7 @@ export default function AddOriginalForm({ playlistId, shareCode, nextPosition, a
           min="0"
           max="59"
           step="1"
-          className="w-20 px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-20 px-3 py-2 rounded-lg bg-surface-hover border border-border text-text placeholder-text-subtle text-sm text-center focus:outline-none focus:ring-2 focus:ring-focus-ring"
         />
         <div className="flex-1" />
         <button type="button" onClick={onCancel} className="px-3 py-2 text-sm text-text-muted hover:text-text transition-colors">

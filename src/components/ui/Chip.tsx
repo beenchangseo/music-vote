@@ -15,7 +15,7 @@ const Chip = forwardRef<HTMLButtonElement, ChipProps>(function Chip(
   ref,
 ) {
   const skin = selected
-    ? "border-primary bg-primary/15 text-primary"
+    ? "border-primary-fg bg-primary-tint text-on-primary-tint"
     : "border-border bg-surface-hover text-text-muted hover:text-text";
 
   return (
@@ -23,7 +23,7 @@ const Chip = forwardRef<HTMLButtonElement, ChipProps>(function Chip(
       ref={ref}
       type={type}
       aria-pressed={selected}
-      className={`inline-flex h-11 shrink-0 items-center gap-1 whitespace-nowrap rounded-pill border px-3 text-caption font-semibold transition-colors ${skin} ${className}`}
+      className={`inline-flex h-control-md shrink-0 items-center gap-1 whitespace-nowrap rounded-pill border px-3 text-caption font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${skin} ${className}`}
       {...rest}
     >
       {children}

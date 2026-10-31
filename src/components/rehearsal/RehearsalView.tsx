@@ -99,7 +99,7 @@ export default function RehearsalView({
   if (loading) {
     return (
       <div className="mt-6 py-16 text-center text-text-subtle">
-        <span className="inline-block h-8 w-8 animate-spin rounded-pill border-2 border-border-strong border-t-primary" />
+        <span className="inline-block h-8 w-8 animate-spin rounded-pill border-2 border-border-strong border-t-primary-fg" />
         <p className="mt-3">합주 정보 불러오는 중...</p>
       </div>
     );

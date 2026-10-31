@@ -335,7 +335,7 @@ function NameForm({
         밴드 만들기
       </Button>
       {error && (
-        <p role="alert" className="mt-2 text-sm text-danger">
+        <p role="alert" className="mt-2 text-sm text-danger-fg">
           {error}
         </p>
       )}

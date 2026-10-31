@@ -6,7 +6,7 @@
 export default function HomeSkeleton() {
   return (
     <main className="relative isolate min-h-full" aria-busy="true">
-      <div aria-hidden className="absolute inset-x-0 top-0 -z-10 h-80 bg-gradient-to-b from-primary-soft/60 to-transparent" />
+      <div aria-hidden className="absolute inset-x-0 top-0 -z-10 h-80 bg-gradient-to-b from-primary-tint/60 to-transparent" />
       <div className="mx-auto w-full max-w-md px-4 pb-16 pt-6">
         <p role="status" className="sr-only">
           홈을 불러오는 중이에요

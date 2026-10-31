@@ -21,7 +21,7 @@ export default function VoteAllowanceStatus({ allowance }: { allowance: VoteAllo
 
   return (
     <span role="status">
-      <strong className="text-primary">{remaining}표 남음</strong>
+      <strong className="text-primary-fg">{remaining}표 남음</strong>
       <span className="ml-1.5 text-text-subtle">
         {allowance.voteLimit}표 중 {allowance.usedVotes}표 사용
       </span>

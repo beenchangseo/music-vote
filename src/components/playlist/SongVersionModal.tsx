@@ -109,7 +109,7 @@ export default function SongVersionModal(props: Props) {
           <p className="py-5 text-center text-sm text-text-muted">아직 등록된 다른 버전이 없어요.</p>
         ) : versions.map((version) => (
           <div key={version.id} className="rounded-xl border border-border bg-surface p-3">
-            <a href={version.youtube_url} target="_blank" rel="noreferrer" className="block text-sm font-medium text-text hover:text-primary line-clamp-2">
+            <a href={version.youtube_url} target="_blank" rel="noreferrer" className="block text-sm font-medium text-text hover:text-primary-fg line-clamp-2">
               {version.title}
             </a>
             {version.description && <p className="mt-1 text-sm text-text-muted whitespace-pre-wrap">{version.description}</p>}
@@ -118,7 +118,7 @@ export default function SongVersionModal(props: Props) {
               {canManage(version) && (
                 <div className="flex shrink-0 gap-1">
                   <button type="button" className="min-h-11 px-3 hover:text-text" onClick={() => { setEditingId(version.id); setUrl(version.youtube_url); setDescription(version.description || ""); }}>수정</button>
-                  <button type="button" className="min-h-11 px-3 hover:text-danger" onClick={() => remove(version)}>삭제</button>
+                  <button type="button" className="min-h-11 px-3 hover:text-danger-fg" onClick={() => remove(version)}>삭제</button>
                 </div>
               )}
             </div>

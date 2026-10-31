@@ -78,23 +78,48 @@ verification/     TLA+ 형식 검증 (verify-vote-quota 스킬)
 
 ## 디자인 시스템
 
-토큰은 모두 `src/app/globals.css` `@theme inline` 에 있다. 새 토큰도 여기에 더한다.
+값은 `src/app/globals.css` `@theme inline`, 각 색의 쓰임과 놓일 수 있는 표면은 `src/components/ui/tokens.ts` 에 있다.
+새 토큰은 두 곳에 같이 더한다. 어긋나거나 허용한 조합이 대비 기준(글자 4.5:1, 테두리·링 3:1) 아래로 떨어지면
+`tokens.test.ts` 가 실패한다. 전체 모습은 `next dev` 의 `/design` 에서 본다(운영 배포에서는 404).
 
-- **컬러**: `primary`, `bg`, `surface`, `surface-hover`, `surface-elevated`, `border`, `border-strong`, `text`,
-  `text-muted`, `text-subtle`, `success`·`warning`·`danger` + soft 변형
-- **타이포**: `text-display`(2.5rem)·`text-h1`·`text-h2`·`text-h3`·`text-body`·`text-sm`·`text-caption`. 한국어
-  line-height 는 1.6 이상
-- **폰트**: Pretendard Variable(한국어) + Geist(영문) 폴백
-- **애니메이션**: `animate-fade-in`, `animate-slide-up`, `animate-gradient`, `animate-float-{slow,mid,fast}`,
-  `animate-bounce-slow`, `animate-pulse-soft`
+**색 역할.** 보라와 빨강은 채움·글자·tint 를 나눈다. 한 색으로는 흰 글자와 어두운 표면 위 글자를 둘 다 맞출 수 없다.
 
-새 컴포넌트는 `src/components/ui/` primitives 위에 쌓는다. 인라인 클래스를 복사하지 않는다.
+| 무엇을 칠하나 | 토큰 |
+|---|---|
+| 주 버튼·켜진 스위치 바탕 | `bg-primary` + `text-on-primary`, hover `primary-hover`, 눌림 `primary-pressed` |
+| 어두운 표면 위 보라 글자·아이콘·순위 | `text-primary-fg` (hover 는 `on-primary-tint`) |
+| 선택 칩·tonal 보라·탭 표시자 바탕 | `bg-primary-tint` + `text-on-primary-tint` |
+| 선택 상태 테두리 | `border-primary-fg` (`border-primary` 는 tint 위에서 3:1 이 안 나온다) |
+| 위험 버튼 바탕 | `bg-danger` + `text-on-danger` |
+| 빨강 글자·오류 문구 | `text-danger-fg` |
+| 입력칸 테두리 / 키보드 포커스 | `border-border-input` / `ring-focus-ring` |
 
-- `Button`: variant primary·secondary·ghost·danger, size sm·md·lg·icon
-- `Input`: invalid 상태와 focus-ring 통일
-- `Card`: variant default·elevated·outline, padding none·sm·md·lg
-- `Modal`: 포털, ESC, 모바일 sheet, scroll lock
-- `useDialog()`(`DialogProvider`): alert·confirm·danger 확인창
+- `text-primary`·`text-danger`·`primary-soft` 는 eslint 가 막는다(`eslint.config.mjs`). 옛 클래스를 옮길 때는
+  `node scripts/codemods/ds1-color-roles.mjs` 를 돌린다.
+- 표면은 `bg` → `surface`(카드·시트) → `surface-hover`(tonal·칩·입력 채움) → `surface-elevated`(토스트·메뉴) 순으로 한
+  단계씩 쌓는다. `text-subtle` 은 `surface-elevated` 위에 두지 않는다(4.08:1). 그 자리는 `text-muted`.
+- `border`·`border-strong` 은 구분선이다. 입력 경계로 쓰지 않는다.
+
+**크기.** 모서리 `rounded-badge` 6 · `rounded-control` 12(버튼·입력·칩) · `rounded-card` 16 · `rounded-t-sheet` 24 ·
+`rounded-pill`. 높이 `h-control-sm` 36(누르는 영역은 44) · `h-control-md` 44 · `h-control-lg` 52, 행 `min-h-row` 56(설정·멤버)
+· `min-h-row-song` 72(곡). 그림자는 `shadow-float` 하나이고 시트·토스트·FAB 에만 쓴다. 다른 층은 표면 색으로 만든다.
+타이포는 `text-display`·`text-h1`~`text-h4`·`text-body`·`text-sm`·`text-caption`, 한국어 줄간격 1.5 이상. 폰트는 Pretendard
+Variable(한국어) + Geist(영문) 폴백.
+
+**모션.** `duration-120`(누름) · `duration-200`(색·페이드) · `duration-300`(시트), 이징은 `ease-standard` 하나. transition
+기본값이 200ms 와 이 이징이다. 애니메이션은 `animate-fade-in`·`animate-slide-up`·`animate-vote-pop`·`animate-score-in`
+·`animate-gradient`·`animate-float-{slow,mid,fast}`·`animate-bounce-slow`·`animate-pulse-soft`.
+
+**부품.** 새 화면은 `src/components/ui/` 위에 쌓는다. 인라인 클래스를 복사하지 않는다.
+
+- `Button`: variant `primary`·`tonal`·`ghost`·`danger`·`kakao`, size `sm`·`md`·`lg`·`icon`, `loading`(aria-busy).
+  버튼처럼 보이는 `<Link>` 는 `buttonClassName()`.
+- 채운 `primary` 버튼은 화면에 하나다. 나란한 보조 동작은 `tonal`, 덜 중요한 동작은 `ghost`. 같은 일을 하는 버튼을 두
+  개 두지 않는다.
+- `Chip`: `selected`(aria-pressed). `IconButton`: tone `default`·`danger`·`brand`, `bare`, 44px 고정, `aria-label` 필수.
+- `Input`: `invalid`(aria-invalid), `pill`. `Card`: variant `default`·`elevated`·`outline`.
+- `Modal`: 포털, ESC, 모바일 sheet, scroll lock. `useDialog()`(`DialogProvider`): alert·confirm·danger 확인창.
+- `ScreenToolbar`: 후보곡·셋리스트·합주 상단의 숫자와 동작.
 
 ## 데이터 흐름
 

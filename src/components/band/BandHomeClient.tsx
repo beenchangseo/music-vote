@@ -245,7 +245,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
               {banner === "joined" && activeRoom && (
                 <Link
                   href={`/playlist/${activeRoom.shareCode}`}
-                  className={buttonClassName({ variant: "secondary", size: "md", className: "mt-3" })}
+                  className={buttonClassName({ variant: "tonal", size: "md", className: "mt-3" })}
                 >
                   지금 플레이리스트 가기
                 </Link>
@@ -331,7 +331,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
               {leaving ? "나가는 중…" : "밴드 나가기"}
             </button>
             {leaveError && (
-              <p role="alert" className="text-sm text-danger">
+              <p role="alert" className="text-sm text-danger-fg">
                 {leaveError}
               </p>
             )}
@@ -444,7 +444,7 @@ function NowRoomCard({ room }: { room: TeamRoom }) {
     <section aria-label="지금 플레이리스트" className="mt-6">
       <Link
         href={`/playlist/${room.shareCode}`}
-        className="block overflow-hidden rounded-card bg-gradient-to-br from-primary-soft/80 via-surface to-surface p-4 ring-1 ring-white/5 transition-transform active:scale-[0.99]"
+        className="block overflow-hidden rounded-card bg-gradient-to-br from-primary-tint/80 via-surface to-surface p-4 ring-1 ring-white/5 transition-transform active:scale-[0.99]"
       >
         <span className="flex items-center gap-4">
           <RoomCover thumbs={room.coverThumbs} sizes="88px" className="h-22 w-22 shrink-0 shadow-lg" />
@@ -557,7 +557,7 @@ function PlayedSongs({ songs }: { songs: PlayedSong[] }) {
                     {song.artist && <span className="block truncate text-sm text-text-muted">{song.artist}</span>}
                   </span>
                   {song.times > 1 && (
-                    <span className="shrink-0 text-sm font-bold text-primary tabular-nums">
+                    <span className="shrink-0 text-sm font-bold text-primary-fg tabular-nums">
                       {song.times}번
                     </span>
                   )}
@@ -647,7 +647,7 @@ function MemberTile({
                   setMenuOpen(false);
                   onRemove();
                 }}
-                className="flex min-h-11 w-full items-center px-4 text-sm text-danger transition-colors hover:bg-surface-hover"
+                className="flex min-h-11 w-full items-center px-4 text-sm text-danger-fg transition-colors hover:bg-surface-hover"
               >
                 내보내기
               </button>

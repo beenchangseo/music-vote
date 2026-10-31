@@ -13,11 +13,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   return (
     <input
       ref={ref}
-      className={`w-full h-11 ${pill ? "rounded-pill pl-11 pr-4" : "rounded-control px-4"} bg-surface border text-text placeholder-text-subtle text-sm
-        focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
+      aria-invalid={invalid || undefined}
+      className={`w-full h-control-md ${pill ? "rounded-pill pl-11 pr-4" : "rounded-control px-4"} bg-surface border text-text placeholder-text-subtle text-sm
+        focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent
         disabled:opacity-50 disabled:cursor-not-allowed
         transition-all
-        ${invalid ? "border-danger" : "border-border"}
+        ${invalid ? "border-danger" : "border-border-input"}
         ${className}`}
       {...rest}
     />

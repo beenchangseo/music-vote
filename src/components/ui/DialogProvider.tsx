@@ -1,11 +1,12 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback, useEffect, useId, useRef, type ReactNode } from "react";
+import { buttonClassName } from "./Button";
 import { trapTabKey } from "./focus-trap";
 
 interface DialogButton {
   label: string;
-  variant?: "primary" | "danger" | "ghost";
+  variant: "primary" | "danger" | "tonal";
   onClick?: () => void | Promise<void>;
 }
 
@@ -36,12 +37,6 @@ export function useDialog() {
   if (!ctx) throw new Error("useDialog must be used inside DialogProvider");
   return ctx;
 }
-
-const buttonStyles = {
-  primary: "bg-primary hover:bg-primary-hover text-white font-semibold",
-  danger: "bg-red-600 hover:bg-red-500 text-white font-semibold",
-  ghost: "bg-surface-hover hover:bg-border-strong text-text-muted font-medium",
-};
 
 function resolveOptions(options: string | DialogOptions | undefined, title: string, confirmLabel: string) {
   const opts = typeof options === "string" ? { title: options } : options ?? {};
@@ -83,7 +78,7 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
         title,
         message,
         buttons: [
-          { label: "취소", variant: "ghost" },
+          { label: "취소", variant: "tonal" },
           { label: confirmLabel, variant: "primary" },
         ],
         focusIndex: 1,
@@ -99,7 +94,7 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
         title,
         message,
         buttons: [
-          { label: "취소", variant: "ghost" },
+          { label: "취소", variant: "tonal" },
           { label: confirmLabel, variant: "danger" },
         ],
         // An irreversible action must not run on a stray Enter.
@@ -143,10 +138,10 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
           aria-describedby={messageId}
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4 animate-fade-in"
         >
-          <div ref={panelRef} className="w-full max-w-xs bg-surface border border-border rounded-2xl p-5 animate-slide-up shadow-2xl">
+          <div ref={panelRef} className="w-full max-w-xs bg-surface border border-border rounded-card p-5 animate-slide-up shadow-float">
             <h3 id={titleId} className="text-base font-bold text-text text-center">{dialog.title}</h3>
             <p id={messageId} className="text-sm text-text-muted text-center mt-2 whitespace-pre-wrap leading-relaxed">{dialog.message}</p>
-            <div className={`mt-5 flex gap-2 ${dialog.buttons.length === 1 ? "" : ""}`}>
+            <div className="mt-5 flex gap-2">
               {dialog.buttons.map((btn, i) => {
                 const isLast = i === dialog.buttons.length - 1;
                 return (
@@ -156,7 +151,7 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
                       buttonRefs.current[i] = el;
                     }}
                     onClick={() => close(isLast)}
-                    className={`flex-1 h-11 rounded-xl text-sm transition-all active:scale-95 ${buttonStyles[btn.variant || "ghost"]}`}
+                    className={buttonClassName({ variant: btn.variant, className: "flex-1" })}
                   >
                     {btn.label}
                   </button>

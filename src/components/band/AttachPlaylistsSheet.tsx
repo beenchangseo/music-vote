@@ -104,7 +104,7 @@ function SheetBody({ teamId, onAttached, onClose }: { teamId: string; onAttached
             목록을 불러오지 못했어요
           </p>
           <Button
-            variant="secondary"
+            variant="tonal"
             className="mt-3 min-h-11"
             onClick={() => {
               setLoadFailed(false);
@@ -153,7 +153,7 @@ function SheetBody({ teamId, onAttached, onClose }: { teamId: string; onAttached
                       </span>
                     ) : (
                       <Button
-                        variant="secondary"
+                        variant="tonal"
                         className="min-h-11 shrink-0"
                         loading={row.status === "pending"}
                         onClick={() => attach(playlist)}
@@ -163,7 +163,7 @@ function SheetBody({ teamId, onAttached, onClose }: { teamId: string; onAttached
                       </Button>
                     )}
                   </div>
-                  {row.status === "failed" && <p className="mt-1.5 text-sm text-danger">{row.message}</p>}
+                  {row.status === "failed" && <p className="mt-1.5 text-sm text-danger-fg">{row.message}</p>}
                 </li>
               );
             })}

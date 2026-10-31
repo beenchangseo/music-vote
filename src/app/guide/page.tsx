@@ -25,7 +25,7 @@ export default function GuidePage() {
           {/* Step 1 */}
           <section>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary-fg font-bold text-sm">
                 1
               </div>
               <h2 className="text-xl font-semibold text-text">
@@ -47,7 +47,7 @@ export default function GuidePage() {
           {/* Step 2 */}
           <section>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary-fg font-bold text-sm">
                 2
               </div>
               <h2 className="text-xl font-semibold text-text">
@@ -67,7 +67,7 @@ export default function GuidePage() {
           {/* Step 3 */}
           <section>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary-fg font-bold text-sm">
                 3
               </div>
               <h2 className="text-xl font-semibold text-text">
@@ -86,7 +86,7 @@ export default function GuidePage() {
           {/* Step 4 */}
           <section>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary-fg font-bold text-sm">
                 4
               </div>
               <h2 className="text-xl font-semibold text-text">
@@ -107,7 +107,7 @@ export default function GuidePage() {
           {/* Step 5 */}
           <section>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary-fg font-bold text-sm">
                 5
               </div>
               <h2 className="text-xl font-semibold text-text">
@@ -144,7 +144,7 @@ export default function GuidePage() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-border">
-          <Link href="/" className="text-sm text-text-subtle hover:text-primary transition-colors">
+          <Link href="/" className="text-sm text-text-subtle hover:text-primary-fg transition-colors">
             &larr; 홈으로 돌아가기
           </Link>
         </div>

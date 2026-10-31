@@ -133,11 +133,11 @@ function InviteSheetBody({
       >
         카톡으로 보내기
       </KakaoShareButton>
-      <Button variant="secondary" size="lg" fullWidth className="mt-2" onClick={copy}>
+      <Button variant="tonal" size="lg" fullWidth className="mt-2" onClick={copy}>
         {copyState === "copied" ? "복사했어요" : "링크 복사"}
       </Button>
       {copyState === "failed" && (
-        <p role="alert" className="mt-2 text-sm text-danger">
+        <p role="alert" className="mt-2 text-sm text-danger-fg">
           복사하지 못했어요. 위 링크를 길게 눌러 복사해 주세요
         </p>
       )}
@@ -155,7 +155,7 @@ function InviteSheetBody({
             </p>
           )}
           {error && (
-            <p role="alert" className="mt-2 text-sm text-danger">
+            <p role="alert" className="mt-2 text-sm text-danger-fg">
               {error}
             </p>
           )}

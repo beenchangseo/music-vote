@@ -163,7 +163,7 @@ export default function BandInviteScreen({
             </div>
           )}
           {error && (
-            <p role="alert" className="mt-2 text-sm text-danger">
+            <p role="alert" className="mt-2 text-sm text-danger-fg">
               {error}
             </p>
           )}

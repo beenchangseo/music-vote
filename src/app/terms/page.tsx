@@ -83,7 +83,7 @@ export default function TermsPage() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-border">
-          <Link href="/" className="text-sm text-text-subtle hover:text-primary transition-colors">
+          <Link href="/" className="text-sm text-text-subtle hover:text-primary-fg transition-colors">
             &larr; 홈으로 돌아가기
           </Link>
         </div>

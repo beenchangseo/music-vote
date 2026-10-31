@@ -272,7 +272,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
                       <Button
                         key={team.id}
                         type="button"
-                        variant="secondary"
+                        variant="tonal"
                         loading={attachingId === team.id}
                         disabled={attachingId !== null}
                         onClick={() => attachToBand(team.id)}
@@ -282,7 +282,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
                     ))}
                   </div>
                   {attachError && (
-                    <p role="alert" className="mt-2 text-sm text-danger">
+                    <p role="alert" className="mt-2 text-sm text-danger-fg">
                       {attachError}
                     </p>
                   )}
@@ -305,7 +305,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
         onChange={(e) => setTitle(e.target.value)}
         placeholder="어떤 합주예요? (예: 4월 정기 합주)"
         maxLength={100}
-        className="w-full px-4 py-3 rounded-xl bg-surface border border-border text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+        className="w-full px-4 py-3 rounded-xl bg-surface border border-border text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all"
       />
 
       {/* DR12: the whole 44px row toggles. */}
@@ -343,7 +343,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
         )}
       </button>
       {formError && (
-        <p role="alert" className="mt-2 text-sm text-danger">
+        <p role="alert" className="mt-2 text-sm text-danger-fg">
           {formError}
         </p>
       )}
@@ -385,7 +385,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
             onClick={() => setVotingMode("free")}
             className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors ${
               votingMode === "free"
-                ? "border-primary bg-primary/15 text-primary"
+                ? "border-primary-fg bg-primary/15 text-primary-fg"
                 : "border-border bg-surface-hover text-text-muted"
             }`}
           >
@@ -396,7 +396,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
             onClick={() => setVotingMode("allocated")}
             className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors ${
               votingMode === "allocated"
-                ? "border-primary bg-primary/15 text-primary"
+                ? "border-primary-fg bg-primary/15 text-primary-fg"
                 : "border-border bg-surface-hover text-text-muted"
             }`}
           >
@@ -423,7 +423,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
                 const value = Number(e.target.value);
                 if (Number.isInteger(value)) setDefaultVoteLimit(Math.min(99, Math.max(1, value)));
               }}
-              className="h-11 w-20 rounded-control border border-border bg-surface-hover px-3 text-center text-text focus:outline-none focus:ring-2 focus:ring-primary"
+              className="h-11 w-20 rounded-control border border-border bg-surface-hover px-3 text-center text-text focus:outline-none focus:ring-2 focus:ring-focus-ring"
             />
           </div>
         )}
@@ -433,7 +433,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
         <div className="px-4 py-3">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-              <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-primary-fg" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
               </svg>
             </div>
@@ -441,12 +441,12 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
               <label className="block text-sm text-text font-medium text-left">투표 마감일</label>
               <p className="text-caption text-text-muted mt-0.5 mb-2 text-left">마감일이 지나면 투표가 종료됩니다</p>
               <div className="flex gap-2">
-                <input type="date" value={deadlineDate} onChange={(e) => setDeadlineDate(e.target.value)} min={todayStr} className="flex-1 px-3 py-2.5 rounded-xl bg-surface-hover border border-border text-text text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all" style={{ colorScheme: "dark" }} />
+                <input type="date" value={deadlineDate} onChange={(e) => setDeadlineDate(e.target.value)} min={todayStr} className="flex-1 px-3 py-2.5 rounded-xl bg-surface-hover border border-border text-text text-sm focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-focus-ring transition-all" style={{ colorScheme: "dark" }} />
                 {deadlineDate && (
-                  <input type="time" value={deadlineTime} onChange={(e) => setDeadlineTime(e.target.value)} className="w-28 px-3 py-2.5 rounded-xl bg-surface-hover border border-border text-text text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all" style={{ colorScheme: "dark" }} />
+                  <input type="time" value={deadlineTime} onChange={(e) => setDeadlineTime(e.target.value)} className="w-28 px-3 py-2.5 rounded-xl bg-surface-hover border border-border text-text text-sm focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-focus-ring transition-all" style={{ colorScheme: "dark" }} />
                 )}
                 {deadlineDate && (
-                  <button type="button" onClick={() => { setDeadlineDate(""); setDeadlineTime("23:59"); }} className="p-2.5 rounded-xl text-text-subtle hover:text-red-400 hover:bg-surface-hover transition-all shrink-0" aria-label="마감일 삭제">
+                  <button type="button" onClick={() => { setDeadlineDate(""); setDeadlineTime("23:59"); }} className="p-2.5 rounded-xl text-text-subtle hover:text-danger-fg hover:bg-surface-hover transition-all shrink-0" aria-label="마감일 삭제">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
                 )}
@@ -461,7 +461,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
         <div className="px-4 py-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-primary-fg" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
               </svg>
             </div>
@@ -470,11 +470,11 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
               <p className="text-caption text-text-muted mt-0.5 text-left">투표 종료 후 상위 N곡이 셋리스트로 선정됩니다</p>
             </div>
             <div className="flex items-center gap-1 shrink-0">
-              <button type="button" onClick={() => setSetlistCount((c) => Math.max(0, c - 1))} disabled={setlistCount <= 0} className="w-11 h-11 flex items-center justify-center rounded-xl bg-surface-hover border border-border text-text-muted hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-30 transition-all active:scale-95" aria-label="곡 수 줄이기">
+              <button type="button" onClick={() => setSetlistCount((c) => Math.max(0, c - 1))} disabled={setlistCount <= 0} className="w-11 h-11 flex items-center justify-center rounded-xl bg-surface-hover border border-border text-text-muted hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-focus-ring disabled:opacity-30 transition-all active:scale-95" aria-label="곡 수 줄이기">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" d="M5 12h14" /></svg>
               </button>
               <span className={`min-w-[5rem] text-center text-sm tabular-nums ${setlistCount > 0 ? "font-semibold text-text" : "text-text-subtle"}`}>{setlistCount > 0 ? `${setlistCount}곡` : "정하지 않음"}</span>
-              <button type="button" onClick={() => setSetlistCount((c) => Math.min(30, c + 1))} disabled={setlistCount >= 30} className="w-11 h-11 flex items-center justify-center rounded-xl bg-surface-hover border border-border text-text-muted hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-30 transition-all active:scale-95" aria-label="곡 수 늘리기">
+              <button type="button" onClick={() => setSetlistCount((c) => Math.min(30, c + 1))} disabled={setlistCount >= 30} className="w-11 h-11 flex items-center justify-center rounded-xl bg-surface-hover border border-border text-text-muted hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-focus-ring disabled:opacity-30 transition-all active:scale-95" aria-label="곡 수 늘리기">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" d="M12 5v14M5 12h14" /></svg>
               </button>
             </div>

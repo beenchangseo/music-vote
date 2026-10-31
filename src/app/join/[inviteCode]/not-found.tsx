@@ -15,7 +15,7 @@ export default async function JoinNotFound() {
       <div className="max-w-sm text-center">
         <h1 className="text-h2 font-bold mb-2">이 초대 링크는 더 이상 쓸 수 없어요</h1>
         <p className="text-sm text-text-muted leading-relaxed mb-7">밴드 멤버에게 새 링크를 받아 주세요</p>
-        <Link href="/" className={buttonClassName({ size: "md", variant: user ? "secondary" : "primary" })}>
+        <Link href="/" className={buttonClassName({ size: "md", variant: user ? "tonal" : "primary" })}>
           홈으로
         </Link>
         {user && (

@@ -157,7 +157,7 @@ export function BandCreatedCard({
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <KakaoInviteButton onClick={onShare}>카톡으로 알리기</KakaoInviteButton>
-          <Link href={`/band/${band.teamId}`} className={buttonClassName({ variant: "secondary", size: "md" })}>
+          <Link href={`/band/${band.teamId}`} className={buttonClassName({ variant: "tonal", size: "md" })}>
             밴드 홈
           </Link>
         </div>

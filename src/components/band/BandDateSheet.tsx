@@ -73,7 +73,7 @@ function DateSheetBody({ teamId, nextShowAt, onSaved, onClose }: Omit<BandDateSh
         style={{ colorScheme: "dark" }}
       />
       {error && (
-        <p id={errorId} role="alert" className="mt-2 text-sm text-danger">
+        <p id={errorId} role="alert" className="mt-2 text-sm text-danger-fg">
           {error}
         </p>
       )}

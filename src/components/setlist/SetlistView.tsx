@@ -135,7 +135,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
   if (loading) {
     return (
       <div className="mt-6 py-16 text-center text-text-subtle">
-        <span className="inline-block h-8 w-8 animate-spin rounded-pill border-2 border-border-strong border-t-primary" />
+        <span className="inline-block h-8 w-8 animate-spin rounded-pill border-2 border-border-strong border-t-primary-fg" />
         <p className="mt-3">셋리스트 불러오는 중...</p>
       </div>
     );
@@ -160,7 +160,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
           <>
             {onPlay && playOrder.length > 0 && (
               <Button
-                variant="secondary"
+                variant="tonal"
                 size="sm"
                 className="min-h-11 min-w-11"
                 onClick={() => {
@@ -224,7 +224,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
               const originalDuration = item.duration_seconds > 0 ? item.duration_seconds : null;
               const originalBody = (
                 <>
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-primary/15 text-primary">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-primary/15 text-primary-fg">
                     <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
                       <path d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
@@ -238,7 +238,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
               return (
                 <li key={item.id} className="flex items-center gap-3 py-2">
                   {showEditControls ? (
-                    <button onClick={() => remove(item.id)} className="-ml-1 flex h-11 w-11 shrink-0 items-center justify-center text-danger print:hidden" aria-label="삭제">
+                    <button onClick={() => remove(item.id)} className="-ml-1 flex h-11 w-11 shrink-0 items-center justify-center text-danger-fg print:hidden" aria-label="삭제">
                       <MinusCircle />
                     </button>
                   ) : (
@@ -286,7 +286,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
             return (
               <li key={item.id} className="flex items-center gap-3 py-2" aria-current={nowPlaying ? "true" : undefined}>
                 {showEditControls ? (
-                  <button onClick={() => remove(item.id)} className="-ml-1 flex h-11 w-11 shrink-0 items-center justify-center text-danger print:hidden" aria-label="삭제">
+                  <button onClick={() => remove(item.id)} className="-ml-1 flex h-11 w-11 shrink-0 items-center justify-center text-danger-fg print:hidden" aria-label="삭제">
                     <MinusCircle />
                   </button>
                 ) : (
@@ -352,7 +352,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
                           </span>
                         ) : null}
                         {key && (
-                          <span className="max-w-[4.5rem] truncate rounded-md bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary">
+                          <span className="max-w-[4.5rem] truncate rounded-md bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary-fg">
                             {key}
                           </span>
                         )}
@@ -396,7 +396,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setShowAddOriginalForm(true)}
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-pill border border-dashed border-primary/30 px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-pill border border-dashed border-primary/30 px-4 text-sm font-medium text-primary-fg transition-colors hover:bg-primary/10"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
                   <path d="M12 5v14M5 12h14" />
@@ -441,10 +441,10 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
                   onClick={() => addFromCandidates(song.id)}
                   disabled={!!addingSongId}
                   aria-label={`${song.title} 셋리스트에 넣기`}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-pill text-text-muted transition-colors hover:bg-surface-hover hover:text-primary disabled:opacity-40"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-pill text-text-muted transition-colors hover:bg-surface-hover hover:text-primary-fg disabled:opacity-40"
                 >
                   {addingSongId === song.id ? (
-                    <span className="h-4 w-4 animate-spin rounded-pill border-2 border-border-strong border-t-primary" />
+                    <span className="h-4 w-4 animate-spin rounded-pill border-2 border-border-strong border-t-primary-fg" />
                   ) : (
                     <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden>
                       <circle cx="12" cy="12" r="9" />

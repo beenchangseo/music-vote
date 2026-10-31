@@ -129,7 +129,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
             <select
               value={selectedSongId}
               onChange={(e) => handleSongChange(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-surface-hover border border-border text-text text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-3 rounded-xl bg-surface-hover border border-border text-text text-sm focus:outline-none focus:ring-2 focus:ring-focus-ring"
             >
               <option value="">곡 선택...</option>
               {songs.map((s) => (
@@ -140,7 +140,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
             </select>
             {selectedSong && (
               <p className="text-center text-caption text-text-subtle mt-2">
-                현재: <span className="text-primary">{selectedSong.title}</span> · {selectedSong.tempo_bpm} BPM
+                현재: <span className="text-primary-fg">{selectedSong.title}</span> · {selectedSong.tempo_bpm} BPM
               </p>
             )}
           </div>

@@ -362,7 +362,7 @@ export default function RoomSettingsButton({
                   <p className="mt-1 text-caption leading-relaxed text-text-muted">
                     이 플레이리스트 참여자가 그대로 밴드 멤버가 돼요. 다음 공연 플레이리스트는 밴드에서 바로 만들어요.
                   </p>
-                  <Button type="button" variant="secondary" fullWidth onClick={openCreateBand} className="mt-3">
+                  <Button type="button" variant="tonal" fullWidth onClick={openCreateBand} className="mt-3">
                     이 멤버로 밴드 만들기
                   </Button>
                   {myTeams.length > 0 && (
@@ -373,7 +373,7 @@ export default function RoomSettingsButton({
                           <Button
                             key={band.id}
                             type="button"
-                            variant="secondary"
+                            variant="tonal"
                             fullWidth
                             loading={attachingId === band.id}
                             disabled={attachingId !== null}
@@ -384,7 +384,7 @@ export default function RoomSettingsButton({
                         ))}
                       </div>
                       {attachError && (
-                        <p role="alert" className="mt-2 text-sm text-danger">
+                        <p role="alert" className="mt-2 text-sm text-danger-fg">
                           {attachError}
                         </p>
                       )}
@@ -403,7 +403,7 @@ export default function RoomSettingsButton({
                   aria-pressed={votesAnonymous}
                   className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors ${
                     votesAnonymous
-                      ? "border-primary bg-primary/15 text-primary"
+                      ? "border-primary-fg bg-primary/15 text-primary-fg"
                       : "border-border bg-surface text-text-muted"
                   }`}
                 >
@@ -415,7 +415,7 @@ export default function RoomSettingsButton({
                   aria-pressed={!votesAnonymous}
                   className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors ${
                     !votesAnonymous
-                      ? "border-primary bg-primary/15 text-primary"
+                      ? "border-primary-fg bg-primary/15 text-primary-fg"
                       : "border-border bg-surface text-text-muted"
                   }`}
                 >
@@ -441,7 +441,7 @@ export default function RoomSettingsButton({
                       onClick={() => value !== mode && persist({ mode: value })}
                       className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors disabled:opacity-40 ${
                         mode === value
-                          ? "border-primary bg-primary/15 text-primary"
+                          ? "border-primary-fg bg-primary/15 text-primary-fg"
                           : "border-border bg-surface text-text-muted"
                       }`}
                     >
@@ -556,7 +556,7 @@ export default function RoomSettingsButton({
                     aria-pressed={shownEditMode === value}
                     className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors disabled:opacity-40 ${
                       shownEditMode === value
-                        ? "border-primary bg-primary/15 text-primary"
+                        ? "border-primary-fg bg-primary/15 text-primary-fg"
                         : "border-border bg-surface text-text-muted"
                     }`}
                   >

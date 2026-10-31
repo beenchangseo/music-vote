@@ -38,7 +38,7 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
       <button
         onClick={handleClick}
         className={`relative inline-flex h-12 w-12 items-center justify-center rounded-pill bg-surface-hover transition-all hover:bg-surface-elevated active:scale-95 ${
-          announcement ? "text-primary" : "text-text"
+          announcement ? "text-primary-fg" : "text-text"
         }`}
         aria-label="공지사항"
         title={announcement ? "공지사항 보기/수정" : "공지사항 작성"}
@@ -67,7 +67,7 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
               placeholder="멤버들에게 전달할 공지사항을 작성하세요"
               rows={4}
               maxLength={500}
-              className="w-full px-3 py-2 rounded-xl bg-surface-hover border border-border text-text placeholder-text-subtle text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-3 py-2 rounded-xl bg-surface-hover border border-border text-text placeholder-text-subtle text-sm resize-none focus:outline-none focus:ring-2 focus:ring-focus-ring"
             />
             <div className="flex justify-between items-center mt-3">
               <span className="text-caption text-text-subtle">{text.length}/500</span>
