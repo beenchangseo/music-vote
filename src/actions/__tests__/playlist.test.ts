@@ -359,6 +359,41 @@ describe("getMyPlaylists", () => {
     );
   });
 
+  it("orders rooms, cover pictures and participants by the instant within one second (Postgres drops a zero fraction)", async () => {
+    state.getCurrentUser.mockResolvedValue(USER);
+    const WHOLE = "2026-10-01T00:00:00+00:00";
+    const HALF = "2026-10-01T00:00:00.5+00:00";
+    state.admin = createFakeClient(
+      sets({
+        created: ok([
+          mine("whole", WHOLE, {
+            songs: [
+              { thumbnail_url: "t-whole", created_at: WHOLE },
+              { thumbnail_url: "t-half", created_at: HALF },
+            ],
+            playlist_members: [
+              { user_id: "user-g", display_name: "기타", joined_at: HALF },
+              { user_id: "user-b", display_name: "베이스", joined_at: WHOLE },
+            ],
+          }),
+          mine("half", HALF),
+        ]),
+      }),
+    );
+
+    await expect(getMyPlaylists()).resolves.toEqual(
+      list(
+        entry("half", HALF, null, { isMine: true }),
+        entry("whole", WHOLE, null, {
+          isMine: true,
+          coverThumbs: ["t-half", "t-whole"],
+          memberCount: 2,
+          memberPreview: ["베이스", "기타"],
+        }),
+      ),
+    );
+  });
+
   it.each([
     ["null (room link gone)", { playlists: null }],
     ["an object (many-to-one)", { playlists: room("a", "2026-10-02") }],
