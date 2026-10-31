@@ -77,7 +77,7 @@ export function SongBlock({ item, song, editing, onEdit, onRemove, nowPlaying, o
 
   if (editing) {
     return (
-      <CardShell kind="song" editing onRemove={onRemove} className="p-3">
+      <CardShell kind="song" editing onRemove={onRemove} current={nowPlaying} className="p-3">
         <button type="button" onClick={onEdit} className="flex min-w-0 flex-1 items-center gap-3" aria-label="곡 블록 수정">
           <span className={coverClass}>{thumbnail}</span>
           {text}
@@ -169,7 +169,7 @@ export function IntervalBlock({ item, editing, onEdit, onRemove }: BlockProps) {
       )}
     </>
   );
-  const lineClass = "flex min-h-11 min-w-0 flex-1 items-center gap-2 text-left";
+  const lineClass = "flex min-h-11 w-full min-w-0 flex-1 items-center gap-2 text-left";
 
   return (
     <CardShell kind="interval" editing={editing} onRemove={onRemove} className={editing ? "pr-3 pl-2" : "px-3"}>
@@ -179,7 +179,7 @@ export function IntervalBlock({ item, editing, onEdit, onRemove }: BlockProps) {
             {line}
           </button>
         ) : canExpand ? (
-          <button type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded} className={`${lineClass} w-full`}>
+          <button type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded} className={lineClass}>
             {line}
           </button>
         ) : (
