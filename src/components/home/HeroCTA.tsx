@@ -121,7 +121,7 @@ function StartChoice({
 }) {
   return (
     <div>
-      <Button onClick={onClick} size="lg" variant={primary ? "primary" : "secondary"} fullWidth>
+      <Button onClick={onClick} size="lg" variant={primary ? "primary" : "tonal"} fullWidth>
         {label}
       </Button>
       <p className="mt-1.5 text-center text-caption text-text-muted">{hint}</p>

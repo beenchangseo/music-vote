@@ -9,7 +9,7 @@ import { avatarInitial } from "@/lib/band-art";
 export function BandArt({ className = "" }: { className?: string }) {
   return (
     <div aria-hidden className={`pointer-events-none overflow-hidden ${className}`}>
-      <div className="absolute inset-0 bg-gradient-to-b from-primary-soft to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-primary-tint to-transparent" />
       <div className="absolute -right-12 -top-8 h-52 w-52 rounded-pill bg-primary opacity-55" />
       <div className="absolute right-16 top-6 h-48 w-48 rounded-pill bg-primary-hover opacity-90 mix-blend-screen" />
       {/* The lower half darkens so the band name stays readable over the art. */}
@@ -69,7 +69,7 @@ export function RoomCover({
   return (
     <div
       aria-hidden
-      className={`${frame} flex items-center justify-center bg-gradient-to-br from-primary to-primary-soft text-white/80`}
+      className={`${frame} flex items-center justify-center bg-gradient-to-br from-primary to-primary-tint text-white/80`}
     >
       <NoteIcon className="h-1/3 w-1/3" />
     </div>
@@ -97,7 +97,7 @@ export function MemberAvatar({ name, className = "h-8 w-8 text-sm" }: { name: st
     // The tint sits on an opaque bg layer so stacked avatars do not show through each other.
     <span
       aria-hidden
-      className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-pill bg-bg font-semibold text-primary ${className}`}
+      className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-pill bg-bg font-semibold text-primary-fg ${className}`}
     >
       <span className="absolute inset-0 bg-primary/20" />
       <span className="relative">{avatarInitial(name)}</span>

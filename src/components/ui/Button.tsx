@@ -1,6 +1,6 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger" | "kakao";
+type Variant = "primary" | "tonal" | "ghost" | "danger" | "kakao";
 type Size = "sm" | "md" | "lg" | "icon";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -13,7 +13,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const variantClasses: Record<Variant, string> = {
   primary:
     "bg-primary hover:bg-primary-hover text-white disabled:bg-primary/50",
-  secondary:
+  tonal:
     "bg-surface-hover hover:bg-border-strong text-text border border-border",
   ghost:
     "bg-transparent hover:bg-surface-hover text-text-muted",
@@ -41,7 +41,7 @@ export function buttonClassName({
   fullWidth = false,
   className = "",
 }: { variant?: Variant; size?: Size; fullWidth?: boolean; className?: string } = {}) {
-  return `inline-flex items-center justify-center gap-2 font-semibold transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`;
+  return `inline-flex items-center justify-center gap-2 font-semibold transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`;
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(

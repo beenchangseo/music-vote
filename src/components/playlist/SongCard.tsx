@@ -136,7 +136,7 @@ export default function SongCard({
         <div className="flex min-h-[72px] items-center gap-2.5 max-[359px]:gap-2">
           {rank != null && (
             <span
-              className={`w-5 shrink-0 text-center text-sm font-extrabold tabular-nums ${topRank ? "text-primary" : "text-text-subtle"}`}
+              className={`w-5 shrink-0 text-center text-sm font-extrabold tabular-nums ${topRank ? "text-primary-fg" : "text-text-subtle"}`}
             >
               {rank}
             </span>
@@ -199,7 +199,7 @@ export default function SongCard({
                   </span>
                 )}
                 {inSetlist && (
-                  <span className="inline-flex shrink-0 items-center text-primary">
+                  <span className="inline-flex shrink-0 items-center text-primary-fg">
                     <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h12M4 12h12M4 18h6M14 18l2.5 2.5L21 16" />
                     </svg>
@@ -288,7 +288,7 @@ export default function SongCard({
                         <button
                           onClick={() => { handleRemove(); setShowMenu(false); }}
                           disabled={isPending}
-                          className={`flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-danger transition-colors hover:bg-surface-hover ${song.added_by ? "border-t border-border" : ""}`}
+                          className={`flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-danger-fg transition-colors hover:bg-surface-hover ${song.added_by ? "border-t border-border" : ""}`}
                         >
                           <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -361,7 +361,7 @@ export default function SongCard({
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className={`font-semibold leading-snug line-clamp-2 ${isCurrent ? "text-primary" : "text-text"}`}>{title}</h3>
+            <h3 className={`font-semibold leading-snug line-clamp-2 ${isCurrent ? "text-primary-fg" : "text-text"}`}>{title}</h3>
             {artist && (
               <p className="text-sm text-text-muted truncate mt-0.5">{artist}</p>
             )}
@@ -374,8 +374,8 @@ export default function SongCard({
             onClick={() => setShowComments(true)}
             className={`text-caption transition-colors flex items-center gap-1 ${
               song.commentCount > 0
-                ? "text-primary hover:text-primary-hover font-semibold"
-                : "text-text-subtle hover:text-primary"
+                ? "text-primary-fg hover:text-on-primary-tint font-semibold"
+                : "text-text-subtle hover:text-primary-fg"
             }`}
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -395,7 +395,7 @@ export default function SongCard({
           {onAddToSetlist && (
             <button
               onClick={() => onAddToSetlist(song.id)}
-              className="flex min-h-11 items-center gap-1 text-caption text-text-subtle transition-colors hover:text-primary"
+              className="flex min-h-11 items-center gap-1 text-caption text-text-subtle transition-colors hover:text-primary-fg"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -407,7 +407,7 @@ export default function SongCard({
             <button
               onClick={handleRemove}
               disabled={isPending}
-              className="text-caption text-text-subtle hover:text-red-400 transition-colors"
+              className="text-caption text-text-subtle hover:text-danger-fg transition-colors"
             >
               곡 삭제
             </button>
@@ -447,7 +447,7 @@ function ActionTab({
   children: ReactNode;
 }) {
   const className = `inline-flex h-12 min-w-0 flex-auto items-center justify-center gap-1.5 whitespace-nowrap px-1 text-sm font-semibold transition-colors max-[359px]:text-caption ${
-    selected ? "text-primary" : "text-text"
+    selected ? "text-primary-fg" : "text-text"
   }`;
   if (!onClick) {
     return (
@@ -458,7 +458,7 @@ function ActionTab({
     );
   }
   return (
-    <button type="button" onClick={onClick} className={`${className} ${selected ? "hover:text-primary-hover" : "hover:text-primary"}`}>
+    <button type="button" onClick={onClick} className={`${className} ${selected ? "hover:text-on-primary-tint" : "hover:text-primary-fg"}`}>
       {icon}
       {children}
     </button>
@@ -567,7 +567,7 @@ function VoterStrip({
       )}
       {down.length > 0 && (
         <span className="inline-flex shrink-0 items-center gap-1">
-          <svg className="h-3 w-3 text-danger" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+          <svg className="h-3 w-3 text-danger-fg" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
             <path d="M12 20l-8-8h5V4h6v8h5z" />
           </svg>
           {down.length}

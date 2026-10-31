@@ -50,7 +50,7 @@ export default function IntervalBlock({ item, index, total, editMode, onEdit, on
     <div className="py-1.5">
       <div className="flex items-center gap-2 pl-[3.25rem]">
         {editMode && (
-          <button onClick={onRemove} className="-ml-[3.25rem] flex h-11 w-11 shrink-0 items-center justify-center text-danger print:hidden" aria-label="삭제">
+          <button onClick={onRemove} className="-ml-[3.25rem] flex h-11 w-11 shrink-0 items-center justify-center text-danger-fg print:hidden" aria-label="삭제">
             <MinusCircle />
           </button>
         )}

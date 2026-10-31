@@ -99,7 +99,7 @@ function RemoveMemberBody({
       </label>
 
       <div className="mt-5 flex gap-2">
-        <Button ref={cancelRef} variant="secondary" className="flex-1" onClick={onClose} disabled={pending}>
+        <Button ref={cancelRef} variant="tonal" className="flex-1" onClick={onClose} disabled={pending}>
           취소
         </Button>
         <Button variant="danger" className="flex-1" loading={pending} onClick={remove}>
@@ -107,7 +107,7 @@ function RemoveMemberBody({
         </Button>
       </div>
       {error && (
-        <p role="alert" className="mt-2 text-sm text-danger">
+        <p role="alert" className="mt-2 text-sm text-danger-fg">
           {error}
         </p>
       )}

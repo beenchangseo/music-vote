@@ -18,7 +18,6 @@
   --color-primary-tint: #221d47;     /* 선택 칩·tonal 보라·탭 표시자 바탕 */
   --color-on-primary-tint: #c4b5fd;  /* primary-tint 위 글자. primary-fg 글자의 hover */
   --color-focus-ring: #a78bfa;
-  --color-primary-soft: #312e81;
 
   /* Semantic colors */
   --color-success: #22c55e;

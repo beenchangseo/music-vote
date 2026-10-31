@@ -12,7 +12,7 @@ interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const toneClasses: Record<Tone, string> = {
   default: "bg-surface border-border hover:bg-surface-hover hover:border-border-strong text-text-muted hover:text-text",
-  danger: "bg-surface border-border hover:bg-danger-soft hover:border-danger/60 text-text-muted hover:text-danger",
+  danger: "bg-surface border-border hover:bg-danger-soft hover:border-danger/60 text-text-muted hover:text-danger-fg",
   brand: "bg-primary border-primary hover:bg-primary-hover text-white",
 };
 

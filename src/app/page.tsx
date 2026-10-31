@@ -85,7 +85,7 @@ async function SignedInHome({
 
   return (
     <main className="relative isolate min-h-full">
-      <div aria-hidden className="absolute inset-x-0 top-0 -z-10 h-80 bg-gradient-to-b from-primary-soft/60 to-transparent" />
+      <div aria-hidden className="absolute inset-x-0 top-0 -z-10 h-80 bg-gradient-to-b from-primary-tint/60 to-transparent" />
       <div className="mx-auto w-full max-w-md px-4 pb-16 pt-6">
         {/* 디자인 2회차 6A: once, right after leaving a band. */}
         <LeftBandNotice left={left} />
@@ -115,7 +115,7 @@ async function SignedInHome({
               목록을 불러오지 못했어요
             </p>
             {/* The home is dynamic, so navigating to it again reads the lists again. */}
-            <Link href="/" prefetch={false} className={buttonClassName({ variant: "secondary", className: "mt-3 min-h-11" })}>
+            <Link href="/" prefetch={false} className={buttonClassName({ variant: "tonal", className: "mt-3 min-h-11" })}>
               다시 불러오기
             </Link>
           </section>
@@ -171,7 +171,7 @@ function Landing({ left }: { left: boolean }) {
 
         <div className="mt-10 flex flex-col gap-16 lg:mt-16 lg:flex-row lg:items-center">
           <section aria-labelledby="hero-title" className="lg:flex-1">
-            <p className="text-caption font-semibold tracking-wider text-primary">밴드 곡 투표</p>
+            <p className="text-caption font-semibold tracking-wider text-primary-fg">밴드 곡 투표</p>
             {/* The space before <br> keeps "합주곡, 투표로" two words for search engines. */}
             <h1 id="hero-title" className="mt-3 break-keep text-display font-bold text-text">
               밴드 합주곡,{" "}
@@ -314,7 +314,7 @@ function Landing({ left }: { left: boolean }) {
               <a
                 key={link.href}
                 href={link.href}
-                className="flex min-h-12 items-center justify-between gap-3 border-b border-surface-hover text-body font-semibold text-primary transition-colors last:border-b-0 hover:text-text"
+                className="flex min-h-12 items-center justify-between gap-3 border-b border-surface-hover text-body font-semibold text-primary-fg transition-colors last:border-b-0 hover:text-text"
               >
                 {link.label}
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -350,7 +350,7 @@ function Landing({ left }: { left: boolean }) {
 function LandingFeature({ title, body, icon }: { title: string; body: string; icon: ReactNode }) {
   return (
     <li className="flex items-start gap-3.5">
-      <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-control bg-primary-soft text-text">
+      <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-control bg-primary-tint text-text">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
           {icon}
         </svg>

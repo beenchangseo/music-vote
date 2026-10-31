@@ -6,7 +6,7 @@ export function LandingShareChat() {
     <div className="rounded-card bg-surface px-4 py-4.5">
       <p className="mb-3 text-center text-caption text-text-subtle">오후 9:41</p>
       <div className="flex items-start gap-2.5">
-        <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-control bg-primary-soft text-sm font-extrabold text-text">
+        <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-control bg-primary-tint text-sm font-extrabold text-text">
           지
         </span>
         <div className="flex min-w-0 flex-col gap-1.5">
@@ -15,7 +15,7 @@ export function LandingShareChat() {
             이번 주 일요일까지 투표해 줘!
           </span>
           <div className="w-62 max-w-full overflow-hidden rounded-card border border-border bg-surface-hover">
-            <div className="relative h-31 overflow-hidden bg-primary-soft p-3.5">
+            <div className="relative h-31 overflow-hidden bg-primary-tint p-3.5">
               <span aria-hidden className="absolute -right-7 -top-10 size-35 rounded-pill bg-primary opacity-60" />
               <span aria-hidden className="absolute right-12 top-2.5 size-28 rounded-pill bg-primary-hover opacity-90" />
               <p className="relative text-[11px] font-bold text-text">PLYPICK</p>

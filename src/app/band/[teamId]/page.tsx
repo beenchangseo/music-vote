@@ -75,7 +75,7 @@ function MembersOnly({ teamId, name, loggedIn }: { teamId: string; name: string;
           {loggedIn ? "들어가려면 밴드 멤버에게 초대 링크를 받아 주세요" : "멤버라면 로그인하면 바로 들어가요"}
         </p>
         {loggedIn ? (
-          <Link href="/" className={buttonClassName({ variant: "secondary", size: "md" })}>
+          <Link href="/" className={buttonClassName({ variant: "tonal", size: "md" })}>
             홈으로
           </Link>
         ) : (

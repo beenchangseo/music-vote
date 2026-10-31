@@ -50,7 +50,7 @@ export default function AuthMenu({ nickname, avatarUrl, embedded = false }: Auth
           // eslint-disable-next-line @next/next/no-img-element
           <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
         ) : (
-          <span className="flex w-full h-full items-center justify-center bg-primary/20 text-primary text-sm font-semibold">
+          <span className="flex w-full h-full items-center justify-center bg-primary/20 text-primary-fg text-sm font-semibold">
             {nickname.slice(0, 1)}
           </span>
         )}

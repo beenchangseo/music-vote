@@ -333,7 +333,7 @@ export default function PlaylistClient({
       text: isExpired
         ? "투표 마감"
         : `마감 ${new Date(playlist.deadline).toLocaleDateString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}`,
-      className: isExpired ? "text-danger" : "",
+      className: isExpired ? "text-danger-fg" : "",
     });
   }
   if (nickname) {
@@ -444,7 +444,7 @@ export default function PlaylistClient({
               </p>
               <Link
                 href="/"
-                className="mt-1.5 inline-flex min-h-11 items-center text-caption font-semibold text-primary hover:underline underline-offset-2"
+                className="mt-1.5 inline-flex min-h-11 items-center text-caption font-semibold text-primary-fg hover:underline underline-offset-2"
               >
                 새 플레이리스트 만들기 →
               </Link>
@@ -563,7 +563,7 @@ export default function PlaylistClient({
               {/* Setlist share banner — confirmed setlist */}
               {playlist.setlist_confirmed && (
                 <div className="mt-5 p-5 rounded-2xl bg-primary/10 border border-primary/30 text-center animate-fade-in">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/20 text-primary text-caption font-bold mb-3">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/20 text-primary-fg text-caption font-bold mb-3">
                     🎵 셋리스트 확정
                   </div>
                   <p className="text-sm text-text mb-4">
@@ -592,7 +592,7 @@ export default function PlaylistClient({
                 {songsWithVotes.length === 0 ? (
                   <div className="mt-2 rounded-2xl border-2 border-dashed border-border bg-surface/40 px-6 py-10 text-center">
                     {/* 위 입력창을 가리키는 화살표 + 음표 */}
-                    <div className="flex items-center justify-center gap-2 mb-5 text-primary animate-bounce-slow">
+                    <div className="flex items-center justify-center gap-2 mb-5 text-primary-fg animate-bounce-slow">
                       <svg
                         className="w-6 h-6"
                         fill="none"
@@ -631,7 +631,7 @@ export default function PlaylistClient({
                     <button
                       type="button"
                       onClick={() => setFilter(DEFAULT_FILTER)}
-                      className="mt-2 text-caption text-primary hover:underline underline-offset-2"
+                      className="mt-2 text-caption text-primary-fg hover:underline underline-offset-2"
                     >
                       필터 초기화
                     </button>
@@ -714,7 +714,7 @@ export default function PlaylistClient({
               <p className="text-caption text-text-subtle mb-2">새로운 플레이리스트가 필요하다면</p>
               <Link
                 href="/"
-                className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:text-primary-hover transition-colors"
+                className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary-fg hover:text-on-primary-tint transition-colors"
               >
                 플레이리스트 만들기
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>

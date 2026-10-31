@@ -37,7 +37,7 @@ export function rankDemoSongs(songs: DemoSong[], mine: Partial<Record<string, My
 }
 
 const COVER: Record<Cover, { box: string; dot: string }> = {
-  violet: { box: "bg-primary-soft", dot: "bg-primary -top-2 left-2.5" },
+  violet: { box: "bg-primary-tint", dot: "bg-primary -top-2 left-2.5" },
   slate: { box: "bg-surface-elevated", dot: "bg-primary-hover -bottom-3 -left-2.5" },
   night: { box: "bg-surface-hover", dot: "bg-primary-hover top-1 left-1" },
 };
@@ -75,7 +75,7 @@ export default function LandingVoteDemo() {
               <VoteButton label={`${song.title} 찬성`} pressed={myVote === 1} dir="up" onClick={() => vote(song.id, 1)} />
               <span
                 className={`min-w-6 text-center text-body font-extrabold tabular-nums ${
-                  score > 0 ? "text-success" : score < 0 ? "text-danger" : "text-text-muted"
+                  score > 0 ? "text-success" : score < 0 ? "text-danger-fg" : "text-text-muted"
                 }`}
               >
                 {score > 0 ? `+${score}` : score}
@@ -107,7 +107,7 @@ function VoteButton({
       aria-label={label}
       aria-pressed={pressed}
       onClick={onClick}
-      className={`flex size-11 items-center justify-center rounded-pill transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+      className={`flex size-11 items-center justify-center rounded-pill transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
         pressed ? on : "text-text-muted hover:text-text"
       }`}
     >

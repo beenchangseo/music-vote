@@ -181,7 +181,7 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
               type="button"
               onClick={actions.toggleShuffle}
               className={`inline-flex h-12 w-12 items-center justify-center rounded-pill transition-colors ${
-                shuffleMode ? "text-primary" : "text-text-muted hover:text-text"
+                shuffleMode ? "text-primary-fg" : "text-text-muted hover:text-text"
               }`}
               aria-label={shuffleMode ? "셔플 끄기" : "셔플 켜기"}
               aria-pressed={shuffleMode}
@@ -224,7 +224,7 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
               type="button"
               onClick={actions.toggleRepeat}
               className={`relative inline-flex h-12 w-12 items-center justify-center rounded-pill transition-colors ${
-                repeatMode === "one" ? "text-primary" : "text-text-muted hover:text-text"
+                repeatMode === "one" ? "text-primary-fg" : "text-text-muted hover:text-text"
               }`}
               aria-label={repeatMode === "one" ? "반복 끄기" : "한곡 반복"}
               aria-pressed={repeatMode === "one"}
