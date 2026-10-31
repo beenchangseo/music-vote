@@ -29,7 +29,7 @@ TLC 로 끝까지 훑는다. 단위 테스트(`src/actions/__tests__/vote.test.t
 | `set_member_vote_limit` | `supabase/migrations/v10.sql` | 같음 |
 | `apply_vote_limit_to_all` | `supabase/migrations/v10.sql` | 같음 |
 
-**마지막 동기화 커밋: `312d124`** — 이 커밋의 코드가 모델과 같다고 확인했다. 위 함수들의 정의와 GRANT·REVOKE 를
+**마지막 동기화 커밋: `a2f5992`** — 이 커밋의 코드가 모델과 같다고 확인했다. 위 함수들의 정의와 GRANT·REVOKE 를
 합친 해시는 `verification/vote-quota/covered.json` 에 있다.
 
 ## 언제 쓰나
