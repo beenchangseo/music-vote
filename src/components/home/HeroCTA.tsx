@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Button from "@/components/ui/Button";
+import ButtonGroup from "@/components/ui/ButtonGroup";
 import Modal from "@/components/ui/Modal";
 import CreatePlaylistForm from "@/components/home/CreatePlaylistForm";
 import CreateBandSheet, { type BandCandidate } from "@/components/band/CreateBandSheet";
@@ -31,12 +32,6 @@ export default function HeroCTA(props: HeroCTAProps) {
   if (props.variant === "landing") {
     return (
       <Button variant="kakao" onClick={() => triggerKakaoLogin("/")} size="lg" fullWidth>
-        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden>
-          <path
-            fill="currentColor"
-            d="M10 3.2c-4.4 0-8 2.8-8 6.3 0 2.3 1.5 4.3 3.8 5.4l-.9 3.3c-.1.3.2.5.5.4l3.9-2.6c.2 0 .5 0 .7 0 4.4 0 8-2.8 8-6.3S14.4 3.2 10 3.2z"
-          />
-        </svg>
         카카오로 시작하기
       </Button>
     );
@@ -70,26 +65,18 @@ function SignedInCTA({
           />
         </div>
       ) : (
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setPlaylistOpen(true)}
-            className="inline-flex h-12 items-center gap-2 rounded-pill bg-primary pl-4 pr-6 text-base font-semibold text-white shadow-lg shadow-primary/30 transition-all hover:bg-primary-hover active:scale-95"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
+        <ButtonGroup>
+          <Button size="lg" onClick={() => setPlaylistOpen(true)}>
+            <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
               <path d="M12 5v14M5 12h14" />
             </svg>
             새 플레이리스트
-          </button>
-          <button
-            type="button"
-            onClick={() => setBandOpen(true)}
-            className="inline-flex h-12 items-center gap-2 rounded-pill border border-border bg-surface-hover pl-4 pr-5 text-base font-semibold text-text transition-all hover:border-border-strong active:scale-95"
-          >
-            <GuitarIcon className="h-5 w-5" />
+          </Button>
+          <Button variant="tonal" size="lg" onClick={() => setBandOpen(true)}>
+            <GuitarIcon className="size-5" />
             새 밴드
-          </button>
-        </div>
+          </Button>
+        </ButtonGroup>
       )}
 
       <Modal open={playlistOpen} onClose={() => setPlaylistOpen(false)} title="플레이리스트 만들기">
