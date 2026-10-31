@@ -1,4 +1,4 @@
-import type { SetlistItem, SongWithScore } from "./types";
+import type { SetlistEditMode, SetlistItem, SongWithScore } from "./types";
 
 type RuntimeItem = Pick<SetlistItem, "item_type" | "song_id" | "duration_seconds" | "duration_override_seconds">;
 type RuntimeSong = Pick<SongWithScore, "id" | "duration_seconds">;
@@ -117,4 +117,17 @@ export function setlistRows(items: RowItem[], songs: RowSong[]): SetlistRow[] {
       duration: itemRuntime(item, song),
     }];
   });
+}
+
+export type SetlistEditAccess = "edit" | "locked_to_host" | "read_only";
+
+export function setlistEditAccess(input: {
+  archived: boolean;
+  mode: SetlistEditMode;
+  loggedIn: boolean;
+  isHost: boolean;
+}): SetlistEditAccess {
+  if (input.archived || !input.loggedIn) return "read_only";
+  if (input.mode === "host_only" && !input.isHost) return "locked_to_host";
+  return "edit";
 }

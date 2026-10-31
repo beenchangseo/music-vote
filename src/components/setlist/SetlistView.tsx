@@ -11,7 +11,7 @@ import SetlistShareButton from "./SetlistShareButton";
 import ScreenToolbar from "../ui/ScreenToolbar";
 import { useDialog } from "../ui/DialogProvider";
 import { addSongToSetlist, removeSetlistItem, updateSetlistOrder } from "@/actions/setlist";
-import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, summarizeSetlist } from "@/domain/setlist";
+import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, summarizeSetlist, type SetlistEditAccess } from "@/domain/setlist";
 import { displayArtist, formatKey } from "@/domain/song-meta";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
 
@@ -28,7 +28,7 @@ interface Props {
   loading: boolean;
   onItemsChange: (items: SetlistItem[]) => void;
   title: string;
-  canEdit: boolean;
+  access: SetlistEditAccess;
   /** 플레이리스트 설정 버튼. 세 화면 툴바의 같은 자리에 온다. */
   actions?: React.ReactNode;
 }
@@ -38,7 +38,7 @@ interface Props {
  * (시작 시각 · 곡 · 길이·BPM·키), "편집"을 누르면 ⊖ 삭제와 ▲▼ 순서 버튼이 나온다.
  * 아래 "후보곡에서 넣기"로 셋리스트 화면 안에서 곡을 채운다.
  */
-export default function SetlistView({ setlistItems, songs, playlistId, shareCode, adminToken, loading, onItemsChange, title, canEdit, actions }: Props) {
+export default function SetlistView({ setlistItems, songs, playlistId, shareCode, adminToken, loading, onItemsChange, title, access, actions }: Props) {
   const [isPending, startTransition] = useTransition();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAddOriginalForm, setShowAddOriginalForm] = useState(false);
@@ -47,6 +47,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
   const [showAllSuggestions, setShowAllSuggestions] = useState(false);
   const [addingSongId, setAddingSongId] = useState<string | null>(null);
   const { showDanger, showAlert } = useDialog();
+  const canEdit = access === "edit";
 
   const songMap = useMemo(() => new Map(songs.map((song) => [song.id, song])), [songs]);
   const sortedItems = useMemo(() => [...setlistItems].sort((a, b) => a.position - b.position), [setlistItems]);
@@ -158,6 +159,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
                 {editMode ? "완료" : "편집"}
               </button>
             )}
+            {access === "locked_to_host" && <span className="px-1 text-caption text-text-muted">방장만 편집할 수 있어요</span>}
             <SetlistShareButton shareCode={shareCode} title={title} />
             {actions}
           </>
