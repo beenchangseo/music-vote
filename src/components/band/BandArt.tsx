@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { avatarInitial } from "@/lib/band-art";
 
 /**
  * 밴드 홈 히어로 뒤 그림 (Spotify Blend 의 겹친 원). 모든 밴드가 같은 기존 토큰 색
@@ -88,19 +87,5 @@ export function SongThumb({ src, className = "" }: { src: string | null; classNa
         </div>
       )}
     </div>
-  );
-}
-
-/** 이름 첫 글자 원형 아바타. 계정 메뉴(AuthMenu)의 사진 없는 아바타와 같은 색이다. */
-export function MemberAvatar({ name, className = "h-8 w-8 text-sm" }: { name: string; className?: string }) {
-  return (
-    // The tint sits on an opaque bg layer so stacked avatars do not show through each other.
-    <span
-      aria-hidden
-      className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-pill bg-bg font-semibold text-primary-fg ${className}`}
-    >
-      <span className="absolute inset-0 bg-primary/20" />
-      <span className="relative">{avatarInitial(name)}</span>
-    </span>
   );
 }

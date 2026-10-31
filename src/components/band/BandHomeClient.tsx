@@ -7,10 +7,11 @@ import Card from "../ui/Card";
 import IconButton from "../ui/IconButton";
 import Button, { buttonClassName } from "../ui/Button";
 import NoticeCard from "../ui/NoticeCard";
+import Avatar, { AvatarStack } from "../ui/Avatar";
 import { useDialog } from "../ui/DialogProvider";
 import GuitarIcon from "../ui/GuitarIcon";
 import { showDateSpokenLabel } from "./ShowDateTile";
-import { BandArt, MemberAvatar, RoomCover, SongThumb } from "./BandArt";
+import { BandArt, RoomCover, SongThumb } from "./BandArt";
 import BandInviteSheet from "./BandInviteSheet";
 import BandStartArea from "./BandStartArea";
 import AttachPlaylistsSheet from "./AttachPlaylistsSheet";
@@ -193,18 +194,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
         {!starting && (
           <div className="mt-4 flex items-center gap-1">
             <a href="#band-members" className="flex min-h-11 items-center pr-1" aria-label={`멤버 ${members.length}명`}>
-              <span className="flex -space-x-2">
-                {members.slice(0, STACKED_AVATARS).map((member) => (
-                  <MemberAvatar
-                    key={`${member.displayName}-${member.joinedAt}`}
-                    name={member.displayName}
-                    className="h-8 w-8 text-sm ring-2 ring-bg"
-                  />
-                ))}
-              </span>
-              {members.length > STACKED_AVATARS && (
-                <span className="ml-1.5 text-sm text-text-muted tabular-nums">+{members.length - STACKED_AVATARS}</span>
-              )}
+              <AvatarStack names={members.map((member) => member.displayName)} max={STACKED_AVATARS} />
             </a>
             <IconButton bare aria-label="멤버 초대" onClick={() => setInviteOpen(true)}>
               <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden>
@@ -595,7 +585,7 @@ function MemberTile({
         if (e.key === "Escape") setMenuOpen(false);
       }}
     >
-      <MemberAvatar name={member.displayName} className="h-16 w-16 text-h3" />
+      <Avatar name={member.displayName} size="lg" />
       <span className="w-full min-w-0">
         <span className="block truncate text-sm text-text">{member.displayName}</span>
         {sub && (
@@ -624,7 +614,7 @@ function MemberTile({
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-9 z-10 w-36 overflow-hidden rounded-control border border-border bg-surface text-left shadow-lg"
+              className="absolute right-0 top-9 z-10 w-36 overflow-hidden rounded-control border border-border bg-surface text-left shadow-float"
             >
               <button
                 type="button"
