@@ -98,6 +98,32 @@ export function cumulativeStarts(
   });
 }
 
+export type SetlistBlock<S> =
+  | { kind: "song"; item: SetlistItem; song: S; start: number }
+  | { kind: "original" | "interval"; item: SetlistItem; start: number };
+
+export function setlistBlocks<S extends RuntimeSong>(items: SetlistItem[], songs: S[]): SetlistBlock<S>[] {
+  const songMap = new Map(songs.map((song) => [song.id, song]));
+  const sorted = [...items].sort((a, b) => a.position - b.position);
+  const starts = cumulativeStarts(sorted, songs);
+
+  return sorted.flatMap((item, index): SetlistBlock<S>[] => {
+    const start = starts[index];
+    if (item.item_type !== "song") return [{ kind: item.item_type, item, start }];
+    const song = item.song_id ? songMap.get(item.song_id) : undefined;
+    return song ? [{ kind: "song", item, song, start }] : [];
+  });
+}
+
+export function moveSetlistBlock(items: SetlistItem[], blocks: SetlistBlock<unknown>[], from: number, to: number): SetlistItem[] {
+  const drawn = blocks.map((block) => block.item);
+  const [picked] = drawn.splice(from, 1);
+  drawn.splice(to, 0, picked);
+  const drawnIds = new Set(drawn.map((item) => item.id));
+  const deletedSongBlocks = [...items].sort((a, b) => a.position - b.position).filter((item) => !drawnIds.has(item.id));
+  return [...drawn, ...deletedSongBlocks].map((item, position) => ({ ...item, position }));
+}
+
 type RowItem = RuntimeItem & Pick<SetlistItem, "label" | "description" | "title_override">;
 type RowSong = RuntimeSong & Pick<SongWithScore, "title" | "artist" | "tempo_bpm">;
 

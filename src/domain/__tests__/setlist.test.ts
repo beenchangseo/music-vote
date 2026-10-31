@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, setlistEditAccess, setlistPlayOrder, setlistRows, summarizeSetlist } from "../setlist";
+import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, moveSetlistBlock, setlistBlocks, setlistEditAccess, setlistPlayOrder, setlistRows, summarizeSetlist } from "../setlist";
 import type { SetlistItem, SongWithScore } from "../types";
 import { FIXTURE_SONG_COUNT, FIXTURE_TOTAL_SECONDS, fixtureItems, fixtureSongs } from "./setlist-fixture";
 
@@ -162,5 +162,67 @@ describe("setlistPlayOrder", () => {
     ["has nothing to play without song blocks", [at(0, { item_type: "interval", song_id: null })], []],
   ])("%s", (_name, items, expected) => {
     expect(ids(items)).toEqual(expected);
+  });
+});
+
+describe("setlistBlocks", () => {
+  const songs = [
+    { id: "a", duration_seconds: 200 },
+    { id: "b", duration_seconds: 240 },
+  ];
+  const at = (position: number, fields: Partial<SetlistItem>) =>
+    ({ ...base, id: `item-${position}`, position, song_id: null, ...fields }) as SetlistItem;
+  const a = (position: number) => at(position, { song_id: "a" });
+  const b = (position: number) => at(position, { song_id: "b" });
+  const deleted = (position: number) => at(position, { song_id: null });
+  const interval = (position: number) => at(position, { item_type: "interval", duration_seconds: 60 });
+  const original = (position: number) => at(position, { item_type: "original", duration_seconds: 210 });
+
+  it.each([
+    [
+      "곡·인터벌·자작곡이 모두 블록이 되고 앞 블록이 끝난 시각에 시작한다",
+      [a(0), interval(1), original(2), b(3)],
+      [["item-0", "song", 0], ["item-1", "interval", 200], ["item-2", "original", 260], ["item-3", "song", 470]],
+    ],
+    [
+      "후보곡을 지워 song_id 가 빈 곡 블록은 그리지 않고 다음 블록이 이어서 시작한다",
+      [a(0), deleted(1), interval(2), b(3)],
+      [["item-0", "song", 0], ["item-2", "interval", 200], ["item-3", "song", 260]],
+    ],
+    [
+      "후보곡 목록에 없는 곡을 가리키는 곡 블록도 그리지 않는다",
+      [a(0), at(1, { song_id: "gone" }), b(2)],
+      [["item-0", "song", 0], ["item-2", "song", 200]],
+    ],
+    ["맨 앞 곡이 지워지면 다음 블록이 0:00 에 시작한다", [deleted(0), b(1)], [["item-1", "song", 0]]],
+    ["지워진 곡이 연달아 있어도 남은 블록이 이어진다", [a(0), deleted(1), deleted(2), b(3)], [["item-0", "song", 0], ["item-3", "song", 200]]],
+    ["지워진 곡만 남으면 그릴 블록이 없다", [deleted(0)], []],
+    ["저장된 순서가 아니라 position 순으로 줄을 세운다", [b(1), a(0)], [["item-0", "song", 0], ["item-1", "song", 200]]],
+  ])("%s", (_name, items, expected) => {
+    expect(setlistBlocks(items, songs).map((block) => [block.item.id, block.kind, block.start])).toEqual(expected);
+  });
+
+  it("곡 블록에 그 후보곡을 붙인다", () => {
+    const [block] = setlistBlocks([b(0)], songs);
+    expect(block.kind === "song" && block.song).toBe(songs[1]);
+  });
+
+  describe("moveSetlistBlock", () => {
+    const moved = (items: SetlistItem[], from: number, to: number) =>
+      moveSetlistBlock(items, setlistBlocks(items, songs), from, to).map((item) => [item.id, item.position]);
+
+    it.each([
+      ["위 블록과 자리를 바꾼다", [a(0), interval(1), b(2)], 2, 1, [["item-0", 0], ["item-2", 1], ["item-1", 2]]],
+      ["여러 칸을 건너 옮긴다", [a(0), interval(1), b(2)], 0, 2, [["item-1", 0], ["item-2", 1], ["item-0", 2]]],
+      [
+        "지워진 곡 블록은 건너뛰고 그린 블록 뒤로 보낸다",
+        [deleted(0), a(1), deleted(2), b(3)],
+        1,
+        0,
+        [["item-3", 0], ["item-1", 1], ["item-0", 2], ["item-2", 3]],
+      ],
+    ])("%s", (_name, items, from, to, expected) => {
+      expect(moved(items, from, to)).toEqual(expected);
+    });
   });
 });
