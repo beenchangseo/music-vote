@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState, useTransition } from "react";
-import { castVote } from "@/actions/vote";
+import { castVote, type CastVoteFailure } from "@/actions/vote";
 import { track } from "@/lib/analytics";
 import { applyVotePress, type VoteDirection } from "@/domain/vote";
 import type { SongWithScore, VoteAllowance, VotingMode } from "@/domain/types";
@@ -9,6 +9,11 @@ import type { SongWithScore, VoteAllowance, VotingMode } from "@/domain/types";
 export const VOTE_LIMIT_REACHED_MESSAGE =
   "투표권을 모두 사용했어요. 기존 표를 취소하면 다시 투표할 수 있어요.";
 export const VOTE_FAILED_MESSAGE = "투표에 실패했어요. 잠시 후 다시 시도해 주세요.";
+
+const VOTE_REJECTED_MESSAGES: Record<CastVoteFailure, string> = {
+  vote_limit_reached: VOTE_LIMIT_REACHED_MESSAGE,
+  voting_closed: "투표가 마감됐어요.",
+};
 
 interface VoteSnapshot {
   score: number;
@@ -145,7 +150,7 @@ export function usePlaylistVotes({
           const result = await castVote(songId, direction, shareCode);
           if (!result.success) {
             clearOverride(songId);
-            if (result.reason === "vote_limit_reached") onError(VOTE_LIMIT_REACHED_MESSAGE);
+            onError(VOTE_REJECTED_MESSAGES[result.reason]);
             return;
           }
           if (result.allowance) {

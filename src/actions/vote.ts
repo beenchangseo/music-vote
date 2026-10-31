@@ -5,6 +5,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistWritableBySong } from "@/lib/playlist-access";
 import { revalidatePath } from "next/cache";
 
+export type CastVoteFailure = "vote_limit_reached" | "voting_closed";
+
 export type CastVoteResult =
   | {
       success: true;
@@ -12,7 +14,7 @@ export type CastVoteResult =
     }
   | {
       success: false;
-      reason: "vote_limit_reached";
+      reason: CastVoteFailure;
     };
 
 /**
@@ -43,6 +45,9 @@ export async function castVote(
 
   if (error?.code === "P0001" && error.message.includes("투표권을 모두 사용했습니다")) {
     return { success: false, reason: "vote_limit_reached" };
+  }
+  if (error?.code === "P0001" && error.message.includes("투표가 마감되었습니다")) {
+    return { success: false, reason: "voting_closed" };
   }
   if (error) throw new Error(error.message || "투표에 실패했습니다.");
 

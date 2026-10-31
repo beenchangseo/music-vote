@@ -5,7 +5,7 @@
 
 ## 적용 순서
 
-새 환경은 `v01` 부터 `v23` 까지 차례로 SQL Editor(또는 DataGrip)에서 실행한다. `v01`·`v03` 은 `CREATE TABLE`·
+새 환경은 `v01` 부터 `v24` 까지 차례로 SQL Editor(또는 DataGrip)에서 실행한다. `v01`·`v03` 은 `CREATE TABLE`·
 `CREATE POLICY` 를 조건 없이 써서 새 환경에서 한 번만 돌릴 수 있다. 다시 돌리면 "already exists" 로 멈춘다.
 나머지 파일은 `IF NOT EXISTS`·`CREATE OR REPLACE`·`DROP … IF EXISTS` 뒤 다시 만들기로 써 있어 다시 돌려도 안전하다.
 
@@ -34,6 +34,7 @@
 | `v21.sql` | teams.created_via 밴드 출처 | 코드 배포 **전** |
 | `v22.sql` | setlist_items.item_type 에 'original'(자작곡) 허용 | 코드 배포 **전** |
 | `v23.sql` | 투표가 방식을 FOR SHARE 로 읽음 + 앱이 안 쓰는 투표권 함수 3개 실행 권한 회수 (#15, #16) | 무관 |
+| `v24.sql` | 마감이 지난 플레이리스트의 표를 cast_playlist_vote 가 거부 (#24) | 코드 배포 **후** |
 
 2026-10-31 전에는 이 파일들이 저장소 루트에 `supabase-schema.sql`(= `v01`)과 `supabase-migration-vN.sql`(= `vNN`)
 이름으로 있었다. 옛 SQL 주석·ADR·커밋 메시지에 나오는 옛 이름은 이 규칙으로 읽는다. 적용된 파일의 바이트는

@@ -22,7 +22,7 @@ TLC 로 끝까지 훑는다. 단위 테스트(`src/actions/__tests__/vote.test.t
 
 | 함수 | 파일 | 누가 부르나 |
 |---|---|---|
-| `cast_playlist_vote` | `supabase/migrations/v23.sql` | `src/actions/vote.ts` `castVote` |
+| `cast_playlist_vote` | `supabase/migrations/v24.sql` | `src/actions/vote.ts` `castVote` |
 | `register_playlist_member` | `supabase/migrations/v10.sql` | `cast_playlist_vote` 안 (`src/actions/member.ts` 에서도) |
 | `save_playlist_voting_settings` | `supabase/migrations/v11.sql` | 설정 시트 → `src/actions/member.ts` `saveVotingSettings` (service_role) |
 | `configure_playlist_voting` | `supabase/migrations/v10.sql` | 아무도 못 부른다. 앱 코드는 부르지 않고(member.ts 의 래퍼는 2026-10-31 삭제), v23 이 PUBLIC·anon·authenticated·service_role 의 실행 권한을 걷었다 |
@@ -135,6 +135,9 @@ v23 부터 두 함수는 어느 API 역할도 실행할 수 없어서 이 순서
 - 방장 함수끼리 동시에 도는 경우는 보지 않는다 (시나리오마다 하나)
 - 멤버 행은 이미 있다. 투표는 한 멤버 것만 센다. `configure`·`save` 의 "전체 표 수" 검사도 그 멤버 표로만 센다
 - 생략한 문장(행에 영향 없음): 방장 권한 확인, `cast` 가 끝에 돌려주는 사용 수, `display_name` 조회, 입력값 검증
+- 투표 마감(v24, #24)은 투표 인자 `startedAfterDeadline` 이다. `cast` 는 마감을 `transaction_timestamp()` 와
+  비교하고 검사 범위의 어느 함수도 `deadline` 을 쓰지 않으므로, 호출마다 시작할 때 정해진다. 마감을 넘긴 호출은
+  방식을 읽은 뒤 아무것도 쓰지 않고 롤백한다. 세 성질은 이 분기로 바뀌지 않는다
 - "가장 최근 표"(`ORDER BY created_at DESC, id DESC`)는 삽입 순서로 둔다. 같은 곡의 어느 행이 최신이든 표 수는 같다
 
 ## 검사하지 않는 것
