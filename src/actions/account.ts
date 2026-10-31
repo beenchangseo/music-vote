@@ -12,6 +12,7 @@
   성공으로 본다. 계정이 지워진 뒤 다시 부르면 로그인 검사에서 not_logged_in 으로 끝난다.
 */
 
+import { revalidatePath } from "next/cache";
 import { bandOwnerAfterLeaving, type BandSuccession } from "@/domain/team";
 import { getCurrentUser } from "@/lib/auth";
 import { unlinkKakaoUser } from "@/lib/kakao-unlink";
@@ -127,6 +128,7 @@ export async function deleteAccount(): Promise<DeleteAccountResult> {
       console.error("deleteAccount: band handover failed", user.id, teamId, error?.message ?? "0 rows");
       return { success: false, reason: "write_failed" };
     }
+    revalidatePath(`/band/${teamId}`);
   }
 
   const { data: hosted, error: hostedError } = await admin

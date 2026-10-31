@@ -13,6 +13,7 @@ const state = vi.hoisted(() => ({
   deleteUser: vi.fn(),
   signOut: vi.fn(),
   fetch: vi.fn(),
+  revalidatePath: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -23,6 +24,7 @@ vi.mock("@/lib/supabase/server", () => ({
   createServerSupabaseClient: async () => ({ auth: { signOut: state.signOut } }),
 }));
 vi.mock("@/lib/auth", () => ({ getCurrentUser: state.getCurrentUser }));
+vi.mock("next/cache", () => ({ revalidatePath: state.revalidatePath }));
 
 import { deleteAccount, previewAccountDeletion } from "../account";
 
@@ -88,6 +90,7 @@ beforeEach(() => {
     return state.respond(op);
   });
   state.getCurrentUser.mockReset().mockResolvedValue(ME);
+  state.revalidatePath.mockReset();
   state.getUserById.mockReset().mockResolvedValue({ data: { user: kakaoUser }, error: null } satisfies AuthResult);
   state.deleteUser.mockReset().mockImplementation(async (): Promise<AuthResult> => {
     state.timeline.push("auth:deleteUser");
@@ -270,6 +273,17 @@ describe("deleteAccount", () => {
       ]),
     );
     expect(handovers()).toHaveLength(2);
+  });
+
+  it("refreshes the home of each band it hands over, and of no other band", async () => {
+    state.ownedBands = [
+      band("band-1", "주말밴드", [OWNER_ME, GUITAR]),
+      band("band-2", "혼자밴드", [OWNER_ME]),
+      band("band-3", "넘긴밴드", [OWNER_ME, { ...DRUM, role: "owner" }]),
+    ];
+
+    expect(await deleteAccount()).toEqual({ success: true });
+    expect(state.revalidatePath.mock.calls).toEqual([["/band/band-1"]]);
   });
 
   it("leaves a band with no other members as it is", async () => {
