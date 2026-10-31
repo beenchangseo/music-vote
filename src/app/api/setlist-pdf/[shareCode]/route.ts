@@ -118,11 +118,12 @@ export async function GET(
   const range = doc.bufferedPageRange();
   for (let page = range.start; page < range.start + range.count; page += 1) {
     doc.switchToPage(page);
+    // The footer sits in the bottom margin. Without its own height, PDFKit treats text there as overflow and adds a page.
     doc.font("Pretendard").fontSize(8).fillColor("#9ca3af").text(
       `Plypick · ${page - range.start + 1}/${range.count}`,
       48,
       doc.page.height - 34,
-      { width: doc.page.width - 96, align: "center", lineBreak: false },
+      { width: doc.page.width - 96, height: 34, align: "center", lineBreak: false },
     );
   }
 
