@@ -54,16 +54,21 @@ const migrations = readdirSync(join(root, "supabase", "migrations"))
 // Who may call a covered function is every GRANT/REVOKE on it, in run order.
 const latest = new Map();
 const grants = [];
+const names = (stmt, name) => new RegExp(`\\b${name}\\s*\\(`, "i").test(stmt);
 for (const file of migrations) {
   const sql = readFileSync(join(root, file), "utf8");
   const re = /CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+(?:public\.)?(\w+)\s*\([\s\S]*?\$\$[\s\S]*?\$\$\s*;/gi;
   for (const m of sql.matchAll(re)) latest.set(m[1].toLowerCase(), { file, body: m[0] });
   for (const m of sql.matchAll(/^[ \t]*(?:GRANT|REVOKE)\b[^;]*\bON\s+FUNCTION\b[^;]*;/gim)) {
-    if (COVERED.some((name) => new RegExp(`\\b${name}\\s*\\(`, "i").test(m[0]))) grants.push(m[0].trim());
+    if (COVERED.some((name) => names(m[0], name))) grants.push(m[0].trim());
   }
 }
 
 const sha = (s) => createHash("sha256").update(s).digest("hex");
+// Grants count as part of the definition: expected.txt accepts failing rows for
+// functions no API role may call, and a new GRANT would make them reachable.
+const fingerprint = (name) =>
+  sha([latest.get(name).body, ...grants.filter((g) => names(g, name))].join("\n"));
 
 if (process.argv.includes("--sql")) {
   for (const name of COVERED) console.log(`${latest.get(name).body}\n`);
@@ -76,7 +81,7 @@ if (process.argv.includes("--write")) {
   for (const name of COVERED) {
     const def = latest.get(name);
     if (!def) throw new Error(`${name}: no CREATE FUNCTION found`);
-    out[name] = { file: def.file, sha256: sha(def.body) };
+    out[name] = { file: def.file, sha256: fingerprint(name) };
   }
   writeFileSync(coveredPath, `${JSON.stringify(out, null, 2)}\n`);
   console.log(`recorded ${COVERED.length} functions in ${relative(root, coveredPath)}`);
@@ -91,8 +96,8 @@ for (const name of COVERED) {
   const rec = recorded[name];
   if (!def) problems.push(`${name}: definition not found any more`);
   else if (!rec) problems.push(`${name}: not recorded in covered.json`);
-  else if (def.file !== rec.file || sha(def.body) !== rec.sha256) {
-    problems.push(`${name}: changed (synced ${rec.file}, now ${def.file})`);
+  else if (def.file !== rec.file || fingerprint(name) !== rec.sha256) {
+    problems.push(`${name}: definition or grants changed (synced ${rec.file}, now ${def.file})`);
   }
 }
 

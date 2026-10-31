@@ -67,7 +67,7 @@ INSERT INTO playlist_members (playlist_id, user_id, display_name, vote_limit) VA
 SQL
 }
 as_member() { sql -c "SET ROLE authenticated" -c "SET request.jwt.claim.sub = '$M'" -c "$1" >/dev/null; }
-# A host RPC the fixed code may refuse (RAISE or no EXECUTE); prints the refusal and goes on.
+# A host RPC that may be refused (RAISE or no EXECUTE); prints the reason instead of stopping.
 host_rpc() { # $1 role, $2 jwt sub, $3 SQL
   local err
   if ! err="$(sql -c "SET ROLE $1" -c "SET request.jwt.claim.sub = '$2'" -c "$3" 2>&1 >/dev/null)"; then
