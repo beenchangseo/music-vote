@@ -76,6 +76,7 @@ vi.mock("../PlaylistHeader", () => ({
       </button>
     ) : null,
 }));
+vi.mock("../PlaylistTitleBar", () => ({ default: () => null }));
 vi.mock("../NavigationBar", () => ({
   default: ({ onModeChange }: { onModeChange: (mode: string) => void }) => (
     <nav>
@@ -173,6 +174,7 @@ function ui(overrides: Partial<Props> = {}) {
 
 beforeEach(() => {
   window.localStorage.clear();
+  vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
   broadcast.mockReset();
   showAlert.mockReset();
   updateSetlistEditMode.mockReset().mockResolvedValue({ success: true });

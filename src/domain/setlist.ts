@@ -98,6 +98,39 @@ export function cumulativeStarts(
   });
 }
 
+export type SetlistBlock<S> =
+  | { kind: "song"; item: SetlistItem; song: S; start: number }
+  | { kind: "original" | "interval"; item: SetlistItem; start: number };
+
+export function setlistBlocks<S extends RuntimeSong>(items: SetlistItem[], songs: S[]): SetlistBlock<S>[] {
+  const songMap = new Map(songs.map((song) => [song.id, song]));
+  const sorted = [...items].sort((a, b) => a.position - b.position);
+  const starts = cumulativeStarts(sorted, songs);
+
+  return sorted.flatMap((item, index): SetlistBlock<S>[] => {
+    const start = starts[index];
+    if (item.item_type !== "song") return [{ kind: item.item_type, item, start }];
+    const song = item.song_id ? songMap.get(item.song_id) : undefined;
+    return song ? [{ kind: "song", item, song, start }] : [];
+  });
+}
+
+/**
+ * 그린 블록끼리만 순서를 바꾸고, 그리지 않은 블록은 제자리에 둔다.
+ * 그리지 않은 블록이 지워진 곡만은 아니다. 실시간 재조회 중에는 다른 멤버가 막 넣은 곡 블록이 후보곡 목록보다 먼저
+ * 도착해 잠깐 안 보인다. 그 사이 ▲▼ 로 그 블록을 옮기면 모두의 셋리스트에서 자리가 바뀐다.
+ */
+export function moveSetlistBlock(items: SetlistItem[], blocks: SetlistBlock<unknown>[], from: number, to: number): SetlistItem[] {
+  const drawn = blocks.map((block) => block.item);
+  const [picked] = drawn.splice(from, 1);
+  drawn.splice(to, 0, picked);
+  const drawnIds = new Set(drawn.map((item) => item.id));
+  let nextDrawn = 0;
+  return [...items]
+    .sort((a, b) => a.position - b.position)
+    .map((item, position) => ({ ...(drawnIds.has(item.id) ? drawn[nextDrawn++] : item), position }));
+}
+
 type RowItem = RuntimeItem & Pick<SetlistItem, "label" | "description" | "title_override">;
 type RowSong = RuntimeSong & Pick<SongWithScore, "title" | "artist" | "tempo_bpm">;
 
