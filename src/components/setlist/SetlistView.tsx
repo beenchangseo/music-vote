@@ -16,6 +16,7 @@ import { track } from "@/lib/analytics";
 import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, setlistPlayOrder, summarizeSetlist, type SetlistEditAccess } from "@/domain/setlist";
 import { displayArtist, formatKey } from "@/domain/song-meta";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
+import type { PlayerState } from "@/hooks/usePlayerQueue";
 
 /** "후보곡에서 넣기"는 점수 높은 5곡 + 더 보기. */
 const COLLAPSED_SUGGESTIONS = 5;
@@ -35,6 +36,8 @@ interface Props {
   actions?: React.ReactNode;
   /** 이 곡부터 셋리 순서로 재생한다. */
   onPlay?: (songId: string) => void;
+  /** 지금 플레이어. 셋리 큐에서 재생 중인 행에 표시를 달고, 전체 듣기가 새 재생인지 가른다. */
+  player?: Pick<PlayerState, "currentSongId" | "source" | "isPlaying">;
 }
 
 /**
@@ -42,7 +45,7 @@ interface Props {
  * (시작 시각 · 곡 · 길이·BPM·키), "편집"을 누르면 ⊖ 삭제와 ▲▼ 순서 버튼이 나온다.
  * 아래 "후보곡에서 넣기"로 셋리스트 화면 안에서 곡을 채운다.
  */
-export default function SetlistView({ setlistItems, songs, playlistId, shareCode, adminToken, loading, onItemsChange, title, access, actions, onPlay }: Props) {
+export default function SetlistView({ setlistItems, songs, playlistId, shareCode, adminToken, loading, onItemsChange, title, access, actions, onPlay, player }: Props) {
   const [isPending, startTransition] = useTransition();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAddOriginalForm, setShowAddOriginalForm] = useState(false);
@@ -66,6 +69,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
   const intervalCount = sortedItems.length - summary.songCount;
   const playOrder = useMemo(() => setlistPlayOrder(sortedItems, songs), [sortedItems, songs]);
   const showEditToggle = canEdit && sortedItems.length > 0;
+  const playingSongId = player?.source === "setlist" && player.isPlaying ? player.currentSongId : null;
   const suggestions = useMemo(() => {
     const inSetlist = new Set(sortedItems.map((item) => item.song_id).filter(Boolean));
     return songs.filter((song) => !inSetlist.has(song.id));
@@ -159,7 +163,8 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
                 size="sm"
                 className="min-h-11 min-w-11"
                 onClick={() => {
-                  track("play_all_started", { source: "setlist", song_count: playOrder.length });
+                  // Counted like the header's 전체 듣기: only a start from an empty player, so the two sources compare.
+                  if (!player?.currentSongId) track("play_all_started", { source: "setlist", song_count: playOrder.length });
                   onPlay(playOrder[0].id);
                 }}
               >
@@ -265,6 +270,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
             const duration = effectiveSetlistDuration(item, song);
             const key = formatKey(song.key_root, song.key_mode) || song.key_memo;
             const songTitle = effectiveSetlistTitle(item, song);
+            const nowPlaying = song.id === playingSongId;
             const thumbnail = song.thumbnail_url && <Image src={song.thumbnail_url} alt="" fill sizes="48px" className="object-cover" />;
             const thumbnailClass = "relative h-12 w-12 shrink-0 overflow-hidden rounded-control bg-surface-elevated";
             const text = (
@@ -276,7 +282,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
               </span>
             );
             return (
-              <li key={item.id} className="flex items-center gap-3 py-2">
+              <li key={item.id} className="flex items-center gap-3 py-2" aria-current={nowPlaying ? "true" : undefined}>
                 {showEditControls ? (
                   <button onClick={() => remove(item.id)} className="-ml-1 flex h-11 w-11 shrink-0 items-center justify-center text-danger print:hidden" aria-label="삭제">
                     <MinusCircle />
@@ -298,10 +304,25 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
                     {onPlay ? (
                       <button type="button" onClick={() => onPlay(song.id)} className={`group ${thumbnailClass}`} aria-label={`${songTitle} 재생`}>
                         {thumbnail}
-                        <span className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/45">
-                          <svg className="ml-0.5 h-5 w-5 text-white opacity-0 transition-opacity group-hover:opacity-100" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                            <path d="M8 5v14l11-7z" />
-                          </svg>
+                        <span
+                          className={`absolute inset-0 flex items-center justify-center transition-colors ${
+                            nowPlaying ? "bg-black/45" : "group-hover:bg-black/45"
+                          }`}
+                        >
+                          {nowPlaying ? (
+                            <span className="flex h-4 items-end gap-0.5" aria-hidden>
+                              {["0ms", "150ms", "300ms"].map((delay) => (
+                                <span key={delay} className="h-full w-0.5 origin-bottom animate-eq-bar rounded-full bg-accent-play" style={{ animationDelay: delay }} />
+                              ))}
+                            </span>
+                          ) : (
+                            // Always shown: a phone has no hover to reveal that the cover plays.
+                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black/45">
+                              <svg className="ml-px h-3.5 w-3.5 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </span>
+                          )}
                         </span>
                       </button>
                     ) : (

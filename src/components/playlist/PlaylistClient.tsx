@@ -692,6 +692,7 @@ export default function PlaylistClient({
               title={playlist.title}
               access={setlistAccess}
               onPlay={handlePlayFromSetlist}
+              player={playerState}
             />
           )}
 

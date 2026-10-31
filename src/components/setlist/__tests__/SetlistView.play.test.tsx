@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { track } from "@/lib/analytics";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
+import type { PlayerState } from "@/hooks/usePlayerQueue";
 import SetlistView from "../SetlistView";
 
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
@@ -19,7 +20,10 @@ const songs = [song("a", "후보 1위"), song("b", "후보 2위")];
 const at = (position: number, fields: Partial<SetlistItem>) =>
   ({ id: `item-${position}`, playlist_id: "p", position, item_type: "song", song_id: null, label: null, description: null, duration_seconds: 60, title_override: null, duration_override_seconds: null, created_at: "", ...fields }) as SetlistItem;
 
-function renderSetlist(setlistItems: SetlistItem[], onPlay = vi.fn()) {
+type Player = Pick<PlayerState, "currentSongId" | "source" | "isPlaying">;
+const idle: Player = { currentSongId: null, source: null, isPlaying: false };
+
+function renderSetlist(setlistItems: SetlistItem[], { onPlay = vi.fn(), player = idle }: { onPlay?: (songId: string) => void; player?: Player } = {}) {
   render(
     <SetlistView
       setlistItems={setlistItems}
@@ -32,6 +36,7 @@ function renderSetlist(setlistItems: SetlistItem[], onPlay = vi.fn()) {
       title="10월 합주"
       access="read_only"
       onPlay={onPlay}
+      player={player}
     />,
   );
   return onPlay;
@@ -61,6 +66,34 @@ describe("SetlistView playback", () => {
     renderSetlist([at(0, { item_type: "interval", label: "멘트" }), at(1, { item_type: "original", label: "자작곡" })]);
 
     expect(screen.queryByRole("button", { name: "셋리 전체 듣기" })).not.toBeInTheDocument();
+  });
+
+  it.each<[string, Player]>([
+    ["the setlist already plays", { currentSongId: "a", source: "setlist", isPlaying: true }],
+    ["a candidate is loaded", { currentSongId: "b", source: "candidates", isPlaying: false }],
+  ])("restarts the setlist without counting a new play-all when %s", (_name, player) => {
+    const onPlay = renderSetlist([at(0, { song_id: "b" }), at(1, { song_id: "a" })], { player });
+
+    fireEvent.click(screen.getByRole("button", { name: "셋리 전체 듣기" }));
+
+    expect(onPlay).toHaveBeenCalledWith("b");
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it("marks the row playing from the setlist queue", () => {
+    renderSetlist([at(0, { song_id: "b" }), at(1, { song_id: "a" })], { player: { currentSongId: "a", source: "setlist", isPlaying: true } });
+
+    expect(screen.getByRole("listitem", { current: true })).toHaveTextContent("후보 1위");
+  });
+
+  it.each<[string, Player]>([
+    ["plays from the candidates", { currentSongId: "a", source: "candidates", isPlaying: true }],
+    ["is paused", { currentSongId: "a", source: "setlist", isPlaying: false }],
+  ])("marks no row when the song %s", (_name, player) => {
+    renderSetlist([at(0, { song_id: "b" }), at(1, { song_id: "a" })], { player });
+
+    expect(screen.getAllByRole("listitem")).toHaveLength(2);
+    expect(screen.queryByRole("listitem", { current: true })).not.toBeInTheDocument();
   });
 
   it("plays from a song when its thumbnail is tapped", () => {
