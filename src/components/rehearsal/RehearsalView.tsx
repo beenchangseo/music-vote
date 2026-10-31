@@ -10,7 +10,7 @@ import { useMetronome, useTapTempo } from "@/hooks/useMetronome";
 import { updateSongMeta } from "@/actions/song";
 import { track } from "@/lib/analytics";
 import { displayArtist, formatKey } from "@/domain/song-meta";
-import { effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime } from "@/domain/setlist";
+import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, summarizeSetlist } from "@/domain/setlist";
 import type { SetlistItem, SongWithScore, Comment } from "@/domain/types";
 
 interface RehearsalViewProps {
@@ -57,28 +57,25 @@ export default function RehearsalView({
     return map;
   }, [songs]);
 
+  const sortedItems = useMemo(() => [...setlistItems].sort((a, b) => a.position - b.position), [setlistItems]);
   const songItems = useMemo(
-    () => [...setlistItems]
-      .filter((i) => i.item_type === "song" && i.song_id && songMap[i.song_id])
-      .sort((a, b) => a.position - b.position),
-    [setlistItems, songMap]
+    () => sortedItems.filter((i) => i.item_type === "song" && i.song_id && songMap[i.song_id]),
+    [sortedItems, songMap]
   );
 
-  const current = songItems[Math.min(index, songItems.length - 1)];
+  const step = Math.min(index, songItems.length - 1);
+  const current = songItems[step];
   const currentSong = current?.song_id ? songMap[current.song_id] : null;
-  const next = songItems[index + 1];
+  const next = songItems[step + 1];
   const nextSong = next?.song_id ? songMap[next.song_id] : null;
 
-  // 남은 시간은 현재 곡부터 끝까지 더한다. 시간을 모르는 곡은 빠진다.
+  // 곡 사이 인터벌·자작곡은 다음 곡으로 넘긴 뒤에 하므로, 앞 곡이 끝난 시각부터 센다.
   const remaining = useMemo(() => {
-    let total = 0;
-    for (let i = index; i < songItems.length; i += 1) {
-      const item = songItems[i];
-      const song = item.song_id ? songMap[item.song_id] : null;
-      if (song) total += effectiveSetlistDuration(item, song) ?? 0;
-    }
-    return total;
-  }, [index, songItems, songMap]);
+    const { totalRuntime } = summarizeSetlist(sortedItems, songs);
+    const previous = songItems[step - 1];
+    if (!previous) return totalRuntime;
+    return totalRuntime - cumulativeStarts(sortedItems, songs)[sortedItems.indexOf(previous) + 1];
+  }, [sortedItems, songItems, songs, step]);
 
   const tappedBpm =
     tapped && tapped.songId === currentSong?.id && (!tapped.saving || isSavingBpm) ? tapped.bpm : null;
@@ -120,10 +117,10 @@ export default function RehearsalView({
   const duration = effectiveSetlistDuration(current, currentSong);
   const artist = displayArtist(currentSong.artist, currentSong.title);
   const songComments = comments.filter((c) => c.song_id === currentSong.id);
-  const progress = Math.round(((index + 1) / songItems.length) * 100);
+  const progress = Math.round(((step + 1) / songItems.length) * 100);
 
   function go(delta: -1 | 1) {
-    setIndex((i) => Math.min(songItems.length - 1, Math.max(0, i + delta)));
+    setIndex(Math.min(songItems.length - 1, Math.max(0, step + delta)));
     track("rehearsal_action", { action: delta === 1 ? "next" : "prev" });
   }
 
@@ -145,7 +142,7 @@ export default function RehearsalView({
     <div>
       {/* 진행 상황. 합주 시간 관리는 밴드의 실제 문제다. */}
       <ScreenToolbar
-        stat={`${index + 1} / ${songItems.length}`}
+        stat={`${step + 1} / ${songItems.length}`}
         caption={remaining > 0 ? <span>남은 {formatRuntime(remaining)}</span> : undefined}
         actions={actions}
       >
@@ -252,7 +249,7 @@ export default function RehearsalView({
         <button
           type="button"
           onClick={() => go(-1)}
-          disabled={index === 0}
+          disabled={step === 0}
           aria-label="이전 곡"
           className="inline-flex h-14 w-14 items-center justify-center rounded-pill bg-surface-hover text-text transition-all hover:bg-surface-elevated active:scale-95 disabled:opacity-30"
         >
@@ -263,7 +260,7 @@ export default function RehearsalView({
         <button
           type="button"
           onClick={() => go(1)}
-          disabled={index >= songItems.length - 1}
+          disabled={step >= songItems.length - 1}
           aria-label="다음 곡"
           className="inline-flex h-16 w-16 items-center justify-center rounded-pill bg-primary text-white shadow-lg shadow-primary/30 transition-all hover:bg-primary-hover active:scale-95 disabled:bg-surface-hover disabled:text-text-subtle disabled:shadow-none"
         >

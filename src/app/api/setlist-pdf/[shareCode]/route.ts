@@ -1,11 +1,13 @@
 import PDFDocument from "pdfkit";
 import { createAdminClient } from "@/lib/supabase/server";
+import { formatRuntime, setlistRows, summarizeSetlist } from "@/domain/setlist";
+import type { SetlistItem } from "@/domain/types";
 
 export const runtime = "nodejs";
 
 interface ItemRow {
   position: number;
-  item_type: "song" | "interval";
+  item_type: SetlistItem["item_type"];
   song_id: string | null;
   label: string | null;
   description: string | null;
@@ -19,6 +21,7 @@ interface SongRow {
   title: string;
   artist: string | null;
   duration_seconds: number | null;
+  tempo_bpm: number | null;
 }
 
 const REGULAR_FONT = "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/public/static/Pretendard-Regular.otf";
@@ -28,15 +31,6 @@ async function fetchFont(url: string) {
   const response = await fetch(url, { cache: "no-store" });
   if (!response.ok) throw new Error("PDF 글꼴을 불러오지 못했습니다.");
   return Buffer.from(await response.arrayBuffer());
-}
-
-function formatTime(seconds: number) {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-  return hours > 0
-    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
-    : `${minutes}:${String(secs).padStart(2, "0")}`;
 }
 
 function safeFilename(title: string) {
@@ -73,12 +67,11 @@ export async function GET(
   if (songIds.length > 0) {
     const { data, error } = await admin
       .from("songs")
-      .select("id, title, artist, duration_seconds")
+      .select("id, title, artist, duration_seconds, tempo_bpm")
       .in("id", songIds);
     if (error) return new Response("곡 정보를 불러오지 못했습니다.", { status: 500 });
     songs = (data || []) as SongRow[];
   }
-  const songMap = new Map(songs.map((song) => [song.id, song]));
 
   const [regularFont, boldFont] = await Promise.all([fetchFont(REGULAR_FONT), fetchFont(BOLD_FONT)]);
   const doc = new PDFDocument({ size: "A4", margin: 48, bufferPages: true, info: { Title: `${playlist.title} 셋리스트`, Author: "Plypick" } });
@@ -92,41 +85,22 @@ export async function GET(
     doc.on("error", reject);
   });
 
-  let totalSeconds = 0;
-  let missing = 0;
-  let songCount = 0;
-  for (const item of items) {
-    if (item.item_type === "interval") {
-      totalSeconds += Math.max(0, item.duration_seconds || 0);
-      continue;
-    }
-    if (!item.song_id) continue;
-    const song = songMap.get(item.song_id);
-    if (!song) continue;
-    songCount += 1;
-    const duration = item.duration_override_seconds ?? song.duration_seconds;
-    if (duration == null) missing += 1;
-    else totalSeconds += Math.max(0, duration);
-  }
+  const { songCount, totalRuntime, missingDurationCount } = summarizeSetlist(items, songs);
 
   doc.font("PretendardBold").fontSize(11).fillColor("#7c3aed").text("PLYPICK · 셋리스트");
   doc.moveDown(0.7).fontSize(23).fillColor("#111827").text(playlist.title);
   doc.moveDown(0.45).font("Pretendard").fontSize(10).fillColor("#6b7280").text(
-    `${songCount}곡 · ${formatTime(totalSeconds)}${missing > 0 ? ` · ${missing}곡 시간 미입력` : ""}`,
+    `${songCount}곡 · ${formatRuntime(totalRuntime)}${missingDurationCount > 0 ? ` · ${missingDurationCount}곡 시간 미입력` : ""}`,
   );
   doc.moveDown(1.3);
 
   const contentWidth = doc.page.width - 96;
-  items.forEach((item, index) => {
-    const isInterval = item.item_type === "interval";
-    const song = item.song_id ? songMap.get(item.song_id) : null;
-    if (!isInterval && !song) return;
-    const title = isInterval ? item.label || "인터벌" : item.title_override || song!.title;
-    const description = isInterval ? item.description : null;
-    const duration = isInterval ? item.duration_seconds : item.duration_override_seconds ?? song!.duration_seconds;
+  for (const row of setlistRows(items, songs)) {
+    const isInterval = row.kind === "interval";
+    const byline = row.kind === "song" ? row.artist || "아티스트 미입력" : row.description || "자작곡";
     const subtitle = isInterval
-      ? description || ""
-      : `${song!.artist || "아티스트 미입력"}${duration != null ? ` · ${formatTime(duration)}` : " · 시간 미입력"}`;
+      ? row.description || ""
+      : `${byline}${row.duration != null ? ` · ${formatRuntime(row.duration)}` : " · 시간 미입력"}`;
     const subtitleHeight = subtitle ? doc.font("Pretendard").fontSize(9).heightOfString(subtitle, { width: contentWidth - 74 }) : 0;
     const rowHeight = Math.max(52, 31 + subtitleHeight);
 
@@ -134,12 +108,12 @@ export async function GET(
     const y = doc.y;
     doc.roundedRect(48, y, contentWidth, rowHeight, 8)
       .fillAndStroke(isInterval ? "#fffbeb" : "#f9fafb", isInterval ? "#fde68a" : "#e5e7eb");
-    doc.font("PretendardBold").fontSize(9).fillColor(isInterval ? "#a16207" : "#7c3aed").text(String(index + 1), 60, y + 18, { width: 24, align: "center" });
-    doc.font("PretendardBold").fontSize(11).fillColor(isInterval ? "#854d0e" : "#111827").text(title, 96, y + 10, { width: contentWidth - 160, lineBreak: false, ellipsis: true });
+    if (!isInterval) doc.font("PretendardBold").fontSize(9).fillColor("#7c3aed").text(String(row.number), 60, y + 18, { width: 24, align: "center" });
+    doc.font("PretendardBold").fontSize(11).fillColor(isInterval ? "#854d0e" : "#111827").text(row.title, 96, y + 10, { width: contentWidth - 160, lineBreak: false, ellipsis: true });
     if (subtitle) doc.font("Pretendard").fontSize(9).fillColor(isInterval ? "#a16207" : "#6b7280").text(subtitle, 96, y + 29, { width: contentWidth - 160, lineGap: 2 });
-    if (duration != null) doc.font("PretendardBold").fontSize(9).fillColor("#6b7280").text(formatTime(duration), doc.page.width - 106, y + 18, { width: 46, align: "right" });
+    if (row.duration != null) doc.font("PretendardBold").fontSize(9).fillColor("#6b7280").text(formatRuntime(row.duration), doc.page.width - 106, y + 18, { width: 46, align: "right" });
     doc.y = y + rowHeight + 7;
-  });
+  }
 
   const range = doc.bufferedPageRange();
   for (let page = range.start; page < range.start + range.count; page += 1) {

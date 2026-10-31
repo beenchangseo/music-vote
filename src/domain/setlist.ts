@@ -1,22 +1,38 @@
 import type { SetlistItem, SongWithScore } from "./types";
 
+type RuntimeItem = Pick<SetlistItem, "item_type" | "song_id" | "duration_seconds" | "duration_override_seconds">;
+type RuntimeSong = Pick<SongWithScore, "id" | "duration_seconds">;
+
 export function effectiveSetlistTitle(
-  item: SetlistItem,
+  item: Pick<SetlistItem, "title_override">,
   song: Pick<SongWithScore, "title">,
 ): string {
   return item.title_override?.trim() || song.title;
 }
 
 export function effectiveSetlistDuration(
-  item: SetlistItem,
+  item: Pick<SetlistItem, "duration_override_seconds">,
   song: Pick<SongWithScore, "duration_seconds">,
 ): number | null {
   return item.duration_override_seconds ?? song.duration_seconds;
 }
 
+/**
+ * 항목 하나가 공연 시간에 더하는 길이(초). 셋리스트·합주·내보내기의 시간은 모두 이 값을 더한다.
+ * null 은 시간을 모르는 곡·자작곡이다. 총 시간에는 0으로 들어가고 `시간 미입력`으로 따로 센다.
+ */
+function itemRuntime(item: RuntimeItem, song: RuntimeSong | undefined): number | null {
+  if (item.item_type === "song") {
+    const duration = song ? effectiveSetlistDuration(item, song) : null;
+    return duration == null ? null : Math.max(0, duration);
+  }
+  const duration = Math.max(0, item.duration_seconds || 0);
+  return item.item_type === "original" && duration === 0 ? null : duration;
+}
+
 export function summarizeSetlist(
-  items: SetlistItem[],
-  songs: Pick<SongWithScore, "id" | "duration_seconds">[],
+  items: RuntimeItem[],
+  songs: RuntimeSong[],
 ): { songCount: number; totalRuntime: number; missingDurationCount: number } {
   const songMap = new Map(songs.map((song) => [song.id, song]));
   let songCount = 0;
@@ -24,29 +40,13 @@ export function summarizeSetlist(
   let missingDurationCount = 0;
 
   for (const item of items) {
-    if (item.item_type === "interval") {
-      totalRuntime += Math.max(0, item.duration_seconds || 0);
-      continue;
-    }
-
-    if (item.item_type === "original") {
-      const duration = Math.max(0, item.duration_seconds || 0);
-      songCount += 1;
-      totalRuntime += duration;
-      if (duration === 0) missingDurationCount += 1;
-      continue;
-    }
-
-    if (!item.song_id) continue;
-    const song = songMap.get(item.song_id);
-    if (!song) continue;
+    const song = item.song_id ? songMap.get(item.song_id) : undefined;
+    if (item.item_type === "song" && !song) continue;
+    const duration = itemRuntime(item, song);
+    totalRuntime += duration ?? 0;
+    if (item.item_type === "interval") continue;
     songCount += 1;
-    const duration = effectiveSetlistDuration(item, song);
-    if (duration == null) {
-      missingDurationCount += 1;
-    } else {
-      totalRuntime += Math.max(0, duration);
-    }
+    if (duration == null) missingDurationCount += 1;
   }
 
   return { songCount, totalRuntime, missingDurationCount };
@@ -71,20 +71,50 @@ export function formatRuntime(seconds: number): string {
  * 화면에서 `N곡 시간 미입력`을 함께 보여줘야 한다.
  */
 export function cumulativeStarts(
-  items: SetlistItem[],
-  songs: Pick<SongWithScore, "id" | "duration_seconds">[],
+  items: RuntimeItem[],
+  songs: RuntimeSong[],
 ): number[] {
   const songMap = new Map(songs.map((song) => [song.id, song]));
   let elapsed = 0;
 
   return items.map((item) => {
     const start = elapsed;
-    if (item.item_type === "interval" || item.item_type === "original") {
-      elapsed += Math.max(0, item.duration_seconds || 0);
-      return start;
-    }
-    const song = item.song_id ? songMap.get(item.song_id) : null;
-    if (song) elapsed += effectiveSetlistDuration(item, song) ?? 0;
+    elapsed += itemRuntime(item, item.song_id ? songMap.get(item.song_id) : undefined) ?? 0;
     return start;
+  });
+}
+
+type RowItem = RuntimeItem & Pick<SetlistItem, "label" | "description" | "title_override">;
+type RowSong = RuntimeSong & Pick<SongWithScore, "title" | "artist" | "tempo_bpm">;
+
+/** 내보내기(이미지·PDF)가 그리는 줄. 번호는 셋리스트 탭처럼 곡과 자작곡에만 붙는다. */
+export type SetlistRow =
+  | { kind: "song"; number: number; title: string; artist: string | null; bpm: number | null; duration: number | null }
+  | { kind: "original"; number: number; title: string; description: string | null; duration: number | null }
+  | { kind: "interval"; title: string; description: string | null; duration: number | null };
+
+export function setlistRows(items: RowItem[], songs: RowSong[]): SetlistRow[] {
+  const songMap = new Map(songs.map((song) => [song.id, song]));
+  let number = 0;
+
+  return items.flatMap((item): SetlistRow[] => {
+    if (item.item_type === "interval") {
+      return [{ kind: "interval", title: item.label || "인터벌", description: item.description, duration: itemRuntime(item, undefined) }];
+    }
+    if (item.item_type === "original") {
+      number += 1;
+      return [{ kind: "original", number, title: item.label || "자작곡", description: item.description, duration: itemRuntime(item, undefined) }];
+    }
+    const song = item.song_id ? songMap.get(item.song_id) : undefined;
+    if (!song) return [];
+    number += 1;
+    return [{
+      kind: "song",
+      number,
+      title: effectiveSetlistTitle(item, song),
+      artist: song.artist,
+      bpm: song.tempo_bpm,
+      duration: itemRuntime(item, song),
+    }];
   });
 }
