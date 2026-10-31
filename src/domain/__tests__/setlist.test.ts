@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, setlistEditAccess, setlistPlayOrder, setlistRows, summarizeSetlist } from "../setlist";
+import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, rehearsalSteps, setlistEditAccess, setlistPlayOrder, setlistRows, summarizeSetlist } from "../setlist";
 import type { SetlistItem, SongWithScore } from "../types";
 import { FIXTURE_SONG_COUNT, FIXTURE_TOTAL_SECONDS, fixtureItems, fixtureSongs } from "./setlist-fixture";
 
@@ -162,5 +162,130 @@ describe("setlistPlayOrder", () => {
     ["has nothing to play without song blocks", [at(0, { item_type: "interval", song_id: null })], []],
   ])("%s", (_name, items, expected) => {
     expect(ids(items)).toEqual(expected);
+  });
+});
+
+describe("rehearsalSteps", () => {
+  const songs = [
+    { id: "a", title: "첫 곡", duration_seconds: 240 },
+    { id: "b", title: "시간 모르는 곡", duration_seconds: null },
+    { id: "c", title: "끝 곡", duration_seconds: 263 },
+  ] as SongWithScore[];
+  let position = 0;
+  const at = (fields: Partial<SetlistItem>) => {
+    position += 1;
+    return { ...base, id: `item-${position}`, position, song_id: null, ...fields } as SetlistItem;
+  };
+  const songItem = (song_id: string, fields: Partial<SetlistItem> = {}) => at({ song_id, ...fields });
+  const interval = (label: string | null, duration_seconds: number) => at({ item_type: "interval", label, duration_seconds });
+  const original = (label: string | null, duration_seconds: number, description: string | null = null) =>
+    at({ item_type: "original", label, description, duration_seconds });
+  const deleted = () => at({ song_id: null });
+
+  const summary = (items: SetlistItem[]) => {
+    const { steps, trailing } = rehearsalSteps(items, songs);
+    const intervals = (list: { title: string; duration: number }[]) => list.map((iv) => `${iv.title} ${iv.duration}`);
+    return {
+      steps: steps.map((step) => [intervals(step.before), step.kind, step.title, step.duration, step.remaining]),
+      trailing: intervals(trailing),
+    };
+  };
+
+  it.each([
+    [
+      "곡만 있으면 곡마다 한 장이고 남은 시간은 그 곡부터 끝까지다",
+      () => [songItem("a"), songItem("c")],
+      { steps: [[[], "song", "첫 곡", 240, 503], [[], "song", "끝 곡", 263, 263]], trailing: [] },
+    ],
+    [
+      "자작곡은 곡처럼 한 장이고 진행에 든다",
+      () => [songItem("a"), original("우리 노래", 225), songItem("c")],
+      { steps: [[[], "song", "첫 곡", 240, 728], [[], "original", "우리 노래", 225, 488], [[], "song", "끝 곡", 263, 263]], trailing: [] },
+    ],
+    [
+      "이름 없는 자작곡은 '자작곡'이고 시간 없는 자작곡은 시간 미입력이다",
+      () => [original(null, 0)],
+      { steps: [[[], "original", "자작곡", null, 0]], trailing: [] },
+    ],
+    [
+      "맨 앞 인터벌은 장이 아니고 첫 장 앞에 붙어 첫 장의 남은 시간에 든다",
+      () => [interval("사운드 체크", 120), songItem("a")],
+      { steps: [[["사운드 체크 120"], "song", "첫 곡", 240, 360]], trailing: [] },
+    ],
+    [
+      "곡 사이 인터벌은 다음 곡으로 넘긴 뒤에 하므로 다음 장 앞에 붙고 그 장의 남은 시간에 든다",
+      () => [songItem("a"), interval("기타 셋업 변경", 180), songItem("c")],
+      { steps: [[[], "song", "첫 곡", 240, 683], [["기타 셋업 변경 180"], "song", "끝 곡", 263, 443]], trailing: [] },
+    ],
+    [
+      "맨 끝 인터벌은 마지막 장 뒤에 남고 마지막 장의 남은 시간에 든다",
+      () => [songItem("a"), interval("앵콜 대기", 60)],
+      { steps: [[[], "song", "첫 곡", 240, 300]], trailing: ["앵콜 대기 60"] },
+    ],
+    [
+      "이어진 인터벌은 순서대로 모두 다음 장 앞에 붙는다",
+      () => [songItem("a"), interval("멘트", 60), interval(null, 180), songItem("c")],
+      { steps: [[[], "song", "첫 곡", 240, 743], [["멘트 60", "인터벌 180"], "song", "끝 곡", 263, 503]], trailing: [] },
+    ],
+    ["빈 셋리스트는 장이 없다", () => [], { steps: [], trailing: [] }],
+    ["인터벌만 있으면 장이 없다", () => [interval("사운드 체크", 120)], { steps: [], trailing: ["사운드 체크 120"] }],
+    [
+      "지워진 곡은 장이 아니고 그 앞뒤 인터벌은 다음 장 앞에 붙는다",
+      () => [songItem("a"), interval("멘트", 60), deleted(), interval("셋업", 30), songItem("c")],
+      { steps: [[[], "song", "첫 곡", 240, 593], [["멘트 60", "셋업 30"], "song", "끝 곡", 263, 353]], trailing: [] },
+    ],
+    [
+      "지워진 곡이 맨 앞이면 그 뒤 인터벌은 첫 장 앞에 붙는다",
+      () => [deleted(), interval("멘트", 60), songItem("a")],
+      { steps: [[["멘트 60"], "song", "첫 곡", 240, 300]], trailing: [] },
+    ],
+    [
+      "후보곡 목록에 없는 곡도 지워진 곡처럼 뺀다",
+      () => [songItem("a"), songItem("gone"), songItem("c")],
+      { steps: [[[], "song", "첫 곡", 240, 503], [[], "song", "끝 곡", 263, 263]], trailing: [] },
+    ],
+    [
+      "셋리스트에서 고친 제목과 시간을 쓴다",
+      () => [songItem("a", { title_override: "공연용 제목", duration_override_seconds: 200 })],
+      { steps: [[[], "song", "공연용 제목", 200, 200]], trailing: [] },
+    ],
+    [
+      "시간 모르는 곡은 시간 미입력이고 남은 시간에는 0으로 든다",
+      () => [songItem("b"), songItem("c")],
+      { steps: [[[], "song", "시간 모르는 곡", null, 263], [[], "song", "끝 곡", 263, 263]], trailing: [] },
+    ],
+    [
+      "저장된 순서가 아니라 position 순서다",
+      () => {
+        const [first, second] = [songItem("a"), songItem("c")];
+        return [first, { ...second, position: 0 }];
+      },
+      { steps: [[[], "song", "끝 곡", 263, 503], [[], "song", "첫 곡", 240, 240]], trailing: [] },
+    ],
+  ] as const)("%s", (_name, items, expected) => {
+    expect(summary(items())).toEqual(expected);
+  });
+
+  it("곡 장은 그 곡을, 자작곡 장은 설명을 들고 있다", () => {
+    const { steps } = rehearsalSteps([songItem("a"), original("우리 노래", 225, "첫 자작곡")], songs);
+    expect(steps[0]).toMatchObject({ kind: "song", song: songs[0] });
+    expect(steps[1]).toMatchObject({ kind: "original", description: "첫 자작곡" });
+  });
+
+  it("같은 곡이 두 번 들면 두 장이고 장은 셋리스트 줄로 구별된다", () => {
+    const items = [songItem("a"), songItem("a")];
+    expect(rehearsalSteps(items, songs).steps.map((step) => step.id)).toEqual(items.map((item) => item.id));
+  });
+
+  it("합주 탭은 곡 3개와 자작곡 1개로 네 장이고 첫 장에서 셋리스트 탭과 같은 16:28 이 남는다", () => {
+    expect(summary(fixtureItems)).toEqual({
+      steps: [
+        [["사운드 체크 120"], "song", "첫 곡", 200, FIXTURE_TOTAL_SECONDS],
+        [["기타 셋업 변경 180"], "song", "시간 모르는 곡", null, 668],
+        [[], "original", "우리 노래", 225, 488],
+        [[], "song", "끝 곡", 263, 263],
+      ],
+      trailing: [],
+    });
   });
 });

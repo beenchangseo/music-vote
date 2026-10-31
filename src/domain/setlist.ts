@@ -133,6 +133,53 @@ export function setlistRows(items: RowItem[], songs: RowSong[]): SetlistRow[] {
   });
 }
 
+export interface RehearsalInterval {
+  id: string;
+  title: string;
+  duration: number;
+}
+
+export type RehearsalStep<S> = {
+  id: string;
+  title: string;
+  duration: number | null;
+  before: RehearsalInterval[];
+  remaining: number;
+} & ({ kind: "song"; song: S } | { kind: "original"; description: string | null });
+
+export function rehearsalSteps<S extends RuntimeSong & Pick<SongWithScore, "title">>(
+  items: (RowItem & Pick<SetlistItem, "id" | "position">)[],
+  songs: S[],
+): { steps: RehearsalStep<S>[]; trailing: RehearsalInterval[] } {
+  const sorted = [...items].sort((a, b) => a.position - b.position);
+  const songMap = new Map(songs.map((song) => [song.id, song]));
+  const starts = cumulativeStarts(sorted, songs);
+  const { totalRuntime } = summarizeSetlist(sorted, songs);
+  const steps: RehearsalStep<S>[] = [];
+  let pending: RehearsalInterval[] = [];
+  let previousEnd = 0;
+
+  sorted.forEach((item, index) => {
+    if (item.item_type === "interval") {
+      pending.push({ id: item.id, title: item.label || "인터벌", duration: itemRuntime(item, undefined) ?? 0 });
+      return;
+    }
+    const song = item.item_type === "song" && item.song_id ? songMap.get(item.song_id) : undefined;
+    if (item.item_type === "song" && !song) return;
+    const duration = itemRuntime(item, song);
+    const base = { id: item.id, duration, before: pending, remaining: totalRuntime - previousEnd };
+    steps.push(
+      song
+        ? { ...base, kind: "song", song, title: effectiveSetlistTitle(item, song) }
+        : { ...base, kind: "original", title: item.label || "자작곡", description: item.description },
+    );
+    pending = [];
+    previousEnd = starts[index] + (duration ?? 0);
+  });
+
+  return { steps, trailing: pending };
+}
+
 export type SetlistEditAccess = "edit" | "locked_to_host" | "read_only";
 
 export function setlistEditAccess(input: {
