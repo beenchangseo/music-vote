@@ -1005,6 +1005,7 @@ describe("createBandPlaylist", () => {
       setlist_count: 12,
       team_id: TEAM,
       team_linked_via: "band",
+      setlist_edit_mode: "host_only",
     });
     expect(opsFor("playlist_admin", "insert")).toHaveLength(1);
     expect(opsFor("playlist_members", "insert")[0].row).toMatchObject({ playlist_id: "room-new", user_id: ME.id });

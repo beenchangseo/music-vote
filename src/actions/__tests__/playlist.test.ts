@@ -103,6 +103,7 @@ describe("createPlaylist", () => {
       voting_mode: "allocated",
       default_vote_limit: 5,
       setlist_count: 12,
+      setlist_edit_mode: "host_only",
     });
     expect(insert.returning).toBe(true);
     expect(opsFor(state.admin.ops, "playlist_admin", "insert")[0].row).toEqual({

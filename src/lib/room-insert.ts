@@ -45,6 +45,7 @@ export async function insertRoom(input: RoomInsertInput): Promise<RoomInsertResu
         creator_user_id: input.creator.id,
         voting_mode: input.votingMode,
         default_vote_limit: input.defaultVoteLimit,
+        setlist_edit_mode: "host_only",
         ...(input.team ? { team_id: input.team.id, team_linked_via: input.team.linkedVia } : {}),
       })
       .select("id, share_code")
