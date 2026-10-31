@@ -29,11 +29,13 @@ function toCover(ids: string[]): InviteCover {
   return [];
 }
 
-const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+// Firefox gained Intl.Segmenter in 125 while Next 16 supports 111+; there code points are the closest count.
+const graphemes = typeof Intl.Segmenter === "function" ? new Intl.Segmenter(undefined, { granularity: "grapheme" }) : null;
 
 /** 보이는 글자(grapheme)로 세어 NAME_MAX 를 넘으면 단어 경계에서 자르고 "…" 를 붙인다. 이모지 가족·국기를 가르지 않는다. */
 function clipName(name: string): string {
-  const chars = Array.from(graphemes.segment(name.trim()), (s) => s.segment);
+  const trimmed = name.trim();
+  const chars = graphemes ? Array.from(graphemes.segment(trimmed), (s) => s.segment) : Array.from(trimmed);
   if (chars.length <= NAME_MAX) return chars.join("");
   let cut = chars.slice(0, NAME_MAX - 1).join("");
   const space = cut.lastIndexOf(" ");

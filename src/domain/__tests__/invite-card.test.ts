@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   inviteCardParams,
   inviteDescription,
@@ -146,5 +146,20 @@ describe("inviteDescription", () => {
     ["keeps the count line for an empty playlist", inviteSongs([]), 0, "0곡 등록 | 밴드 곡 투표에 참여하세요!"],
   ])("%s", (_, songs, participants, expected) => {
     expect(inviteDescription(songs, participants)).toBe(expected);
+  });
+});
+
+describe("browsers without Intl.Segmenter (Firefox before 125)", () => {
+  it("still loads and clips names by code point", async () => {
+    const { Segmenter } = Intl;
+    Reflect.deleteProperty(Intl, "Segmenter");
+    try {
+      vi.resetModules();
+      const { inviteSongs: load } = await import("../invite-card");
+      expect(load([{ ...NANGMAN, title: "가나다라마바사아자차카타파하" }]).names).toEqual(["가나다라마바사아자차카…"]);
+    } finally {
+      Reflect.set(Intl, "Segmenter", Segmenter);
+      vi.resetModules();
+    }
   });
 });
