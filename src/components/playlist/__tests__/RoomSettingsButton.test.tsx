@@ -87,25 +87,31 @@ describe("RoomSettingsButton", () => {
     expect(screen.getByText("플레이리스트 삭제", { selector: "p" })).toBeInTheDocument();
   });
 
-  it("applies the setlist permission optimistically", async () => {
+  it("shows the new setlist permission while it saves and reports it once saved", async () => {
+    let finishSave = () => {};
+    updateSetlistEditMode.mockReturnValue(new Promise<void>((resolve) => { finishSave = resolve; }));
     const onChange = renderSheet();
     fireEvent.click(screen.getByLabelText("플레이리스트 설정"));
     fireEvent.click(await screen.findByRole("button", { name: "방장만 편집" }));
 
-    expect(onChange).toHaveBeenCalledWith("host_only");
-    await waitFor(() =>
-      expect(updateSetlistEditMode).toHaveBeenCalledWith("playlist", null, "host_only", "share"),
-    );
+    expect(screen.getByRole("button", { name: "방장만 편집" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("방장만 셋리스트를 바꿀 수 있어요.")).toBeInTheDocument();
+    expect(updateSetlistEditMode).toHaveBeenCalledWith("playlist", null, "host_only", "share");
+    expect(onChange).not.toHaveBeenCalled();
+
+    finishSave();
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith("host_only"));
   });
 
-  it("rolls the permission back when the server rejects it", async () => {
+  it("goes back to the saved permission when the server rejects it", async () => {
     updateSetlistEditMode.mockRejectedValue(new Error("권한 없음"));
     const onChange = renderSheet();
     fireEvent.click(screen.getByLabelText("플레이리스트 설정"));
     fireEvent.click(await screen.findByRole("button", { name: "방장만 편집" }));
 
-    await waitFor(() => expect(onChange).toHaveBeenLastCalledWith("everyone"));
-    expect(showAlert).toHaveBeenCalledWith("권한 없음");
+    await waitFor(() => expect(showAlert).toHaveBeenCalledWith("권한 없음"));
+    expect(screen.getByRole("button", { name: "모두 편집" })).toHaveAttribute("aria-pressed", "true");
+    expect(onChange).not.toHaveBeenCalled();
   });
 });
 
