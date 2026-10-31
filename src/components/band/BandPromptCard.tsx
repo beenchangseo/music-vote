@@ -59,7 +59,7 @@ export default function BandPromptCard({ playlistId, adminToken, dismissed, onCr
         className="mb-3"
         onDismiss={dismiss}
         actions={
-          <Button size="sm" onClick={() => setSheetOpen(true)}>
+          <Button variant="tonal" size="sm" onClick={() => setSheetOpen(true)}>
             밴드 이름 정하고 만들기
           </Button>
         }
@@ -99,7 +99,7 @@ export function HomeBandCard({ candidate, dismissed }: { candidate: BandCandidat
         title={<span className="block truncate">「{candidate.title}」</span>}
         onDismiss={dismiss}
         actions={
-          <Button size="sm" onClick={() => setSheetOpen(true)}>
+          <Button variant="tonal" size="sm" onClick={() => setSheetOpen(true)}>
             이 멤버로 밴드 만들기
           </Button>
         }
