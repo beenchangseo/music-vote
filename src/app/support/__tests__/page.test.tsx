@@ -25,6 +25,19 @@ describe("/support", () => {
     }
   });
 
+  it("says where to leave the service and what is erased or kept", () => {
+    render(<SupportPage />);
+    const entry = [...document.querySelectorAll("details")].find((details) =>
+      /탈퇴/.test(details.querySelector("summary")?.textContent ?? ""),
+    );
+    const answer = entry?.querySelector("p")?.textContent ?? "";
+
+    expect(answer).toContain("'탈퇴하기'");
+    expect(answer).toMatch(/투표와 댓글.*지워/);
+    expect(answer).toContain("탈퇴한 멤버");
+    expect(answer).toContain("되돌릴 수 없어요");
+  });
+
   it("links to the KakaoTalk channel chat when the channel URL is set", () => {
     vi.stubEnv("NEXT_PUBLIC_KAKAO_CHANNEL_CHAT_URL", CHAT_URL);
     render(<SupportPage />);
