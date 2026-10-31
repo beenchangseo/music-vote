@@ -25,6 +25,8 @@ const variantClasses: Record<Variant, string> = {
     "bg-kakao hover:bg-kakao-hover text-kakao-text",
 };
 
+export const BUTTON_VARIANTS = Object.keys(variantClasses) as Variant[];
+
 const sizeClasses: Record<Size, string> = {
   // 36px to see, 44px to touch: the ::after hit area reaches past the visible edge.
   sm: "relative h-control-sm px-3 text-sm after:absolute after:inset-x-0 after:top-1/2 after:h-control-md after:-translate-y-1/2",
