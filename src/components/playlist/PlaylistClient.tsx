@@ -33,6 +33,7 @@ import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import type { ViewMode } from "./NavigationBar";
 import { isArchivedPlaylist } from "@/domain/playlist-archive";
+import { setlistEditAccess } from "@/domain/setlist";
 import type { MyTeam } from "@/actions/team";
 import type { Playlist, RoomTeam, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/domain/types";
 import { displayTitle } from "@/domain/song-meta";
@@ -123,7 +124,8 @@ export default function PlaylistClient({
     ? !!adminToken
     : !!currentUserId && currentUserId === playlist.creator_user_id;
   const isExpired = playlist.deadline ? new Date(playlist.deadline) < new Date() : false;
-  const canEditSetlist = !isArchived && !loginGate && (setlistEditMode === "everyone" || isAdmin);
+  const setlistAccess = setlistEditAccess({ archived: isArchived, mode: setlistEditMode, loggedIn, isHost: isAdmin });
+  const canEditSetlist = setlistAccess === "edit";
   // F7: owner · room without a band · at least two logged-in members. A brand-new room (1 member) has no card.
   const showBandPrompt =
     isAdmin && !isArchived && loggedIn && !playlist.team_id && !team && (memberCount ?? 0) >= 2;
@@ -682,7 +684,7 @@ export default function PlaylistClient({
                 notifyChange();
               }}
               title={playlist.title}
-              canEdit={canEditSetlist}
+              access={setlistAccess}
             />
           )}
 

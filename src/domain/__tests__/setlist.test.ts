@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, setlistRows, summarizeSetlist } from "../setlist";
+import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, setlistEditAccess, setlistRows, summarizeSetlist } from "../setlist";
 import type { SetlistItem, SongWithScore } from "../types";
 import { FIXTURE_SONG_COUNT, FIXTURE_TOTAL_SECONDS, fixtureItems, fixtureSongs } from "./setlist-fixture";
 
@@ -114,5 +114,27 @@ describe("한 셋리스트는 셋리스트 탭과 내보내기에서 같은 곡 
       { kind: "song", number: 4, title: "끝 곡", artist: "끝 곡 밴드", bpm: null, duration: 263 },
     ]);
     expect(rows.reduce((sum, row) => sum + (row.duration ?? 0), 0)).toBe(FIXTURE_TOTAL_SECONDS);
+  });
+});
+
+describe("setlistEditAccess", () => {
+  const host = { loggedIn: true, isHost: true };
+  const member = { loggedIn: true, isHost: false };
+  const visitor = { loggedIn: false, isHost: false };
+  const tokenHost = { loggedIn: false, isHost: true };
+
+  it.each([
+    ["the host of a host-only room", "edit", { archived: false, mode: "host_only", ...host }],
+    ["a member of a host-only room", "locked_to_host", { archived: false, mode: "host_only", ...member }],
+    ["a logged-out visitor of a host-only room", "read_only", { archived: false, mode: "host_only", ...visitor }],
+    ["the host of an everyone room", "edit", { archived: false, mode: "everyone", ...host }],
+    ["a member of an everyone room", "edit", { archived: false, mode: "everyone", ...member }],
+    ["a logged-out visitor of an everyone room", "read_only", { archived: false, mode: "everyone", ...visitor }],
+    ["a member of an archived host-only room", "read_only", { archived: true, mode: "host_only", ...member }],
+    ["a member of an archived everyone room", "read_only", { archived: true, mode: "everyone", ...member }],
+    ["the token host of an archived host-only room", "read_only", { archived: true, mode: "host_only", ...tokenHost }],
+    ["the token host of an archived everyone room", "read_only", { archived: true, mode: "everyone", ...tokenHost }],
+  ] as const)("gives %s %s access", (_label, expected, input) => {
+    expect(setlistEditAccess(input)).toBe(expected);
   });
 });
