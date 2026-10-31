@@ -76,6 +76,31 @@ describe("SongCard compact row (디자인 C9)", () => {
     expect(screen.queryByRole("button", { name: /^댓글/ })).not.toBeInTheDocument();
   });
 
+  it("plays from the cover and names it by the playing state", () => {
+    const onTogglePlay = vi.fn();
+    const { rerender } = renderRow({ onTogglePlay });
+    fireEvent.click(screen.getByRole("button", { name: "예뻤어 재생" }));
+    expect(onTogglePlay).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <SongCard
+        song={song}
+        votingMode="free"
+        nickname="멤버"
+        shareCode="share"
+        playlistId="playlist"
+        isAdmin={false}
+        viewMode="compact"
+        rank={1}
+        onVotePress={() => undefined}
+        isPlaying
+        isCurrent
+        onTogglePlay={onTogglePlay}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "예뻤어 일시정지" })).toBeInTheDocument();
+  });
+
   it("asks the list to open the row when the title is tapped", () => {
     const onToggleExpand = vi.fn();
     renderRow({ onToggleExpand });
