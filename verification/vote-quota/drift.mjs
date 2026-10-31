@@ -3,7 +3,8 @@
 //
 //   node verification/vote-quota/drift.mjs           report, exit 1 on drift
 //   node verification/vote-quota/drift.mjs --write   record the current SQL as synced
-//   node verification/vote-quota/drift.mjs --sql     print the covered functions (replay.sh loads them)
+//   node verification/vote-quota/drift.mjs --sql     print the covered functions and their GRANT/REVOKE
+//                                                    statements (replay.sh loads them)
 //
 // Only run --write after the model describes the current code again
 // (.claude/skills/verify-vote-quota/SKILL.md).
@@ -50,17 +51,23 @@ const migrations = readdirSync(join(root, "supabase", "migrations"))
   .map((f) => `supabase/migrations/${f}`);
 
 // The definition that wins is the last CREATE FUNCTION in run order (supabase/README.md).
+// Who may call a covered function is every GRANT/REVOKE on it, in run order.
 const latest = new Map();
+const grants = [];
 for (const file of migrations) {
   const sql = readFileSync(join(root, file), "utf8");
   const re = /CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+(?:public\.)?(\w+)\s*\([\s\S]*?\$\$[\s\S]*?\$\$\s*;/gi;
   for (const m of sql.matchAll(re)) latest.set(m[1].toLowerCase(), { file, body: m[0] });
+  for (const m of sql.matchAll(/^[ \t]*(?:GRANT|REVOKE)\b[^;]*\bON\s+FUNCTION\b[^;]*;/gim)) {
+    if (COVERED.some((name) => new RegExp(`\\b${name}\\s*\\(`, "i").test(m[0]))) grants.push(m[0].trim());
+  }
 }
 
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 
 if (process.argv.includes("--sql")) {
   for (const name of COVERED) console.log(`${latest.get(name).body}\n`);
+  console.log(grants.join("\n"));
   process.exit(0);
 }
 
