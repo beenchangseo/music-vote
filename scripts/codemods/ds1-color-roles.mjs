@@ -14,6 +14,7 @@ export const RULES = [
   { from: "stroke-primary", to: "stroke-primary-fg" },
   { from: "ring-primary", to: "ring-focus-ring" },
   { from: "border-primary", to: "border-focus-ring", onlyAfter: /(^|:)focus(-visible)?:$/ },
+  { from: "border-primary", to: "border-primary-fg", opaqueOnly: true, unlessWith: "bg-primary" },
   { from: "bg-primary-soft", to: "bg-primary-tint" },
   { from: "from-primary-soft", to: "from-primary-tint" },
   { from: "to-primary-soft", to: "to-primary-tint" },
@@ -29,14 +30,19 @@ const MATCHERS = RULES.map((rule) => ({
   re: new RegExp(`^(.*:)?(!?)${escape(rule.from)}(/\\d+)?(!?)$`),
 }));
 
+const CLASS_TOKEN = /[^\s"'`${}]+/g;
+
 export function rewriteClassText(text) {
   const hits = [];
-  const out = text.replace(/[^\s"'`${}]+/g, (token) => {
+  const classes = new Set(text.match(CLASS_TOKEN));
+  const out = text.replace(CLASS_TOKEN, (token) => {
     for (const { rule, re } of MATCHERS) {
       const m = token.match(re);
       if (!m) continue;
       const [, prefix = "", lead, opacity = "", trail] = m;
       if (rule.onlyAfter && !rule.onlyAfter.test(prefix)) continue;
+      if (rule.opaqueOnly && opacity) continue;
+      if (rule.unlessWith && classes.has(rule.unlessWith)) continue;
       hits.push(`${rule.from} → ${rule.to}`);
       return `${prefix}${lead}${rule.to}${rule.dropOpacity ? "" : opacity}${trail}`;
     }

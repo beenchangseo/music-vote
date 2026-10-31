@@ -11,6 +11,8 @@ describe("rewriteClassText", () => {
     ["focus:ring-primary", "focus:ring-focus-ring"],
     ["focus-visible:ring-primary", "focus-visible:ring-focus-ring"],
     ["focus:border-primary", "focus:border-focus-ring"],
+    ["border-primary", "border-primary-fg"],
+    ["aria-pressed:border-primary", "aria-pressed:border-primary-fg"],
     ["bg-primary-soft", "bg-primary-tint"],
     ["from-primary-soft/60", "from-primary-tint/60"],
     ["to-primary-soft", "to-primary-tint"],
@@ -26,11 +28,19 @@ describe("rewriteClassText", () => {
     expect(rewriteClassText("from-primary-soft/60").text).toBe("from-primary-tint/60");
   });
 
+  it("moves a selected-state border to primary-fg, since primary falls under 3:1 on primary-tint", () => {
+    expect(rewriteClassText('"border-primary bg-primary-tint text-on-primary-tint"').text).toBe('"border-primary-fg bg-primary-tint text-on-primary-tint"');
+  });
+
+  it("keeps border-primary on a primary fill, where it is the fill's own edge", () => {
+    expect(rewriteClassText('"bg-primary border-primary hover:bg-primary-hover"').text).toBe('"bg-primary border-primary hover:bg-primary-hover"');
+  });
+
   it.each([
     "bg-primary",
     "hover:bg-primary-hover",
-    "border-primary",
     "border-primary/30",
+    "hover:border-primary/60",
     "bg-primary/15",
     "text-primary-fg",
     "text-on-primary",
@@ -42,7 +52,7 @@ describe("rewriteClassText", () => {
   });
 
   it("keeps the rest of a class list byte for byte", () => {
-    expect(rewriteClassText('"border-primary bg-primary/15 text-primary"').text).toBe('"border-primary bg-primary/15 text-primary-fg"');
+    expect(rewriteClassText('"border-primary bg-primary/15 text-primary"').text).toBe('"border-primary-fg bg-primary/15 text-primary-fg"');
   });
 });
 
@@ -70,7 +80,7 @@ describe("rewriteSource", () => {
   });
 
   it("finds nothing to do on its own output", () => {
-    const src = '<a className="text-primary hover:text-primary-hover focus:ring-primary bg-primary-soft" variant="secondary" />;';
+    const src = '<a className="border-primary text-primary hover:text-primary-hover focus:ring-primary bg-primary-soft" variant="secondary" />;';
     const once = rewriteSource(src).output;
     expect(rewriteSource(once).hits).toEqual([]);
   });
