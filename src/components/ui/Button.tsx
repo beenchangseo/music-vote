@@ -10,7 +10,6 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
 }
 
-/** 채운 보라(primary)는 화면에 하나. 나란한 보조 동작은 tonal, 덜 중요한 동작은 ghost. */
 const variantClasses: Record<Variant, string> = {
   primary:
     "bg-primary hover:bg-primary-hover active:bg-primary-pressed text-on-primary disabled:bg-primary/50",
@@ -27,9 +26,10 @@ const variantClasses: Record<Variant, string> = {
 
 export const BUTTON_VARIANTS = Object.keys(variantClasses) as Variant[];
 
+const touchTarget44 = "relative after:absolute after:inset-x-0 after:top-1/2 after:h-control-md after:-translate-y-1/2";
+
 const sizeClasses: Record<Size, string> = {
-  // 36px to see, 44px to touch: the ::after hit area reaches past the visible edge.
-  sm: "relative h-control-sm px-3 text-sm after:absolute after:inset-x-0 after:top-1/2 after:h-control-md after:-translate-y-1/2",
+  sm: `h-control-sm px-3 text-sm ${touchTarget44}`,
   md: "h-control-md px-5 text-sm",
   lg: "h-control-lg px-6 text-body",
   icon: "size-control-md",
@@ -70,7 +70,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
       {...rest}
     >
       {loading ? (
-        // currentColor, so the spinner reads on every variant (white on violet, dark on kakao yellow).
         <span aria-hidden className="inline-block size-4 rounded-pill border-2 border-current border-t-transparent animate-spin" />
       ) : null}
       {children}

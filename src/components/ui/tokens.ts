@@ -1,11 +1,3 @@
-/**
- * Design tokens as data: what each color is for and which surfaces it may sit on.
- *
- * `src/app/globals.css` is what Tailwind reads; this file is what /design renders and what the tests
- * check. `__tests__/tokens.test.ts` fails when a value here drifts from globals.css, when an allowed
- * pairing drops under its WCAG minimum, or when a forbidden pairing starts passing (the rule is stale).
- */
-
 /** WCAG 2.x contrast ratio of two opaque `#rrggbb` colors. */
 export function contrastRatio(a: string, b: string): number {
   const luminance = (hex: string) => {
@@ -23,21 +15,16 @@ export function contrastRatio(a: string, b: string): number {
 export type Minimum = 4.5 | 3;
 
 export interface Pairing {
-  /** Another color token in this file. */
   against: string;
   min: Minimum;
 }
 
 export interface ColorToken {
-  /** Tailwind color name: `primary-fg` → `text-primary-fg`, `bg-primary-fg`. */
   name: string;
   hex: string;
-  /** `fg` is drawn on its pairs (text, icons, rings); `bg` is a fill its pairs are drawn on. */
   layer: "fg" | "bg";
   use: string;
-  /** Combinations this color is meant for. Each must reach `min`. */
   pairs: readonly Pairing[];
-  /** Combinations that fail and must not be used. Each must stay under `min`. */
   avoid?: readonly Pairing[];
 }
 
@@ -126,12 +113,10 @@ export const COLOR_GROUPS: readonly { title: string; note: string; tokens: reado
 
 export const COLORS: ReadonlyMap<string, ColorToken> = new Map(COLOR_GROUPS.flatMap((g) => g.tokens).map((t) => [t.name, t]));
 
-/** Non-color scales. `cssVar` is the `@theme` variable, `value` its exact value in globals.css. */
 export interface ScaleToken {
   name: string;
   cssVar: string;
   value: string;
-  /** Tailwind class that uses it, shown next to the sample. */
   utility: string;
   use: string;
 }

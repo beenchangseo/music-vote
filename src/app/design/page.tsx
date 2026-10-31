@@ -18,7 +18,6 @@ export const metadata: Metadata = {
 };
 
 export default function DesignPage() {
-  // A working reference for next dev and Vercel preview deploys, not a page for users.
   if (process.env.VERCEL_ENV === "production") notFound();
 
   return (
@@ -100,18 +99,18 @@ export default function DesignPage() {
         <StateHeader />
         {BUTTON_VARIANTS.map((variant) => (
           <StateRow key={variant} label={variant}>
-            <Button variant={variant} className={CELL}>
+            <Button variant={variant} size="sm" fullWidth>
               저장
             </Button>
             <HoverSample>
-              <Button variant={variant} tabIndex={-1} className={CELL}>
+              <Button variant={variant} tabIndex={-1} size="sm" fullWidth>
                 저장
               </Button>
             </HoverSample>
-            <Button variant={variant} disabled className={CELL}>
+            <Button variant={variant} disabled size="sm" fullWidth>
               저장
             </Button>
-            <Button variant={variant} loading className={CELL}>
+            <Button variant={variant} loading size="sm" fullWidth>
               저장
             </Button>
           </StateRow>
@@ -246,12 +245,10 @@ function TokenLabel({ token }: { token: { name: string; value: string; utility: 
 }
 
 const STATES = ["기본", "hover", "비활성", "로딩"];
-/** A state cell narrow enough for four in a row at 390px. */
-const CELL = "w-full px-0!";
 
 function StateHeader({ labels = STATES }: { labels?: string[] }) {
   return (
-    <div className="grid grid-cols-4 gap-2 pl-16 text-caption text-text-muted">
+    <div className="grid grid-cols-4 gap-2 text-caption text-text-muted">
       {labels.map((l) => (
         <span key={l}>{l}</span>
       ))}
@@ -261,9 +258,9 @@ function StateHeader({ labels = STATES }: { labels?: string[] }) {
 
 function StateRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="mt-2 flex items-center gap-2">
-      <span className="w-14 shrink-0 text-caption text-text-muted">{label}</span>
-      <div className="grid flex-1 grid-cols-4 items-center justify-items-start gap-2">{children}</div>
+    <div className="mt-3">
+      <p className="text-caption font-semibold text-text-muted">{label}</p>
+      <div className="mt-1 grid grid-cols-4 items-center justify-items-start gap-2">{children}</div>
     </div>
   );
 }
@@ -292,7 +289,6 @@ function ColorRow({ token }: { token: ColorToken }) {
   );
 }
 
-/** One combination drawn in its real colors, with its contrast. Inline styles: the hexes are data. */
 function PairTile({ token, pair, avoided = false }: { token: ColorToken; pair: Pairing; avoided?: boolean }) {
   const other = COLORS.get(pair.against)!;
   const [fg, bg] = token.layer === "fg" ? [token, other] : [other, token];

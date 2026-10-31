@@ -35,7 +35,6 @@ describe("/design", () => {
 
   it("shows each pairing with its computed contrast, and the forbidden one struck out", () => {
     render(<DialogProvider>{DesignPage()}</DialogProvider>);
-    // primary-fg on surface, white on primary, text-subtle on surface-elevated
     expect(screen.getByTitle("primary-fg on surface")).toHaveTextContent("6.52");
     expect(screen.getByTitle("on-primary on primary")).toHaveTextContent("5.70");
     expect(screen.getByTitle("text-subtle on surface-elevated")).toHaveTextContent("4.08 금지");

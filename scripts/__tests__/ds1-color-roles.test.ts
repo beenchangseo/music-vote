@@ -5,7 +5,6 @@ describe("rewriteClassText", () => {
   it.each([
     ["text-primary", "text-primary-fg"],
     ["hover:text-primary", "hover:text-primary-fg"],
-    ["text-primary/70", "text-primary-fg"],
     ["max-[359px]:text-primary", "max-[359px]:text-primary-fg"],
     ["hover:text-primary-hover", "hover:text-on-primary-tint"],
     ["border-t-primary", "border-t-primary-fg"],
@@ -19,6 +18,12 @@ describe("rewriteClassText", () => {
     ["hover:text-red-400", "hover:text-danger-fg"],
   ])("%s → %s", (from, to) => {
     expect(rewriteClassText(from).text).toBe(to);
+  });
+
+  it("drops the opacity of an fg role, since primary-fg at 70% falls under 4.5:1 on surface", () => {
+    expect(rewriteClassText("text-primary/70").text).toBe("text-primary-fg");
+    expect(rewriteClassText("text-danger/80").text).toBe("text-danger-fg");
+    expect(rewriteClassText("from-primary-soft/60").text).toBe("from-primary-tint/60");
   });
 
   it.each([

@@ -7,16 +7,14 @@
   --font-sans: "Pretendard Variable", "Pretendard", var(--font-geist-sans),
     -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
 
-  /* 보라 역할. 흰 글자를 올릴 보라(어두워야 함)와 어두운 표면 위 보라 글자(밝아야 함)를 한 색으로
-   * 둘 다 맞출 수 없어서 채움·글자·tint 를 나눈다. 대비 수치와 쓸 수 있는 표면은
-   * src/components/ui/tokens.ts 가 원본이고 테스트가 지킨다. */
-  --color-primary: #7c3aed;          /* 채움: 주 버튼·켜진 스위치. 위 글자는 on-primary */
+  /* Brand roles */
+  --color-primary: #7c3aed;
   --color-on-primary: #ffffff;
   --color-primary-hover: #6d28d9;
   --color-primary-pressed: #5b21b6;
-  --color-primary-fg: #a78bfa;       /* 어두운 표면 위 보라 글자·아이콘·순위 */
-  --color-primary-tint: #221d47;     /* 선택 칩·tonal 보라·탭 표시자 바탕 */
-  --color-on-primary-tint: #c4b5fd;  /* primary-tint 위 글자. primary-fg 글자의 hover */
+  --color-primary-fg: #a78bfa;
+  --color-primary-tint: #221d47;
+  --color-on-primary-tint: #c4b5fd;
   --color-focus-ring: #a78bfa;
 
   /* Semantic colors */
@@ -24,9 +22,9 @@
   --color-success-soft: #14532d;
   --color-warning: #f59e0b;
   --color-warning-soft: #78350f;
-  --color-danger: #dc2626;           /* 채움. 위 글자는 on-danger */
+  --color-danger: #dc2626;
   --color-on-danger: #ffffff;
-  --color-danger-fg: #f87171;        /* 어두운 표면 위 빨강 글자·아이콘 */
+  --color-danger-fg: #f87171;
   --color-danger-soft: #7f1d1d;
 
   /* 재생 중 전용. primary 와 역할을 나눈다 */
@@ -50,13 +48,11 @@
   --color-surface-elevated: #2a3441;
   --color-border: #374151;
   --color-border-strong: #4b5563;
-  /* 입력 경계. border 는 surface 대비 1.72:1 이라 입력칸 테두리로는 안 보인다(3:1 필요) */
   --color-border-input: #6b7280;
 
   /* Text scale */
   --color-text: #f3f4f6;
   --color-text-muted: #9ca3af;
-  /* surface-elevated 위에는 쓰지 않는다 (4.08:1). 그 위 보조 글자는 text-muted */
   --color-text-subtle: #8a93a4;
 
   /* Typography — 한국어 가독성 우선 (line-height 1.6+) */
@@ -88,28 +84,27 @@
   --text-caption: 0.75rem;
   --text-caption--line-height: 1.5;
 
-  /* Radius. 형태가 역할을 말하게 한다. control 12px 은 이미 많이 쓰던 rounded-xl 과 같다. */
-  --radius-badge: 0.375rem;   /* 6px — 배지 */
-  --radius-control: 0.75rem;  /* 12px — 버튼·입력·칩 */
-  --radius-card: 1rem;        /* 16px — 카드·다이얼로그 */
-  --radius-sheet: 1.5rem;     /* 24px — 바텀시트 위 모서리 */
-  --radius-pill: 9999px;      /* 아바타·카운트 뱃지 */
+  /* Radius */
+  --radius-badge: 0.375rem;
+  --radius-control: 0.75rem;
+  --radius-card: 1rem;
+  --radius-sheet: 1.5rem;
+  --radius-pill: 9999px;
 
-  /* Heights. sm 은 보이는 높이만 36px 이고 누르는 영역은 44px 로 넓힌다. */
-  --spacing-control-sm: 2.25rem; /* 36px */
-  --spacing-control-md: 2.75rem; /* 44px */
-  --spacing-control-lg: 3.25rem; /* 52px */
-  --spacing-row: 3.5rem;         /* 56px — 설정·멤버 행 */
-  --spacing-row-song: 4.5rem;    /* 72px — 곡 행 */
+  /* Heights */
+  --spacing-control-sm: 2.25rem;
+  --spacing-control-md: 2.75rem;
+  --spacing-control-lg: 3.25rem;
+  --spacing-row: 3.5rem;
+  --spacing-row-song: 4.5rem;
 
   /* Layout — 하단 고정 요소. 지금까지 매직 넘버로 흩어져 있었다. */
   --spacing-dock: 4rem;       /* 64px — 하단 탭 (알약 세그먼트 44px + 위아래 여백) */
   --spacing-player: 3.5rem;   /* 56px — 플레이어 바 */
 
-  /* 다크에서 층은 표면 색 단계로 만든다. 그림자는 떠 있는 것(시트·토스트·FAB)에만. */
   --shadow-float: 0 12px 32px -8px rgb(0 0 0 / 0.6);
 
-  /* Motion. 120ms 누름 · 200ms 색·페이드(기본값) · 300ms 시트. 이징은 하나. */
+  /* Motion */
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --default-transition-duration: 200ms;
   --default-transition-timing-function: cubic-bezier(0.2, 0, 0, 1);

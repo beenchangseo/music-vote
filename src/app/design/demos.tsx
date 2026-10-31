@@ -9,11 +9,7 @@ import { COLORS, type ScaleToken } from "@/components/ui/tokens";
 
 const HOVER_PROPS = { bg: "backgroundColor", text: "color", border: "borderColor" } as const;
 
-/**
- * Paints its one child as if hovered. CSS cannot force :hover, so this reads the child's own
- * `hover:bg-*`/`hover:text-*`/`hover:border-*` classes and applies those colors inline. The sample
- * follows the primitive's classes instead of a second copy of them.
- */
+/** CSS cannot force :hover, so this applies the child's own `hover:` colors inline. */
 export function HoverSample({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLSpanElement>(null);
   useLayoutEffect(() => {

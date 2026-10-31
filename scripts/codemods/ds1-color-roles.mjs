@@ -1,21 +1,11 @@
 #!/usr/bin/env node
-// 디자인 시스템 1단계 색 역할 스윕. 다시 돌려도 같은 결과가 나온다.
-//
 //   node scripts/codemods/ds1-color-roles.mjs          고친다
 //   node scripts/codemods/ds1-color-roles.mjs --check  고칠 곳이 있으면 1 로 끝난다
-//
-// primary 가 #8b5cf6 → #7c3aed 로 어두워져서, 보라를 글자·아이콘으로 쓰던 클래스는 어두운 표면 위에서
-// 4.5:1 을 못 넘는다. 채움(primary)과 글자(primary-fg)를 나눈 역할로 옮긴다. 기준은 AGENTS.md "디자인 시스템".
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import ts from "typescript";
 
-/**
- * Class rewrites. `from` and `to` are whole utilities; variant prefixes (`hover:`, `md:`) and the
- * important mark are kept. `dropOpacity` removes `/NN`: an fg role is tuned for full opacity, and
- * `text-primary-fg/70` falls back under 4.5:1 on surface.
- */
 export const RULES = [
   { from: "text-primary", to: "text-primary-fg", dropOpacity: true },
   { from: "text-primary-hover", to: "text-on-primary-tint" },
@@ -39,7 +29,6 @@ const MATCHERS = RULES.map((rule) => ({
   re: new RegExp(`^(.*:)?(!?)${escape(rule.from)}(/\\d+)?(!?)$`),
 }));
 
-/** Rewrites the class tokens in one piece of literal text. Everything that is not a token stays byte-identical. */
 export function rewriteClassText(text) {
   const hits = [];
   const out = text.replace(/[^\s"'`${}]+/g, (token) => {
@@ -56,7 +45,6 @@ export function rewriteClassText(text) {
   return { text: out, hits };
 }
 
-/** A string that is the value of a `variant` JSX attribute or object property, through ternaries and `||`. */
 function isVariantValue(node) {
   for (let p = node.parent; p; p = p.parent) {
     if (ts.isJsxAttribute(p) || ts.isPropertyAssignment(p)) return p.name.getText() === "variant";
