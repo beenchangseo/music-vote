@@ -81,7 +81,8 @@ export default function SupportPage() {
         </nav>
       </div>
 
-      <div className="sticky bottom-0 border-t border-border bg-bg/95 backdrop-blur-sm">
+      {/* The body already pads the bottom inset; the negative margin lets the bar cover that padding at the end of the page. */}
+      <div className="sticky bottom-0 -mb-[env(safe-area-inset-bottom)] border-t border-border bg-bg/95 backdrop-blur-sm">
         <div className="mx-auto w-full max-w-2xl px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3">
           {chatUrl ? (
             <a href={chatUrl} className={buttonClassName({ variant: "kakao", size: "lg", fullWidth: true })}>
