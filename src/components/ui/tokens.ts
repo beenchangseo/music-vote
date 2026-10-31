@@ -36,11 +36,17 @@ export const COLOR_GROUPS: readonly { title: string; note: string; tokens: reado
     title: "보라",
     note: "채움(primary)·글자(primary-fg)·tint 를 나눈다. 채운 보라 버튼은 화면에 하나.",
     tokens: [
-      { name: "primary", hex: "#7c3aed", layer: "bg", use: "채움. 주 버튼, 켜진 스위치", pairs: [{ against: "on-primary", min: 4.5 }] },
+      { name: "primary", hex: "#7c3aed", layer: "bg", use: "채움. 주 버튼, 켜진 스위치. 선택 테두리는 primary-fg", pairs: [{ against: "on-primary", min: 4.5 }] },
       { name: "primary-hover", hex: "#6d28d9", layer: "bg", use: "채움 hover", pairs: [{ against: "on-primary", min: 4.5 }] },
       { name: "primary-pressed", hex: "#5b21b6", layer: "bg", use: "채움 눌림", pairs: [{ against: "on-primary", min: 4.5 }] },
       { name: "on-primary", hex: "#ffffff", layer: "fg", use: "보라 채움 위 글자·아이콘", pairs: [] },
-      { name: "primary-fg", hex: "#a78bfa", layer: "fg", use: "어두운 표면 위 보라 글자·아이콘·순위", pairs: onSurfaces(4.5) },
+      {
+        name: "primary-fg",
+        hex: "#a78bfa",
+        layer: "fg",
+        use: "어두운 표면 위 보라 글자·아이콘·순위. 선택 상태 테두리",
+        pairs: [...onSurfaces(4.5), { against: "primary-tint", min: 3 }],
+      },
       {
         name: "primary-tint",
         hex: "#221d47",
