@@ -7,6 +7,7 @@ const state = vi.hoisted(() => ({
   timeline: [] as string[],
   admin: null as unknown as ReturnType<typeof createFakeClient>,
   respond: null as unknown as (op: FakeOp) => FakeResult,
+  ownedBands: [] as unknown[],
   getCurrentUser: vi.fn(),
   getUserById: vi.fn(),
   deleteUser: vi.fn(),
@@ -23,7 +24,7 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 vi.mock("@/lib/auth", () => ({ getCurrentUser: state.getCurrentUser }));
 
-import { deleteAccount } from "../account";
+import { deleteAccount, previewAccountDeletion } from "../account";
 
 const ME = { id: "user-me", nickname: "보컬", avatarUrl: null };
 const KAKAO_ID = "4242424242";
@@ -33,8 +34,23 @@ const LEFT = "탈퇴한 멤버";
 
 const ok = (data: unknown = null): FakeResult => ({ data, error: null });
 const dbError: FakeResult = { data: null, error: { code: "XX000", message: "boom" } };
-const answer = (op: FakeOp): FakeResult =>
-  op.table === "playlists" && op.action === "select" ? ok(HOSTED) : ok();
+
+type MemberRow = { user_id: string; display_name: string; role: "owner" | "member"; joined_at: string };
+const OWNER_ME: MemberRow = { user_id: ME.id, display_name: "보컬", role: "owner", joined_at: "2026-10-01T00:00:00+00:00" };
+const GUITAR: MemberRow = { user_id: "user-guitar", display_name: "기타", role: "member", joined_at: "2026-10-02T00:00:00+00:00" };
+const DRUM: MemberRow = { user_id: "user-drum", display_name: "드럼", role: "member", joined_at: "2026-10-03T00:00:00+00:00" };
+const band = (team_id: string, name: string, members: MemberRow[]) => ({ team_id, teams: { name, team_members: members } });
+
+// Bands answer only the lookup for bands I own, so a query that also picks up bands where I am
+// a plain member hands over nothing.
+const answer = (op: FakeOp): FakeResult => {
+  if (op.table === "playlists" && op.action === "select") return ok(HOSTED);
+  if (op.table === "team_members" && op.action === "select") {
+    return ok(op.filters.user_id === ME.id && op.filters.role === "owner" ? state.ownedBands : []);
+  }
+  if (op.table === "team_members" && op.action === "update") return ok([{ user_id: op.filters.user_id }]);
+  return ok();
+};
 
 const kakaoUser = {
   id: ME.id,
@@ -52,6 +68,8 @@ const writes = () =>
     .filter((op) => op.action !== "select")
     .map(({ table, action, row, filters }) => ({ table, action, row, filters }));
 
+const handovers = () => writes().filter((op) => op.table === "team_members");
+
 const CLEANUP = [
   { table: "songs", action: "update", row: { added_by: LEFT }, filters: { added_by_user_id: ME.id } },
   { table: "song_versions", action: "update", row: { added_by_nickname: LEFT }, filters: { added_by_user_id: ME.id } },
@@ -63,6 +81,7 @@ const at = (step: string) => state.timeline.indexOf(step);
 
 beforeEach(() => {
   state.timeline = [];
+  state.ownedBands = [];
   state.respond = answer;
   state.admin = createFakeClient((op) => {
     state.timeline.push(`${op.table}:${op.action}`);
@@ -133,6 +152,7 @@ describe("deleteAccount", () => {
 
   it("changes nothing when Kakao refuses the unlink, and a retry finishes", async () => {
     state.fetch.mockImplementation(kakaoReply(401, { code: -401, msg: "invalid app key" }));
+    state.ownedBands = [band("band-1", "주말밴드", [OWNER_ME, GUITAR])];
 
     expect(await deleteAccount()).toEqual({ success: false, reason: "kakao_unlink_failed" });
     expect(writes()).toEqual([]);
@@ -169,6 +189,7 @@ describe("deleteAccount", () => {
 
   it("says deletion is unavailable, not a passing failure, while the Kakao admin key is missing", async () => {
     vi.stubEnv("KAKAO_ADMIN_KEY", "");
+    state.ownedBands = [band("band-1", "주말밴드", [OWNER_ME, GUITAR])];
 
     expect(await deleteAccount()).toEqual({ success: false, reason: "not_available" });
     expect(state.fetch).not.toHaveBeenCalled();
@@ -217,6 +238,79 @@ describe("deleteAccount", () => {
     expect(state.deleteUser).toHaveBeenCalledTimes(1);
   });
 
+  it("hands a band I own to its earliest-joined member before the account goes", async () => {
+    state.ownedBands = [band("band-1", "주말밴드", [OWNER_ME, DRUM, GUITAR])];
+
+    expect(await deleteAccount()).toEqual({ success: true });
+
+    expect(handovers()).toEqual([
+      {
+        table: "team_members",
+        action: "update",
+        row: { role: "owner" },
+        filters: { team_id: "band-1", user_id: GUITAR.user_id },
+      },
+    ]);
+    expect(at("team_members:update")).toBeGreaterThan(at("kakao:unlink"));
+    expect(at("team_members:update")).toBeLessThan(at("auth:deleteUser"));
+  });
+
+  it("hands over every band I own, and none where I am a plain member", async () => {
+    state.ownedBands = [
+      band("band-1", "주말밴드", [OWNER_ME, GUITAR]),
+      band("band-2", "평일밴드", [DRUM, OWNER_ME]),
+    ];
+
+    expect(await deleteAccount()).toEqual({ success: true });
+
+    expect(handovers().map((op) => op.filters)).toEqual(
+      expect.arrayContaining([
+        { team_id: "band-1", user_id: GUITAR.user_id },
+        { team_id: "band-2", user_id: DRUM.user_id },
+      ]),
+    );
+    expect(handovers()).toHaveLength(2);
+  });
+
+  it("leaves a band with no other members as it is", async () => {
+    state.ownedBands = [band("band-1", "혼자밴드", [OWNER_ME])];
+
+    expect(await deleteAccount()).toEqual({ success: true });
+    expect(handovers()).toEqual([]);
+    expect(state.deleteUser).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not hand a band over again when an earlier try already did", async () => {
+    state.ownedBands = [band("band-1", "주말밴드", [OWNER_ME, GUITAR, { ...DRUM, role: "owner" }])];
+
+    expect(await deleteAccount()).toEqual({ success: true });
+    expect(handovers()).toEqual([]);
+  });
+
+  it("keeps the account when the next owner left the band mid-way, and a retry hands it to the next member", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    state.ownedBands = [band("band-1", "주말밴드", [OWNER_ME, GUITAR, DRUM])];
+    state.respond = (op) => (op.table === "team_members" && op.action === "update" ? ok([]) : answer(op));
+
+    expect(await deleteAccount()).toEqual({ success: false, reason: "write_failed" });
+    expect(state.deleteUser).not.toHaveBeenCalled();
+
+    state.ownedBands = [band("band-1", "주말밴드", [OWNER_ME, DRUM])];
+    state.respond = answer;
+    state.admin.ops.length = 0;
+    expect(await deleteAccount()).toEqual({ success: true });
+    expect(handovers().map((op) => op.filters)).toEqual([{ team_id: "band-1", user_id: DRUM.user_id }]);
+    expect(state.deleteUser).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the account when the band lookup fails", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    state.respond = (op) => (op.table === "team_members" && op.action === "select" ? dbError : answer(op));
+
+    expect(await deleteAccount()).toEqual({ success: false, reason: "write_failed" });
+    expect(state.deleteUser).not.toHaveBeenCalled();
+  });
+
   it("treats an account that is already gone as deleted", async () => {
     state.deleteUser.mockResolvedValueOnce({
       data: { user: null },
@@ -225,5 +319,42 @@ describe("deleteAccount", () => {
 
     expect(await deleteAccount()).toEqual({ success: true });
     expect(state.signOut).toHaveBeenCalledWith({ scope: "local" });
+  });
+});
+
+describe("previewAccountDeletion", () => {
+  it("refuses a signed-out caller", async () => {
+    state.getCurrentUser.mockResolvedValue(null);
+
+    expect(await previewAccountDeletion()).toEqual({ success: false, reason: "not_logged_in" });
+    expect(state.admin.ops).toEqual([]);
+  });
+
+  it("names who takes over each band I own, skips bands no one else is in, and writes nothing", async () => {
+    state.ownedBands = [
+      band("band-1", "주말밴드", [OWNER_ME, DRUM, GUITAR]),
+      band("band-2", "혼자밴드", [OWNER_ME]),
+      band("band-3", "평일밴드", [OWNER_ME, { ...DRUM, role: "owner" }]),
+    ];
+
+    const result = await previewAccountDeletion();
+
+    expect(result).toEqual({
+      success: true,
+      handovers: [
+        { bandName: "주말밴드", ownerName: "기타" },
+        { bandName: "평일밴드", ownerName: "드럼" },
+      ],
+    });
+    expect(JSON.stringify(result)).not.toContain("user-");
+    expect(writes()).toEqual([]);
+    expect(state.fetch).not.toHaveBeenCalled();
+  });
+
+  it("reports a failed band lookup instead of an empty list", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    state.respond = (op) => (op.table === "team_members" ? dbError : answer(op));
+
+    expect(await previewAccountDeletion()).toEqual({ success: false, reason: "read_failed" });
   });
 });

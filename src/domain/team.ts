@@ -191,6 +191,26 @@ export function sortMembersForDisplay<T extends { role: TeamRole; joined_at: str
 }
 
 /**
+ * owner 가 탈퇴할 때 밴드를 누가 맡는지 (2026-10-31 운영자 결정: 가장 먼저 들어온 멤버).
+ * kept 는 앞선 탈퇴 시도가 이미 넘긴 경우라 다시 넘기지 않는다. empty 는 owner 없는 빈 밴드로 남는다.
+ */
+export type BandSuccession<T> = { kind: "promote"; owner: T } | { kind: "kept"; owner: T } | { kind: "empty" };
+
+export function bandOwnerAfterLeaving<T extends { user_id: string; role: TeamRole; joined_at: string }>(
+  members: T[],
+  leavingUserId: string,
+): BandSuccession<T> {
+  // A band promoted from a playlist inserts every member in one statement, so joined_at ties.
+  // user_id breaks the tie so the confirm dialog and the handover pick the same person.
+  const others = members
+    .filter((member) => member.user_id !== leavingUserId)
+    .sort((a, b) => a.joined_at.localeCompare(b.joined_at) || a.user_id.localeCompare(b.user_id));
+  const owner = others.find((member) => member.role === "owner");
+  if (owner) return { kind: "kept", owner };
+  return others[0] ? { kind: "promote", owner: others[0] } : { kind: "empty" };
+}
+
+/**
  * 초대 화면에 보여줄 앞 몇 명의 이름 (owner 먼저, 가입 순).
  * 초대받은 사람이 아는 사람인지 확인하는 근거라 그 이상은 보여주지 않는다.
  */

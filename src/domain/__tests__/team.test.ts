@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   aggregatePlayedSongs,
+  bandOwnerAfterLeaving,
   bandShareDescription,
   canPromote,
   formatShowDate,
@@ -152,6 +153,49 @@ describe("previewMemberNames", () => {
 
   it("returns fewer names when the band is small", () => {
     expect(previewMemberNames([{ display_name: "보컬", role: "owner", joined_at: null }])).toEqual(["보컬"]);
+  });
+});
+
+describe("bandOwnerAfterLeaving", () => {
+  const member = (user_id: string, role: "owner" | "member", joined_at: string) => ({
+    user_id,
+    display_name: `name-${user_id}`,
+    role,
+    joined_at,
+  });
+  const ME = member("u-me", "owner", "2026-10-01T00:00:00+00:00");
+
+  it.each([
+    ["no one else is in the band", [ME], { kind: "empty" }],
+    [
+      "the earliest-joined member takes over, whatever the row order",
+      [
+        member("u-late", "member", "2026-10-03T00:00:00+00:00"),
+        ME,
+        member("u-early", "member", "2026-10-02T00:00:00+00:00"),
+      ],
+      { kind: "promote", owner: member("u-early", "member", "2026-10-02T00:00:00+00:00") },
+    ],
+    [
+      "members who joined at the same moment (a promoted band) resolve by user id",
+      [
+        ME,
+        member("u-b", "member", "2026-10-02T00:00:00+00:00"),
+        member("u-a", "member", "2026-10-02T00:00:00+00:00"),
+      ],
+      { kind: "promote", owner: member("u-a", "member", "2026-10-02T00:00:00+00:00") },
+    ],
+    [
+      "an earlier try already handed the band over",
+      [
+        ME,
+        member("u-early", "member", "2026-10-02T00:00:00+00:00"),
+        member("u-handed", "owner", "2026-10-03T00:00:00+00:00"),
+      ],
+      { kind: "kept", owner: member("u-handed", "owner", "2026-10-03T00:00:00+00:00") },
+    ],
+  ])("%s", (_case, members, expected) => {
+    expect(bandOwnerAfterLeaving(members, ME.user_id)).toEqual(expected);
   });
 });
 
