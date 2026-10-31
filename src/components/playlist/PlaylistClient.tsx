@@ -12,6 +12,7 @@ import EmptyState from "../ui/EmptyState";
 import InlineNotice from "../ui/InlineNotice";
 import LoginButton from "../auth/LoginButton";
 import PlaylistHeader from "./PlaylistHeader";
+import PlaylistTitleBar from "./PlaylistTitleBar";
 import AddSongForm from "./AddSongForm";
 import SongCard from "./SongCard";
 import VoteButtons from "./VoteButtons";
@@ -140,6 +141,7 @@ export default function PlaylistClient({
 
   // Lazy load setlist items on first mode switch
   const handleModeChange = useCallback(async (mode: ViewMode) => {
+    window.scrollTo({ top: 0 });
     setNavMode(mode);
     track("playlist_tab_viewed", { tab: mode === "playlist" ? "candidates" : mode });
     if (mode === "setlist" && setlistItems === null && !loadingSetlist) {
@@ -343,6 +345,7 @@ export default function PlaylistClient({
 
   // Bottom padding: NavigationBar(52px) + MiniPlayer(~56px if active)
   const bottomPadding = playerState.currentSongId ? "pb-40" : "pb-20";
+  const memberBand = team?.isMember && team.id && team.name ? { id: team.id, name: team.name, nextShowAt: team.nextShowAt } : null;
 
   /*
     방 설정은 화면 설정이 아니라 방 설정이다. 투표 공개 범위도, 셋리스트 편집 권한도
@@ -376,63 +379,72 @@ export default function PlaylistClient({
     <>
       <div className="min-h-full bg-bg">
         <div className={`max-w-lg mx-auto px-4 py-6 ${bottomPadding}`}>
-          <PlaylistHeader
-            playlistId={playlist.id}
-            title={playlist.title}
-            inviteSongs={invite}
-            archived={isArchived}
-            shareCode={shareCode}
-            participantCount={participantCount}
-            announcement={playlist.announcement}
-            currentUserNickname={userNickname}
-            currentUserAvatarUrl={currentUserAvatarUrl}
-            band={team?.isMember && team.id && team.name ? { id: team.id, name: team.name, nextShowAt: team.nextShowAt } : null}
-            showDate={team?.nextShowAt ?? null}
-            coverThumbs={coverThumbs}
-            onPlayAll={navMode === "playlist" && songsWithVotes.length > 0 ? handlePlayAll : undefined}
-            playing={playerState.isPlaying}
-            onOpenSettings={canOpenSettings ? () => settingsRef.current?.open() : undefined}
-            viewToggle={
-              navMode === "playlist" && songsWithVotes.length > 0 ? (
-                <button
-                  type="button"
-                  onClick={() => setViewMode(viewMode === "compact" ? "card" : "compact")}
-                  aria-label={viewMode === "compact" ? "카드 보기" : "리스트 보기"}
-                  className="inline-flex h-12 w-12 items-center justify-center rounded-pill bg-surface-hover text-text transition-all hover:bg-surface-elevated active:scale-95"
-                >
-                  {viewMode === "compact" ? (
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                      <rect x="3.5" y="4.5" width="17" height="10" rx="2" />
-                      <path strokeLinecap="round" d="M3.5 19h17" />
-                    </svg>
-                  ) : (
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                    </svg>
+          {navMode !== "playlist" ? (
+            <PlaylistTitleBar
+              title={playlist.title}
+              band={memberBand}
+              currentUserNickname={userNickname}
+              currentUserAvatarUrl={currentUserAvatarUrl}
+            />
+          ) : (
+            <PlaylistHeader
+              playlistId={playlist.id}
+              title={playlist.title}
+              inviteSongs={invite}
+              archived={isArchived}
+              shareCode={shareCode}
+              participantCount={participantCount}
+              announcement={playlist.announcement}
+              currentUserNickname={userNickname}
+              currentUserAvatarUrl={currentUserAvatarUrl}
+              band={memberBand}
+              showDate={team?.nextShowAt ?? null}
+              coverThumbs={coverThumbs}
+              onPlayAll={songsWithVotes.length > 0 ? handlePlayAll : undefined}
+              playing={playerState.isPlaying}
+              onOpenSettings={canOpenSettings ? () => settingsRef.current?.open() : undefined}
+              viewToggle={
+                songsWithVotes.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setViewMode(viewMode === "compact" ? "card" : "compact")}
+                    aria-label={viewMode === "compact" ? "카드 보기" : "리스트 보기"}
+                    className="inline-flex h-12 w-12 items-center justify-center rounded-pill bg-surface-hover text-text transition-all hover:bg-surface-elevated active:scale-95"
+                  >
+                    {viewMode === "compact" ? (
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                        <rect x="3.5" y="4.5" width="17" height="10" rx="2" />
+                        <path strokeLinecap="round" d="M3.5 19h17" />
+                      </svg>
+                    ) : (
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                      </svg>
+                    )}
+                  </button>
+                ) : undefined
+              }
+              meta={
+                /*
+                  참여자 수·마감·내 닉네임·로그인이 세 덩어리로 흩어져 있었다.
+                  정렬축이 계속 바뀌어 위계가 읽히지 않았으므로 제목 아래 한 줄로 합친다.
+                */
+                <div className="flex flex-wrap items-center justify-center gap-x-2">
+                  <p className="min-w-0 text-caption leading-relaxed text-text-muted tabular-nums">
+                    {metaParts.map((part, i) => (
+                      <span key={part.key}>
+                        {i > 0 && <span className="mx-1.5 text-text-subtle" aria-hidden>·</span>}
+                        <span className={part.className}>{part.text}</span>
+                      </span>
+                    ))}
+                  </p>
+                  {loginGate && (
+                    <LoginButton variant="tonal" size="sm" label="로그인" className="shrink-0" />
                   )}
-                </button>
-              ) : undefined
-            }
-            meta={
-              /*
-                참여자 수·마감·내 닉네임·로그인이 세 덩어리로 흩어져 있었다.
-                정렬축이 계속 바뀌어 위계가 읽히지 않았으므로 제목 아래 한 줄로 합친다.
-              */
-              <div className="flex flex-wrap items-center justify-center gap-x-2">
-                <p className="min-w-0 text-caption leading-relaxed text-text-muted tabular-nums">
-                  {metaParts.map((part, i) => (
-                    <span key={part.key}>
-                      {i > 0 && <span className="mx-1.5 text-text-subtle" aria-hidden>·</span>}
-                      <span className={part.className}>{part.text}</span>
-                    </span>
-                  ))}
-                </p>
-                {loginGate && (
-                  <LoginButton variant="tonal" size="sm" label="로그인" className="shrink-0" />
-                )}
-              </div>
-            }
-          />
+                </div>
+              }
+            />
+          )}
 
           {isArchived && (
             <InlineNotice
