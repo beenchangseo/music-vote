@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import Card from "../ui/Card";
-import IconButton from "../ui/IconButton";
+import NoticeCard from "../ui/NoticeCard";
 
 /** 밴드 홈이 "밴드 나가기" 직후 밴드 이름을 담아 두는 자리. 홈이 한 번 읽고 지운다. */
 export const LEFT_BAND_STORAGE_KEY = "plypick:left-band";
@@ -44,13 +43,8 @@ export default function LeftBandNotice({ left }: { left: boolean }) {
   if (!open || !hydrated) return null;
 
   return (
-    <Card role="status" className="mb-6 flex items-center gap-3 animate-fade-in">
-      <p className="min-w-0 flex-1 text-sm text-text">{name ? `${name}에서 나왔어요` : "밴드에서 나왔어요"}</p>
-      <IconButton bare aria-label="닫기" onClick={() => setOpen(false)} className="-my-2 -mr-2">
-        <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </IconButton>
-    </Card>
+    <NoticeCard role="status" className="mb-6 animate-fade-in" onDismiss={() => setOpen(false)} dismissLabel="닫기">
+      {name ? `${name}에서 나왔어요` : "밴드에서 나왔어요"}
+    </NoticeCard>
   );
 }

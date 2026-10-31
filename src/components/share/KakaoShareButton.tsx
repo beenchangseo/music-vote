@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Button from "../ui/Button";
 import { track } from "@/lib/analytics";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
 import { bandShareDescription, roomSharePrefix, shareableShowDate } from "@/domain/team";
@@ -49,7 +50,6 @@ type KakaoShareButtonProps = ShareLink & {
   children?: React.ReactNode;
   className?: string;
   ariaLabel?: string;
-  visualStyle?: "primary" | "secondary" | "subtle";
   size?: "sm" | "md" | "lg";
 };
 
@@ -134,21 +134,6 @@ const buildOgUrl = (
   return `${origin}/api/og?${sp.toString()}`;
 };
 
-const styleMap: Record<NonNullable<KakaoShareButtonProps["visualStyle"]>, string> = {
-  primary:
-    "bg-kakao hover:bg-kakao-hover text-kakao-text font-semibold",
-  secondary:
-    "bg-surface-hover hover:bg-border-strong text-text font-semibold border border-border",
-  subtle:
-    "bg-transparent hover:bg-surface-hover text-text-muted hover:text-text font-medium",
-};
-
-const sizeMap: Record<NonNullable<KakaoShareButtonProps["size"]>, string> = {
-  sm: "h-9 px-3 text-sm rounded-lg",
-  md: "h-11 px-5 text-sm rounded-xl",
-  lg: "h-12 px-6 text-base rounded-xl",
-};
-
 export default function KakaoShareButton({
   shareCode,
   linkPath,
@@ -167,7 +152,6 @@ export default function KakaoShareButton({
   children,
   className = "",
   ariaLabel,
-  visualStyle = "primary",
   size = "md",
 }: KakaoShareButtonProps) {
   const [copied, setCopied] = useState(false);
@@ -234,28 +218,8 @@ export default function KakaoShareButton({
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      aria-label={ariaLabel || "카카오톡으로 공유"}
-      className={`inline-flex items-center justify-center gap-2 transition-all active:scale-[0.97] ${styleMap[visualStyle]} ${sizeMap[size]} ${className}`}
-    >
-      {visualStyle === "primary" && <KakaoIcon />}
+    <Button type="button" variant="kakao" size={size} onClick={handleClick} aria-label={ariaLabel || "카카오톡으로 공유"} className={className}>
       {copied ? "링크 복사됨!" : children || "카카오톡으로 공유"}
-    </button>
-  );
-}
-
-function KakaoIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden
-    >
-      <path d="M12 3C6.48 3 2 6.48 2 10.8c0 2.79 1.86 5.24 4.66 6.6l-1.18 4.32c-.1.36.31.64.61.43L11.2 19.4c.26.02.53.04.8.04 5.52 0 10-3.48 10-7.8S17.52 3 12 3z" />
-    </svg>
+    </Button>
   );
 }

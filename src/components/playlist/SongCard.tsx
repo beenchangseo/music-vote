@@ -5,7 +5,9 @@ import Image from "next/image";
 import VoteButtons from "./VoteButtons";
 import CommentModal from "./CommentModal";
 import SongVersionModal from "./SongVersionModal";
+import Badge from "../ui/Badge";
 import { useDialog } from "../ui/DialogProvider";
+import { SongRow } from "../ui/ListRow";
 import { removeSong } from "@/actions/song";
 import type { VoteDirection } from "@/domain/vote";
 import { displayArtist, displayTitle } from "@/domain/song-meta";
@@ -133,49 +135,46 @@ export default function SongCard({
           expanded ? "bg-surface" : "hover:bg-surface/60"
         } ${isHighlighted ? "ring-1 ring-inset ring-warning/40" : ""} ${isPending ? "opacity-50" : ""}`}
       >
-        <div className="flex min-h-[72px] items-center gap-2.5 max-[359px]:gap-2">
-          {rank != null && (
-            <span
-              className={`w-5 shrink-0 text-center text-sm font-extrabold tabular-nums ${topRank ? "text-primary-fg" : "text-text-subtle"}`}
+        <SongRow
+          rank={rank}
+          topRank={topRank}
+          trailing={voteButtons}
+          cover={
+            // Spotify: tap the art to play.
+            <button
+              onClick={onTogglePlay}
+              className="group absolute inset-0"
+              aria-label={`${title} ${isPlaying ? "일시정지" : "재생"}`}
             >
-              {rank}
-            </span>
-          )}
-
-          {/* Cover = play button (Spotify: tap the art to play). */}
-          <button
-            onClick={onTogglePlay}
-            className="group relative h-12 w-12 shrink-0 overflow-hidden rounded-control bg-surface-elevated max-[359px]:h-10 max-[359px]:w-10"
-            aria-label={`${title} ${isPlaying ? "일시정지" : "재생"}`}
-          >
-            {song.thumbnail_url && (
-              <Image src={song.thumbnail_url} alt="" fill sizes="48px" className="object-cover" />
-            )}
-            <span
-              className={`absolute inset-0 flex items-center justify-center transition-colors ${
-                isCurrent ? "bg-black/45" : "bg-black/0 group-hover:bg-black/45"
-              }`}
-            >
-              {isPlaying ? (
-                <span className="flex items-end gap-0.5" aria-hidden>
-                  <span className="h-2.5 w-0.5 animate-bounce rounded-full bg-accent-play" style={{ animationDelay: "0ms" }} />
-                  <span className="h-4 w-0.5 animate-bounce rounded-full bg-accent-play" style={{ animationDelay: "150ms" }} />
-                  <span className="h-3 w-0.5 animate-bounce rounded-full bg-accent-play" style={{ animationDelay: "300ms" }} />
-                </span>
-              ) : (
-                <svg
-                  className={`ml-0.5 h-5 w-5 text-white ${isCurrent ? "" : "opacity-0 transition-opacity group-hover:opacity-100"}`}
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden
-                >
-                  <path d="M8 5v14l11-7z" />
-                </svg>
+              {song.thumbnail_url && (
+                <Image src={song.thumbnail_url} alt="" fill sizes="48px" className="object-cover" />
               )}
-            </span>
-          </button>
-
-          <div className={`min-w-0 flex-1 ${expanded ? "py-2" : ""}`}>
+              <span
+                className={`absolute inset-0 flex items-center justify-center transition-colors ${
+                  isCurrent ? "bg-black/45" : "bg-black/0 group-hover:bg-black/45"
+                }`}
+              >
+                {isPlaying ? (
+                  <span className="flex items-end gap-0.5" aria-hidden>
+                    <span className="h-2.5 w-0.5 animate-bounce rounded-full bg-accent-play" style={{ animationDelay: "0ms" }} />
+                    <span className="h-4 w-0.5 animate-bounce rounded-full bg-accent-play" style={{ animationDelay: "150ms" }} />
+                    <span className="h-3 w-0.5 animate-bounce rounded-full bg-accent-play" style={{ animationDelay: "300ms" }} />
+                  </span>
+                ) : (
+                  <svg
+                    className={`ml-0.5 h-5 w-5 text-white ${isCurrent ? "" : "opacity-0 transition-opacity group-hover:opacity-100"}`}
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden
+                  >
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                )}
+              </span>
+            </button>
+          }
+        >
+          <div className={expanded ? "py-2" : ""}>
             <button
               type="button"
               onClick={onToggleExpand}
@@ -224,9 +223,7 @@ export default function SongCard({
             )}
             {expanded && <VoterStrip votes={song.votes} hide={votesAnonymous} />}
           </div>
-
-          <div className="shrink-0">{voteButtons}</div>
-        </div>
+        </SongRow>
 
         {expanded && (
           // 디자인 E1 (LinkedIn · Grab): no pill backgrounds, one hairline, tabs share the width. Each tab keeps
@@ -339,22 +336,22 @@ export default function SongCard({
           />
         )}
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
-          <div className={`w-14 h-14 flex items-center justify-center rounded-full shadow-lg transition-colors ${isCurrent ? "bg-primary group-hover:bg-primary-hover" : "bg-red-600 group-hover:bg-red-500"}`}>
+          <div className={`w-14 h-14 flex items-center justify-center rounded-full shadow-lg transition-colors ${isCurrent ? "bg-primary text-on-primary group-hover:bg-primary-hover" : "bg-danger text-on-danger group-hover:bg-danger-hover"}`}>
             {isPlaying ? (
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
               </svg>
             ) : (
-              <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
             )}
           </div>
         </div>
         {isCurrent && (
-          <span className="absolute left-2 top-2 rounded-md bg-primary/90 px-2 py-0.5 text-caption font-semibold text-white">
+          <Badge tone="primary" className="absolute left-2 top-2">
             재생 중
-          </span>
+          </Badge>
         )}
       </button>
 
@@ -382,15 +379,11 @@ export default function SongCard({
               <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
             </svg>
             댓글
-            {song.commentCount > 0 && (
-              <span className="ml-0.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-primary/20 text-[10px] font-bold tabular-nums">
-                {song.commentCount}
-              </span>
-            )}
+            {song.commentCount > 0 && <Badge tone="primary">{song.commentCount}</Badge>}
           </button>
           <button onClick={() => setShowVersions(true)} className={`flex min-h-11 items-center gap-1 text-caption transition-colors ${versionCount > 0 ? "font-semibold text-warning" : "text-text-subtle hover:text-warning"}`}>
             <VersionIcon /> 다른 버전
-            {versionCount > 0 && <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warning-soft px-1 text-[10px] font-bold">{versionCount}</span>}
+            {versionCount > 0 && <Badge tone="warning">{versionCount}</Badge>}
           </button>
           {onAddToSetlist && (
             <button

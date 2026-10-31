@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { avatarInitial } from "@/lib/band-art";
 
 /**
  * 밴드 홈 히어로 뒤 그림 (Spotify Blend 의 겹친 원). 모든 밴드가 같은 기존 토큰 색
@@ -76,31 +75,12 @@ export function RoomCover({
   );
 }
 
-/** 곡 한 줄 앞의 정사각 썸네일. */
-export function SongThumb({ src, className = "" }: { src: string | null; className?: string }) {
+/** SongRow 커버 칸을 채우는 썸네일. 틀(크기·모서리·바탕)은 SongRow 가 그린다. 없으면 음표. */
+export function SongThumb({ src }: { src: string | null }) {
+  if (src) return <Image src={src} alt="" fill sizes="48px" className="object-cover" />;
   return (
-    <div aria-hidden className={`relative shrink-0 overflow-hidden rounded-control bg-surface-elevated ${className}`}>
-      {src ? (
-        <Image src={src} alt="" fill sizes="48px" className="object-cover" />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center text-text-subtle">
-          <NoteIcon className="h-1/2 w-1/2" />
-        </div>
-      )}
+    <div aria-hidden className="flex size-full items-center justify-center text-text-subtle">
+      <NoteIcon className="h-1/2 w-1/2" />
     </div>
-  );
-}
-
-/** 이름 첫 글자 원형 아바타. 계정 메뉴(AuthMenu)의 사진 없는 아바타와 같은 색이다. */
-export function MemberAvatar({ name, className = "h-8 w-8 text-sm" }: { name: string; className?: string }) {
-  return (
-    // The tint sits on an opaque bg layer so stacked avatars do not show through each other.
-    <span
-      aria-hidden
-      className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-pill bg-bg font-semibold text-primary-fg ${className}`}
-    >
-      <span className="absolute inset-0 bg-primary/20" />
-      <span className="relative">{avatarInitial(name)}</span>
-    </span>
   );
 }

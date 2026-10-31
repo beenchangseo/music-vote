@@ -6,6 +6,10 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useDialog } from "../ui/DialogProvider";
+import Badge from "../ui/Badge";
+import Card from "../ui/Card";
+import EmptyState from "../ui/EmptyState";
+import InlineNotice from "../ui/InlineNotice";
 import LoginButton from "../auth/LoginButton";
 import PlaylistHeader from "./PlaylistHeader";
 import AddSongForm from "./AddSongForm";
@@ -23,7 +27,6 @@ import { getSetlistItems, confirmSetlist, addSongToSetlist, removeSetlistItem } 
 import { getComments } from "@/actions/comment";
 import { track } from "@/lib/analytics";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
-import { DEFAULT_FILTER, songMatchesFilter, type FilterState } from "./FilterBar";
 import KakaoShareButton from "../share/KakaoShareButton";
 import RoomSettingsButton, { type RoomSettingsHandle } from "./RoomSettingsButton";
 import BandPromptCard, { BandCreatedCard } from "../band/BandPromptCard";
@@ -82,7 +85,6 @@ export default function PlaylistClient({
   const [viewMode, setViewMode] = useState<"card" | "compact">("compact");
   const [navMode, setNavMode] = useState<ViewMode>("playlist");
   const [adminToken, setAdminToken] = useState<string | null>(null);
-  const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
   const [allowance, setAllowance] = useState<VoteAllowance | null>(null);
   // Band made from the prompt card (R6). Lives here, not in the card: the action's revalidatePath
   // re-renders the room with a band, the prompt condition turns false and the card unmounts.
@@ -190,10 +192,6 @@ export default function PlaylistClient({
     onSaved: notifyChange,
   });
 
-  const filteredSongs = useMemo(
-    () => songsWithVotes.filter((s) => songMatchesFilter(s, filter)),
-    [songsWithVotes, filter],
-  );
 
 
   // Setlist highlight: top N songs after deadline
@@ -241,7 +239,7 @@ export default function PlaylistClient({
       handleTogglePlay(playerState.currentSongId);
       return;
     }
-    const first = filteredSongs[0] ?? songsWithVotes[0];
+    const first = songsWithVotes[0];
     if (!first) return;
     playerActions.playSong(first.id, "candidates");
     try {
@@ -249,9 +247,9 @@ export default function PlaylistClient({
     } catch {
       // Analytics never blocks playback.
     }
-  }, [playerState.currentSongId, handleTogglePlay, filteredSongs, songsWithVotes, playerActions]);
+  }, [playerState.currentSongId, handleTogglePlay, songsWithVotes, playerActions]);
 
-  // Score rank for every row (디자인 C9). It comes from the whole list, so a filter never turns 4th into 1st.
+  // Score rank for every row (디자인 C9).
   // Ties share a number (5,5,4 → 1,1,3): with a number on every row, 1,2,3 for equal scores would read as a ranking.
   const rankById = useMemo(() => {
     const ranks = assignRanks(songsWithVotes.map((song) => song.score));
@@ -426,29 +424,25 @@ export default function PlaylistClient({
                   ))}
                 </p>
                 {loginGate && (
-                  <LoginButton
-                    size="sm"
-                    label="로그인"
-                    className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-pill border border-border px-4 text-caption font-semibold text-text transition-colors hover:border-border-strong hover:bg-surface-hover"
-                  />
+                  <LoginButton variant="tonal" size="sm" label="로그인" className="shrink-0" />
                 )}
               </div>
             }
           />
 
           {isArchived && (
-            <div className="mt-3 rounded-lg border border-border bg-surface/60 px-3 py-2 animate-fade-in" role="status">
-              <p className="text-caption leading-relaxed text-text-muted">
-                <span className="font-semibold text-text">보관된 플레이리스트예요.</span>{" "}
-                지난 투표 결과와 셋리스트는 그대로 볼 수 있지만, 새로 투표하거나 곡을 추가할 수는 없어요.
-              </p>
-              <Link
-                href="/"
-                className="mt-1.5 inline-flex min-h-11 items-center text-caption font-semibold text-primary-fg hover:underline underline-offset-2"
-              >
-                새 플레이리스트 만들기 →
-              </Link>
-            </div>
+            <InlineNotice
+              role="status"
+              className="mt-3 animate-fade-in"
+              action={
+                <Link href="/" className="font-semibold text-primary-fg underline-offset-2 hover:underline">
+                  새 플레이리스트 만들기 →
+                </Link>
+              }
+            >
+              <span className="font-semibold text-text">보관된 플레이리스트예요.</span>{" "}
+              지난 투표 결과와 셋리스트는 그대로 볼 수 있지만, 새로 투표하거나 곡을 추가할 수는 없어요.
+            </InlineNotice>
           )}
 
 
@@ -518,7 +512,6 @@ export default function PlaylistClient({
                     topSong={songsWithVotes[0].title}
                     topArtist={songsWithVotes[0].artist || undefined}
                     topScore={Math.max(0, songsWithVotes[0].score)}
-                    visualStyle="primary"
                     size="md"
                   >
                     카톡 단톡방에 결과 공유
@@ -562,11 +555,9 @@ export default function PlaylistClient({
 
               {/* Setlist share banner — confirmed setlist */}
               {playlist.setlist_confirmed && (
-                <div className="mt-5 p-5 rounded-2xl bg-primary/10 border border-primary/30 text-center animate-fade-in">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/20 text-primary-fg text-caption font-bold mb-3">
-                    🎵 셋리스트 확정
-                  </div>
-                  <p className="text-sm text-text mb-4">
+                <Card className="mt-5 text-center animate-fade-in">
+                  <Badge tone="primary">🎵 셋리스트 확정</Badge>
+                  <p className="mt-3 mb-4 text-sm text-text">
                     총 {setlistCount || songsWithVotes.length}곡 · 다음 공연 준비 완료
                   </p>
                   <KakaoShareButton
@@ -576,12 +567,11 @@ export default function PlaylistClient({
                     songs={songs.length}
                     participants={participantCount}
                     setlistCount={setlistCount || songsWithVotes.length}
-                    visualStyle="primary"
                     size="md"
                   >
                     셋리스트 카톡 공유
                   </KakaoShareButton>
-                </div>
+                </Card>
               )}
 
               {/* Song list */}
@@ -590,54 +580,31 @@ export default function PlaylistClient({
                 className={`mt-3 ${viewMode === "compact" ? "space-y-1" : "space-y-4"}`}
               >
                 {songsWithVotes.length === 0 ? (
-                  <div className="mt-2 rounded-2xl border-2 border-dashed border-border bg-surface/40 px-6 py-10 text-center">
-                    {/* 위 입력창을 가리키는 화살표 + 음표 */}
-                    <div className="flex items-center justify-center gap-2 mb-5 text-primary-fg animate-bounce-slow">
-                      <svg
-                        className="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2.5}
-                        viewBox="0 0 24 24"
-                        aria-hidden
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M5 11l7-7 7 7M5 19l7-7 7 7"
-                        />
+                  <div className="mt-2">
+                    <p className="mb-3 flex items-center justify-center gap-2 text-sm font-semibold text-primary-fg animate-bounce-slow">
+                      <svg className="size-6" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7" />
                       </svg>
-                      <span className="text-sm font-semibold">위 입력창부터</span>
-                    </div>
-
-                    <p className="text-h3 font-bold text-text mb-2">
-                      첫 곡을 추가해보세요
+                      위 입력창부터
                     </p>
-                    <p className="text-sm text-text-muted leading-relaxed max-w-xs mx-auto">
-                      YouTube 링크를 붙여넣으면<br />
-                      제목·썸네일이 자동으로 들어가요.
-                    </p>
-
-                    <div className="mt-6 flex flex-col gap-1.5 text-caption text-text-subtle">
-                      <p>곡 3개 이상 → 멤버에게 카톡으로 공유</p>
-                      <p>5분 안에 다음 합주곡 결정 끝.</p>
-                    </div>
-                  </div>
-                ) : filteredSongs.length === 0 ? (
-                  <div className="mt-2 rounded-2xl border border-dashed border-border bg-surface/30 px-6 py-8 text-center">
-                    <p className="text-sm text-text-muted">
-                      필터에 맞는 곡이 없어요.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setFilter(DEFAULT_FILTER)}
-                      className="mt-2 text-caption text-primary-fg hover:underline underline-offset-2"
-                    >
-                      필터 초기화
-                    </button>
+                    <EmptyState
+                      title="첫 곡을 추가해보세요"
+                      description={
+                        <>
+                          <p className="leading-relaxed">
+                            YouTube 링크를 붙여넣으면<br />
+                            제목·썸네일이 자동으로 들어가요.
+                          </p>
+                          <div className="mt-6 flex flex-col gap-1.5 text-caption text-text-subtle">
+                            <p>곡 3개 이상 → 멤버에게 카톡으로 공유</p>
+                            <p>5분 안에 다음 합주곡 결정 끝.</p>
+                          </div>
+                        </>
+                      }
+                    />
                   </div>
                 ) : (
-                  filteredSongs.map((song) => (
+                  songsWithVotes.map((song) => (
                     <SongCard
                       key={song.id}
                       song={song}

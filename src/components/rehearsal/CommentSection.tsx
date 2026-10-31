@@ -108,7 +108,7 @@ export default function CommentSection({ songId, comments, nickname, shareCode, 
                   <button
                     onClick={handleSubmit}
                     disabled={!content.trim() || isPending}
-                    className="inline-flex min-h-11 items-center px-3 rounded-control bg-primary hover:bg-primary-hover text-white text-caption font-medium disabled:opacity-50 transition-colors"
+                    className="inline-flex min-h-11 items-center px-3 rounded-control bg-primary hover:bg-primary-hover text-on-primary text-caption font-medium disabled:opacity-50 transition-colors"
                   >
                     {isPending ? "저장 중..." : myComment ? "수정" : "작성"}
                   </button>

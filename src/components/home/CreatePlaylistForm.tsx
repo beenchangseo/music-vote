@@ -11,7 +11,17 @@ import { teamMessage } from "@/lib/team-messages";
 import KakaoShareButton from "../share/KakaoShareButton";
 import GuitarIcon from "../ui/GuitarIcon";
 import Button from "../ui/Button";
+import Card from "../ui/Card";
+import IconButton from "../ui/IconButton";
+import Input from "../ui/Input";
+import SegmentedControl, { type SegmentOption } from "../ui/SegmentedControl";
+import Switch from "../ui/Switch";
 import type { VotingMode } from "@/domain/types";
+
+const VOTING_MODE_OPTIONS: readonly SegmentOption<VotingMode>[] = [
+  { value: "free", label: "자유 투표" },
+  { value: "allocated", label: "투표권 할당" },
+];
 
 interface CreatedPlaylist {
   id: string;
@@ -179,7 +189,9 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
 
     return (
       <div className="w-full max-w-md mx-auto animate-fade-in">
-        <div className="bg-surface border border-border rounded-2xl p-6 text-center">
+        {/* Outline, not filled: the form sits on a surface sheet at home and on bg at /new, and the tonal and
+            QR fills inside have to stay one step above either. */}
+        <Card variant="outline" padding="lg" className="text-center">
           <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-upvote/20 flex items-center justify-center">
             <svg className="w-6 h-6 text-upvote" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -198,45 +210,31 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
             title={created.title}
             showDate={created.band?.nextShowAt ?? null}
             size="lg"
-            visualStyle="primary"
             className="w-full mb-2"
           >
             카카오톡으로 공유
           </KakaoShareButton>
 
           {/* Secondary CTA — go add songs */}
-          <button
-            type="button"
-            onClick={handleGoToPlaylist}
-            className="w-full h-11 rounded-xl bg-surface-hover hover:bg-border-strong text-text font-semibold transition-all active:scale-95"
-          >
+          <Button variant="tonal" fullWidth onClick={handleGoToPlaylist}>
             곡 추가하러 가기 →
-          </button>
+          </Button>
 
           {/* Tertiary — small ghost buttons */}
-          <div className="flex items-center justify-center gap-1 mt-3 text-text-muted">
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm hover:text-text hover:bg-surface-hover transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <div className="flex items-center justify-center gap-1 mt-3">
+            <Button variant="ghost" size="sm" onClick={handleCopy}>
+              <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h6a2 2 0 002-2M8 5a2 2 0 012-2h4a2 2 0 012 2m0 0h2a2 2 0 012 2v3" />
               </svg>
               {copied ? "복사됨" : "링크 복사"}
-            </button>
+            </Button>
             <span className="text-text-subtle" aria-hidden>·</span>
-            <button
-              type="button"
-              onClick={() => setShowQR((v) => !v)}
-              aria-expanded={showQR}
-              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm hover:text-text hover:bg-surface-hover transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <Button variant="ghost" size="sm" onClick={() => setShowQR((v) => !v)} aria-expanded={showQR}>
+              <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.5h4.5v4.5h-4.5zM15.75 4.5h4.5v4.5h-4.5zM3.75 15h4.5v4.5h-4.5zM15.75 15v4.5M19.5 19.5h.75M15.75 12h4.5M12 3.75v4.5m0 3v4.5m0 3V21" />
               </svg>
               QR 코드 {showQR ? "숨기기" : "보기"}
-            </button>
+            </Button>
           </div>
 
           {showQR && (
@@ -290,7 +288,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
               )}
             </div>
           )}
-        </div>
+        </Card>
       </div>
     );
   }
@@ -298,50 +296,28 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
   // Creation form
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto">
-      {/* Title input — full width */}
-      <input
+      <Input
         type="text"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="어떤 합주예요? (예: 4월 정기 합주)"
         maxLength={100}
-        className="w-full px-4 py-3 rounded-xl bg-surface border border-border text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all"
       />
 
       {/* DR12: the whole 44px row toggles. */}
       {soleTeam && (
-        <button
-          type="button"
-          role="switch"
-          aria-checked={inSoleTeam}
-          onClick={() => setInSoleTeam((on) => !on)}
-          className="mt-2 flex min-h-11 w-full items-center gap-2.5 rounded-xl px-1 text-left text-sm text-text transition-colors hover:bg-surface"
-        >
-          <GuitarIcon className="h-4 w-4 shrink-0 text-text-muted" />
-          <span className="min-w-0 flex-1 truncate">{soleTeam.name}에 만들기</span>
-          <span
-            aria-hidden
-            className={`relative h-6 w-10 shrink-0 rounded-pill transition-colors ${inSoleTeam ? "bg-primary" : "bg-border-strong"}`}
-          >
-            <span
-              className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-pill bg-white transition-transform ${inSoleTeam ? "translate-x-4" : "translate-x-0"}`}
-            />
-          </span>
-        </button>
+        <Switch
+          className="mt-2"
+          icon={<GuitarIcon className="size-4" />}
+          label={<span className="block truncate">{soleTeam.name}에 만들기</span>}
+          checked={inSoleTeam}
+          onCheckedChange={setInSoleTeam}
+        />
       )}
 
-      {/* Primary CTA — full-width below input */}
-      <button
-        type="submit"
-        disabled={!title.trim() || loading}
-        className="w-full mt-3 h-12 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98] flex items-center justify-center"
-      >
-        {loading ? (
-          <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-        ) : (
-          "플레이리스트 만들기"
-        )}
-      </button>
+      <Button type="submit" size="lg" fullWidth className="mt-3" disabled={!title.trim()} loading={loading}>
+        플레이리스트 만들기
+      </Button>
       {formError && (
         <p role="alert" className="mt-2 text-sm text-danger-fg">
           {formError}
@@ -350,59 +326,39 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
 
       {/* Options toggle — collapsed by default */}
       {!showOptions ? (
-        <button
-          type="button"
-          onClick={() => setShowOptions(true)}
-          className="w-full mt-3 h-10 rounded-xl text-sm text-text-muted hover:text-text hover:bg-surface transition-colors inline-flex items-center justify-center gap-1.5"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+        <Button type="button" variant="ghost" fullWidth className="mt-3" onClick={() => setShowOptions(true)}>
+          <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
           옵션 추가 (투표 방식 · 마감일 · 셋리스트 곡 수)
-        </button>
+        </Button>
       ) : (
-      /* Options card */
-      <div className="mt-4 bg-surface border border-border rounded-2xl overflow-hidden animate-fade-in">
-        <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+      /* Options card. Outline for the same reason as the success card. */
+      <Card variant="outline" padding="none" className="mt-4 overflow-hidden animate-fade-in">
+        <div className="pl-4 pr-1 pt-2 pb-1 flex items-center justify-between">
           <p className="text-caption text-text-subtle uppercase tracking-wider font-semibold">옵션</p>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => { setShowOptions(false); setDeadlineDate(""); setDeadlineTime("23:59"); setSetlistCount(0); }}
-            className="text-caption text-text-subtle hover:text-text transition-colors"
           >
             닫기
-          </button>
+          </Button>
         </div>
 
         <div className="border-t border-border px-4 py-3">
-        <p className="text-sm font-semibold text-text">투표 방식</p>
+        <p id="voting-mode-label" className="text-sm font-semibold text-text">투표 방식</p>
         <p className="mt-1 text-caption text-text-muted">
           플레이리스트를 만든 뒤에도 투표가 시작되기 전에는 바꿀 수 있어요.
         </p>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => setVotingMode("free")}
-            className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors ${
-              votingMode === "free"
-                ? "border-primary-fg bg-primary/15 text-primary-fg"
-                : "border-border bg-surface-hover text-text-muted"
-            }`}
-          >
-            자유 투표
-          </button>
-          <button
-            type="button"
-            onClick={() => setVotingMode("allocated")}
-            className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors ${
-              votingMode === "allocated"
-                ? "border-primary-fg bg-primary/15 text-primary-fg"
-                : "border-border bg-surface-hover text-text-muted"
-            }`}
-          >
-            투표권 할당
-          </button>
-        </div>
+        <SegmentedControl
+          aria-labelledby="voting-mode-label"
+          className="mt-3"
+          options={VOTING_MODE_OPTIONS}
+          value={votingMode}
+          onChange={setVotingMode}
+        />
         {votingMode === "allocated" && (
           <div className="mt-3 flex items-center justify-between gap-3 animate-fade-in">
             <div>
@@ -411,20 +367,22 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
               </label>
               <p className="text-caption text-text-muted">새 참여자가 받는 표 수예요.</p>
             </div>
-            <input
-              id="default-vote-limit"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={99}
-              step={1}
-              value={defaultVoteLimit}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-                if (Number.isInteger(value)) setDefaultVoteLimit(Math.min(99, Math.max(1, value)));
-              }}
-              className="h-11 w-20 rounded-control border border-border bg-surface-hover px-3 text-center text-text focus:outline-none focus:ring-2 focus:ring-focus-ring"
-            />
+            <div className="w-20 shrink-0">
+              <Input
+                id="default-vote-limit"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={99}
+                step={1}
+                value={defaultVoteLimit}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  if (Number.isInteger(value)) setDefaultVoteLimit(Math.min(99, Math.max(1, value)));
+                }}
+                className="text-center"
+              />
+            </div>
           </div>
         )}
         </div>
@@ -441,14 +399,16 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
               <label className="block text-sm text-text font-medium text-left">투표 마감일</label>
               <p className="text-caption text-text-muted mt-0.5 mb-2 text-left">마감일이 지나면 투표가 종료됩니다</p>
               <div className="flex gap-2">
-                <input type="date" value={deadlineDate} onChange={(e) => setDeadlineDate(e.target.value)} min={todayStr} className="flex-1 px-3 py-2.5 rounded-xl bg-surface-hover border border-border text-text text-sm focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-focus-ring transition-all" style={{ colorScheme: "dark" }} />
+                <Input type="date" value={deadlineDate} onChange={(e) => setDeadlineDate(e.target.value)} min={todayStr} className="flex-1" style={{ colorScheme: "dark" }} />
                 {deadlineDate && (
-                  <input type="time" value={deadlineTime} onChange={(e) => setDeadlineTime(e.target.value)} className="w-28 px-3 py-2.5 rounded-xl bg-surface-hover border border-border text-text text-sm focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-focus-ring transition-all" style={{ colorScheme: "dark" }} />
+                  <div className="w-32">
+                    <Input type="time" value={deadlineTime} onChange={(e) => setDeadlineTime(e.target.value)} style={{ colorScheme: "dark" }} />
+                  </div>
                 )}
                 {deadlineDate && (
-                  <button type="button" onClick={() => { setDeadlineDate(""); setDeadlineTime("23:59"); }} className="p-2.5 rounded-xl text-text-subtle hover:text-danger-fg hover:bg-surface-hover transition-all shrink-0" aria-label="마감일 삭제">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                  </button>
+                  <IconButton bare onClick={() => { setDeadlineDate(""); setDeadlineTime("23:59"); }} aria-label="마감일 삭제">
+                    <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                  </IconButton>
                 )}
               </div>
             </div>
@@ -470,17 +430,17 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
               <p className="text-caption text-text-muted mt-0.5 text-left">투표 종료 후 상위 N곡이 셋리스트로 선정됩니다</p>
             </div>
             <div className="flex items-center gap-1 shrink-0">
-              <button type="button" onClick={() => setSetlistCount((c) => Math.max(0, c - 1))} disabled={setlistCount <= 0} className="w-11 h-11 flex items-center justify-center rounded-xl bg-surface-hover border border-border text-text-muted hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-focus-ring disabled:opacity-30 transition-all active:scale-95" aria-label="곡 수 줄이기">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" d="M5 12h14" /></svg>
-              </button>
+              <IconButton onClick={() => setSetlistCount((c) => Math.max(0, c - 1))} disabled={setlistCount <= 0} aria-label="곡 수 줄이기">
+                <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" d="M5 12h14" /></svg>
+              </IconButton>
               <span className={`min-w-[5rem] text-center text-sm tabular-nums ${setlistCount > 0 ? "font-semibold text-text" : "text-text-subtle"}`}>{setlistCount > 0 ? `${setlistCount}곡` : "정하지 않음"}</span>
-              <button type="button" onClick={() => setSetlistCount((c) => Math.min(30, c + 1))} disabled={setlistCount >= 30} className="w-11 h-11 flex items-center justify-center rounded-xl bg-surface-hover border border-border text-text-muted hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-focus-ring disabled:opacity-30 transition-all active:scale-95" aria-label="곡 수 늘리기">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" d="M12 5v14M5 12h14" /></svg>
-              </button>
+              <IconButton onClick={() => setSetlistCount((c) => Math.min(30, c + 1))} disabled={setlistCount >= 30} aria-label="곡 수 늘리기">
+                <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" d="M12 5v14M5 12h14" /></svg>
+              </IconButton>
             </div>
           </div>
         </div>
-      </div>
+      </Card>
       )}
     </form>
   );

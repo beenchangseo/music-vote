@@ -95,7 +95,7 @@ export default function AddOriginalForm({ playlistId, shareCode, nextPosition, a
         <button
           type="submit"
           disabled={!label.trim() || isPending}
-          className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-hover text-white text-sm font-medium disabled:opacity-50 transition-colors"
+          className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-hover text-on-primary text-sm font-medium disabled:opacity-50 transition-colors"
         >
           {isPending ? "추가 중..." : "추가"}
         </button>

@@ -209,7 +209,7 @@ describe("the host saving the setlist permission", () => {
   it("tells the other open screens to refetch once the save lands", async () => {
     render(ui({ currentUserId: OWNER, userNickname: "보컬", playlist: { ...playlist, setlist_edit_mode: "everyone" } }));
     fireEvent.click(screen.getByRole("button", { name: "플레이리스트 설정" }));
-    fireEvent.click(await screen.findByRole("button", { name: "방장만 편집" }));
+    fireEvent.click(await screen.findByRole("radio", { name: "방장만 편집" }));
 
     await waitFor(() =>
       expect(updateSetlistEditMode).toHaveBeenCalledWith(playlist.id, null, "host_only", "abc123"),
@@ -223,10 +223,10 @@ describe("the host saving the setlist permission", () => {
     updateSetlistEditMode.mockRejectedValue(new Error("권한 없음"));
     render(ui({ currentUserId: OWNER, userNickname: "보컬", playlist: { ...playlist, setlist_edit_mode: "everyone" } }));
     fireEvent.click(screen.getByRole("button", { name: "플레이리스트 설정" }));
-    fireEvent.click(await screen.findByRole("button", { name: "방장만 편집" }));
+    fireEvent.click(await screen.findByRole("radio", { name: "방장만 편집" }));
 
     await waitFor(() => expect(showAlert).toHaveBeenCalledWith("권한 없음"));
-    expect(screen.getByRole("button", { name: "모두 편집" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("radio", { name: "모두 편집" })).toHaveAttribute("aria-checked", "true");
     expect(broadcast).not.toHaveBeenCalled();
   });
 });

@@ -39,6 +39,19 @@ describe("Button", () => {
     fireEvent.click(screen.getByRole("button", { name: "삭제" }));
     expect(onClick).not.toHaveBeenCalled();
   });
+
+  it("marks a Kakao action with the speech bubble whether it is yellow or tonal", () => {
+    render(
+      <>
+        <Button variant="kakao">카톡 공유</Button>
+        <Button variant="tonal" kakaoMark>로그인</Button>
+        <Button variant="tonal">취소</Button>
+      </>,
+    );
+    expect(screen.getByRole("button", { name: "카톡 공유" }).querySelector("svg")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "로그인" }).querySelector("svg")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "취소" }).querySelector("svg")).toBeNull();
+  });
 });
 
 describe("Chip", () => {

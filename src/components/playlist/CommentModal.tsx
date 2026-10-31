@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useDialog } from "../ui/DialogProvider";
+import Textarea from "../ui/Textarea";
 import { addOrUpdateComment, deleteComment, getCommentsBySong } from "@/actions/comment";
 import type { Comment } from "@/domain/types";
 import LoginButton from "../auth/LoginButton";
@@ -132,13 +133,11 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
         {/* Write/Edit form */}
         {nickname && (!myComment || isEditing) && (
           <div className="px-4 py-3 border-t border-border shrink-0">
-            <textarea
+            <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={`${nickname}의 메모를 남겨보세요`}
               maxLength={1000}
-              rows={3}
-              className="w-full px-3 py-2 rounded-xl bg-surface-hover border border-border text-sm text-text placeholder-text-subtle resize-none focus:outline-none focus:ring-2 focus:ring-focus-ring transition-all"
             />
             <div className="flex items-center justify-between mt-2">
               <span className="text-[10px] text-text-subtle">{content.length}/1000</span>

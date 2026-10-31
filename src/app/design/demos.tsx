@@ -4,6 +4,13 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import Button from "@/components/ui/Button";
 import Chip from "@/components/ui/Chip";
 import Modal from "@/components/ui/Modal";
+import NoticeCard from "@/components/ui/NoticeCard";
+import SegmentedControl from "@/components/ui/SegmentedControl";
+import Switch from "@/components/ui/Switch";
+import TabBar from "@/components/ui/TabBar";
+import ListRow, { ListGroup } from "@/components/ui/ListRow";
+import Avatar from "@/components/ui/Avatar";
+import GuitarIcon from "@/components/ui/GuitarIcon";
 import { useDialog } from "@/components/ui/DialogProvider";
 import { COLORS, type ScaleToken } from "@/components/ui/tokens";
 
@@ -97,5 +104,119 @@ export function ModalDemo() {
         </Button>
       </Modal>
     </>
+  );
+}
+
+export function SwitchDemo() {
+  const [anonymous, setAnonymous] = useState(true);
+  const [inBand, setInBand] = useState(false);
+  return (
+    <div className="rounded-card bg-surface px-4">
+      <Switch label="익명 투표" description="누가 투표했는지 안 보여요." checked={anonymous} onCheckedChange={setAnonymous} />
+      <Switch label="일코해제에 만들기" icon={<GuitarIcon className="size-4" />} checked={inBand} onCheckedChange={setInBand} />
+      <Switch label="비활성" checked={false} onCheckedChange={() => {}} disabled />
+    </div>
+  );
+}
+
+export function SegmentedDemo() {
+  const [mode, setMode] = useState<"free" | "allocated">("allocated");
+  const [view, setView] = useState<"all" | "mine" | "setlist">("all");
+  return (
+    <div className="space-y-3">
+      <SegmentedControl
+        aria-label="투표 방식"
+        value={mode}
+        onChange={setMode}
+        options={[
+          { value: "free", label: "자유 투표" },
+          { value: "allocated", label: "투표권 할당" },
+        ]}
+      />
+      <SegmentedControl
+        aria-label="보기"
+        value={view}
+        onChange={setView}
+        options={[
+          { value: "all", label: "전체" },
+          { value: "mine", label: "내 곡" },
+          { value: "setlist", label: "셋리스트", disabled: true },
+        ]}
+      />
+    </div>
+  );
+}
+
+const DOCK = [
+  { id: "playlist", label: "후보곡", icon: null },
+  { id: "setlist", label: "셋리스트", icon: null },
+  { id: "rehearsal", label: "합주", icon: null },
+] as const;
+
+export function TabBarDemo() {
+  const [tab, setTab] = useState<(typeof DOCK)[number]["id"]>("playlist");
+  return <TabBar aria-label="디자인 시스템 하단 탭 예시" items={DOCK} value={tab} onChange={setTab} />;
+}
+
+export function NoticeDemo() {
+  const [open, setOpen] = useState(true);
+  if (!open) {
+    return (
+      <Button variant="tonal" size="sm" onClick={() => setOpen(true)}>
+        안내 다시 보기
+      </Button>
+    );
+  }
+  return (
+    <div className="space-y-3">
+      <NoticeCard
+        onDismiss={() => setOpen(false)}
+        actions={
+          <Button variant="tonal" size="sm">
+            밴드 이름 정하고 만들기
+          </Button>
+        }
+      >
+        이 멤버 그대로 다음 공연도 해요? 밴드로 묶어두면 다음 플레이리스트는 버튼 한 번이에요
+      </NoticeCard>
+      <NoticeCard
+        tone="success"
+        icon={
+          <svg className="size-4.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+        }
+        title="밴드를 만들었어요"
+        onDismiss={() => setOpen(false)}
+        dismissLabel="닫기"
+        actions={<Button variant="kakao">카톡으로 알리기</Button>}
+      >
+        일코해제 · 멤버 4명
+      </NoticeCard>
+    </div>
+  );
+}
+
+export function ListGroupDemo() {
+  const [anonymous, setAnonymous] = useState(true);
+  return (
+    <div className="rounded-card bg-surface p-4">
+      <p className="text-caption font-semibold text-text-muted">시트 안 묶음 (surface 위 surface-hover)</p>
+      <ListGroup className="mt-2">
+        <Switch label="익명 투표" description="누가 투표했는지 안 보여요." checked={anonymous} onCheckedChange={setAnonymous} />
+      </ListGroup>
+      <ListGroup className="mt-2">
+        {[
+          ["창빈", "방장 · 3표 사용"],
+          ["민지", "5표 모두 사용"],
+          ["도윤", "아직 안 썼어요"],
+        ].map(([name, meta]) => (
+          <ListRow key={name} leading={<Avatar name={name} />} trailing={<span className="text-sm font-bold tabular-nums text-text">5표</span>}>
+            <p className="truncate text-sm font-semibold text-text">{name}</p>
+            <p className="text-caption text-text-muted">{meta}</p>
+          </ListRow>
+        ))}
+      </ListGroup>
+    </div>
   );
 }

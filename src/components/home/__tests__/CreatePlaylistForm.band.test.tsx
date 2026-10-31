@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CreatePlaylistForm from "../CreatePlaylistForm";
 
@@ -123,5 +123,26 @@ describe("CreatePlaylistForm completion screen (13A)", () => {
     submit();
     await screen.findByRole("heading", { name: "11월 합주" });
     expect(screen.queryByText("이 플레이리스트를 밴드에 넣을까요?")).not.toBeInTheDocument();
+  });
+});
+
+describe("CreatePlaylistForm voting mode option", () => {
+  it("is one choice between 자유 투표 and 투표권 할당, sent with the default vote limit", async () => {
+    createPlaylist.mockResolvedValue(room);
+    render(<CreatePlaylistForm />);
+    fireEvent.click(screen.getByRole("button", { name: /옵션 추가/ }));
+
+    const modes = screen.getByRole("radiogroup", { name: "투표 방식" });
+    expect(within(modes).getByRole("radio", { name: "자유 투표" })).toBeChecked();
+    expect(screen.queryByLabelText("기본 투표권")).not.toBeInTheDocument();
+
+    fireEvent.click(within(modes).getByRole("radio", { name: "투표권 할당" }));
+    expect(within(modes).getByRole("radio", { name: "투표권 할당" })).toBeChecked();
+    expect(within(modes).getByRole("radio", { name: "자유 투표" })).not.toBeChecked();
+    fireEvent.change(screen.getByLabelText("기본 투표권"), { target: { value: "5" } });
+
+    submit();
+    await screen.findByRole("heading", { name: "11월 합주" });
+    expect(createPlaylist).toHaveBeenCalledWith("11월 합주", undefined, undefined, "allocated", 5);
   });
 });

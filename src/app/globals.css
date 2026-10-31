@@ -22,7 +22,9 @@
   --color-success-soft: #14532d;
   --color-warning: #f59e0b;
   --color-warning-soft: #78350f;
+  --color-warning-tint: #352d23;
   --color-danger: #dc2626;
+  --color-danger-hover: #b91c1c;
   --color-on-danger: #ffffff;
   --color-danger-fg: #f87171;
   --color-danger-soft: #7f1d1d;

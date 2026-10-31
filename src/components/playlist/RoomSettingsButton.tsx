@@ -3,8 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useImperativeHandle, useOptimistic, useState, useTransition, type Ref } from "react";
-import Modal from "../ui/Modal";
+import Avatar from "../ui/Avatar";
 import Button from "../ui/Button";
+import IconButton from "../ui/IconButton";
+import Input from "../ui/Input";
+import ListRow, { ListGroup } from "../ui/ListRow";
+import Modal from "../ui/Modal";
+import SegmentedControl from "../ui/SegmentedControl";
+import Switch from "../ui/Switch";
 import { useDialog } from "../ui/DialogProvider";
 import GuitarIcon from "../ui/GuitarIcon";
 import CreateBandSheet from "../band/CreateBandSheet";
@@ -342,14 +348,16 @@ export default function RoomSettingsButton({
               )}
               {team ? (
                 team.isMember && team.id ? (
-                  <Link
-                    href={`/band/${team.id}`}
-                    className="mt-2 flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-sm font-semibold text-text transition-colors hover:bg-surface-hover"
-                  >
-                    <GuitarIcon className="h-4 w-4 shrink-0 text-text-muted" />
-                    <span className="min-w-0 flex-1 truncate">{team.name}</span>
-                    <span className="shrink-0 text-text-muted">밴드 홈 ›</span>
-                  </Link>
+                  <ListGroup className="mt-2">
+                    <Link href={`/band/${team.id}`} className="-mx-4 block px-4 text-sm font-semibold text-text">
+                      <ListRow
+                        leading={<GuitarIcon className="size-4 text-text-muted" />}
+                        trailing={<span className="text-text-muted">밴드 홈 ›</span>}
+                      >
+                        <span className="block truncate">{team.name}</span>
+                      </ListRow>
+                    </Link>
+                  </ListGroup>
                 ) : (
                   // A removed owner keeps the room but no longer sees the band (R10 payload table).
                   <p className="mt-2 flex items-center gap-2 text-sm text-text-muted">
@@ -396,141 +404,124 @@ export default function RoomSettingsButton({
 
             <section>
               <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 · 공개 범위</p>
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => changeVoteVisibility(true)}
-                  aria-pressed={votesAnonymous}
-                  className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors ${
+              <ListGroup className="mt-2">
+                <Switch
+                  label="익명 투표"
+                  description={
                     votesAnonymous
-                      ? "border-primary-fg bg-primary/15 text-primary-fg"
-                      : "border-border bg-surface text-text-muted"
-                  }`}
-                >
-                  익명 투표
-                </button>
-                <button
-                  type="button"
-                  onClick={() => changeVoteVisibility(false)}
-                  aria-pressed={!votesAnonymous}
-                  className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors ${
-                    !votesAnonymous
-                      ? "border-primary-fg bg-primary/15 text-primary-fg"
-                      : "border-border bg-surface text-text-muted"
-                  }`}
-                >
-                  기명 투표
-                </button>
-              </div>
-              <p className="mt-2 text-caption text-text-muted">
-                {votesAnonymous
-                  ? "누가 어떻게 투표했는지 다른 참여자에게 보이지 않아요."
-                  : "투표한 멤버의 닉네임이 모든 참여자에게 보여요."}
-              </p>
+                      ? "누가 어떻게 투표했는지 다른 참여자에게 보이지 않아요."
+                      : "투표한 멤버의 닉네임이 모든 참여자에게 보여요."
+                  }
+                  checked={votesAnonymous}
+                  onCheckedChange={changeVoteVisibility}
+                />
+              </ListGroup>
             </section>
 
             {supportsVoteAllocation && (
               <section className="mt-6 border-t border-border pt-5">
                 <p className="mb-2 text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 · 방식</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {(["free", "allocated"] as VotingMode[]).map((value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      disabled={settings.totalVotes > 0 && value !== settings.mode}
-                      onClick={() => value !== mode && persist({ mode: value })}
-                      className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors disabled:opacity-40 ${
-                        mode === value
-                          ? "border-primary-fg bg-primary/15 text-primary-fg"
-                          : "border-border bg-surface text-text-muted"
-                      }`}
-                    >
-                      {value === "free" ? "자유 투표" : "투표권 할당"}
-                    </button>
-                  ))}
-                </div>
+                <SegmentedControl
+                  aria-label="투표 방식"
+                  options={(["free", "allocated"] as VotingMode[]).map((value) => ({
+                    value,
+                    label: value === "free" ? "자유 투표" : "투표권 할당",
+                    disabled: isPending || (settings.totalVotes > 0 && value !== settings.mode),
+                  }))}
+                  value={mode}
+                  onChange={(value) => persist({ mode: value })}
+                />
                 {settings.totalVotes > 0 && (
                   <p className="mt-2 text-caption text-warning">투표가 시작되어 모드는 바꿀 수 없어요.</p>
                 )}
 
                 {mode === "allocated" && (
                   <>
-                    <div className="mt-5 rounded-xl border border-border bg-surface p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-medium text-text">새 참여자 기본 투표권</p>
-                          <p className="text-caption text-text-muted">
-                            {settings.mode === "allocated" ? "기존 참여자 값은 유지돼요." : "전환하면 현재 참여자에게도 적용돼요."}
-                          </p>
-                        </div>
-                        <input
-                          type="number"
-                          min={1}
-                          max={99}
-                          step={1}
-                          inputMode="numeric"
-                          value={defaultLimit}
-                          onChange={(e) => setDefaultLimit(Number(e.target.value))}
-                          className="h-11 w-20 rounded-xl border border-border bg-surface-hover px-2 text-center text-text"
-                          aria-label="새 참여자 기본 투표권"
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={applyAll}
-                        className="mt-3 min-h-11 w-full rounded-xl border border-border bg-surface-hover text-sm font-semibold text-text-muted"
-                      >
-                        모두에게 적용
-                      </button>
-                    </div>
-
-                    <div className="mt-5 space-y-2">
-                      <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">참여자별 투표권</p>
-                      {settings.members.map((member) => {
-                        const stagedLimit = Number(memberLimits[member.user_id]);
-                        return (
-                          <div key={member.user_id} className="rounded-xl border border-border bg-surface p-3">
-                            <div className="flex items-center gap-2">
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-medium text-text">{member.display_name}</p>
-                                <p className="text-caption text-text-muted">{member.used_votes}표 사용</p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => changeMember(member.user_id, stagedLimit - 1)}
-                                disabled={!Number.isInteger(stagedLimit) || stagedLimit <= member.used_votes}
-                                className="h-11 w-11 shrink-0 rounded-xl border border-border text-text-muted disabled:opacity-30"
-                                aria-label={`${member.display_name} 투표권 줄이기`}
-                              >
-                                −
-                              </button>
-                              <input
-                                type="number"
-                                min={member.used_votes}
-                                max={99}
-                                step={1}
-                                inputMode="numeric"
-                                value={memberLimits[member.user_id] ?? ""}
-                                onChange={(event) => setMemberLimits((current) => ({
-                                  ...current,
-                                  [member.user_id]: event.target.value,
-                                }))}
-                                className="h-11 w-16 shrink-0 rounded-xl border border-border bg-surface-hover px-1 text-center text-sm font-bold tabular-nums text-text"
-                                aria-label={`${member.display_name} 투표권 직접 입력`}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => changeMember(member.user_id, stagedLimit + 1)}
-                                disabled={!Number.isInteger(stagedLimit) || stagedLimit >= 99}
-                                className="h-11 w-11 shrink-0 rounded-xl border border-border text-text-muted disabled:opacity-30"
-                                aria-label={`${member.display_name} 투표권 늘리기`}
-                              >
-                                +
-                              </button>
-                            </div>
+                    <ListGroup className="mt-5">
+                      <ListRow
+                        trailing={
+                          // Input is w-full, so its width comes from this box.
+                          <div className="w-20">
+                            <Input
+                              type="number"
+                              min={1}
+                              max={99}
+                              step={1}
+                              inputMode="numeric"
+                              value={defaultLimit}
+                              onChange={(e) => setDefaultLimit(Number(e.target.value))}
+                              className="text-center"
+                              aria-label="새 참여자 기본 투표권"
+                            />
                           </div>
-                        );
-                      })}
+                        }
+                      >
+                        <p className="text-sm font-medium text-text">새 참여자 기본 투표권</p>
+                        <p className="text-caption text-text-muted">
+                          {settings.mode === "allocated" ? "기존 참여자 값은 유지돼요." : "전환하면 현재 참여자에게도 적용돼요."}
+                        </p>
+                      </ListRow>
+                    </ListGroup>
+                    <Button type="button" variant="tonal" fullWidth onClick={applyAll} className="mt-2">
+                      모두에게 적용
+                    </Button>
+
+                    <div className="mt-5">
+                      <p className="mb-2 text-caption font-semibold uppercase tracking-wider text-text-subtle">참여자별 투표권</p>
+                      <ListGroup>
+                        {settings.members.map((member) => {
+                          const stagedLimit = Number(memberLimits[member.user_id]);
+                          return (
+                            <ListRow
+                              key={member.user_id}
+                              leading={<Avatar name={member.display_name} className="max-[359px]:hidden" />}
+                              trailing={
+                                <>
+                                  <IconButton
+                                    bare
+                                    onClick={() => changeMember(member.user_id, stagedLimit - 1)}
+                                    disabled={!Number.isInteger(stagedLimit) || stagedLimit <= member.used_votes}
+                                    aria-label={`${member.display_name} 투표권 줄이기`}
+                                  >
+                                    <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
+                                      <path d="M5 12h14" />
+                                    </svg>
+                                  </IconButton>
+                                  <div className="w-20">
+                                    <Input
+                                      type="number"
+                                      min={member.used_votes}
+                                      max={99}
+                                      step={1}
+                                      inputMode="numeric"
+                                      value={memberLimits[member.user_id] ?? ""}
+                                      onChange={(event) => setMemberLimits((current) => ({
+                                        ...current,
+                                        [member.user_id]: event.target.value,
+                                      }))}
+                                      className="text-center font-bold tabular-nums"
+                                      aria-label={`${member.display_name} 투표권 직접 입력`}
+                                    />
+                                  </div>
+                                  <IconButton
+                                    bare
+                                    onClick={() => changeMember(member.user_id, stagedLimit + 1)}
+                                    disabled={!Number.isInteger(stagedLimit) || stagedLimit >= 99}
+                                    aria-label={`${member.display_name} 투표권 늘리기`}
+                                  >
+                                    <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
+                                      <path d="M12 5v14M5 12h14" />
+                                    </svg>
+                                  </IconButton>
+                                </>
+                              }
+                            >
+                              <p className="truncate text-sm font-medium text-text">{member.display_name}</p>
+                              <p className="text-caption text-text-muted">{member.used_votes}표 사용</p>
+                            </ListRow>
+                          );
+                        })}
+                      </ListGroup>
                       {/* 숫자 입력이라 즉시 적용이 안 된다. 이 블록만 저장을 남긴다. */}
                       <Button type="button" fullWidth onClick={saveConfiguration} loading={isPending} className="mt-3">
                         투표권 저장
@@ -543,27 +534,16 @@ export default function RoomSettingsButton({
 
             <section className="mt-6 border-t border-border pt-5">
               <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">셋리스트 · 편집 권한</p>
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                {([
-                  { value: "everyone" as SetlistEditMode, label: "모두 편집" },
-                  { value: "host_only" as SetlistEditMode, label: "방장만 편집" },
-                ]).map(({ value, label }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    disabled={isPending}
-                    onClick={() => value !== shownEditMode && changeSetlistEditMode(value)}
-                    aria-pressed={shownEditMode === value}
-                    className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors disabled:opacity-40 ${
-                      shownEditMode === value
-                        ? "border-primary-fg bg-primary/15 text-primary-fg"
-                        : "border-border bg-surface text-text-muted"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+              <SegmentedControl<SetlistEditMode>
+                aria-label="셋리스트 편집 권한"
+                className="mt-2"
+                options={[
+                  { value: "everyone", label: "모두 편집", disabled: isPending },
+                  { value: "host_only", label: "방장만 편집", disabled: isPending },
+                ]}
+                value={shownEditMode}
+                onChange={changeSetlistEditMode}
+              />
               <p className="mt-2 text-caption text-text-muted">
                 {shownEditMode === "everyone"
                   ? "참여자 누구나 곡을 추가·수정하고 순서를 바꿀 수 있어요."

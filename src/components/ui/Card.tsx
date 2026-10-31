@@ -9,7 +9,7 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 
 const variantClasses: Record<Variant, string> = {
   default: "bg-surface border border-border",
-  elevated: "bg-surface-elevated border border-border-strong shadow-lg shadow-black/20",
+  elevated: "bg-surface-elevated border border-border-strong",
   outline: "bg-transparent border border-border",
 };
 

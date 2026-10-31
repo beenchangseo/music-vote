@@ -3,6 +3,7 @@
 import { ReactNode, RefObject, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { dialogLayerOpen, getFocusable, trapTabKey } from "./focus-trap";
+import IconButton from "./IconButton";
 
 interface ModalProps {
   open: boolean;
@@ -67,37 +68,21 @@ export default function Modal({ open, onClose, children, title, initialFocus }: 
     >
       <div
         ref={panelRef}
-        className="w-full sm:max-w-md bg-bg border-t sm:border border-border rounded-t-3xl sm:rounded-3xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] animate-slide-up shadow-2xl max-h-[90vh] overflow-y-auto"
+        className="w-full sm:max-w-md bg-surface rounded-t-sheet sm:rounded-sheet px-5 pt-2 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:pt-5 animate-slide-up shadow-float max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
+        <div aria-hidden className="mx-auto mb-2 h-1 w-9 rounded-pill bg-border-strong sm:hidden" />
         <div className="flex items-center justify-between mb-4">
           {title ? (
             <h2 className="text-h3 font-bold text-text">{title}</h2>
           ) : (
             <span />
           )}
-          <button
-            ref={closeRef}
-            type="button"
-            onClick={onClose}
-            className="w-11 h-11 -mr-2 rounded-lg flex items-center justify-center text-text-muted hover:text-text hover:bg-surface-hover transition-colors"
-            aria-label="닫기"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-              aria-hidden
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
+          <IconButton ref={closeRef} bare onClick={onClose} aria-label="닫기" className="-mr-2">
+            <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
-          </button>
+          </IconButton>
         </div>
         {children}
       </div>

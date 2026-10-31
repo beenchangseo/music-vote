@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Card from "../ui/Card";
 import Button, { buttonClassName } from "../ui/Button";
-import { KakaoInviteButton } from "./BandInviteSheet";
 
 interface BandStartAreaProps {
   /** /new?band={teamId} */
@@ -40,9 +39,9 @@ export default function BandStartArea({ newRoomHref, onInvite, attachableCount, 
           첫 플레이리스트 만들기
         </Link>
       )}
-      <KakaoInviteButton onClick={onInvite} className="mt-2 w-full">
+      <Button variant="kakao" onClick={onInvite} fullWidth className="mt-2">
         카톡으로 멤버 부르기
-      </KakaoInviteButton>
+      </Button>
       {canAttach && (
         <Link
           href={newRoomHref}

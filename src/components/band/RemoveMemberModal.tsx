@@ -3,6 +3,7 @@
 import { useRef, useState, type RefObject } from "react";
 import Modal from "../ui/Modal";
 import Button from "../ui/Button";
+import ButtonGroup from "../ui/ButtonGroup";
 import { removeTeamMember } from "@/actions/team";
 import { teamMessage } from "@/lib/team-messages";
 
@@ -98,14 +99,14 @@ function RemoveMemberBody({
         </span>
       </label>
 
-      <div className="mt-5 flex gap-2">
-        <Button ref={cancelRef} variant="tonal" className="flex-1" onClick={onClose} disabled={pending}>
+      <ButtonGroup className="mt-5">
+        <Button ref={cancelRef} variant="tonal" onClick={onClose} disabled={pending}>
           취소
         </Button>
-        <Button variant="danger" className="flex-1" loading={pending} onClick={remove}>
+        <Button variant="danger" loading={pending} onClick={remove}>
           내보내기
         </Button>
-      </div>
+      </ButtonGroup>
       {error && (
         <p role="alert" className="mt-2 text-sm text-danger-fg">
           {error}

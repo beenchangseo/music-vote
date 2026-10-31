@@ -13,6 +13,8 @@ import MyBands from "@/components/home/MyBands";
 import LeftBandNotice from "@/components/band/LeftBandNotice";
 import { HomeBandCard } from "@/components/band/BandPromptCard";
 import { buttonClassName } from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import InlineNotice from "@/components/ui/InlineNotice";
 import type { BandCandidate } from "@/components/band/CreateBandSheet";
 import { getCurrentUser, hasAuthCookie } from "@/lib/auth";
 import { BAND_PROMPT_COOKIE, parseDismissals } from "@/lib/prompt-dismissals";
@@ -109,15 +111,21 @@ async function SignedInHome({
         {showCard && <HomeBandCard candidate={cardTarget} dismissed={false} />}
 
         {failed ? (
-          <section aria-labelledby="home-load-error" className="mt-10 rounded-card border border-border bg-surface p-4">
-            {/* The skeleton announced loading; a failure that replaces it has to be announced too. */}
-            <p id="home-load-error" role="alert" className="text-sm text-text">
-              목록을 불러오지 못했어요
-            </p>
-            {/* The home is dynamic, so navigating to it again reads the lists again. */}
-            <Link href="/" prefetch={false} className={buttonClassName({ variant: "tonal", className: "mt-3 min-h-11" })}>
-              다시 불러오기
-            </Link>
+          <section aria-labelledby="home-load-error" className="mt-10">
+            <InlineNotice
+              tone="warning"
+              action={
+                // The home is dynamic, so navigating to it again reads the lists again.
+                <Link href="/" prefetch={false} className={buttonClassName({ variant: "tonal" })}>
+                  다시 불러오기
+                </Link>
+              }
+            >
+              {/* The skeleton announced loading; a failure that replaces it has to be announced too. */}
+              <p id="home-load-error" role="alert">
+                목록을 불러오지 못했어요
+              </p>
+            </InlineNotice>
           </section>
         ) : (
           <>
@@ -294,7 +302,7 @@ function Landing({ left }: { left: boolean }) {
         </section>
 
         <section aria-labelledby="cta-title" className="mt-16 lg:mx-auto lg:mt-28 lg:max-w-md">
-          <div className="rounded-card border border-border bg-surface p-6 text-center">
+          <Card padding="lg" className="text-center">
             <h2 id="cta-title" className="break-keep text-h2 font-bold text-text">
               다음 공연 셋리스트,{" "}
               <br />
@@ -304,7 +312,7 @@ function Landing({ left }: { left: boolean }) {
             <div className="mt-5">
               <HeroCTA variant="landing" />
             </div>
-          </div>
+          </Card>
           {/* Keyword anchor text for the two pages search engines should reach next. */}
           <nav aria-label="더 알아보기" className="mt-4 flex flex-col">
             {[
