@@ -402,7 +402,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
               <div className="flex gap-2">
                 <Input type="date" value={deadlineDate} onChange={(e) => setDeadlineDate(e.target.value)} min={todayStr} className="flex-1" style={{ colorScheme: "dark" }} />
                 {deadlineDate && (
-                  <div className="w-28">
+                  <div className="w-32">
                     <Input type="time" value={deadlineTime} onChange={(e) => setDeadlineTime(e.target.value)} style={{ colorScheme: "dark" }} />
                   </div>
                 )}

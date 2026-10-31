@@ -186,6 +186,21 @@ describe("RoomSettingsButton voting controls", () => {
     );
   });
 
+  it("sends one mode save at a time, even from the keyboard", async () => {
+    let finish = () => {};
+    saveVotingSettings.mockImplementationOnce(() => new Promise<void>((resolve) => (finish = resolve)));
+    await openSettings();
+    const free = screen.getByRole("radio", { name: "자유 투표" });
+    free.focus();
+
+    fireEvent.keyDown(free, { key: "ArrowRight" });
+    await waitFor(() => expect(saveVotingSettings).toHaveBeenCalledTimes(1));
+    fireEvent.keyDown(screen.getByRole("radio", { name: "투표권 할당" }), { key: "ArrowLeft" });
+    expect(saveVotingSettings).toHaveBeenCalledTimes(1);
+
+    finish();
+  });
+
   it("locks the other voting mode once votes exist", async () => {
     serve({ totalVotes: 4 });
     await openSettings();

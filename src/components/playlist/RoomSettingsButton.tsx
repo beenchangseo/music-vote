@@ -349,7 +349,7 @@ export default function RoomSettingsButton({
               {team ? (
                 team.isMember && team.id ? (
                   <ListGroup className="mt-2">
-                    <Link href={`/band/${team.id}`} className="block text-sm font-semibold text-text">
+                    <Link href={`/band/${team.id}`} className="-mx-4 block px-4 text-sm font-semibold text-text">
                       <ListRow
                         leading={<GuitarIcon className="size-4 text-text-muted" />}
                         trailing={<span className="text-text-muted">밴드 홈 ›</span>}
@@ -426,7 +426,7 @@ export default function RoomSettingsButton({
                   options={(["free", "allocated"] as VotingMode[]).map((value) => ({
                     value,
                     label: value === "free" ? "자유 투표" : "투표권 할당",
-                    disabled: settings.totalVotes > 0 && value !== settings.mode,
+                    disabled: isPending || (settings.totalVotes > 0 && value !== settings.mode),
                   }))}
                   value={mode}
                   onChange={(value) => persist({ mode: value })}
@@ -487,7 +487,7 @@ export default function RoomSettingsButton({
                                       <path d="M5 12h14" />
                                     </svg>
                                   </IconButton>
-                                  <div className="w-16">
+                                  <div className="w-20">
                                     <Input
                                       type="number"
                                       min={member.used_votes}
