@@ -69,6 +69,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
   const intervalCount = sortedItems.length - summary.songCount;
   const playOrder = useMemo(() => setlistPlayOrder(sortedItems, songs), [sortedItems, songs]);
   const showEditToggle = canEdit && sortedItems.length > 0;
+  const showHostOnlyNotice = access === "locked_to_host";
   const playingSongId = player?.source === "setlist" && player.isPlaying ? player.currentSongId : null;
   const suggestions = useMemo(() => {
     const inSetlist = new Set(sortedItems.map((item) => item.song_id).filter(Boolean));
@@ -171,8 +172,8 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
                 <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path d="M8 5v14l11-7z" />
                 </svg>
-                {/* With 편집 beside it, the label squeezes the runtime on a 360px phone. */}
-                <span className={showEditToggle ? "max-sm:sr-only" : undefined}>셋리 전체 듣기</span>
+                {/* With 편집 or the host-only notice beside it, the label squeezes the runtime on a 360px phone. */}
+                <span className={showEditToggle || showHostOnlyNotice ? "max-sm:sr-only" : undefined}>셋리 전체 듣기</span>
               </Button>
             )}
             {showEditToggle && (
@@ -187,7 +188,8 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
                 {editMode ? "완료" : "편집"}
               </button>
             )}
-            {access === "locked_to_host" && <span className="px-1 text-caption text-text-muted">방장만 편집할 수 있어요</span>}
+            {/* Two lines on a phone, so the runtime keeps its cell. */}
+            {showHostOnlyNotice && <span className="px-1 text-caption text-text-muted max-sm:max-w-20 break-keep">방장만 편집할 수 있어요</span>}
             <SetlistShareButton shareCode={shareCode} title={title} />
             {actions}
           </>
