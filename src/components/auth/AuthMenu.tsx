@@ -39,7 +39,7 @@ const RETRY_LATER = "탈퇴하지 못했어요. 잠시 후 다시 시도해 주�
 type DeleteFailure = Extract<DeleteAccountResult, { success: false }>["reason"];
 
 const DELETE_FAILED: Record<Exclude<DeleteFailure, "not_logged_in">, string> = {
-  not_available: "지금은 앱에서 탈퇴할 수 없어요. 아무것도 지우지 않았어요.",
+  not_available: "지금은 앱에서 탈퇴할 수 없어요. 아무것도 지우지 않았어요. 문의할 곳은 메뉴의 '문의하기'에서 안내해요.",
   kakao_unlink_failed: RETRY_LATER,
   write_failed: RETRY_LATER,
 };

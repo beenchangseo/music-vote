@@ -143,4 +143,16 @@ describe("AuthMenu 탈퇴하기", () => {
     expect(alert).not.toHaveTextContent("잠시 후");
     expect(assign).not.toHaveBeenCalled();
   });
+
+  it("points to 문의하기 when deletion is unavailable, and the link is still in the menu after the alert", async () => {
+    actions.deleteAccount.mockResolvedValue({ success: false, reason: "not_available" });
+    fireEvent.click(within(await openDeleteConfirm()).getByRole("button", { name: "탈퇴하기" }));
+
+    const alert = await screen.findByRole("alertdialog");
+    expect(alert).toHaveTextContent("'문의하기'");
+    fireEvent.click(within(alert).getByRole("button", { name: "확인" }));
+
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+    expect(screen.getByRole("link", { name: "문의하기" })).toHaveAttribute("href", "/support");
+  });
 });
