@@ -7,7 +7,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useDialog } from "../ui/DialogProvider";
 import Badge from "../ui/Badge";
-import Button from "../ui/Button";
 import Card from "../ui/Card";
 import EmptyState from "../ui/EmptyState";
 import InlineNotice from "../ui/InlineNotice";
@@ -28,7 +27,6 @@ import { getSetlistItems, confirmSetlist, addSongToSetlist, removeSetlistItem } 
 import { getComments } from "@/actions/comment";
 import { track } from "@/lib/analytics";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
-import { DEFAULT_FILTER, songMatchesFilter, type FilterState } from "./FilterBar";
 import KakaoShareButton from "../share/KakaoShareButton";
 import RoomSettingsButton, { type RoomSettingsHandle } from "./RoomSettingsButton";
 import BandPromptCard, { BandCreatedCard } from "../band/BandPromptCard";
@@ -87,7 +85,6 @@ export default function PlaylistClient({
   const [viewMode, setViewMode] = useState<"card" | "compact">("compact");
   const [navMode, setNavMode] = useState<ViewMode>("playlist");
   const [adminToken, setAdminToken] = useState<string | null>(null);
-  const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
   const [allowance, setAllowance] = useState<VoteAllowance | null>(null);
   // Band made from the prompt card (R6). Lives here, not in the card: the action's revalidatePath
   // re-renders the room with a band, the prompt condition turns false and the card unmounts.
@@ -195,10 +192,6 @@ export default function PlaylistClient({
     onSaved: notifyChange,
   });
 
-  const filteredSongs = useMemo(
-    () => songsWithVotes.filter((s) => songMatchesFilter(s, filter)),
-    [songsWithVotes, filter],
-  );
 
 
   // Setlist highlight: top N songs after deadline
@@ -246,7 +239,7 @@ export default function PlaylistClient({
       handleTogglePlay(playerState.currentSongId);
       return;
     }
-    const first = filteredSongs[0] ?? songsWithVotes[0];
+    const first = songsWithVotes[0];
     if (!first) return;
     playerActions.playSong(first.id, "candidates");
     try {
@@ -254,9 +247,9 @@ export default function PlaylistClient({
     } catch {
       // Analytics never blocks playback.
     }
-  }, [playerState.currentSongId, handleTogglePlay, filteredSongs, songsWithVotes, playerActions]);
+  }, [playerState.currentSongId, handleTogglePlay, songsWithVotes, playerActions]);
 
-  // Score rank for every row (디자인 C9). It comes from the whole list, so a filter never turns 4th into 1st.
+  // Score rank for every row (디자인 C9).
   // Ties share a number (5,5,4 → 1,1,3): with a number on every row, 1,2,3 for equal scores would read as a ranking.
   const rankById = useMemo(() => {
     const ranks = assignRanks(songsWithVotes.map((song) => song.score));
@@ -612,18 +605,8 @@ export default function PlaylistClient({
                       }
                     />
                   </div>
-                ) : filteredSongs.length === 0 ? (
-                  <EmptyState
-                    className="mt-2"
-                    description="필터에 맞는 곡이 없어요."
-                    action={
-                      <Button variant="ghost" size="sm" onClick={() => setFilter(DEFAULT_FILTER)}>
-                        필터 초기화
-                      </Button>
-                    }
-                  />
                 ) : (
-                  filteredSongs.map((song) => (
+                  songsWithVotes.map((song) => (
                     <SongCard
                       key={song.id}
                       song={song}

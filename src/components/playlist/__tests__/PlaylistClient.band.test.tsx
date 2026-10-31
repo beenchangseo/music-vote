@@ -30,7 +30,6 @@ vi.mock("@/hooks/usePlayerQueue", () => ({
     actions: { playNext: vi.fn(), playSong: vi.fn(), setIsPlaying: vi.fn() },
   }),
 }));
-vi.mock("../FilterBar", () => ({ DEFAULT_FILTER: {}, songMatchesFilter: () => true }));
 vi.mock("../PlaylistHeader", () => ({ default: () => null }));
 vi.mock("../AddSongForm", () => ({ default: () => null }));
 vi.mock("../SongCard", () => ({ default: () => null }));
