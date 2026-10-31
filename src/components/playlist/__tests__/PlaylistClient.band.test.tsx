@@ -5,8 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Playlist, RoomTeam } from "@/domain/types";
 import PlaylistClient from "../PlaylistClient";
 
-// Everything around the band slot is stubbed: this file is about the prompt card (F7, 27A)
-// and the success card that must survive the action's revalidation (R6, D30A).
+// Everything around the band slot is stubbed: this file is about the prompt card (F7, 27A),
+// the success card that must survive the action's revalidation (R6, D30A) and the list's own notices.
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }) }));
 vi.mock("next/image", () => ({ default: () => null }));
 vi.mock("@formkit/auto-animate/react", () => ({ useAutoAnimate: () => [vi.fn()] }));
@@ -223,5 +223,19 @@ describe("PlaylistClient band success card (R6, D30A)", () => {
     createFromCard();
     fireEvent.click(screen.getByRole("button", { name: "닫기" }));
     expect(screen.queryByText("밴드를 만들었어요")).not.toBeInTheDocument();
+  });
+});
+
+describe("PlaylistClient list notices", () => {
+  it("points a room without songs to the input above", () => {
+    render(ui());
+    expect(screen.getByText("위 입력창부터")).toBeInTheDocument();
+    expect(screen.getByText("첫 곡을 추가해보세요")).toBeInTheDocument();
+  });
+
+  it("tells a visitor that an archived room is read-only and links to a new playlist", () => {
+    render(ui({ playlist: { ...playlist, creator_user_id: null } }));
+    expect(screen.getByRole("status")).toHaveTextContent("보관된 플레이리스트예요.");
+    expect(screen.getByRole("link", { name: /새 플레이리스트 만들기/ })).toHaveAttribute("href", "/");
   });
 });

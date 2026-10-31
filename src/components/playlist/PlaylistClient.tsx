@@ -6,6 +6,11 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useDialog } from "../ui/DialogProvider";
+import Badge from "../ui/Badge";
+import Button from "../ui/Button";
+import Card from "../ui/Card";
+import EmptyState from "../ui/EmptyState";
+import InlineNotice from "../ui/InlineNotice";
 import LoginButton from "../auth/LoginButton";
 import PlaylistHeader from "./PlaylistHeader";
 import AddSongForm from "./AddSongForm";
@@ -433,18 +438,18 @@ export default function PlaylistClient({
           />
 
           {isArchived && (
-            <div className="mt-3 rounded-lg border border-border bg-surface/60 px-3 py-2 animate-fade-in" role="status">
-              <p className="text-caption leading-relaxed text-text-muted">
-                <span className="font-semibold text-text">보관된 플레이리스트예요.</span>{" "}
-                지난 투표 결과와 셋리스트는 그대로 볼 수 있지만, 새로 투표하거나 곡을 추가할 수는 없어요.
-              </p>
-              <Link
-                href="/"
-                className="mt-1.5 inline-flex min-h-11 items-center text-caption font-semibold text-primary-fg hover:underline underline-offset-2"
-              >
-                새 플레이리스트 만들기 →
-              </Link>
-            </div>
+            <InlineNotice
+              role="status"
+              className="mt-3 animate-fade-in"
+              action={
+                <Link href="/" className="inline-flex min-h-11 items-center font-semibold text-primary-fg underline-offset-2 hover:underline">
+                  새 플레이리스트 만들기 →
+                </Link>
+              }
+            >
+              <span className="font-semibold text-text">보관된 플레이리스트예요.</span>{" "}
+              지난 투표 결과와 셋리스트는 그대로 볼 수 있지만, 새로 투표하거나 곡을 추가할 수는 없어요.
+            </InlineNotice>
           )}
 
 
@@ -558,11 +563,9 @@ export default function PlaylistClient({
 
               {/* Setlist share banner — confirmed setlist */}
               {playlist.setlist_confirmed && (
-                <div className="mt-5 p-5 rounded-2xl bg-primary/10 border border-primary/30 text-center animate-fade-in">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/20 text-primary-fg text-caption font-bold mb-3">
-                    🎵 셋리스트 확정
-                  </div>
-                  <p className="text-sm text-text mb-4">
+                <Card className="mt-5 text-center animate-fade-in">
+                  <Badge tone="primary">🎵 셋리스트 확정</Badge>
+                  <p className="mt-3 mb-4 text-sm text-text">
                     총 {setlistCount || songsWithVotes.length}곡 · 다음 공연 준비 완료
                   </p>
                   <KakaoShareButton
@@ -577,7 +580,7 @@ export default function PlaylistClient({
                   >
                     셋리스트 카톡 공유
                   </KakaoShareButton>
-                </div>
+                </Card>
               )}
 
               {/* Song list */}
@@ -586,52 +589,39 @@ export default function PlaylistClient({
                 className={`mt-3 ${viewMode === "compact" ? "space-y-1" : "space-y-4"}`}
               >
                 {songsWithVotes.length === 0 ? (
-                  <div className="mt-2 rounded-2xl border-2 border-dashed border-border bg-surface/40 px-6 py-10 text-center">
-                    {/* 위 입력창을 가리키는 화살표 + 음표 */}
-                    <div className="flex items-center justify-center gap-2 mb-5 text-primary-fg animate-bounce-slow">
-                      <svg
-                        className="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2.5}
-                        viewBox="0 0 24 24"
-                        aria-hidden
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M5 11l7-7 7 7M5 19l7-7 7 7"
-                        />
+                  <div className="mt-2">
+                    <p className="mb-3 flex items-center justify-center gap-2 text-sm font-semibold text-primary-fg animate-bounce-slow">
+                      <svg className="size-6" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7" />
                       </svg>
-                      <span className="text-sm font-semibold">위 입력창부터</span>
-                    </div>
-
-                    <p className="text-h3 font-bold text-text mb-2">
-                      첫 곡을 추가해보세요
+                      위 입력창부터
                     </p>
-                    <p className="text-sm text-text-muted leading-relaxed max-w-xs mx-auto">
-                      YouTube 링크를 붙여넣으면<br />
-                      제목·썸네일이 자동으로 들어가요.
-                    </p>
-
-                    <div className="mt-6 flex flex-col gap-1.5 text-caption text-text-subtle">
-                      <p>곡 3개 이상 → 멤버에게 카톡으로 공유</p>
-                      <p>5분 안에 다음 합주곡 결정 끝.</p>
-                    </div>
+                    <EmptyState
+                      title="첫 곡을 추가해보세요"
+                      description={
+                        <>
+                          <p className="leading-relaxed">
+                            YouTube 링크를 붙여넣으면<br />
+                            제목·썸네일이 자동으로 들어가요.
+                          </p>
+                          <div className="mt-6 flex flex-col gap-1.5 text-caption text-text-subtle">
+                            <p>곡 3개 이상 → 멤버에게 카톡으로 공유</p>
+                            <p>5분 안에 다음 합주곡 결정 끝.</p>
+                          </div>
+                        </>
+                      }
+                    />
                   </div>
                 ) : filteredSongs.length === 0 ? (
-                  <div className="mt-2 rounded-2xl border border-dashed border-border bg-surface/30 px-6 py-8 text-center">
-                    <p className="text-sm text-text-muted">
-                      필터에 맞는 곡이 없어요.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setFilter(DEFAULT_FILTER)}
-                      className="mt-2 text-caption text-primary-fg hover:underline underline-offset-2"
-                    >
-                      필터 초기화
-                    </button>
-                  </div>
+                  <EmptyState
+                    className="mt-2"
+                    description="필터에 맞는 곡이 없어요."
+                    action={
+                      <Button variant="ghost" size="sm" onClick={() => setFilter(DEFAULT_FILTER)}>
+                        필터 초기화
+                      </Button>
+                    }
+                  />
                 ) : (
                   filteredSongs.map((song) => (
                     <SongCard
