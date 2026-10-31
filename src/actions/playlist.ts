@@ -6,6 +6,7 @@ import { assertPlaylistAdmin } from "@/lib/playlist-admin";
 import { insertRoom } from "@/lib/room-insert";
 import { nestedRows } from "@/lib/supabase/nested";
 import { roomCoverThumbs } from "@/domain/team";
+import { compareTimestamps } from "@/domain/timestamp";
 import { isValidDefaultVoteLimit } from "@/domain/vote";
 import type { SetlistEditMode, VotingMode } from "@/domain/types";
 import { revalidatePath } from "next/cache";
@@ -95,14 +96,14 @@ export async function getMyPlaylists(): Promise<MyPlaylistsResult> {
     }
     const newestFirst = nestedRows(room.songs)
       .slice()
-      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .sort((a, b) => compareTimestamps(b.created_at, a.created_at))
       .map((song) => ({ thumbnailUrl: song.thumbnail_url }));
     const isMine = room.creator_user_id === user.id;
     // Participants come only with my own rooms (MY_CREATED_COLUMNS).
     const members = isMine
       ? nestedRows(room.playlist_members)
           .slice()
-          .sort((a, b) => (a.joined_at ?? "").localeCompare(b.joined_at ?? ""))
+          .sort((a, b) => compareTimestamps(a.joined_at, b.joined_at))
       : [];
     byId.set(room.id, {
       id: room.id,
@@ -138,7 +139,7 @@ export async function getMyPlaylists(): Promise<MyPlaylistsResult> {
   }
 
   return {
-    playlists: [...byId.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    playlists: [...byId.values()].sort((a, b) => compareTimestamps(b.createdAt, a.createdAt)),
     failed: Boolean(created.error || joined.error || teams.error),
   };
 }
