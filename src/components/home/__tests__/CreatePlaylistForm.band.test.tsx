@@ -22,7 +22,8 @@ vi.mock("../../ui/DialogProvider", () => ({ useDialog: () => ({ showAlert }) }))
 
 const TEAM = "11111111-1111-4111-8111-111111111111";
 const BAND = { id: TEAM, name: "일코해제", nextShowAt: "2026-10-16" };
-const room = { id: "room-1", shareCode: "abc123", adminToken: "token" };
+// shareImage: the new playlist's invite card, signed by the action (src/lib/share-card.ts).
+const room = { id: "room-1", shareCode: "abc123", adminToken: "token", shareImage: "/api/og?card=v1.invite.signature" };
 const myTeam = (id: string, name: string) => ({ id, name, nextShowAt: null, role: "member" as const, roomCount: 2 });
 
 function submit(title = "11월 합주") {
@@ -48,6 +49,21 @@ describe("CreatePlaylistForm in a band (/new?band=)", () => {
     expect(track).toHaveBeenCalledWith("team_playlist_created", { has_next_show: true });
     // A room made from the band does not ask to be put into a band.
     expect(screen.queryByText("이 플레이리스트를 밴드에 넣을까요?")).not.toBeInTheDocument();
+  });
+
+  it("shares the new playlist with the card the action signed", async () => {
+    const sendDefault = vi.fn();
+    window.Kakao = { isInitialized: () => true, Share: { sendDefault } };
+    try {
+      createBandPlaylist.mockResolvedValue({ success: true, ...room });
+      render(<CreatePlaylistForm band={BAND} />);
+      submit();
+      fireEvent.click(await screen.findByRole("button", { name: "카카오톡으로 공유" }));
+      const card = sendDefault.mock.calls[0][0] as { content: { imageUrl: string } };
+      expect(card.content.imageUrl).toBe(`${window.location.origin}${room.shareImage}`);
+    } finally {
+      delete window.Kakao;
+    }
   });
 
   it("shows the returned reason under the button instead of a generic alert", async () => {

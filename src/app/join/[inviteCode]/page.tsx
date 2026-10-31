@@ -4,7 +4,9 @@ import { notFound, redirect } from "next/navigation";
 import BandInviteScreen from "@/components/band/BandInviteScreen";
 import { getTeamInvite } from "@/actions/team";
 import { BASE_OPEN_GRAPH } from "@/lib/seo";
-import { bandShareDescription, shareableShowDate } from "@/domain/team";
+import { bandShareDescription } from "@/domain/team";
+import { bandCard } from "@/domain/share-card";
+import { signShareCard } from "@/lib/share-card";
 
 // generateMetadata and the page read the same invite once per request.
 const loadInvite = cache((inviteCode: string) => getTeamInvite(inviteCode));
@@ -26,15 +28,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = `${invite.name} · Plypick`;
   // previewNames puts the owner first (2A), so a band of one carries the owner's name (DR13).
   const description = bandShareDescription(invite.nextShowAt, invite.memberCount, now, invite.previewNames[0] ?? null);
-  const og = new URLSearchParams({ variant: "band", title: invite.name, members: String(invite.memberCount) });
-  const date = shareableShowDate(invite.nextShowAt, now);
-  if (date) og.set("date", date);
+  const image = await signShareCard(bandCard(invite.name, invite.memberCount, invite.nextShowAt, now));
 
   return {
     title,
     description,
     robots: { index: false },
-    openGraph: { ...BASE_OPEN_GRAPH, title, description, images: [`/api/og?${og.toString()}`] },
+    openGraph: { ...BASE_OPEN_GRAPH, title, description, images: [image] },
     twitter: { card: "summary_large_image", title, description },
   };
 }

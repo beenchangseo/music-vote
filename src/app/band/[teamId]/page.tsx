@@ -7,6 +7,8 @@ import BandHomeSkeleton from "@/components/band/BandHomeSkeleton";
 import LoginButton from "@/components/auth/LoginButton";
 import { buttonClassName } from "@/components/ui/Button";
 import { getTeamHome, teamExists, type TeamHomeView } from "@/actions/team";
+import { bandCard } from "@/domain/share-card";
+import { signShareCard } from "@/lib/share-card";
 
 // generateMetadata and the page read the same band once per request.
 const loadTeamHome = cache((teamId: string) => getTeamHome(teamId));
@@ -58,7 +60,9 @@ async function BandHome({
     return <MembersOnly teamId={view.team.id} name={view.team.name} loggedIn={view.loggedIn} />;
   }
 
-  return <BandHomeClient view={view} created={created} joined={joined} />;
+  // The invite sheet's Kakao button sends this; the browser cannot sign one (#35).
+  const inviteImage = await signShareCard(bandCard(view.team.name, view.members.length, view.team.nextShowAt, new Date()));
+  return <BandHomeClient view={view} created={created} joined={joined} inviteImage={inviteImage} />;
 }
 
 /**

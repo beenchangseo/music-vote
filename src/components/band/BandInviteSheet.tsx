@@ -7,6 +7,7 @@ import KakaoShareButton from "../share/KakaoShareButton";
 import { useDialog } from "../ui/DialogProvider";
 import { regenerateInviteCode } from "@/actions/team";
 import { teamMessage } from "@/lib/team-messages";
+import type { CardImage } from "@/domain/share-card";
 
 interface BandInviteSheetProps {
   open: boolean;
@@ -18,6 +19,8 @@ interface BandInviteSheetProps {
   nextShowAt: string | null;
   /** 밴드 리더(owner) 이름. 혼자인 밴드의 카톡 카드 문구에 쓴다 (DR13). */
   ownerName: string | null;
+  /** 카톡 카드 그림. 서버가 서명했다 (#35). */
+  image: CardImage;
   /** owner 에게만 "링크 새로 만들기"를 보여준다. */
   isOwner: boolean;
   /** 링크를 새로 만들었을 때 새 코드 (R7). 주소(/band/{teamId})는 그대로다. */
@@ -43,6 +46,7 @@ function InviteSheetBody({
   memberCount,
   nextShowAt,
   ownerName,
+  image,
   isOwner,
   onInviteCodeChange,
 }: Omit<BandInviteSheetProps, "open" | "onClose">) {
@@ -100,6 +104,7 @@ function InviteSheetBody({
         showDate={nextShowAt}
         members={memberCount}
         ownerName={ownerName}
+        image={image}
         size="lg"
         className="mt-3 w-full"
         ariaLabel="카톡으로 보내기"

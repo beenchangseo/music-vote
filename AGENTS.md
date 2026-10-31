@@ -159,6 +159,10 @@ Variable(한국어) + Geist(영문) 폴백.
 - 익명 모드에서는 `SongWithScore.votes` 를 채우지 않는다. 계정 식별자는 어느 모드에서도 내려보내지 않는다(`docs/adr/0011`).
 - 실시간은 내용 없는 broadcast 알림 뒤 재조회다(`docs/adr/0010`). `postgres_changes` 구독은 익명 모드를 뚫으므로
   eslint 가 막는다.
+- 공유 카드 이미지(`/api/og`)는 서버가 서명한 카드만 그리고, 서명 없는 링크는 로고만 있는 기본 카드가 된다(#35).
+  카드 주소는 페이지·액션에서 `signShareCard`(`src/lib/share-card.ts`)로 만들어 prop 으로 내린다. 화면 코드는
+  서명 모듈을 import 하지 못한다(eslint). 서명하는 카드는 그 요청에서 DB 에서 읽거나 막 쓴 값으로만 만들고,
+  클라이언트가 보낸 글자에 서명하는 액션은 만들지 않는다.
 - YouTube `search.list` 는 하루 100회 쿼터를 모든 사용자가 나눠 쓴다. 키 입력마다 부르지 않고, 명시적 제출에서만
   `youtube_search_cache` 를 거쳐 부른다. `videos.list` 는 50개 묶음에 1유닛이라 부담이 없다.
 - Supabase 는 서울 리전(`ap-northeast-2`, ref `vwygluhbrxtfcegkmgid`) 프로젝트다(2026-10-07 싱가포르에서 이전).
