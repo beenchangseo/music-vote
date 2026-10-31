@@ -360,6 +360,11 @@ FreeOneVotePerSong ==
    was written by the rules of the current mode. *)
 VotesMatchMode == \A v \in votes : v.cast = mode
 
+(* A cast that starts after the voting deadline writes no votes row, not
+   even one that its own rollback would undo. *)
+NoWriteAfterDeadline ==
+  \A p \in Voters : arg[p].startedAfterDeadline => ins[p] = {} /\ del[p] = {}
+
 TypeOK ==
   /\ mode \in Modes
   /\ limit \in LimitValues \cup DefaultValues

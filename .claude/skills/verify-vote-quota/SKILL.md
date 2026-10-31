@@ -15,6 +15,7 @@ TLC 로 끝까지 훑는다. 단위 테스트(`src/actions/__tests__/vote.test.t
 | `QuotaHolds` | 할당 모드에서 멤버가 가진 표 수는 그 멤버의 투표권(`vote_limit`)을 넘지 않는다 | 방장이 정한 것보다 표를 많이 가진 멤버가 생겨 투표 결과가 불공정해진다 |
 | `FreeOneVotePerSong` | 자유 모드에서 멤버는 곡마다 표를 하나만 가진다 | 한 사람이 한 곡에 두 표를 넣어 순위가 부풀려진다 |
 | `VotesMatchMode` | 투표가 시작되면 방식이 바뀌지 않으므로, 모든 표는 지금 방식의 규칙으로 들어갔다 | 다른 방식의 규칙(예: 한도 검사 없음)으로 들어간 표가 남는다 |
+| `NoWriteAfterDeadline` | 투표 마감이 지난 뒤 시작한 투표 호출은 `votes` 에 아무것도 쓰지 않는다. 롤백으로 되돌릴 쓰기도 없다 | 마감 뒤 표가 들어가 셋리 자동 확정 크론이 읽는 순위와 어긋난다 |
 
 ## 검사 범위 (coverage)
 
@@ -42,12 +43,12 @@ TLC 로 끝까지 훑는다. 단위 테스트(`src/actions/__tests__/vote.test.t
 - `votes` 에 INSERT/UPDATE/DELETE, `playlist_members.vote_limit` UPDATE, `playlists.voting_mode` UPDATE 를 하는 SQL 함수나 서버 코드를 새로 만든다
 - `castVote`·`saveVotingSettings` 가 RPC 를 부르는 방식을 바꾼다 (예: RPC 앞에 별도 조회·쓰기를 추가)
 
-닿는지 모르겠으면 그냥 돌린다. 30초쯤 걸린다.
+닿는지 모르겠으면 그냥 돌린다. 50초쯤 걸린다.
 
 ## 돌리기
 
 ```sh
-verification/vote-quota/check.sh          # 시나리오 5개 × 성질 3개, 약 30초
+verification/vote-quota/check.sh          # 시나리오 5개 × 성질 4개, 약 50초
 verification/vote-quota/check.sh save     # 시나리오 하나만
 ```
 
@@ -137,13 +138,14 @@ v23 부터 두 함수는 어느 API 역할도 실행할 수 없어서 이 순서
 - 생략한 문장(행에 영향 없음): 방장 권한 확인, `cast` 가 끝에 돌려주는 사용 수, `display_name` 조회, 입력값 검증
 - 투표 마감(v24, #24)은 투표 인자 `startedAfterDeadline` 이다. `cast` 는 마감을 `transaction_timestamp()` 와
   비교하고 검사 범위의 어느 함수도 `deadline` 을 쓰지 않으므로, 호출마다 시작할 때 정해진다. 마감을 넘긴 호출은
-  방식을 읽은 뒤 아무것도 쓰지 않고 롤백한다. 세 성질은 이 분기로 바뀌지 않는다
+  방식을 읽은 뒤 아무것도 쓰지 않고 롤백한다. 앞의 세 성질은 이 분기를 빼도 통과하므로 `NoWriteAfterDeadline` 이
+  분기를 지킨다. 분기를 빼거나 마감 검사를 쓰기 뒤로 옮기면 이 성질이 `fail` 이다
 - "가장 최근 표"(`ORDER BY created_at DESC, id DESC`)는 삽입 순서로 둔다. 같은 곡의 어느 행이 최신이든 표 수는 같다
 
 ## 검사하지 않는 것
 
 - 새 멤버 등록 경쟁: `src/lib/room-insert.ts`(방장), `src/lib/setlist-permissions.ts`(셋리 편집자)의 `playlist_members` insert
-- `resetPlaylistVotes`(`src/actions/playlist.ts`): 표를 지우기만 해서 세 성질을 깰 수 없다
+- `resetPlaylistVotes`(`src/actions/playlist.ts`): 표를 지우기만 하고 투표 호출이 아니라서 어느 성질도 깰 수 없다
 - 곡·방 삭제, 여러 멤버, 익명 모드 응답(`docs/adr/0011`), RLS, PostgREST 재시도
 - 실행 권한(누가 부를 수 있나)은 모델이 보지 않는다. 검사 범위 함수의 GRANT·REVOKE 가 바뀌면 `drift.mjs` 가 알린다
 
