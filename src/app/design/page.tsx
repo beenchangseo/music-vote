@@ -184,7 +184,7 @@ export default function DesignPage() {
         </StateRow>
       </Section>
 
-      <Section title="Input" note="테두리는 border-input(3:1 이상), 포커스는 focus-ring, 오류는 danger 테두리와 aria-invalid.">
+      <Section title="Input" note="채움은 surface-hover, 테두리는 border-input(3:1 이상), 포커스는 focus-ring, 오류는 danger-fg 테두리와 aria-invalid. 글자는 16px(iOS 확대 방지).">
         <div className="space-y-3">
           <Input aria-label="기본" placeholder="곡 제목이나 유튜브 링크" />
           <Input aria-label="채움" defaultValue="데이식스 예뻤어" />
