@@ -6,8 +6,18 @@ import { describe, expect, it } from "vitest";
 
 const hook = join(import.meta.dirname, "..", "guard-bash.mjs");
 
+// Under `git rebase --exec` git exports GIT_DIR for the real repo; `git init` would then re-init it with core.bare=true.
+const gitEnv = () => Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith("GIT_")));
+const git = (...args) => execFileSync("git", args, { env: gitEnv(), encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+
+function scratchRepo() {
+  const repo = mkdtempSync(join(tmpdir(), "guard-bash-"));
+  git("init", "-q", "-b", "main", repo);
+  return repo;
+}
+
 function decision(command, cwd = process.cwd()) {
-  const run = spawnSync("node", [hook], { input: JSON.stringify({ tool_input: { command }, cwd }), encoding: "utf8" });
+  const run = spawnSync("node", [hook], { input: JSON.stringify({ tool_input: { command }, cwd }), encoding: "utf8", env: gitEnv() });
   return run.stdout ? JSON.parse(run.stdout).hookSpecificOutput.permissionDecision : "allow";
 }
 
@@ -47,14 +57,28 @@ describe("guard-bash", () => {
   });
 
   it("asks for a bare push only when the current branch is main", () => {
-    const repo = mkdtempSync(join(tmpdir(), "guard-bash-"));
-    execFileSync("git", ["init", "-q", "-b", "main", repo]);
+    const repo = scratchRepo();
     expect(decision("git push", repo)).toBe("ask");
     expect(decision("git push -u origin feature-x", repo)).toBe("allow");
     expect(decision("git push origin HEAD", repo)).toBe("ask");
     expect(decision("git push origin @", repo)).toBe("ask");
-    execFileSync("git", ["-C", repo, "switch", "-q", "-c", "feature-x"]);
+    git("-C", repo, "switch", "-q", "-c", "feature-x");
     expect(decision("git push", repo)).toBe("allow");
     expect(decision("git push origin HEAD", repo)).toBe("allow");
+  });
+
+  it("leaves the repository named by an inherited GIT_DIR alone", () => {
+    const outer = scratchRepo();
+    git("-C", outer, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "x");
+    git("-C", outer, "worktree", "add", "-q", join(mkdtempSync(join(tmpdir(), "guard-bash-wt-")), "wt"));
+    const saved = process.env.GIT_DIR;
+    process.env.GIT_DIR = join(outer, ".git", "worktrees", "wt");
+    try {
+      scratchRepo();
+    } finally {
+      if (saved === undefined) delete process.env.GIT_DIR;
+      else process.env.GIT_DIR = saved;
+    }
+    expect(git("-C", outer, "config", "--get", "core.bare").trim()).toBe("false");
   });
 });
