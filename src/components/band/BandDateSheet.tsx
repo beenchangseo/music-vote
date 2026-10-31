@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import Modal from "../ui/Modal";
 import Button from "../ui/Button";
+import Field from "../ui/Field";
 import Input from "../ui/Input";
 import { updateTeamNextShow } from "@/actions/team";
 import { track } from "@/lib/analytics";
@@ -30,7 +31,6 @@ export default function BandDateSheet({ open, onClose, ...body }: BandDateSheetP
 }
 
 function DateSheetBody({ teamId, nextShowAt, onSaved, onClose }: Omit<BandDateSheetProps, "open">) {
-  const inputId = useId();
   const errorId = useId();
   const [value, setValue] = useState(nextShowAt ?? "");
   const [pending, setPending] = useState<"save" | "clear" | null>(null);
@@ -58,20 +58,17 @@ function DateSheetBody({ teamId, nextShowAt, onSaved, onClose }: Omit<BandDateSh
 
   return (
     <div>
-      <label htmlFor={inputId} className="text-sm font-semibold text-text">
-        공연 날짜
-      </label>
-      <Input
-        id={inputId}
-        type="date"
-        min={min}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        invalid={!!error}
-        aria-describedby={error ? errorId : undefined}
-        className="mt-2"
-        style={{ colorScheme: "dark" }}
-      />
+      <Field label="공연 날짜">
+        <Input
+          type="date"
+          min={min}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          invalid={!!error}
+          aria-describedby={error ? errorId : undefined}
+          style={{ colorScheme: "dark" }}
+        />
+      </Field>
       {error && (
         <p id={errorId} role="alert" className="mt-2 text-sm text-danger-fg">
           {error}

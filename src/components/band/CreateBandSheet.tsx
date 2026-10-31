@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "../ui/Modal";
 import Button from "../ui/Button";
+import Field from "../ui/Field";
 import Input from "../ui/Input";
 import { createTeam, createTeamFromPlaylist } from "@/actions/team";
 import { getVotingSettings } from "@/actions/member";
@@ -170,7 +171,7 @@ function HomeBody({ source, candidates, participantOnlyTitle, target, inputRef }
 
   // DR11: a member of someone else's band-less playlist may be about to split that band in two.
   const participantNote = participantOnlyTitle && (
-    <p className="mb-4 rounded-control bg-surface px-3 py-2.5 text-sm leading-relaxed text-text-muted">
+    <p className="mb-4 rounded-control bg-surface-hover px-3 py-2.5 text-sm leading-relaxed text-text-muted">
       「{participantOnlyTitle}」 멤버와 같은 밴드라면, 방장이 그 플레이리스트에서 만들면 다 같이 들어가요
     </p>
   );
@@ -187,7 +188,7 @@ function HomeBody({ source, candidates, participantOnlyTitle, target, inputRef }
                 type="button"
                 ref={returnTo === candidate.id ? returnRef : undefined}
                 onClick={() => setStep(candidate)}
-                className="flex min-h-14 w-full items-center justify-between gap-3 rounded-control border border-border bg-surface px-4 py-3 text-left transition-colors hover:bg-surface-hover"
+                className="flex min-h-14 w-full items-center justify-between gap-3 rounded-control bg-surface-hover px-4 py-3 text-left transition-colors hover:bg-surface-elevated"
               >
                 {/* Names tell apart playlists with similar titles before picking one. */}
                 <span className="min-w-0 flex-1">
@@ -201,14 +202,15 @@ function HomeBody({ source, candidates, participantOnlyTitle, target, inputRef }
             </li>
           ))}
         </ul>
-        <button
-          type="button"
+        <Button
           ref={returnTo === "empty" ? returnRef : undefined}
+          variant="ghost"
+          fullWidth
+          className="mt-3"
           onClick={() => setStep("empty")}
-          className="mt-3 inline-flex min-h-11 w-full items-center justify-center text-sm font-semibold text-text-muted transition-colors hover:text-text"
         >
           멤버 없이 새 밴드로 시작
-        </button>
+        </Button>
       </div>
     );
   }
@@ -279,8 +281,6 @@ function NameForm({
   /** 시트 안에서 고르기 단계 다음에 나타날 때. 처음부터 보이면 Modal 의 initialFocus 가 맡는다. */
   focusOnMount?: boolean;
 }) {
-  const inputId = useId();
-  const helpId = useId();
   const [name, setName] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -310,26 +310,19 @@ function NameForm({
   return (
     <form onSubmit={submit}>
       {header}
-      <label htmlFor={inputId} className="text-sm font-semibold text-text">
-        밴드 이름
-      </label>
-      <Input
-        ref={inputRef}
-        id={inputId}
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        maxLength={TEAM_NAME_MAX}
-        aria-describedby={helpId}
-        invalid={!!error}
-        className="mt-2"
-        autoComplete="off"
-      />
-      <p id={helpId} className="mt-2 text-caption leading-relaxed text-text-muted">
-        나중에 바꿀 수 없어요. 공연 이름 말고 밴드 이름을 써 주세요
-      </p>
+      <Field label="밴드 이름" help="나중에 바꿀 수 없어요. 공연 이름 말고 밴드 이름을 써 주세요">
+        <Input
+          ref={inputRef}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={TEAM_NAME_MAX}
+          invalid={!!error}
+          autoComplete="off"
+        />
+      </Field>
 
       {/* A filled box without a border, like the DR11 note: only the input above has an outline. */}
-      <div className="mt-4 rounded-control bg-surface px-3 py-2.5">{note}</div>
+      <div className="mt-4 rounded-control bg-surface-hover px-3 py-2.5">{note}</div>
 
       <Button type="submit" size="lg" fullWidth className="mt-5" disabled={!name.trim()} loading={pending}>
         밴드 만들기

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "../ui/Modal";
 import Button from "../ui/Button";
+import EmptyState from "../ui/EmptyState";
+import InlineNotice from "../ui/InlineNotice";
 import { RoomCover } from "./BandArt";
 import { attachPlaylistToTeam, getAttachablePlaylists, type AttachablePlaylist } from "@/actions/team";
 import { track } from "@/lib/analytics";
@@ -99,35 +101,36 @@ function SheetBody({ teamId, onAttached, onClose }: { teamId: string; onAttached
       </p>
 
       {loadFailed ? (
-        <div className="rounded-control border border-border bg-surface p-4">
-          <p role="alert" className="text-sm text-text">
-            목록을 불러오지 못했어요
-          </p>
-          <Button
-            variant="tonal"
-            className="mt-3 min-h-11"
-            onClick={() => {
-              setLoadFailed(false);
-              setAttempt((n) => n + 1);
-            }}
-          >
-            다시 불러오기
-          </Button>
-        </div>
+        <InlineNotice
+          tone="warning"
+          action={
+            <Button
+              variant="tonal"
+              onClick={() => {
+                setLoadFailed(false);
+                setAttempt((n) => n + 1);
+              }}
+            >
+              다시 불러오기
+            </Button>
+          }
+        >
+          <p role="alert">목록을 불러오지 못했어요</p>
+        </InlineNotice>
       ) : list === null ? (
         <ul aria-busy="true" aria-label="플레이리스트를 불러오는 중" className="space-y-3">
           {Array.from({ length: 3 }, (_, i) => (
             <li key={i} className="flex items-center gap-3 motion-safe:animate-pulse-soft">
-              <span className="h-14 w-14 shrink-0 rounded-control bg-surface" />
+              <span className="h-14 w-14 shrink-0 rounded-control bg-surface-hover" />
               <span className="flex-1 space-y-2">
-                <span className="block h-4 w-2/3 rounded bg-surface" />
-                <span className="block h-3 w-1/3 rounded bg-surface" />
+                <span className="block h-4 w-2/3 rounded bg-surface-hover" />
+                <span className="block h-3 w-1/3 rounded bg-surface-hover" />
               </span>
             </li>
           ))}
         </ul>
       ) : list.length === 0 ? (
-        <p className="text-sm text-text-muted">넣을 플레이리스트가 없어요</p>
+        <EmptyState size="inline" description="넣을 플레이리스트가 없어요" />
       ) : (
         <>
           <ul className="space-y-3">

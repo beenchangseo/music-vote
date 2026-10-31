@@ -89,7 +89,7 @@ function InviteSheetBody({
 
   return (
     <div>
-      <p className="truncate rounded-control border border-border bg-surface px-3 py-2.5 text-sm text-text-muted" title={url}>
+      <p className="truncate rounded-control bg-surface-hover px-3 py-2.5 text-sm text-text-muted" title={url}>
         {url}
       </p>
 
