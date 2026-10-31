@@ -1,15 +1,17 @@
 # scenario property result — what check.sh must see on the current code.
-# "fail" rows are known findings F1 (#15) and F2 (#16) in the skill, not noise:
-# when a fix lands they turn to "pass", and this file changes with the fix.
+# The two "fail" rows are finding F1 (#15) in the bodies of set_member_vote_limit and
+# apply_vote_limit_to_all. v23 revoked EXECUTE on both from every API role, so no caller
+# can start these scenarios. drift.mjs hashes their grants: a new GRANT shows up as DRIFT,
+# and the body has to be fixed (rows turn "pass") before the grant ships.
 voters     QuotaHolds           pass
 voters     FreeOneVotePerSong   pass
 voters     VotesMatchMode       pass
-save       QuotaHolds           fail
-save       FreeOneVotePerSong   fail
-save       VotesMatchMode       fail
-configure  QuotaHolds           fail
-configure  FreeOneVotePerSong   fail
-configure  VotesMatchMode       fail
+save       QuotaHolds           pass
+save       FreeOneVotePerSong   pass
+save       VotesMatchMode       pass
+configure  QuotaHolds           pass
+configure  FreeOneVotePerSong   pass
+configure  VotesMatchMode       pass
 setLimit   QuotaHolds           fail
 setLimit   FreeOneVotePerSong   pass
 setLimit   VotesMatchMode       pass

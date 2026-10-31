@@ -159,6 +159,20 @@ if (rpcProbe.error?.code === "42501") {
   report("save_playlist_voting_settings RPC", "fail", `예상 밖 오류 ${errorId(rpcProbe.error, rpcProbe.status)}`);
 }
 
+// v23 이 모든 API 역할에서 걷은 함수들. 앱은 부르지 않는다. 열려 있으면 #15 경로가 되살아난다.
+// 없는 방 id 를 보내므로 권한이 열려 있어도 바뀌는 행은 없다.
+const NONE = "00000000-0000-0000-0000-000000000000";
+const REVOKED_RPCS = [
+  ["configure_playlist_voting", { p_playlist_id: NONE, p_mode: "free", p_default_limit: 1 }],
+  ["set_member_vote_limit", { p_playlist_id: NONE, p_user_id: NONE, p_vote_limit: 1 }],
+  ["apply_vote_limit_to_all", { p_playlist_id: NONE, p_vote_limit: 1 }],
+];
+for (const [fn, args] of REVOKED_RPCS) {
+  const probe = await anon.rpc(fn, args);
+  if (probe.error?.code === "42501") report(`${fn} RPC`, "pass", "권한 거부 42501");
+  else report(`${fn} RPC`, "fail", probe.error ? `EXECUTE 가 열려 있음 (${errorId(probe.error, probe.status)})` : "오류 없이 통과");
+}
+
 console.log("\n열려 있어야 하는 것");
 for (const view of OPEN_VIEWS) {
   const result = await anon.from(view).select("*").limit(1);

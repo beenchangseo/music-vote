@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Replays TLC counterexamples against the real SQL functions (loaded from the
-# migrations by drift.mjs --sql) in a throwaway Postgres 17 container.
+# Replays TLC counterexamples against the real SQL functions and their EXECUTE grants
+# (loaded from the migrations by drift.mjs --sql) in a throwaway Postgres 17 container.
+# Each RPC runs as the role PostgREST gives its caller: members and the host as
+# authenticated, the settings sheet's save as service_role.
 # Evidence for the findings in .claude/skills/verify-vote-quota/SKILL.md; check.sh does not need it.
 #
 #   verification/vote-quota/replay.sh     needs Docker
@@ -46,6 +48,12 @@ CREATE TABLE playlist_members (
 CREATE TABLE votes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(), song_id UUID REFERENCES songs(id) ON DELETE CASCADE,
   user_id UUID, nickname TEXT, vote_type SMALLINT NOT NULL, created_at TIMESTAMPTZ DEFAULT now());
+-- Supabase grants EXECUTE on new public functions to these roles by name as well as
+-- to PUBLIC, so a REVOKE takes effect only for the roles it names.
+CREATE ROLE anon NOLOGIN;
+CREATE ROLE authenticated NOLOGIN;
+CREATE ROLE service_role NOLOGIN;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon, authenticated, service_role;
 SQL
 node "$here/drift.mjs" --sql | sql
 
@@ -58,8 +66,15 @@ INSERT INTO songs VALUES ('$S1', '$P'), ('$S2', '$P');
 INSERT INTO playlist_members (playlist_id, user_id, display_name, vote_limit) VALUES ('$P', '$M', 'member', $2);
 SQL
 }
-as_member() { sql -c "SET request.jwt.claim.sub = '$M'" -c "$1" >/dev/null; }
-as_host() { sql -c "SET request.jwt.claim.sub = '$H'" -c "$1" >/dev/null; }
+as_member() { sql -c "SET ROLE authenticated" -c "SET request.jwt.claim.sub = '$M'" -c "$1" >/dev/null; }
+# A host RPC that may be refused (RAISE or no EXECUTE); prints the reason instead of stopping.
+host_rpc() { # $1 role, $2 jwt sub, $3 SQL
+  local err
+  if ! err="$(sql -c "SET ROLE $1" -c "SET request.jwt.claim.sub = '$2'" -c "$3" 2>&1 >/dev/null)"; then
+    err="${err%%$'\n'*}"
+    echo "  refused: ${err#*ERROR:  }"
+  fi
+}
 # A vote whose transaction stays open (holding the member row lock) for $2 seconds.
 slow_vote() { as_member "BEGIN; SELECT result FROM cast_playlist_vote('$1', 1::SMALLINT, 'member'); SELECT pg_sleep($2); COMMIT;"; }
 vote() { as_member "SELECT result FROM cast_playlist_vote('$1', 1::SMALLINT, 'member')"; }
@@ -73,32 +88,32 @@ verdict() { # $1 scenario, $2 state we expect if the bug happens
   else echo "not reproduced  $1: mode limit votes = $got (bug would give $2)"; fi
 }
 
-# save/QuotaHolds: save_playlist_voting_settings counts the member's votes before it
-# takes the member row lock, so a vote that commits in between is not counted.
+# save/QuotaHolds: the host lowers the member's limit to 0 while a vote that passed the
+# quota check is still open. The bug: save counts 0 votes, the vote commits, the limit
+# becomes 0 under 1 vote.
 seed allocated 1
 slow_vote "$S1" 2 &
 sleep 0.8
-sql -c "SELECT save_playlist_voting_settings('$P', false, 'allocated', 3::SMALLINT,
-        '[{\"user_id\": \"$M\", \"vote_limit\": 0}]'::JSONB)" >/dev/null
+host_rpc service_role '' "SELECT save_playlist_voting_settings('$P', false, 'allocated', 3::SMALLINT,
+        '[{\"user_id\": \"$M\", \"vote_limit\": 0}]'::JSONB)"
 wait
 verdict "save lowers the limit while a vote is in flight" "allocated 0 1"
 
-# setLimit/QuotaHolds: the same order through set_member_vote_limit.
+# setLimit/QuotaHolds: the same order, the host calling set_member_vote_limit by RPC.
 seed allocated 1
 slow_vote "$S1" 2 &
 sleep 0.8
-as_host "SELECT set_member_vote_limit('$P', '$M', 0::SMALLINT)"
+host_rpc authenticated "$H" "SELECT set_member_vote_limit('$P', '$M', 0::SMALLINT)"
 wait
 verdict "set_member_vote_limit lowers the limit while a vote is in flight" "allocated 0 1"
 
-# save/VotesMatchMode: cast_playlist_vote reads voting_mode without a lock. A vote
-# that read 'free' before the switch to allocated (limit 1) still takes the free
-# branch, which skips the quota count.
+# save/VotesMatchMode: two votes read 'free', then the host switches to allocated
+# (limit 1). The bug: both votes take the free branch, which skips the quota count.
 seed free 3
 slow_vote "$S1" 3 &          # holds the member row lock
 sleep 0.8
-vote "$S2" &                  # reads 'free', then waits for the lock
+vote "$S2" &                  # reads the mode, then waits for the member row lock
 sleep 0.8
-sql -c "SELECT save_playlist_voting_settings('$P', false, 'allocated', 1::SMALLINT, '[]'::JSONB)" >/dev/null
+host_rpc service_role '' "SELECT save_playlist_voting_settings('$P', false, 'allocated', 1::SMALLINT, '[]'::JSONB)"
 wait
 verdict "save switches free -> allocated while votes are in flight" "allocated 1 2"

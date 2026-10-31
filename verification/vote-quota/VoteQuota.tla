@@ -7,17 +7,24 @@
 (* READ COMMITTED (the Supabase default). Every step is one SQL statement *)
 (* of the function, and the comment on each step names its line:          *)
 (*                                                                         *)
-(*   cast_playlist_vote             supabase/migrations/v12.sql            *)
+(*   cast_playlist_vote             supabase/migrations/v23.sql            *)
 (*   register_playlist_member       supabase/migrations/v10.sql (in cast)  *)
 (*   save_playlist_voting_settings  supabase/migrations/v11.sql (UI path)  *)
 (*   configure_playlist_voting      supabase/migrations/v10.sql            *)
 (*   set_member_vote_limit          supabase/migrations/v10.sql            *)
 (*   apply_vote_limit_to_all        supabase/migrations/v10.sql            *)
 (*                                                                         *)
+(* v23 revoked EXECUTE on the last three from PUBLIC, anon, authenticated *)
+(* and service_role, so no API caller can start their scenarios. The      *)
+(* model keeps them to describe their bodies; expected.txt says which     *)
+(* rows that leaves failing.                                              *)
+(*                                                                         *)
 (* READ COMMITTED: a statement sees the committed rows plus its own       *)
 (* transaction's writes. UPDATE, SELECT ... FOR UPDATE and                *)
 (* INSERT ... ON CONFLICT DO UPDATE take the row lock and wait while      *)
 (* another transaction holds it, then act on the latest committed row.    *)
+(* SELECT ... FOR SHARE takes a shared lock on the row: shared holders    *)
+(* do not wait for each other, and FOR UPDATE waits for all of them.      *)
 (* Locks are released at COMMIT or at the rollback a RAISE causes.        *)
 (*                                                                         *)
 (* Left out: reads with no effect on these rows (creator checks, the      *)
@@ -52,7 +59,8 @@ VARIABLES
                  \*   (not a column; it records which rules wrote the row)
   nextId,        \* id of the next votes row
   memberLock,    \* transaction holding the member's playlist_members row lock, or NONE
-  playlistLock,  \* transaction holding the playlists row lock, or NONE
+  playlistLock,  \* the playlists row lock: [excl |-> FOR UPDATE holder or NONE,
+                 \*                          share |-> FOR SHARE holders]
   pc,            \* next statement of each transaction
   seenMode,      \* voting_mode the transaction read
   seenLimit,     \* vote_limit the voter read FOR UPDATE
@@ -83,22 +91,29 @@ Latest(S, s) ==
 
 Go(p, l) == pc' = [pc EXCEPT ![p] = l]
 TakeMemberLock(p) == memberLock \in {NONE, p} /\ memberLock' = p
-TakePlaylistLock(p) == playlistLock \in {NONE, p} /\ playlistLock' = p
+TakePlaylistLock(p) ==
+  /\ playlistLock.excl \in {NONE, p} /\ playlistLock.share \subseteq {p}
+  /\ playlistLock' = [playlistLock EXCEPT !.excl = p]
+SharePlaylistLock(p) ==
+  /\ playlistLock.excl \in {NONE, p}
+  /\ playlistLock' = [playlistLock EXCEPT !.share = @ \cup {p}]
 
 Locals == <<seenMode, seenLimit, seenVote, ins, del, wMode, wLimit>>
 
 ----------------------------------------------------------------------------
-(* cast_playlist_vote, supabase/migrations/v12.sql *)
+(* cast_playlist_vote, supabase/migrations/v23.sql *)
 
-(* l.41: SELECT s.playlist_id, p.voting_mode ... JOIN playlists p (no lock) *)
+(* l.57-62: SELECT s.playlist_id, p.voting_mode ... JOIN playlists p ... FOR SHARE OF p
+   waits while a host holds the playlists row FOR UPDATE, then reads the committed mode *)
 VReadMode(p) ==
   /\ pc[p] = "start"
+  /\ SharePlaylistLock(p)
   /\ seenMode' = [seenMode EXCEPT ![p] = mode]
   /\ Go(p, "register")
-  /\ UNCHANGED <<mode, limit, votes, nextId, memberLock, playlistLock,
+  /\ UNCHANGED <<mode, limit, votes, nextId, memberLock,
                  seenLimit, seenVote, ins, del, wMode, wLimit, arg>>
 
-(* l.51: PERFORM register_playlist_member -> v10 l.183-186
+(* l.68: PERFORM register_playlist_member -> v10 l.183-186
    INSERT ... ON CONFLICT (playlist_id, user_id) DO UPDATE locks the member row *)
 VRegister(p) ==
   /\ pc[p] = "register"
@@ -106,7 +121,7 @@ VRegister(p) ==
   /\ Go(p, "lockMember")
   /\ UNCHANGED <<mode, limit, votes, nextId, playlistLock, Locals, arg>>
 
-(* l.54-58: SELECT pm.vote_limit ... FOR UPDATE (p already holds the lock) *)
+(* l.71-75: SELECT pm.vote_limit ... FOR UPDATE (p already holds the lock) *)
 VReadLimit(p) ==
   /\ pc[p] = "lockMember"
   /\ seenLimit' = [seenLimit EXCEPT ![p] = limit]
@@ -114,8 +129,8 @@ VReadLimit(p) ==
   /\ UNCHANGED <<mode, limit, votes, nextId, memberLock, playlistLock,
                  seenMode, seenVote, ins, del, wMode, wLimit, arg>>
 
-(* l.60-65: SELECT v.id, v.vote_type ... ORDER BY created_at DESC, id DESC LIMIT 1,
-   then the branch on v_mode at l.67 / l.88 / l.97 *)
+(* l.77-82: SELECT v.id, v.vote_type ... ORDER BY created_at DESC, id DESC LIMIT 1,
+   then the branch on v_mode at l.84 / l.105 / l.114 *)
 VReadVote(p) ==
   /\ pc[p] = "readVote"
   /\ LET e == Latest(Visible(p), arg[p].song)
@@ -128,13 +143,13 @@ VReadVote(p) ==
   /\ UNCHANGED <<mode, limit, votes, nextId, memberLock, playlistLock,
                  seenMode, seenLimit, ins, del, wMode, wLimit, arg>>
 
-(* l.73-81: SELECT count( * ) ...; IF v_used >= v_limit THEN RAISE *)
+(* l.90-98: SELECT count( * ) ...; IF v_used >= v_limit THEN RAISE *)
 VCountUsed(p) ==
   /\ pc[p] = "countUsed"
   /\ Go(p, IF Used(p) >= seenLimit[p] THEN "rollback" ELSE "insert")
   /\ UNCHANGED <<mode, limit, votes, nextId, memberLock, playlistLock, Locals, arg>>
 
-(* l.84 / l.98: INSERT INTO votes *)
+(* l.101 / l.115: INSERT INTO votes *)
 VInsert(p) ==
   /\ pc[p] = "insert"
   /\ ins' = [ins EXCEPT ![p] = @ \cup {[id |-> nextId, song |-> arg[p].song,
@@ -144,7 +159,7 @@ VInsert(p) ==
   /\ UNCHANGED <<mode, limit, votes, memberLock, playlistLock,
                  seenMode, seenLimit, seenVote, del, wMode, wLimit, arg>>
 
-(* l.70 / l.91: DELETE FROM votes WHERE id = v_existing_id *)
+(* l.87 / l.108: DELETE FROM votes WHERE id = v_existing_id *)
 VDelete(p) ==
   /\ pc[p] = "delete"
   /\ del' = [del EXCEPT ![p] = @ \cup {seenVote[p].id}]
@@ -152,7 +167,7 @@ VDelete(p) ==
   /\ UNCHANGED <<mode, limit, votes, nextId, memberLock, playlistLock,
                  seenMode, seenLimit, seenVote, ins, wMode, wLimit, arg>>
 
-(* l.94: UPDATE votes SET vote_type = p_vote_type WHERE id = v_existing_id *)
+(* l.111: UPDATE votes SET vote_type = p_vote_type WHERE id = v_existing_id *)
 VUpdate(p) ==
   /\ pc[p] = "update"
   /\ del' = [del EXCEPT ![p] = @ \cup {seenVote[p].id}]
@@ -297,7 +312,8 @@ ApplyAll == LimitCheck("applyAll") \/ LimitUpdate("applyAll")
 
 Release(p) ==
   /\ memberLock' = IF memberLock = p THEN NONE ELSE memberLock
-  /\ playlistLock' = IF playlistLock = p THEN NONE ELSE playlistLock
+  /\ playlistLock' = [excl |-> IF playlistLock.excl = p THEN NONE ELSE playlistLock.excl,
+                      share |-> playlistLock.share \ {p}]
 
 Forget(p) ==
   /\ seenMode' = [seenMode EXCEPT ![p] = NONE]
@@ -348,7 +364,7 @@ TypeOK ==
   /\ limit \in LimitValues \cup DefaultValues
   /\ votes \subseteq Vote
   /\ memberLock \in Procs \cup {NONE}
-  /\ playlistLock \in Procs \cup {NONE}
+  /\ playlistLock \in [excl : Procs \cup {NONE}, share : SUBSET Procs]
 
 ----------------------------------------------------------------------------
 
@@ -358,7 +374,7 @@ Init ==
   /\ votes \in {{}} \cup {{[id |-> 0, song |-> s, type |-> t, cast |-> mode]} : s \in Songs, t \in Types}
   /\ QuotaHolds /\ FreeOneVotePerSong
   /\ nextId = 1
-  /\ memberLock = NONE /\ playlistLock = NONE
+  /\ memberLock = NONE /\ playlistLock = [excl |-> NONE, share |-> {}]
   /\ pc = [p \in Procs |-> "start"]
   /\ seenMode = [p \in Procs |-> NONE]
   /\ seenLimit = [p \in Procs |-> NONE]

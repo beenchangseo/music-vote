@@ -1,26 +1,26 @@
 {
   "cast_playlist_vote": {
-    "file": "supabase/migrations/v12.sql",
-    "sha256": "7ba0a927cdd7f6d716cdb28a3b8bbeafbd06ce404d3c55783cb1592de7a97904"
+    "file": "supabase/migrations/v23.sql",
+    "sha256": "4aa6a4bcb427e687bc5ed8f11b530568d33b1f476ce939d15489b289f6e84417"
   },
   "register_playlist_member": {
     "file": "supabase/migrations/v10.sql",
-    "sha256": "666a48d8eb4da787eb96ea4aa035de69839429784080f0e1d27b7c600fd9cad3"
+    "sha256": "9146398a2e4a81187906aa9679dcd7ec5604c3e51164823724a4af67be1cdc55"
   },
   "save_playlist_voting_settings": {
     "file": "supabase/migrations/v11.sql",
-    "sha256": "f426229462c00401571d80d38915b2e2f4a6d29319b098a10a1e1820724a093e"
+    "sha256": "887831c4817895bb05ff30bd461e48d0567d6854c2ef1700686cb6b06e5b8330"
   },
   "configure_playlist_voting": {
     "file": "supabase/migrations/v10.sql",
-    "sha256": "eb2c91c7a9150ec4fd99e70842ea527082df36196a7f7b6c7c74c38317817272"
+    "sha256": "aa4881a349282cd316be7385b783bdb49ba29a39aa1618f3235c6462d920df54"
   },
   "set_member_vote_limit": {
     "file": "supabase/migrations/v10.sql",
-    "sha256": "f60080a83c3a0aaf0b28aa20d312beb8af53e3cf000c10c8b4a0f2d152c26d3b"
+    "sha256": "dbc480aa8d8f0fb4957996c19e92ba18e16184570407bfa93e7e60e938751372"
   },
   "apply_vote_limit_to_all": {
     "file": "supabase/migrations/v10.sql",
-    "sha256": "19f80bfd7f8a80296ecf450124dfb37346e9b586c12e8b42975343da7731f065"
+    "sha256": "fc2ac5587a28f4d38f77162bcbe8d3154277b3c77f5640e4a7deca944385c1d5"
   }
 }
