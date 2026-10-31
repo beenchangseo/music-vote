@@ -206,7 +206,7 @@ export default function PlaylistClient({
   }, [isExpired, setlistCount, songsWithVotes]);
 
   // Player queue
-  const { state: playerState, actions: playerActions } = usePlayerQueue(songsWithVotes);
+  const { state: playerState, actions: playerActions } = usePlayerQueue(songsWithVotes, setlistItems);
 
   // No need to call loadVideoById on song switch — each SongCard mounts
   // a fresh YouTubePlayer with the correct videoId prop when isCurrent becomes true.
@@ -227,9 +227,15 @@ export default function PlaylistClient({
       if (playerState.isPlaying) playerRef.current?.pause();
       else playerRef.current?.play();
     } else {
-      playerActions.playSong(songId);
+      playerActions.playSong(songId, "candidates");
     }
   }, [playerState.currentSongId, playerState.isPlaying, playerActions]);
+
+  const handlePlayFromSetlist = useCallback((songId: string) => {
+    playerActions.playSong(songId, "setlist");
+    // Same video, so nothing reloads: a paused player has to be told to go on.
+    if (playerState.currentSongId === songId) playerRef.current?.play();
+  }, [playerState.currentSongId, playerActions]);
 
   // Header "전체 듣기": resume or pause what is loaded, otherwise start from the top of the list.
   const handlePlayAll = useCallback(() => {
@@ -239,9 +245,9 @@ export default function PlaylistClient({
     }
     const first = filteredSongs[0] ?? songsWithVotes[0];
     if (!first) return;
-    playerActions.playSong(first.id);
+    playerActions.playSong(first.id, "candidates");
     try {
-      track("play_all_started", { song_count: songsWithVotes.length });
+      track("play_all_started", { song_count: songsWithVotes.length, source: "candidates" });
     } catch {
       // Analytics never blocks playback.
     }
@@ -685,6 +691,8 @@ export default function PlaylistClient({
               }}
               title={playlist.title}
               access={setlistAccess}
+              onPlay={handlePlayFromSetlist}
+              player={playerState}
             />
           )}
 
@@ -787,7 +795,6 @@ export default function PlaylistClient({
         state={playerState}
         actions={playerActions}
         playerRef={playerRef}
-        queue={songsWithVotes}
         songActions={
           // YouTube Music's like/dislike pill = our vote pill, for the song on air.
           playerState.currentSong ? (

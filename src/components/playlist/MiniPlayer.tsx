@@ -6,14 +6,11 @@ import type { PlayerState, PlayerActions } from "@/hooks/usePlayerQueue";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
 import { trapTabKey } from "../ui/focus-trap";
 import { displayArtist } from "@/domain/song-meta";
-import type { SongWithScore } from "@/domain/types";
 
 interface MiniPlayerProps {
   state: PlayerState;
   actions: PlayerActions;
   playerRef: React.RefObject<YouTubePlayerHandle | null>;
-  /** 재생 큐 (점수 순 후보곡). 펼친 화면의 "다음 곡"을 여기서 뽑는다. */
-  queue: SongWithScore[];
   /** 펼친 화면에서 지금 곡 아래에 놓을 것 (투표 알약 등). */
   songActions?: ReactNode;
   /** 영상. 곡이 바뀌어도 여기 그대로 머문다. 옮기면 브라우저가 다시 로드한다. */
@@ -38,8 +35,8 @@ function formatTime(seconds: number): string {
  * 영상 iframe 은 처음 자리에서 움직이지 않는다. 모달로 옮기면 브라우저가 iframe 을 다시 로드해
  * 모바일에서 다음 곡 자동 재생 허용이 풀린다. 그래서 펼침은 포털이 아니라 같은 컨테이너의 CSS 로 한다.
  */
-export default function MiniPlayer({ state, actions, playerRef, queue, songActions, children }: MiniPlayerProps) {
-  const { currentSong, isPlaying, repeatMode, shuffleMode } = state;
+export default function MiniPlayer({ state, actions, playerRef, songActions, children }: MiniPlayerProps) {
+  const { currentSong, isPlaying, repeatMode, shuffleMode, queue, source } = state;
   const [expanded, setExpanded] = useState(false);
   const [progress, setProgress] = useState({ current: 0, duration: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
@@ -130,7 +127,7 @@ export default function MiniPlayer({ state, actions, playerRef, queue, songActio
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-          <p className="text-caption font-semibold text-text-muted">후보곡 재생 중</p>
+          <p className="text-caption font-semibold text-text-muted">{source === "setlist" ? "셋리스트" : "후보곡"} 재생 중</p>
           <span className="h-11 w-11" aria-hidden />
         </div>
       )}
