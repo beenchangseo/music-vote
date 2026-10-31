@@ -7,7 +7,8 @@
 --      v12 는 락 없이 읽어서, 그사이 방장이 방식을 바꾸면 표가 예전 방식의 규칙으로 들어갔다(자유 → 할당이면
 --      한도 검사 없이). 설정 저장과 configure 는 같은 행을 FOR UPDATE 로 잡으므로, 이제 처리 중인 표가 커밋될
 --      때까지 기다렸다가 그 표를 센다. 표가 있으면 방식 변경을 거부하고, 한도를 줄일 때도 그 표를 놓치지 않는다
---      (#15 의 save_playlist_voting_settings 경로). 투표끼리는 FOR SHARE 가 서로 막지 않는다.
+--      (#15 의 save_playlist_voting_settings 경로). 투표끼리는 FOR SHARE 가 서로 막지 않으므로, 표가 계속 겹쳐
+--      들어오면 설정 저장은 그 표들이 모두 커밋될 때까지 기다린다(밴드 규모에서는 ms 단위로 본다, 측정하지 않음).
 --   2) configure_playlist_voting · set_member_vote_limit · apply_vote_limit_to_all: 모든 API 역할의 실행 권한을
 --      걷는다 (#15). 뒤의 둘은 멤버의 표를 락 없이 세고 나중에 UPDATE 해서, 방장이 RPC 로 직접 부르면 표가
 --      한도를 넘은 채로 남을 수 있었다. 앱은 셋 다 부르지 않는다. service_role 도 걷는다. 셋 다
