@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, useId, useRef, type ReactNode } from "react";
 import { buttonClassName } from "./Button";
+import ButtonGroup from "./ButtonGroup";
 import { trapTabKey } from "./focus-trap";
 
 interface DialogButton {
@@ -141,7 +142,7 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
           <div ref={panelRef} className="w-full max-w-xs bg-surface border border-border rounded-card p-5 animate-slide-up shadow-float">
             <h3 id={titleId} className="text-base font-bold text-text text-center">{dialog.title}</h3>
             <p id={messageId} className="text-sm text-text-muted text-center mt-2 whitespace-pre-wrap leading-relaxed">{dialog.message}</p>
-            <div className="mt-5 flex gap-2">
+            <ButtonGroup className="mt-5">
               {dialog.buttons.map((btn, i) => {
                 const isLast = i === dialog.buttons.length - 1;
                 return (
@@ -151,13 +152,13 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
                       buttonRefs.current[i] = el;
                     }}
                     onClick={() => close(isLast)}
-                    className={buttonClassName({ variant: btn.variant, className: "flex-1" })}
+                    className={buttonClassName({ variant: btn.variant })}
                   >
                     {btn.label}
                   </button>
                 );
               })}
-            </div>
+            </ButtonGroup>
           </div>
         </div>
       )}
