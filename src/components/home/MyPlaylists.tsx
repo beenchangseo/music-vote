@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import Button from "../ui/Button";
 import GuitarIcon from "../ui/GuitarIcon";
 import { RoomCover } from "../band/BandArt";
 
@@ -110,13 +111,9 @@ export default function MyPlaylists({ loggedIn = true, dbPlaylists = [] }: MyPla
         ))}
       </div>
       {!expanded && hiddenCount > 0 && (
-        <button
-          type="button"
-          onClick={() => setExpanded(true)}
-          className="mt-3 inline-flex min-h-11 items-center rounded-pill border border-border px-4 text-sm font-semibold text-text transition-colors hover:bg-surface-hover"
-        >
+        <Button variant="tonal" size="sm" className="mt-3" onClick={() => setExpanded(true)}>
           전체 보기 ({merged.length}개)
-        </button>
+        </Button>
       )}
     </section>
   );
