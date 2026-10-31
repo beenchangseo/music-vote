@@ -21,22 +21,30 @@ vi.mock("next/og", () => ({
 import { GET } from "../route";
 
 const IDS = ["oSlqhkPa3no", "tXV7dfvSefo", "Ciea1ARtPzg", "Ejc__vhP2U8"];
-const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xd9]);
+const thumb = (id: string, size: string) => `https://img.youtube.com/vi/${id}/${size}.jpg`;
 
-let youtube: "ok" | "down";
+// YouTube answers 404 for any picture URL containing one of these (a gone video, a size it never made).
+let missing: string[];
+// YouTube does not answer these until the route gives up on them.
+let hanging: string[];
 const fetched: string[] = [];
 
 beforeEach(() => {
-  youtube = "ok";
+  missing = [];
+  hanging = [];
   fetched.length = 0;
   vi.stubGlobal(
     "fetch",
-    vi.fn(async (input: string | URL) => {
+    vi.fn(async (input: string | URL, init?: RequestInit) => {
       const url = String(input);
       fetched.push(url);
-      if (url.includes("img.youtube.com") && youtube === "down") return new Response(null, { status: 404 });
-      if (url.includes("img.youtube.com")) return new Response(JPEG, { headers: { "Content-Type": "image/jpeg" } });
-      return new Response(new ArrayBuffer(8));
+      if (!url.includes("img.youtube.com")) return new Response(new ArrayBuffer(8));
+      if (missing.some((part) => url.includes(part))) return new Response(null, { status: 404 });
+      if (hanging.some((part) => url.includes(part))) {
+        return new Promise<Response>((_, reject) => init?.signal?.addEventListener("abort", () => reject(init.signal!.reason)));
+      }
+      // The body names the picture, so a test can read back which one was drawn.
+      return new Response(new TextEncoder().encode(url), { headers: { "Content-Type": "image/jpeg" } });
     }),
   );
 });
@@ -55,17 +63,18 @@ async function draw(query: string) {
 
 const youtubeFetches = () => fetched.filter((url) => url.includes("img.youtube.com"));
 const coverImages = () => Array.from(document.querySelectorAll("img"));
+const drawnPictures = () => coverImages().map((img) => atob(img.getAttribute("src")!.replace("data:image/jpeg;base64,", "")));
 
 const FIVE = new URLSearchParams({ variant: "playlist", title: "UX 워크스루 테스트", songs: "5", participants: "1", cover: IDS.join(",") });
 FIVE.append("name", "낭만고양이");
 FIVE.append("name", "벚꽃 엔딩");
+const TWO = new URLSearchParams({ variant: "playlist", title: "합주", songs: "2", cover: IDS[0], name: "낭만고양이" });
 
 describe("GET /api/og vote invite card", () => {
   it("draws the four song pictures and the first song names", async () => {
     const res = await draw(FIVE.toString());
-    expect(youtubeFetches()).toEqual(IDS.map((id) => `https://img.youtube.com/vi/${id}/mqdefault.jpg`));
-    expect(coverImages()).toHaveLength(4);
-    for (const img of coverImages()) expect(img.getAttribute("src")).toBe("data:image/jpeg;base64,/9j/2Q==");
+    expect(youtubeFetches()).toEqual(IDS.map((id) => thumb(id, "mqdefault")));
+    expect(drawnPictures()).toEqual(IDS.map((id) => thumb(id, "mqdefault")));
     expect(screen.getByText("낭만고양이·벚꽃 엔딩")).toBeInTheDocument();
     expect(screen.getByText("외 3곡")).toBeInTheDocument();
     expect(screen.getByText("UX 워크스루 테스트")).toBeInTheDocument();
@@ -73,19 +82,47 @@ describe("GET /api/og vote invite card", () => {
     expect(res.headers.get("Vercel-CDN-Cache-Control")).toBe("max-age=604800");
   });
 
-  it("draws one picture for a playlist with fewer than four", async () => {
-    await draw(new URLSearchParams({ variant: "playlist", title: "합주", songs: "2", cover: IDS[0], name: "낭만고양이" }).toString());
-    expect(youtubeFetches()).toHaveLength(1);
-    expect(coverImages()).toHaveLength(1);
+  it.each<[string, string[], string]>([
+    ["the HD picture", [], "maxresdefault"],
+    ["the 480px picture when the video has no HD one", ["maxresdefault"], "hqdefault"],
+    ["the small picture when that is all there is", ["maxresdefault", "hqdefault"], "mqdefault"],
+  ])("draws one picture for a playlist with fewer than four, from %s", async (_, gone, size) => {
+    missing = gone;
+    const res = await draw(TWO.toString());
+    expect(drawnPictures()).toEqual([thumb(IDS[0], size)]);
     expect(screen.getByText("2곡")).toBeInTheDocument();
+    expect(res.headers.get("Vercel-CDN-Cache-Control")).toBe("max-age=604800");
   });
 
-  it("falls back to the text card when a picture does not load, and keeps it only briefly", async () => {
-    youtube = "down";
+  it("does not lose the lone picture to a slow answer for a size the video lacks", async () => {
+    // A missing maxresdefault once took 1.3s to 404, past the whole picture budget.
+    hanging = ["maxresdefault"];
+    const res = await draw(TWO.toString());
+    expect(drawnPictures()).toEqual([thumb(IDS[0], "hqdefault")]);
+    expect(res.headers.get("Vercel-CDN-Cache-Control")).toBe("max-age=604800");
+  });
+
+  it.each<[string, string[], string]>([
+    ["the first of four videos is gone", [IDS[0]], IDS[1]],
+    ["the third of four videos is gone", [IDS[2]], IDS[0]],
+    ["three of four videos are gone", [IDS[0], IDS[1], IDS[3]], IDS[2]],
+  ])("keeps the cover when %s: the first picture that loaded, alone, kept a week", async (_, gone, shown) => {
+    missing = gone;
     const res = await draw(FIVE.toString());
+    expect(drawnPictures()).toEqual([thumb(shown, "mqdefault")]);
+    expect(screen.getByText("낭만고양이·벚꽃 엔딩")).toBeInTheDocument();
+    expect(res.headers.get("Vercel-CDN-Cache-Control")).toBe("max-age=604800");
+  });
+
+  it.each<[string, URLSearchParams, string[]]>([
+    ["none of the four pictures loads", FIVE, IDS],
+    ["the one video is gone", TWO, [IDS[0]]],
+  ])("falls back to the text card when %s, and keeps it only briefly", async (_, query, gone) => {
+    missing = gone;
+    const res = await draw(query.toString());
     expect(coverImages()).toHaveLength(0);
-    expect(screen.queryByText("낭만고양이·벚꽃 엔딩")).not.toBeInTheDocument();
-    expect(screen.getByText("UX 워크스루 테스트")).toBeInTheDocument();
+    expect(screen.queryByText(/낭만고양이/)).not.toBeInTheDocument();
+    expect(screen.getByText(query.get("title")!)).toBeInTheDocument();
     expect(screen.getByText("지금 투표하기 →")).toBeInTheDocument();
     expect(res.headers.get("Vercel-CDN-Cache-Control")).toBe("max-age=60");
   });

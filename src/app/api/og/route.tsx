@@ -17,16 +17,17 @@ const CACHE_HEADERS = {
   "Vercel-CDN-Cache-Control": "max-age=604800",
   "Vercel-Cache-Tag": "og-card",
 };
-// A card drawn without its song pictures (YouTube slow or a video gone) is not what the query asks
-// for, so the CDN keeps it only a minute and the next scrape tries again.
+// A card drawn without any song picture (YouTube slow, or every cover video gone) is not what the
+// query asks for, so the CDN keeps it only a minute and the next scrape tries again.
 const COVER_MISSED_CACHE_HEADERS = {
   ...CACHE_HEADERS,
   "Cache-Control": "public, max-age=60",
   "Vercel-CDN-Cache-Control": "max-age=60",
 };
 
-// Upper bound on fetching the song pictures. They load alongside the fonts; past this the
-// invite card falls back to the text-only card instead of keeping Kakao's scraper waiting.
+// Upper bound on fetching the song pictures. They load alongside the fonts; past this the invite
+// card draws with the pictures it has, or the text-only card if none, instead of keeping Kakao's
+// scraper waiting.
 const COVER_TIMEOUT_MS = 1000;
 
 // Pretendard via CDN — satori(ImageResponse)는 OTF/TTF 만 지원, WOFF2 불가
@@ -46,20 +47,39 @@ async function loadFont(weight: 700 | 800): Promise<ArrayBuffer> {
   return res.arrayBuffer();
 }
 
-/** The cover's pictures as data URIs, fetched before drawing so the wait is bounded. Null if any fails. */
-async function loadCover(cover: InviteCover): Promise<string[] | null> {
+/** A cover picture as a data URI. `letterboxed`: hqdefault, a 4:3 picture with the 16:9 frame between black bars. */
+type CoverPicture = { src: string; letterboxed: boolean };
+
+// YouTube thumbnail sizes, sharpest first. The lone 470px cover wants more than mqdefault's 320×180;
+// maxresdefault (1280×720) is missing for some videos, hqdefault (480×360) always exists.
+const LONE_SIZES = ["maxresdefault", "hqdefault", "mqdefault"];
+const TILE_SIZES = ["mqdefault"];
+
+/** The sharpest of `sizes` that loaded. All are asked at once: a missing size has taken 1.3s to 404. */
+async function loadPicture(id: string, sizes: string[], signal: AbortSignal): Promise<CoverPicture | null> {
+  const pictures = await Promise.all(
+    sizes.map(async (size) => {
+      try {
+        const res = await fetch(`https://img.youtube.com/vi/${id}/${size}.jpg`, { signal });
+        if (!res.ok) return null;
+        return { src: `data:image/jpeg;base64,${base64(await res.arrayBuffer())}`, letterboxed: size === "hqdefault" };
+      } catch {
+        return null;
+      }
+    }),
+  );
+  return pictures.find((picture) => picture !== null) ?? null;
+}
+
+/**
+ * The cover's pictures, fetched before drawing so the wait is bounded. Four tiles only if all four
+ * loaded, otherwise the first that did, so one deleted video does not cost the whole cover.
+ */
+async function loadCover(cover: InviteCover): Promise<CoverPicture[]> {
   const signal = AbortSignal.timeout(COVER_TIMEOUT_MS);
-  try {
-    return await Promise.all(
-      cover.map(async (id) => {
-        const res = await fetch(`https://img.youtube.com/vi/${id}/mqdefault.jpg`, { signal });
-        if (!res.ok) throw new Error(`YouTube thumbnail ${id}: ${res.status}`);
-        return `data:image/jpeg;base64,${base64(await res.arrayBuffer())}`;
-      }),
-    );
-  } catch {
-    return null;
-  }
+  const sizes = cover.length === 1 ? LONE_SIZES : TILE_SIZES;
+  const loaded = (await Promise.all(cover.map((id) => loadPicture(id, sizes, signal)))).filter((p) => p !== null);
+  return loaded.length === 4 ? loaded : loaded.slice(0, 1);
 }
 
 function base64(buffer: ArrayBuffer): string {
@@ -108,7 +128,7 @@ export async function GET(request: NextRequest) {
   const [fontBold, fontExtraBold, cover] = await Promise.all([
     loadFont(700),
     loadFont(800),
-    wantsCover ? loadCover(invite.cover) : null,
+    wantsCover ? loadCover(invite.cover) : [],
   ]);
 
   let body: React.ReactNode;
@@ -130,7 +150,7 @@ export async function GET(request: NextRequest) {
     />;
   } else if (variant === "band") {
     body = <BandView name={title} showDate={showDate} members={members} />;
-  } else if (invite && cover) {
+  } else if (invite && cover.length > 0) {
     body = <InviteView title={title} participants={participants} songs={invite} cover={cover} />;
   } else if (variant === "playlist") {
     body = <PlaylistView
@@ -175,7 +195,7 @@ export async function GET(request: NextRequest) {
   return new Response(png, {
     headers: {
       "Content-Type": "image/png",
-      ...(wantsCover && !cover ? COVER_MISSED_CACHE_HEADERS : CACHE_HEADERS),
+      ...(wantsCover && cover.length === 0 ? COVER_MISSED_CACHE_HEADERS : CACHE_HEADERS),
       ...(isSiteCard ? {} : { "X-Robots-Tag": "noindex" }),
     },
   });
@@ -361,11 +381,13 @@ function InviteView({
   title: string;
   participants: number;
   songs: InviteSongs;
-  cover: string[];
+  cover: CoverPicture[];
 }) {
   // 30px text in the 522px column, less the note mark: about 16 Hangul-wide characters.
   const line = inviteSongsLine(songs, 16);
   const tile = cover.length >= 4 ? 235 : 470;
+  // A letterboxed 4:3 picture drawn 4/3 larger, centered, so the frame clips its black bars off.
+  const zoomed = (tile * 4) / 3;
   return (
     <div style={{ width: "100%", height: "100%", display: "flex", padding: 80, gap: 48 }}>
       <div
@@ -380,10 +402,14 @@ function InviteView({
           background: "#2a3441",
         }}
       >
-        {cover.map((src, i) => (
-          // eslint-disable-next-line @next/next/no-img-element -- satori draws plain <img>
-          <img key={i} src={src} alt="" width={tile} height={tile} style={{ width: tile, height: tile, objectFit: "cover" }} />
-        ))}
+        {cover.map(({ src, letterboxed }, i) => {
+          const size = letterboxed ? zoomed : tile;
+          const margin = letterboxed ? (tile - zoomed) / 2 : 0;
+          return (
+            // eslint-disable-next-line @next/next/no-img-element -- satori draws plain <img>
+            <img key={i} src={src} alt="" width={size} height={size} style={{ width: size, height: size, margin, objectFit: "cover" }} />
+          );
+        })}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0, height: 470 }}>
