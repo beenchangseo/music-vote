@@ -13,12 +13,12 @@ const showAlert = vi.fn();
 
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
-    channel: () => {
+    channel: (name: string) => {
       const channel = {
         on: () => channel,
         subscribe: () => channel,
         send: (message: unknown) => {
-          broadcast(message);
+          broadcast(name, message);
           return Promise.resolve("ok");
         },
       };
@@ -215,7 +215,7 @@ describe("the host saving the setlist permission", () => {
       expect(updateSetlistEditMode).toHaveBeenCalledWith(playlist.id, null, "host_only", "abc123"),
     );
     await waitFor(() =>
-      expect(broadcast).toHaveBeenCalledWith({ type: "broadcast", event: "playlist_changed", payload: {} }),
+      expect(broadcast).toHaveBeenCalledWith("playlist:abc123", { type: "broadcast", event: "playlist_changed", payload: {} }),
     );
   });
 
