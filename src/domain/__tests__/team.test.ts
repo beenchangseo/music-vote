@@ -15,6 +15,7 @@ import {
   showDateParts,
   showDday,
   showDdayLabel,
+  sortMembersForDisplay,
   validateNextShowDate,
   validateTeamName,
 } from "../team";
@@ -156,6 +157,17 @@ describe("previewMemberNames", () => {
   });
 });
 
+describe("sortMembersForDisplay", () => {
+  it("orders members who joined in the same second by the instant, though Postgres drops a zero fraction", () => {
+    const names = sortMembersForDisplay([
+      { display_name: "기타", role: "member", joined_at: "2026-10-02T00:00:00.5+00:00" },
+      { display_name: "베이스", role: "member", joined_at: "2026-10-02T00:00:00+00:00" },
+      { display_name: "보컬", role: "owner", joined_at: "2026-10-04T00:00:00+00:00" },
+    ]).map((member) => member.display_name);
+    expect(names).toEqual(["보컬", "베이스", "기타"]);
+  });
+});
+
 describe("bandOwnerAfterLeaving", () => {
   const member = (user_id: string, role: "owner" | "member", joined_at: string) => ({
     user_id,
@@ -184,6 +196,15 @@ describe("bandOwnerAfterLeaving", () => {
         member("u-a", "member", "2026-10-02T00:00:00+00:00"),
       ],
       { kind: "promote", owner: member("u-a", "member", "2026-10-02T00:00:00+00:00") },
+    ],
+    [
+      "a whole-second join is earlier than a fraction of the same second (Postgres drops a zero fraction)",
+      [
+        ME,
+        member("u-a", "member", "2026-10-02T00:00:00.5+00:00"),
+        member("u-b", "member", "2026-10-02T00:00:00+00:00"),
+      ],
+      { kind: "promote", owner: member("u-b", "member", "2026-10-02T00:00:00+00:00") },
     ],
     [
       "an earlier try already handed the band over",
