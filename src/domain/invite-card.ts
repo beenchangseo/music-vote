@@ -29,9 +29,11 @@ function toCover(ids: string[]): InviteCover {
   return [];
 }
 
-/** 코드 포인트로 세어 NAME_MAX 를 넘으면 단어 경계에서 자르고 "…" 를 붙인다. */
+const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
+/** 보이는 글자(grapheme)로 세어 NAME_MAX 를 넘으면 단어 경계에서 자르고 "…" 를 붙인다. 이모지 가족·국기를 가르지 않는다. */
 function clipName(name: string): string {
-  const chars = Array.from(name.trim());
+  const chars = Array.from(graphemes.segment(name.trim()), (s) => s.segment);
   if (chars.length <= NAME_MAX) return chars.join("");
   let cut = chars.slice(0, NAME_MAX - 1).join("");
   const space = cut.lastIndexOf(" ");

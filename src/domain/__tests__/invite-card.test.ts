@@ -60,6 +60,15 @@ describe("inviteSongs", () => {
     ["ABCDEFGHIJKLMNOP", "ABCDEFGHIJK…"],
     // Exactly twelve characters stays whole.
     ["주저하는 연인들을 위해", "주저하는 연인들을 위해"],
+    // Korean without spaces is cut mid-word.
+    ["그대에게보내는마지막사랑노래", "그대에게보내는마지막사…"],
+    // The same title in decomposed Hangul (NFD, as macOS writes file names) counts one character per syllable.
+    ["그대에게보내는마지막사랑노래".normalize("NFD"), "그대에게보내는마지막사…".normalize("NFD")],
+    // An emoji family is one character, never cut into its people.
+    ["우리 가족👨‍👩‍👧‍👦 행복송", "우리 가족👨‍👩‍👧‍👦 행복송"],
+    ["Family👨‍👩‍👧‍👦👨‍👩‍👧‍👦 Song", "Family👨‍👩‍👧‍👦👨‍👩‍👧‍👦…"],
+    // A flag is one character, never a lone letter.
+    ["대한민국응원가요🇰🇷🇰🇷🇰🇷", "대한민국응원가요🇰🇷🇰🇷🇰🇷"],
   ])("clips the long name %j to %j", (title, name) => {
     expect(inviteSongs([{ ...NANGMAN, title }]).names).toEqual([name]);
   });
