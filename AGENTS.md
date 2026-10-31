@@ -30,7 +30,7 @@ src/
 ├── domain/       순수 규칙과 엔티티 타입. 프레임워크·DB·브라우저를 모른다
 ├── lib/          바깥 연결과 서버 헬퍼. supabase/·youtube·analytics·seo·kakao, 권한 검사(playlist-access 등)
 ├── components/
-│   ├── ui/       primitives (Button·Card·Chip·IconButton·Input·Modal·ScreenToolbar·DialogProvider·GuitarIcon)
+│   ├── ui/       primitives (Button·Chip·Switch·SegmentedControl·SongRow·NoticeCard·Modal 등, 목록은 디자인 시스템 절)
 │   ├── playlist/ 플레이리스트 화면 뼈대와 후보곡 탭
 │   ├── setlist/  셋리스트 탭
 │   ├── rehearsal/ 합주 탭과 메트로놈
@@ -90,9 +90,10 @@ verification/     TLA+ 형식 검증 (verify-vote-quota 스킬)
 | 어두운 표면 위 보라 글자·아이콘·순위 | `text-primary-fg` (hover 는 `on-primary-tint`) |
 | 선택 칩·tonal 보라·탭 표시자 바탕 | `bg-primary-tint` + `text-on-primary-tint` |
 | 선택 상태 테두리 | `border-primary-fg` (`border-primary` 는 tint 위에서 3:1 이 안 나온다) |
-| 위험 버튼 바탕 | `bg-danger` + `text-on-danger` |
+| 위험 버튼 바탕 | `bg-danger` + `text-on-danger`, hover `danger-hover` |
+| 주의 배지 바탕 | `bg-warning-tint` + `text-warning` (`warning-soft` 위 warning 글자는 4.22:1 이라 금지) |
 | 빨강 글자·오류 문구 | `text-danger-fg` |
-| 입력칸 테두리 / 키보드 포커스 | `border-border-input` / `ring-focus-ring` |
+| 입력칸·꺼진 스위치 테두리 / 키보드 포커스 | `border-border-input` / `ring-focus-ring` |
 
 - `text-primary`·`text-danger`·`primary-soft` 는 eslint 가 막는다(`eslint.config.mjs`). 옛 클래스를 옮길 때는
   `node scripts/codemods/ds1-color-roles.mjs` 를 돌린다.
@@ -110,16 +111,23 @@ Variable(한국어) + Geist(영문) 폴백.
 기본값이 200ms 와 이 이징이다. 애니메이션은 `animate-fade-in`·`animate-slide-up`·`animate-vote-pop`·`animate-score-in`
 ·`animate-gradient`·`animate-float-{slow,mid,fast}`·`animate-bounce-slow`·`animate-pulse-soft`.
 
-**부품.** 새 화면은 `src/components/ui/` 위에 쌓는다. 인라인 클래스를 복사하지 않는다.
+**부품.** 새 화면은 `src/components/ui/` 위에 쌓는다. 인라인 클래스를 복사하지 않는다. 모두 `/design` 에 있다.
 
 - `Button`: variant `primary`·`tonal`·`ghost`·`danger`·`kakao`, size `sm`·`md`·`lg`·`icon`, `loading`(aria-busy).
-  버튼처럼 보이는 `<Link>` 는 `buttonClassName()`.
+  버튼처럼 보이는 `<Link>` 는 `buttonClassName()`. 카카오 노랑은 `kakao` 변형으로만 칠한다(말풍선 표시를 그린다).
 - 채운 `primary` 버튼은 화면에 하나다. 나란한 보조 동작은 `tonal`, 덜 중요한 동작은 `ghost`. 같은 일을 하는 버튼을 두
-  개 두지 않는다.
-- `Chip`: `selected`(aria-pressed). `IconButton`: tone `default`·`danger`·`brand`, `bare`, 44px 고정, `aria-label` 필수.
-- `Input`: `invalid`(aria-invalid), `pill`. `Card`: variant `default`·`elevated`·`outline`.
-- `Modal`: 포털, ESC, 모바일 sheet, scroll lock. `useDialog()`(`DialogProvider`): alert·confirm·danger 확인창.
-- `ScreenToolbar`: 후보곡·셋리스트·합주 상단의 숫자와 동작.
+  개 두지 않는다. 나란한 버튼 둘은 `ButtonGroup`(같은 폭).
+- 고르기: 필터·켜고 끄는 선택지는 `Chip`(36px, 누르는 영역 44px), 한 화면 안 보기·방식 하나는 `SegmentedControl`
+  (radiogroup), 켜고 끄기는 `Switch`(label 을 주면 줄 전체가 눌린다), 화면 아래 탭은 `TabBar`.
+- 목록: 곡은 `SongRow`(카드 없이 72px, 48px 커버, 고정 폭 `RankNumber`), 설정·멤버는 `ListRow`(56px)를 시트 안에서
+  `ListGroup` 으로 묶는다. 사람은 `Avatar`·`AvatarStack`, 메타·상태는 `Badge`(neutral·primary·warning).
+- 안내: 닫을 수 있는 안내는 `NoticeCard`(늘 닫기가 있고, 닫힘 기억은 부르는 쪽), 상태가 이어지는 동안 남는 안내는
+  `InlineNotice`, 빈 목록은 `EmptyState`(screen·inline). 성공 확인을 띄우는 토스트는 아직 없다.
+- 입력: `Field`(라벨 위, 도움말·오류 아래, aria 를 이어 준다) 안에 `Input`·`Textarea`.
+- `Modal` 은 모바일 시트다(surface 바탕, 그래버, 위 모서리 24, `shadow-float`). 시트 안 묶음·칸은 `surface-hover` 로
+  한 단계 올린다. `useDialog()`(`DialogProvider`): alert·confirm·danger 확인창.
+- `Card`: variant `default`·`elevated`·`outline`, 그림자 없음. `IconButton`: tone `default`·`danger`·`brand`, `bare`, 44px,
+  `aria-label` 필수. `ScreenToolbar`: 후보곡·셋리스트·합주 상단의 숫자와 동작.
 
 ## 데이터 흐름
 
