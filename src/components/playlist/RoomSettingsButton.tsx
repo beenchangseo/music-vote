@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useImperativeHandle, useState, useTransition, type Ref } from "react";
+import { useImperativeHandle, useOptimistic, useState, useTransition, type Ref } from "react";
 import Modal from "../ui/Modal";
 import Button from "../ui/Button";
 import { useDialog } from "../ui/DialogProvider";
@@ -38,6 +38,7 @@ interface Props {
   onVotesAnonymousChange?: (votesAnonymous: boolean) => void;
   onVotesReset?: () => void;
   setlistEditMode: SetlistEditMode;
+  /** 저장이 끝난 뒤 부른다. */
   onSetlistEditModeChange: (mode: SetlistEditMode) => void;
   /** The room's band as the page trimmed it for this viewer (R10). */
   team?: RoomTeam | null;
@@ -73,6 +74,7 @@ export default function RoomSettingsButton({
   const [defaultLimit, setDefaultLimit] = useState(3);
   const [memberLimits, setMemberLimits] = useState<Record<string, string>>({});
   const [isPending, startTransition] = useTransition();
+  const [shownEditMode, showEditMode] = useOptimistic(setlistEditMode);
   const { showAlert, showConfirm, showDanger } = useDialog();
 
   useImperativeHandle(ref, () => ({ open: () => void load() }));
@@ -161,14 +163,15 @@ export default function RoomSettingsButton({
   }
 
   // 셋리스트 편집 권한도 투표 설정과 같이 누르는 즉시 적용된다.
+  // 낙관값은 저장이 끝나면 걷힌다. 성공이면 액션의 revalidatePath 가 setlistEditMode 를 이미 새 값으로
+  // 내려줬고, 실패면 서버 값이 그대로라 따로 되돌리지 않는다.
   function changeSetlistEditMode(next: SetlistEditMode) {
-    const previous = setlistEditMode;
-    onSetlistEditModeChange(next);
     startTransition(async () => {
+      showEditMode(next);
       try {
         await updateSetlistEditMode(playlistId, adminToken, next, shareCode);
+        onSetlistEditModeChange(next);
       } catch (error) {
-        onSetlistEditModeChange(previous);
         showAlert(error instanceof Error ? error.message : "편집 권한 변경에 실패했습니다.");
       }
     });
@@ -549,10 +552,10 @@ export default function RoomSettingsButton({
                     key={value}
                     type="button"
                     disabled={isPending}
-                    onClick={() => value !== setlistEditMode && changeSetlistEditMode(value)}
-                    aria-pressed={setlistEditMode === value}
+                    onClick={() => value !== shownEditMode && changeSetlistEditMode(value)}
+                    aria-pressed={shownEditMode === value}
                     className={`min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors disabled:opacity-40 ${
-                      setlistEditMode === value
+                      shownEditMode === value
                         ? "border-primary bg-primary/15 text-primary"
                         : "border-border bg-surface text-text-muted"
                     }`}
@@ -562,7 +565,7 @@ export default function RoomSettingsButton({
                 ))}
               </div>
               <p className="mt-2 text-caption text-text-muted">
-                {setlistEditMode === "everyone"
+                {shownEditMode === "everyone"
                   ? "참여자 누구나 곡을 추가·수정하고 순서를 바꿀 수 있어요."
                   : "방장만 셋리스트를 바꿀 수 있어요."}
               </p>

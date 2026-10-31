@@ -84,8 +84,6 @@ export default function PlaylistClient({
   const [adminToken, setAdminToken] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
   const [allowance, setAllowance] = useState<VoteAllowance | null>(null);
-  const [votesAnonymous, setVotesAnonymous] = useState(playlist.votes_anonymous);
-  const [setlistEditMode, setSetlistEditMode] = useState(playlist.setlist_edit_mode);
   // Band made from the prompt card (R6). Lives here, not in the card: the action's revalidatePath
   // re-renders the room with a band, the prompt condition turns false and the card unmounts.
   const [justCreatedTeam, setJustCreatedTeam] = useState<CreatedBand | null>(null);
@@ -124,7 +122,7 @@ export default function PlaylistClient({
     ? !!adminToken
     : !!currentUserId && currentUserId === playlist.creator_user_id;
   const isExpired = playlist.deadline ? new Date(playlist.deadline) < new Date() : false;
-  const setlistAccess = setlistEditAccess({ archived: isArchived, mode: setlistEditMode, loggedIn, isHost: isAdmin });
+  const setlistAccess = setlistEditAccess({ archived: isArchived, mode: playlist.setlist_edit_mode, loggedIn, isHost: isAdmin });
   const canEditSetlist = setlistAccess === "edit";
   // F7: owner · room without a band · at least two logged-in members. A brand-new room (1 member) has no card.
   const showBandPrompt =
@@ -362,13 +360,10 @@ export default function PlaylistClient({
       currentUserId={currentUserId}
       team={team}
       myTeams={myTeams}
-      setlistEditMode={setlistEditMode}
-      onSetlistEditModeChange={setSetlistEditMode}
+      setlistEditMode={playlist.setlist_edit_mode}
+      onSetlistEditModeChange={notifyChange}
       onAllowanceChange={(mode, usedVotes, voteLimit) => setAllowance({ mode, usedVotes, voteLimit })}
-      onVotesAnonymousChange={(next) => {
-        setVotesAnonymous(next);
-        notifyChange();
-      }}
+      onVotesAnonymousChange={notifyChange}
       onVotesReset={() => {
         resetVotes();
         notifyChange();
@@ -647,7 +642,7 @@ export default function PlaylistClient({
                       key={song.id}
                       song={song}
                       votingMode={playlist.voting_mode}
-                      votesAnonymous={votesAnonymous}
+                      votesAnonymous={playlist.votes_anonymous}
                       nickname={nickname}
                       shareCode={shareCode}
                       playlistId={playlist.id}
