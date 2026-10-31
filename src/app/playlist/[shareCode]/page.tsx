@@ -6,7 +6,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { shouldExposeVoters } from "@/domain/vote";
 import { BAND_PROMPT_COOKIE, parseDismissals } from "@/lib/prompt-dismissals";
 import { BASE_OPEN_GRAPH } from "@/lib/seo";
-import { inviteCardParams, inviteDescription, inviteSongs } from "@/domain/invite-card";
+import { inviteSongs, playlistShareCard } from "@/domain/invite-card";
+import { isArchivedPlaylist } from "@/domain/playlist-archive";
 import { getMyTeams, type MyTeam } from "@/actions/team";
 import PlaylistClient from "@/components/playlist/PlaylistClient";
 import type { Metadata } from "next";
@@ -114,11 +115,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const [stats, songsResult] = await Promise.all([getPlaylistStats(playlist.id), getPlaylistSongs(playlist.id)]);
   const participantCount = stats?.participant_count ?? 0;
-  // A pasted link unfurls as the same vote invite card the share button sends.
-  const songs = inviteSongs((songsResult.data ?? []) as Song[]);
+  // A pasted link unfurls as the same card the share button sends.
+  const card = playlistShareCard(
+    { title: playlist.title, archived: isArchivedPlaylist(playlist) },
+    participantCount,
+    inviteSongs((songsResult.data ?? []) as Song[]),
+  );
 
   const metaTitle = `${playlist.title} - Plypick`;
-  const description = inviteDescription(songs, participantCount);
+  const description = card.description;
 
   return {
     title: metaTitle,
@@ -129,7 +134,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ...BASE_OPEN_GRAPH,
       title: metaTitle,
       description,
-      images: [`/api/og?${inviteCardParams(playlist.title, participantCount, songs)}`],
+      images: [`/api/og?${card.query}`],
     },
     twitter: {
       card: "summary_large_image",

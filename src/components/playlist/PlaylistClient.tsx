@@ -380,6 +380,7 @@ export default function PlaylistClient({
             playlistId={playlist.id}
             title={playlist.title}
             inviteSongs={invite}
+            archived={isArchived}
             shareCode={shareCode}
             participantCount={participantCount}
             announcement={playlist.announcement}

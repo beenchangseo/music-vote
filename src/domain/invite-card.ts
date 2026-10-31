@@ -104,3 +104,25 @@ export function inviteDescription(songs: InviteSongs, participants: number): str
   const lead = names ? [names, more].filter(Boolean).join(" ") : `${songs.count}곡 등록`;
   return participants > 0 ? `${lead} · ${participants}명 참여 중` : `${lead} | 밴드 곡 투표에 참여하세요!`;
 }
+
+/**
+ * 카톡 공유 버튼과 링크 미리보기가 같이 보내는 카드. `query` 는 `/api/og?` 뒤에 붙는다.
+ * 보관된 플레이리스트(ADR 0012)는 투표를 받지 않으니 "투표 진행 중" 카드를 보내지 않는다.
+ * #11 이전의 홈 카드 URL 과 "N곡 등록" 문구를 글자 그대로 둬서 이미 퍼진 미리보기와도 같다.
+ */
+export function playlistShareCard(
+  playlist: { title: string; archived: boolean },
+  participants: number,
+  songs: InviteSongs,
+): { query: string; description: string } {
+  if (playlist.archived) {
+    return {
+      query: `title=${encodeURIComponent(playlist.title)}&songs=${songs.count}&participants=${participants}`,
+      description: inviteDescription({ cover: [], names: [], count: songs.count }, participants),
+    };
+  }
+  return {
+    query: inviteCardParams(playlist.title, participants, songs).toString(),
+    description: inviteDescription(songs, participants),
+  };
+}

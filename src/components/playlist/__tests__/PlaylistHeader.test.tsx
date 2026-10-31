@@ -58,6 +58,15 @@ describe("PlaylistHeader vote invite card", () => {
     expect(card).toMatchObject({ imageWidth: 1200, imageHeight: 630 });
   });
 
+  it("shares the old card for an archived playlist, which takes no votes", () => {
+    renderHeader({ archived: true });
+    const card = sharedCard();
+    expect(card.description).toBe("3곡 등록 · 2명 참여 중");
+    const image = new URL(card.imageUrl);
+    expect(image.pathname).toBe("/api/og");
+    expect(image.search).toBe(`?title=${encodeURIComponent("10월 합주")}&songs=3&participants=2`);
+  });
+
   it("keeps the count line for a playlist without songs", () => {
     renderHeader({ inviteSongs: { cover: [], names: [], count: 0 }, participantCount: 0 });
     const card = sharedCard();

@@ -3,12 +3,14 @@ import { createFakeClient } from "@/actions/__tests__/fake-supabase";
 
 const db = vi.hoisted(() => ({
   songs: [] as { title: string; youtube_video_id: string; created_at: string }[],
+  // A playlist made before Kakao login has no creator account (ADR 0012).
+  creator: "u1" as string | null,
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
   createAdminClient: () =>
     createFakeClient((op) => {
-      if (op.table === "playlists") return { data: { id: "p1", title: "UX 워크스루 테스트", share_code: "qDPJnh1d" } };
+      if (op.table === "playlists") return { data: { id: "p1", title: "UX 워크스루 테스트", share_code: "qDPJnh1d", creator_user_id: db.creator } };
       if (op.table === "songs") return { data: db.songs };
       return { data: null };
     }).client,
@@ -23,21 +25,24 @@ vi.mock("@/components/playlist/PlaylistClient", () => ({ default: () => null }))
 
 import { generateMetadata } from "../page";
 
+const FIVE_SONGS = [
+  { title: "[MV] 체리필터 - 낭만고양이 | Cherryfilter - Romantic Cat", youtube_video_id: "oSlqhkPa3no", created_at: "2026-10-01T10:00:00+00:00" },
+  { title: "버스커 버스커 (Busker Busker) - 벚꽃 엔딩", youtube_video_id: "tXV7dfvSefo", created_at: "2026-10-01T10:01:00+00:00" },
+  { title: "요루시카 - 그저 네게 맑아라(ただ君に晴れ) [가사/발음/해석]", youtube_video_id: "Ciea1ARtPzg", created_at: "2026-10-01T10:02:00+00:00" },
+  { title: "DAY6(데이식스)- 예뻤어 [가사/Lyrics]", youtube_video_id: "Ejc__vhP2U8", created_at: "2026-10-01T10:03:00+00:00" },
+  { title: "그녀가 웃었다 She Smiled", youtube_video_id: "8XqtC-sD2sY", created_at: "2026-10-01T10:04:00+00:00" },
+];
+
 const props = { params: Promise.resolve({ shareCode: "qDPJnh1d" }) };
 
 afterEach(() => {
   db.songs = [];
+  db.creator = "u1";
 });
 
 describe("/playlist/[shareCode] link preview", () => {
   it("unfurls a pasted link as the same vote invite card the share button sends", async () => {
-    db.songs = [
-      { title: "[MV] 체리필터 - 낭만고양이 | Cherryfilter - Romantic Cat", youtube_video_id: "oSlqhkPa3no", created_at: "2026-10-01T10:00:00+00:00" },
-      { title: "버스커 버스커 (Busker Busker) - 벚꽃 엔딩", youtube_video_id: "tXV7dfvSefo", created_at: "2026-10-01T10:01:00+00:00" },
-      { title: "요루시카 - 그저 네게 맑아라(ただ君に晴れ) [가사/발음/해석]", youtube_video_id: "Ciea1ARtPzg", created_at: "2026-10-01T10:02:00+00:00" },
-      { title: "DAY6(데이식스)- 예뻤어 [가사/Lyrics]", youtube_video_id: "Ejc__vhP2U8", created_at: "2026-10-01T10:03:00+00:00" },
-      { title: "그녀가 웃었다 She Smiled", youtube_video_id: "8XqtC-sD2sY", created_at: "2026-10-01T10:04:00+00:00" },
-    ];
+    db.songs = FIVE_SONGS;
     const meta = await generateMetadata(props);
     expect(meta.description).toBe("낭만고양이·벚꽃 엔딩 외 3곡 · 1명 참여 중");
     const image = new URL(String((meta.openGraph?.images as string[])[0]), "https://plypick.kr");
@@ -54,5 +59,16 @@ describe("/playlist/[shareCode] link preview", () => {
     const image = new URL(String((meta.openGraph?.images as string[])[0]), "https://plypick.kr");
     expect(image.searchParams.get("variant")).toBe("playlist");
     expect(image.searchParams.get("cover")).toBeNull();
+  });
+
+  it("keeps the old card for an archived playlist, which takes no votes", async () => {
+    db.songs = FIVE_SONGS;
+    db.creator = null;
+    const meta = await generateMetadata(props);
+    expect(meta.description).toBe("5곡 등록 · 1명 참여 중");
+    // The same URL main sent before #11, so previews already shared stay as they are.
+    expect((meta.openGraph?.images as string[])[0]).toBe(
+      `/api/og?title=${encodeURIComponent("UX 워크스루 테스트")}&songs=5&participants=1`,
+    );
   });
 });
