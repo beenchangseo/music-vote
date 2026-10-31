@@ -385,6 +385,7 @@ export default function PlaylistClient({
               band={memberBand}
               currentUserNickname={userNickname}
               currentUserAvatarUrl={currentUserAvatarUrl}
+              loginGate={loginGate}
             />
           ) : (
             <PlaylistHeader

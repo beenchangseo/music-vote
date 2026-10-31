@@ -1,14 +1,16 @@
 import Link from "next/link";
 import AuthMenu from "../auth/AuthMenu";
+import LoginButton from "../auth/LoginButton";
 
 interface PlaylistTitleBarProps {
   title: string;
   band?: { id: string; name: string } | null;
   currentUserNickname?: string;
   currentUserAvatarUrl?: string | null;
+  loginGate?: boolean;
 }
 
-export default function PlaylistTitleBar({ title, band, currentUserNickname, currentUserAvatarUrl }: PlaylistTitleBarProps) {
+export default function PlaylistTitleBar({ title, band, currentUserNickname, currentUserAvatarUrl, loginGate = false }: PlaylistTitleBarProps) {
   return (
     <header className="-mt-3 flex min-h-12 items-center gap-1.5 text-body">
       <Link
@@ -28,6 +30,7 @@ export default function PlaylistTitleBar({ title, band, currentUserNickname, cur
       )}
       <h1 className="min-w-0 flex-1 truncate font-semibold text-text">{title}</h1>
       {currentUserNickname && <AuthMenu nickname={currentUserNickname} avatarUrl={currentUserAvatarUrl ?? null} embedded />}
+      {loginGate && <LoginButton variant="tonal" size="sm" label="로그인" className="shrink-0" />}
     </header>
   );
 }

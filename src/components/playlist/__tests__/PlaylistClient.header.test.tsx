@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Playlist, RoomTeam } from "@/domain/types";
 import PlaylistClient from "../PlaylistClient";
@@ -31,7 +31,9 @@ vi.mock("../YouTubePlayer", () => ({ default: () => null }));
 vi.mock("../RoomSettingsButton", () => ({ default: () => null }));
 vi.mock("../../setlist/SetlistView", () => ({ default: () => null }));
 vi.mock("../../rehearsal/RehearsalView", () => ({ default: () => null }));
-vi.mock("../../auth/LoginButton", () => ({ default: () => null }));
+vi.mock("../../auth/LoginButton", () => ({
+  default: ({ label, variant }: { label?: string; variant?: string }) => <button type="button" data-variant={variant}>{label}</button>,
+}));
 vi.mock("../NavigationBar", () => ({
   default: ({ onModeChange }: { onModeChange: (mode: string) => void }) => (
     <nav>
@@ -106,6 +108,21 @@ describe("PlaylistClient header per tab (#4)", () => {
     expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
     expect(screen.getByRole("heading", { level: 1, name: "10월 합주" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /계정 메뉴/ })).not.toBeInTheDocument();
+  });
+
+  it.each(["셋리스트", "합주"])("gives a logged-out viewer the candidates tab's login button on the %s tab", (tab) => {
+    renderRoom({ team: null, currentUserId: null, userNickname: undefined });
+    fireEvent.click(screen.getByRole("button", { name: tab }));
+
+    const login = within(screen.getByRole("banner")).getByRole("button", { name: "로그인" });
+    expect(login).toHaveAttribute("data-variant", "tonal");
+  });
+
+  it("leaves the login button out of the one-line header for a logged-in member", () => {
+    renderRoom();
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
+
+    expect(within(screen.getByRole("banner")).queryByRole("button", { name: "로그인" })).not.toBeInTheDocument();
   });
 
   it("opens every tab at its top, so the shorter header does not drop the reader mid-list", () => {
