@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Badge from "../ui/Badge";
 import { triggerKakaoLogin } from "@/lib/kakao-login";
 import type { VoteDirection } from "@/domain/vote";
 import type { VotingMode } from "@/domain/types";
@@ -139,8 +140,8 @@ export default function VoteButtons({
 
 function VoteCountBadge({ count }: { count: number }) {
   return (
-    <span className="absolute right-0.5 top-0.5 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] font-bold leading-4 text-white tabular-nums">
+    <Badge tone="primary" className="absolute -right-1 -top-1">
       {count}
-    </span>
+    </Badge>
   );
 }

@@ -2,6 +2,9 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Modal from "../ui/Modal";
+import EmptyState from "../ui/EmptyState";
+import Input from "../ui/Input";
+import Textarea from "../ui/Textarea";
 import { useDialog } from "../ui/DialogProvider";
 import {
   addSongVersion,
@@ -106,9 +109,9 @@ export default function SongVersionModal(props: Props) {
         {loading ? (
           <p className="py-8 text-center text-sm text-text-muted">불러오는 중...</p>
         ) : versions.length === 0 ? (
-          <p className="py-5 text-center text-sm text-text-muted">아직 등록된 다른 버전이 없어요.</p>
+          <EmptyState size="inline" description="아직 등록된 다른 버전이 없어요." />
         ) : versions.map((version) => (
-          <div key={version.id} className="rounded-xl border border-border bg-surface p-3">
+          <div key={version.id} className="rounded-card border border-border bg-surface-hover p-3">
             <a href={version.youtube_url} target="_blank" rel="noreferrer" className="block text-sm font-medium text-text hover:text-primary-fg line-clamp-2">
               {version.title}
             </a>
@@ -129,8 +132,8 @@ export default function SongVersionModal(props: Props) {
       {!props.loginGate && (
         <div className="mt-5 space-y-3 border-t border-border pt-4">
           <p className="text-sm font-semibold text-text">{editingId ? "다른 버전 수정" : "다른 버전 추가"}</p>
-          <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="YouTube 링크" className="h-11 w-full rounded-xl border border-border bg-surface-hover px-3 text-sm text-text" />
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={100} rows={2} placeholder="짧은 설명 (선택)" className="w-full resize-none rounded-xl border border-border bg-surface-hover px-3 py-2 text-sm text-text" />
+          <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="YouTube 링크" />
+          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={100} rows={2} placeholder="짧은 설명 (선택)" />
           <div className="flex items-center justify-between">
             <span className="text-caption text-text-subtle">{description.length}/100</span>
             <div className="flex gap-2">

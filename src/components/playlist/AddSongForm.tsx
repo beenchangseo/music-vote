@@ -162,12 +162,11 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
 
         {showManualTitle && (
           <div className="mt-2 animate-fade-in">
-            <input
+            <Input
               type="text"
               value={manualTitle}
               onChange={(e) => setManualTitle(e.target.value)}
               placeholder="곡 제목을 직접 입력해주세요 (메타데이터를 가져올 수 없습니다)"
-              className="w-full px-4 py-2 rounded-xl bg-surface-hover border border-yellow-600/50 text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all text-sm"
             />
           </div>
         )}

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useDialog } from "../ui/DialogProvider";
+import Textarea from "../ui/Textarea";
 import { updateAnnouncementPublic } from "@/actions/playlist";
 
 interface AnnouncementButtonProps {
@@ -61,13 +62,12 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
                 <p className="text-sm text-text-muted whitespace-pre-wrap">{announcement}</p>
               </div>
             )}
-            <textarea
+            <Textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="멤버들에게 전달할 공지사항을 작성하세요"
               rows={4}
               maxLength={500}
-              className="w-full px-3 py-2 rounded-xl bg-surface-hover border border-border text-text placeholder-text-subtle text-sm resize-none focus:outline-none focus:ring-2 focus:ring-focus-ring"
             />
             <div className="flex justify-between items-center mt-3">
               <span className="text-caption text-text-subtle">{text.length}/500</span>
