@@ -159,7 +159,7 @@ export default function AuthMenu({ nickname, avatarUrl, embedded = false }: Auth
             type="button"
             onClick={confirmDeleteAccount}
             disabled={deletePhase !== "idle"}
-            className="flex min-h-11 w-full items-center border-t border-border px-3 text-left text-sm text-danger hover:bg-surface-hover transition-colors disabled:opacity-60"
+            className="flex min-h-11 w-full items-center border-t border-border px-3 text-left text-sm text-danger-fg hover:bg-surface-hover transition-colors disabled:opacity-60"
           >
             {DELETE_LABEL[deletePhase]}
           </button>
