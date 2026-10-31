@@ -12,6 +12,16 @@ const DELETE_ACCOUNT_MESSAGE =
   "내가 만든 플레이리스트는 방장이 없는 보관 플레이리스트가 돼요. 멤버들이 지난 기록은 볼 수 있지만 더는 투표하거나 곡을 추가할 수 없어요.\n\n" +
   "탈퇴하면 되돌릴 수 없어요.";
 
+const RETRY_LATER = "탈퇴하지 못했어요. 잠시 후 다시 시도해 주세요.";
+
+type DeleteFailure = Extract<DeleteAccountResult, { success: false }>["reason"];
+
+const DELETE_FAILED: Record<Exclude<DeleteFailure, "not_logged_in">, string> = {
+  not_available: "지금은 앱에서 탈퇴할 수 없어요. 아무것도 지우지 않았어요.",
+  kakao_unlink_failed: RETRY_LATER,
+  write_failed: RETRY_LATER,
+};
+
 interface AuthMenuProps {
   nickname: string;
   avatarUrl: string | null;
@@ -69,7 +79,7 @@ export default function AuthMenu({ nickname, avatarUrl, embedded = false }: Auth
         void showAlert("로그인이 풀렸어요. 탈퇴하려면 다시 로그인해 주세요.").then(() => window.location.reload());
         return;
       }
-      void showAlert("탈퇴하지 못했어요. 잠시 후 다시 시도해 주세요.");
+      void showAlert(DELETE_FAILED[result.reason]);
     });
   }
 

@@ -144,17 +144,33 @@ describe("deleteAccount", () => {
     expect(state.deleteUser).toHaveBeenCalledTimes(1);
   });
 
-  it("goes on when Kakao says the account is no longer linked", async () => {
-    state.fetch.mockImplementation(kakaoReply(400, { code: -101, msg: "not registered user" }));
+  it.each([-101, -103])(
+    "goes on when Kakao answers %i (already unlinked) and logs the code with only the internal user id",
+    async (code) => {
+      const info = vi.spyOn(console, "info").mockImplementation(() => {});
+      state.fetch.mockImplementation(kakaoReply(400, { code, msg: "not registered user" }));
+
+      expect(await deleteAccount()).toEqual({ success: true });
+      expect(state.deleteUser).toHaveBeenCalledTimes(1);
+
+      const logged = info.mock.calls.map((args) => args.join(" "));
+      expect(logged.some((line) => line.includes(String(code)) && line.includes(ME.id))).toBe(true);
+      expect(logged.join("\n")).not.toContain(KAKAO_ID);
+      expect(logged.join("\n")).not.toContain(ME.nickname);
+    },
+  );
+
+  it("does not log an already-unlinked line when Kakao really unlinked", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
 
     expect(await deleteAccount()).toEqual({ success: true });
-    expect(state.deleteUser).toHaveBeenCalledTimes(1);
+    expect(info).not.toHaveBeenCalled();
   });
 
-  it("refuses to delete a Kakao account while the Kakao admin key is missing", async () => {
+  it("says deletion is unavailable, not a passing failure, while the Kakao admin key is missing", async () => {
     vi.stubEnv("KAKAO_ADMIN_KEY", "");
 
-    expect(await deleteAccount()).toEqual({ success: false, reason: "kakao_unlink_failed" });
+    expect(await deleteAccount()).toEqual({ success: false, reason: "not_available" });
     expect(state.fetch).not.toHaveBeenCalled();
     expect(writes()).toEqual([]);
     expect(state.deleteUser).not.toHaveBeenCalled();
@@ -191,6 +207,14 @@ describe("deleteAccount", () => {
     expect(await deleteAccount()).toEqual({ success: true });
     expect(state.deleteUser).toHaveBeenCalledTimes(2);
     expect(state.signOut).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports success when signing out of this device throws after the account is gone", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    state.signOut.mockRejectedValueOnce(new Error("cookie write failed"));
+
+    expect(await deleteAccount()).toEqual({ success: true });
+    expect(state.deleteUser).toHaveBeenCalledTimes(1);
   });
 
   it("treats an account that is already gone as deleted", async () => {

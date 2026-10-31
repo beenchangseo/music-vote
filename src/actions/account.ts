@@ -18,7 +18,7 @@ import type { ActionResult } from "@/domain/types";
 
 export type DeleteAccountResult = ActionResult<
   Record<never, never>,
-  "not_logged_in" | "kakao_unlink_failed" | "write_failed"
+  "not_logged_in" | "not_available" | "kakao_unlink_failed" | "write_failed"
 >;
 
 const LEFT_MEMBER_NAME = "탈퇴한 멤버";
@@ -45,9 +45,20 @@ export async function deleteAccount(): Promise<DeleteAccountResult> {
   const kakaoId = found.user.identities?.find((identity) => identity.provider === "kakao")?.id;
   if (kakaoId) {
     const unlink = await unlinkKakaoUser(kakaoId);
-    if (unlink !== "unlinked") {
-      console.error(`deleteAccount: kakao unlink ${unlink}`, user.id);
+    if (unlink.kind === "not_configured") {
+      console.error("deleteAccount: KAKAO_ADMIN_KEY is not set", user.id);
+      return { success: false, reason: "not_available" };
+    }
+    if (unlink.kind === "failed") {
+      console.error(
+        `deleteAccount: kakao unlink failed (http ${unlink.httpStatus ?? "none"}, code ${unlink.kakaoCode ?? "none"})`,
+        user.id,
+      );
       return { success: false, reason: "kakao_unlink_failed" };
+    }
+    // Tells a real unlink (no line) apart from Kakao saying the link was already gone.
+    if (unlink.kind === "already_unlinked") {
+      console.info(`deleteAccount: kakao already unlinked (code ${unlink.kakaoCode})`, user.id);
     }
   }
 
@@ -82,7 +93,13 @@ export async function deleteAccount(): Promise<DeleteAccountResult> {
     return { success: false, reason: "write_failed" };
   }
 
-  const supabase = await createServerSupabaseClient();
-  await supabase.auth.signOut({ scope: "local" });
+  // The account is gone either way. A failed sign-out only leaves a cookie for a user that no longer
+  // exists, which getUser rejects on the next request, so it must not read as a failed deletion.
+  try {
+    const supabase = await createServerSupabaseClient();
+    await supabase.auth.signOut({ scope: "local" });
+  } catch (error) {
+    console.error("deleteAccount: sign-out after delete failed", user.id, error instanceof Error ? error.message : "");
+  }
   return { success: true };
 }

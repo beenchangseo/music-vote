@@ -82,4 +82,15 @@ describe("AuthMenu 탈퇴하기", () => {
     expect(assign).not.toHaveBeenCalled();
     expect(reload).not.toHaveBeenCalled();
   });
+
+  it("says deletion is unavailable right now without asking to retry soon", async () => {
+    actions.deleteAccount.mockResolvedValue({ success: false, reason: "not_available" });
+    fireEvent.click(within(openDeleteConfirm()).getByRole("button", { name: "탈퇴하기" }));
+
+    const alert = await screen.findByRole("alertdialog");
+    expect(alert).toHaveTextContent("지금은 앱에서 탈퇴할 수 없어요");
+    expect(alert).toHaveTextContent("아무것도 지우지 않았어요");
+    expect(alert).not.toHaveTextContent("잠시 후");
+    expect(assign).not.toHaveBeenCalled();
+  });
 });

@@ -10,11 +10,15 @@ const UNLINK_URL = "https://kapi.kakao.com/v1/user/unlink";
 // Either way the link the unlink would cut is already gone.
 const ALREADY_UNLINKED = new Set([-101, -103]);
 
-export type KakaoUnlinkOutcome = "unlinked" | "not_configured" | "failed";
+export type KakaoUnlinkOutcome =
+  | { kind: "unlinked" }
+  | { kind: "already_unlinked"; kakaoCode: number }
+  | { kind: "not_configured" }
+  | { kind: "failed"; httpStatus: number | null; kakaoCode: number | null };
 
 export async function unlinkKakaoUser(kakaoUserId: string): Promise<KakaoUnlinkOutcome> {
   const adminKey = process.env.KAKAO_ADMIN_KEY;
-  if (!adminKey) return "not_configured";
+  if (!adminKey) return { kind: "not_configured" };
 
   try {
     const response = await fetch(UNLINK_URL, {
@@ -26,10 +30,12 @@ export async function unlinkKakaoUser(kakaoUserId: string): Promise<KakaoUnlinkO
       body: new URLSearchParams({ target_id_type: "user_id", target_id: kakaoUserId }),
       signal: AbortSignal.timeout(5000),
     });
-    if (response.ok) return "unlinked";
+    if (response.ok) return { kind: "unlinked" };
     const body = (await response.json().catch(() => null)) as { code?: number } | null;
-    return body?.code !== undefined && ALREADY_UNLINKED.has(body.code) ? "unlinked" : "failed";
+    const kakaoCode = typeof body?.code === "number" ? body.code : null;
+    if (kakaoCode !== null && ALREADY_UNLINKED.has(kakaoCode)) return { kind: "already_unlinked", kakaoCode };
+    return { kind: "failed", httpStatus: response.status, kakaoCode };
   } catch {
-    return "failed";
+    return { kind: "failed", httpStatus: null, kakaoCode: null };
   }
 }
