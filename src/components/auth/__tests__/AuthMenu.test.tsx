@@ -12,13 +12,17 @@ vi.mock("next/navigation", () => ({ usePathname: () => "/" }));
 const assign = vi.fn();
 const reload = vi.fn();
 
-function pressDelete() {
+function openMenu() {
   render(
     <DialogProvider>
       <AuthMenu nickname="보컬" avatarUrl={null} />
     </DialogProvider>,
   );
   fireEvent.click(screen.getByRole("button", { name: "보컬 계정 메뉴" }));
+}
+
+function pressDelete() {
+  openMenu();
   fireEvent.click(screen.getByRole("button", { name: "탈퇴하기" }));
 }
 
@@ -38,6 +42,20 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+});
+
+describe("AuthMenu 문의하기", () => {
+  it("links to /support and closes the menu on the way out", () => {
+    openMenu();
+
+    const link = screen.getByRole("link", { name: "문의하기" });
+    expect(link).toHaveAttribute("href", "/support");
+
+    // jsdom cannot load another document; the menu closing is what this test watches.
+    link.addEventListener("click", (event) => event.preventDefault());
+    fireEvent.click(link);
+    expect(screen.queryByRole("link", { name: "문의하기" })).not.toBeInTheDocument();
+  });
 });
 
 describe("AuthMenu 탈퇴하기", () => {

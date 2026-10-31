@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Avatar from "../ui/Avatar";
 import {
@@ -147,6 +148,13 @@ export default function AuthMenu({ nickname, avatarUrl, embedded = false }: Auth
             <p className="text-caption text-text-subtle">로그인됨</p>
             <p className="text-sm font-medium text-text truncate">{nickname}</p>
           </div>
+          <Link
+            href="/support"
+            onClick={() => setOpen(false)}
+            className="flex min-h-11 items-center px-3 text-sm text-text-muted hover:bg-surface-hover hover:text-text transition-colors"
+          >
+            문의하기
+          </Link>
           <form action="/auth/logout" method="post">
             <button
               type="submit"
