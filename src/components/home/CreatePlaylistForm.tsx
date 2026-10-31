@@ -198,7 +198,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
             title={created.title}
             showDate={created.band?.nextShowAt ?? null}
             size="lg"
-            visualStyle="primary"
+           
             className="w-full mb-2"
           >
             카카오톡으로 공유

@@ -426,11 +426,7 @@ export default function PlaylistClient({
                   ))}
                 </p>
                 {loginGate && (
-                  <LoginButton
-                    size="sm"
-                    label="로그인"
-                    className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-pill border border-border px-4 text-caption font-semibold text-text transition-colors hover:border-border-strong hover:bg-surface-hover"
-                  />
+                  <LoginButton variant="tonal" size="sm" label="로그인" className="shrink-0" />
                 )}
               </div>
             }
@@ -518,7 +514,7 @@ export default function PlaylistClient({
                     topSong={songsWithVotes[0].title}
                     topArtist={songsWithVotes[0].artist || undefined}
                     topScore={Math.max(0, songsWithVotes[0].score)}
-                    visualStyle="primary"
+                   
                     size="md"
                   >
                     카톡 단톡방에 결과 공유
@@ -576,7 +572,7 @@ export default function PlaylistClient({
                     songs={songs.length}
                     participants={participantCount}
                     setlistCount={setlistCount || songsWithVotes.length}
-                    visualStyle="primary"
+                   
                     size="md"
                   >
                     셋리스트 카톡 공유

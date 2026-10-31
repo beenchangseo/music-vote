@@ -1,39 +1,12 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import Modal from "../ui/Modal";
 import Button from "../ui/Button";
 import KakaoShareButton from "../share/KakaoShareButton";
 import { useDialog } from "../ui/DialogProvider";
 import { regenerateInviteCode } from "@/actions/team";
 import { teamMessage } from "@/lib/team-messages";
-
-/**
- * "카톡으로 알리기"·"카톡으로 멤버 부르기" 처럼 초대 시트를 여는 카카오 색 버튼 (18A 토큰).
- * 밴드 홈 성공 배너와 방의 성공 카드가 같이 쓴다.
- */
-export function KakaoInviteButton({
-  onClick,
-  children,
-  className = "",
-}: {
-  onClick: () => void;
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`inline-flex h-11 items-center justify-center gap-2 rounded-control bg-kakao px-4 text-sm font-semibold text-kakao-text transition-all hover:bg-kakao-hover active:scale-[0.97] ${className}`}
-    >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-        <path d="M12 3C6.48 3 2 6.48 2 10.8c0 2.79 1.86 5.24 4.66 6.6l-1.18 4.32c-.1.36.31.64.61.43L11.2 19.4c.26.02.53.04.8.04 5.52 0 10-3.48 10-7.8S17.52 3 12 3z" />
-      </svg>
-      {children}
-    </button>
-  );
-}
 
 interface BandInviteSheetProps {
   open: boolean;

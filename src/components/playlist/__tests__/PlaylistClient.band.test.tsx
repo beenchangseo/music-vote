@@ -64,11 +64,6 @@ vi.mock("../../band/CreateBandSheet", () => ({
 vi.mock("../../band/BandInviteSheet", () => ({
   default: ({ open, inviteCode }: { open: boolean; inviteCode: string }) =>
     open ? <div role="dialog" aria-label="멤버 초대">{`/join/${inviteCode}`}</div> : null,
-  KakaoInviteButton: ({ onClick, children }: { onClick: () => void; children: React.ReactNode }) => (
-    <button type="button" onClick={onClick}>
-      {children}
-    </button>
-  ),
 }));
 
 const TEAM = "11111111-1111-4111-8111-111111111111";

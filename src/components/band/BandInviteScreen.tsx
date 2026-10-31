@@ -158,7 +158,8 @@ export default function BandInviteScreen({
               <LoginButton
                 next={`/join/${code}?join=1`}
                 label="카카오로 로그인하고 들어가기"
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-kakao text-base font-semibold text-kakao-text transition hover:bg-kakao-hover active:scale-[0.97] disabled:opacity-60"
+                size="lg"
+                fullWidth
               />
             </div>
           )}

@@ -5,12 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Card from "../ui/Card";
 import IconButton from "../ui/IconButton";
-import { buttonClassName } from "../ui/Button";
+import Button, { buttonClassName } from "../ui/Button";
 import { useDialog } from "../ui/DialogProvider";
 import GuitarIcon from "../ui/GuitarIcon";
 import { showDateSpokenLabel } from "./ShowDateTile";
 import { BandArt, MemberAvatar, RoomCover, SongThumb } from "./BandArt";
-import BandInviteSheet, { KakaoInviteButton } from "./BandInviteSheet";
+import BandInviteSheet from "./BandInviteSheet";
 import BandStartArea from "./BandStartArea";
 import AttachPlaylistsSheet from "./AttachPlaylistsSheet";
 import BandDateSheet from "./BandDateSheet";
@@ -238,9 +238,9 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
                 <p className="mt-1 text-sm text-text-muted">방장이 첫 플레이리스트를 만들면 여기에 떠요</p>
               )}
               {banner === "created" && (
-                <KakaoInviteButton onClick={() => setInviteOpen(true)} className="mt-3">
+                <Button variant="kakao" onClick={() => setInviteOpen(true)} className="mt-3">
                   카톡으로 알리기
-                </KakaoInviteButton>
+                </Button>
               )}
               {banner === "joined" && activeRoom && (
                 <Link
@@ -270,9 +270,9 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
               {/* A prompt card, like BandPromptCard's: "안내 닫기". Status banners keep plain "닫기". */}
               <CloseButton label="안내 닫기" onClick={dismissInviteCard} />
             </div>
-            <KakaoInviteButton onClick={() => setInviteOpen(true)} className="mt-4 w-full">
+            <Button variant="kakao" onClick={() => setInviteOpen(true)} fullWidth className="mt-4">
               카톡으로 멤버 부르기
-            </KakaoInviteButton>
+            </Button>
           </Card>
         )}
 

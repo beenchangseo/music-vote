@@ -6,7 +6,6 @@ import Card from "../ui/Card";
 import Button, { buttonClassName } from "../ui/Button";
 import IconButton from "../ui/IconButton";
 import CreateBandSheet, { type BandCandidate, type CreatedBand } from "./CreateBandSheet";
-import { KakaoInviteButton } from "./BandInviteSheet";
 import { dismissBandPrompt, hasBandPromptDismissal, migrateLegacyDismissal } from "@/lib/prompt-dismissals";
 
 function subscribeStorage(callback: () => void) {
@@ -156,7 +155,7 @@ export function BandCreatedCard({
           {band.name} · 멤버 {band.memberCount}명
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <KakaoInviteButton onClick={onShare}>카톡으로 알리기</KakaoInviteButton>
+          <Button variant="kakao" onClick={onShare}>카톡으로 알리기</Button>
           <Link href={`/band/${band.teamId}`} className={buttonClassName({ variant: "tonal", size: "md" })}>
             밴드 홈
           </Link>
