@@ -10,7 +10,7 @@ import { useMetronome, useTapTempo } from "@/hooks/useMetronome";
 import { updateSongMeta } from "@/actions/song";
 import { track } from "@/lib/analytics";
 import { displayArtist, formatKey } from "@/domain/song-meta";
-import { effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime } from "@/domain/setlist";
+import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, summarizeSetlist } from "@/domain/setlist";
 import type { SetlistItem, SongWithScore, Comment } from "@/domain/types";
 
 interface RehearsalViewProps {
@@ -57,28 +57,25 @@ export default function RehearsalView({
     return map;
   }, [songs]);
 
+  const sortedItems = useMemo(() => [...setlistItems].sort((a, b) => a.position - b.position), [setlistItems]);
   const songItems = useMemo(
-    () => [...setlistItems]
-      .filter((i) => i.item_type === "song" && i.song_id && songMap[i.song_id])
-      .sort((a, b) => a.position - b.position),
-    [setlistItems, songMap]
+    () => sortedItems.filter((i) => i.item_type === "song" && i.song_id && songMap[i.song_id]),
+    [sortedItems, songMap]
   );
 
-  const current = songItems[Math.min(index, songItems.length - 1)];
+  const step = Math.min(index, songItems.length - 1);
+  const current = songItems[step];
   const currentSong = current?.song_id ? songMap[current.song_id] : null;
   const next = songItems[index + 1];
   const nextSong = next?.song_id ? songMap[next.song_id] : null;
 
-  // 남은 시간은 현재 곡부터 끝까지 더한다. 시간을 모르는 곡은 빠진다.
+  // 곡 사이 인터벌·자작곡은 다음 곡으로 넘긴 뒤에 하므로, 앞 곡이 끝난 시각부터 센다.
   const remaining = useMemo(() => {
-    let total = 0;
-    for (let i = index; i < songItems.length; i += 1) {
-      const item = songItems[i];
-      const song = item.song_id ? songMap[item.song_id] : null;
-      if (song) total += effectiveSetlistDuration(item, song) ?? 0;
-    }
-    return total;
-  }, [index, songItems, songMap]);
+    const { totalRuntime } = summarizeSetlist(sortedItems, songs);
+    const previous = songItems[step - 1];
+    if (!previous) return totalRuntime;
+    return totalRuntime - cumulativeStarts(sortedItems, songs)[sortedItems.indexOf(previous) + 1];
+  }, [sortedItems, songItems, songs, step]);
 
   const tappedBpm =
     tapped && tapped.songId === currentSong?.id && (!tapped.saving || isSavingBpm) ? tapped.bpm : null;

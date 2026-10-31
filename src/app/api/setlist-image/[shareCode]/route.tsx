@@ -1,6 +1,8 @@
 import { ImageResponse } from "next/og";
 import { createAdminClient } from "@/lib/supabase/server";
 import { NextRequest } from "next/server";
+import { formatRuntime, setlistRows, summarizeSetlist, type SetlistRow } from "@/domain/setlist";
+import type { SetlistItem } from "@/domain/types";
 
 export const runtime = "edge";
 
@@ -27,17 +29,9 @@ const C = {
   rowBg: "rgba(255, 255, 255, 0.04)",
 };
 
-function fmtRuntime(sec: number): string {
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  return `${m}:${String(s).padStart(2, "0")}`;
-}
-
 interface SetlistItemRow {
   position: number;
-  item_type: "song" | "interval";
+  item_type: SetlistItem["item_type"];
   song_id: string | null;
   label: string | null;
   description: string | null;
@@ -101,31 +95,19 @@ export async function GET(
       .in("id", songIds);
     songs = songRows ?? [];
   }
-  const songMap = Object.fromEntries(songs.map((s) => [s.id, s]));
+  const { songCount, totalRuntime } = summarizeSetlist(setlistItems, songs);
+  const rows = setlistRows(setlistItems, songs);
 
-  // 총 러닝타임
-  let total = 0;
-  for (const item of setlistItems) {
-    if (item.item_type === "song" && item.song_id) {
-      const s = songMap[item.song_id];
-      const duration = item.duration_override_seconds ?? s?.duration_seconds;
-      if (duration != null) total += duration;
-    } else if (item.item_type === "interval") {
-      total += item.duration_seconds || 0;
-    }
-  }
-  const songCount = setlistItems.filter((i) => i.item_type === "song").length;
-
-  // 설명이 있는 인터벌은 더 많은 세로 공간을 배정하고, 들어가는 항목은 설명을 전부 표시한다.
-  const visible: SetlistItemRow[] = [];
+  // 설명이 있는 인터벌·자작곡은 더 많은 세로 공간을 배정하고, 들어가는 항목은 설명을 전부 표시한다.
+  const visible: SetlistRow[] = [];
   let usedSpace = 0;
-  for (const item of setlistItems) {
-    const cost = item.item_type === "interval" && item.description ? 3 : 1;
+  for (const row of rows) {
+    const cost = row.kind !== "song" && row.description ? 3 : 1;
     if (usedSpace + cost > 18) break;
-    visible.push(item);
+    visible.push(row);
     usedSpace += cost;
   }
-  const truncated = setlistItems.length - visible.length;
+  const truncated = rows.length - visible.length;
 
   const [fontBold, fontExtraBold] = await Promise.all([
     loadFont(700),
@@ -209,10 +191,10 @@ export async function GET(
             }}
           >
             <span>총 {songCount}곡</span>
-            {total > 0 && (
+            {totalRuntime > 0 && (
               <>
                 <span style={{ color: C.textSubtle }}>·</span>
-                <span>{fmtRuntime(total)}</span>
+                <span>{formatRuntime(totalRuntime)}</span>
               </>
             )}
           </div>
@@ -227,13 +209,13 @@ export async function GET(
             marginTop: 12,
           }}
         >
-          {visible.map((item) => {
-            const isInterval = item.item_type === "interval";
-            const song = item.song_id ? songMap[item.song_id] : null;
+          {visible.map((row, index) => {
+            const isInterval = row.kind === "interval";
+            const subtitle = row.kind === "song" ? row.artist : row.kind === "original" ? row.description || "자작곡" : null;
 
             return (
               <div
-                key={`${item.position}-${item.item_type}`}
+                key={index}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -261,7 +243,7 @@ export async function GET(
                     flexShrink: 0,
                   }}
                 >
-                  {isInterval ? "⏸" : item.position + 1}
+                  {isInterval ? "⏸" : row.number}
                 </div>
 
                 <div
@@ -280,14 +262,14 @@ export async function GET(
                       letterSpacing: "-0.01em",
                     }}
                   >
-                    {isInterval ? item.label || "인터벌" : item.title_override || song?.title || "(곡 정보 없음)"}
+                    {row.title}
                   </span>
-                  {isInterval && item.description && (
+                  {isInterval && row.description && (
                     <span style={{ fontSize: 20, color: C.textMuted, marginTop: 4, fontWeight: 700, whiteSpace: "pre-wrap" }}>
-                      {item.description}
+                      {row.description}
                     </span>
                   )}
-                  {!isInterval && song?.artist && (
+                  {subtitle && (
                     <span
                       style={{
                         fontSize: 22,
@@ -296,12 +278,12 @@ export async function GET(
                         fontWeight: 700,
                       }}
                     >
-                      {song.artist}
+                      {subtitle}
                     </span>
                   )}
                 </div>
 
-                {!isInterval && song && (
+                {!isInterval && (
                   <div
                     style={{
                       display: "flex",
@@ -311,7 +293,7 @@ export async function GET(
                       flexShrink: 0,
                     }}
                   >
-                    {song.tempo_bpm && (
+                    {row.kind === "song" && row.bpm ? (
                       <span
                         style={{
                           fontSize: 22,
@@ -319,10 +301,10 @@ export async function GET(
                           color: C.brand,
                         }}
                       >
-                        {song.tempo_bpm} BPM
+                        {row.bpm} BPM
                       </span>
-                    )}
-                    {(item.duration_override_seconds ?? song.duration_seconds) != null && (
+                    ) : null}
+                    {row.duration != null && (
                       <span
                         style={{
                           fontSize: 20,
@@ -330,12 +312,12 @@ export async function GET(
                           fontWeight: 700,
                         }}
                       >
-                        {fmtRuntime(item.duration_override_seconds ?? song.duration_seconds ?? 0)}
+                        {formatRuntime(row.duration)}
                       </span>
                     )}
                   </div>
                 )}
-                {isInterval && item.duration_seconds > 0 && (
+                {isInterval && row.duration ? (
                   <span
                     style={{
                       fontSize: 22,
@@ -344,9 +326,9 @@ export async function GET(
                       flexShrink: 0,
                     }}
                   >
-                    {fmtRuntime(item.duration_seconds)}
+                    {formatRuntime(row.duration)}
                   </span>
-                )}
+                ) : null}
               </div>
             );
           })}
