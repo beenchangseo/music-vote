@@ -1,15 +1,15 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
-import { DEFAULT_OG_IMAGE } from "@/lib/seo";
+import { readShareCard } from "@/lib/share-card";
 import { formatShowDate } from "@/domain/team";
-import { inviteSongsLine, parseInviteSongs, type InviteCover, type InviteSongs } from "@/domain/invite-card";
+import { inviteSongsLine, type InviteCover, type InviteSongs } from "@/domain/invite-card";
 
 export const runtime = "edge";
 // The project's function region (vercel.json `regions`: icn1). On "auto" it ran in sin1.
 export const preferredRegion = "home";
 
-// A card is drawn from its query string alone, so the CDN keeps each URL for a week (a deploy
+// A card is drawn from its signed query string alone, so the CDN keeps each URL for a week (a deploy
 // also clears it). Kakao's scraper gives up on a slow image and caches the card without one.
 // A bad card can be purged alone: `vercel cache invalidate --tag og-card`.
 const CACHE_HEADERS = {
@@ -89,13 +89,6 @@ function base64(buffer: ArrayBuffer): string {
   return btoa(binary);
 }
 
-type Variant = "home" | "playlist" | "decided" | "setlist" | "band";
-
-function parseVariant(v: string | null): Variant {
-  if (v === "playlist" || v === "decided" || v === "setlist" || v === "band") return v;
-  return "home";
-}
-
 const C = {
   bg: "linear-gradient(135deg, #1a1025 0%, #0a0a0f 50%, #0f1a2e 100%)",
   brand: "#8b5cf6",
@@ -108,61 +101,45 @@ const C = {
 };
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = request.nextUrl;
-  const variant = parseVariant(searchParams.get("variant"));
-  const title = searchParams.get("title") || "Plypick";
-  const subtitle = searchParams.get("subtitle") || "";
-  const songs = parseInt(searchParams.get("songs") || "0", 10) || 0;
-  const participants = parseInt(searchParams.get("participants") || "0", 10) || 0;
-  const topSong = searchParams.get("topSong") || "";
-  const topArtist = searchParams.get("topArtist") || "";
-  const topScore = parseInt(searchParams.get("topScore") || "0", 10);
-  const setlistCount = parseInt(searchParams.get("setlistCount") || "0", 10);
-  const members = parseInt(searchParams.get("members") || "0", 10) || 0;
-  // Exact show date only (25A). The caller already dropped past dates; a malformed value shows nothing.
-  const showDate = formatShowDate(searchParams.get("date") || "");
-
-  const invite = variant === "playlist" ? parseInviteSongs(searchParams) : null;
-  const wantsCover = !!invite && invite.count > 0 && invite.cover.length > 0;
+  // Only words the server signed are drawn; any other link draws the site card (#35).
+  const card = await readShareCard(request.nextUrl.searchParams);
+  const wantsCover = card.kind === "invite" && card.songs.count > 0 && card.songs.cover.length > 0;
 
   const [fontBold, fontExtraBold, cover] = await Promise.all([
     loadFont(700),
     loadFont(800),
-    wantsCover ? loadCover(invite.cover) : [],
+    wantsCover ? loadCover(card.songs.cover) : [],
   ]);
 
   let body: React.ReactNode;
-
-  if (variant === "decided" && topSong) {
-    body = <DecidedView
-      title={title}
-      topSong={topSong}
-      topArtist={topArtist}
-      topScore={topScore}
-      participants={participants}
-      songs={songs}
-    />;
-  } else if (variant === "setlist") {
-    body = <SetlistView
-      title={title}
-      setlistCount={setlistCount || songs}
-      participants={participants}
-    />;
-  } else if (variant === "band") {
-    body = <BandView name={title} showDate={showDate} members={members} />;
-  } else if (invite && cover.length > 0) {
-    body = <InviteView title={title} participants={participants} songs={invite} cover={cover} />;
-  } else if (variant === "playlist") {
-    body = <PlaylistView
-      title={title}
-      songs={songs}
-      participants={participants}
-    />;
-  } else {
-    body = <HomeView title={title} subtitle={subtitle} />;
+  switch (card.kind) {
+    case "decided":
+      body = <DecidedView
+        title={card.title}
+        topSong={card.top.title}
+        topArtist={card.top.artist}
+        topScore={card.top.score}
+        participants={card.participants}
+        songs={card.songs}
+      />;
+      break;
+    case "setlist":
+      body = <SetlistView title={card.title} setlistCount={card.setlistCount} participants={card.participants} />;
+      break;
+    case "band":
+      body = <BandView name={card.name} showDate={formatShowDate(card.showDate ?? "")} members={card.members} />;
+      break;
+    case "invite":
+      body = cover.length > 0
+        ? <InviteView title={card.title} participants={card.participants} songs={card.songs} cover={cover} />
+        : <PlaylistView title={card.title} songs={card.songs.count} participants={card.participants} />;
+      break;
+    case "site":
+      body = <HomeView title="Plypick" subtitle="밴드 합주곡, 투표로 정해요" />;
+      break;
   }
 
-  const card = new ImageResponse(
+  const image = new ImageResponse(
     (
       <div
         style={{
@@ -189,9 +166,10 @@ export async function GET(request: NextRequest) {
 
   // ImageResponse sends 200 before it draws. Draw the whole PNG first so a render error is a
   // 500 the CDN won't keep, not a 200 whose body breaks off.
-  const png = await card.arrayBuffer();
-  // Only the site's own card belongs in image search; the others carry room and band names.
-  const isSiteCard = `${request.nextUrl.pathname}${request.nextUrl.search}` === DEFAULT_OG_IMAGE.url;
+  const png = await image.arrayBuffer();
+  // Only the bare site card belongs in image search: the others carry playlist and band names, and
+  // a link nobody signed would index the same picture under any address.
+  const isSiteCard = request.nextUrl.search === "";
   return new Response(png, {
     headers: {
       "Content-Type": "image/png",

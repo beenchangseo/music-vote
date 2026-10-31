@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { TeamHomeView, TeamRoom } from "@/actions/team";
 import BandHomeClient from "../BandHomeClient";
+import type { CardImage } from "@/domain/share-card";
 
 const actions = vi.hoisted(() => ({
   leaveTeam: vi.fn(),
@@ -69,8 +70,11 @@ const ownerView = (overrides: Partial<MemberView> = {}) =>
     ...overrides,
   });
 
+// The band card the page signed for the invite sheet (src/app/band/[teamId]/page.tsx).
+const INVITE_IMAGE = "/api/og?card=v1.band.signature" as CardImage;
+
 function renderHome(v: MemberView, flags: { created?: boolean; joined?: boolean } = {}) {
-  return render(<BandHomeClient view={v} created={!!flags.created} joined={!!flags.joined} />);
+  return render(<BandHomeClient view={v} created={!!flags.created} joined={!!flags.joined} inviteImage={INVITE_IMAGE} />);
 }
 
 beforeEach(() => {
@@ -244,8 +248,9 @@ describe("BandHomeClient start area for a new empty band (DR1, DR16)", () => {
       renderHome(empty());
       fireEvent.click(screen.getByRole("button", { name: "카톡으로 멤버 부르기" }));
       fireEvent.click(within(screen.getByRole("dialog", { name: "멤버 초대" })).getByRole("button", { name: "카톡으로 보내기" }));
-      const card = sendDefault.mock.calls[0][0] as { content: { description: string } };
+      const card = sendDefault.mock.calls[0][0] as { content: { description: string; imageUrl: string } };
       expect(card.content.description).toBe("리더 보컬님의 밴드 · 카카오 로그인 한 번이면 합류");
+      expect(card.content.imageUrl).toBe(`${window.location.origin}${INVITE_IMAGE}`);
     } finally {
       delete window.Kakao;
     }

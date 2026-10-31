@@ -10,7 +10,7 @@ import AuthMenu from "../auth/AuthMenu";
 import GuitarIcon from "../ui/GuitarIcon";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
 import { roomSharePrefix, showDday, showDdayLabel } from "@/domain/team";
-import { playlistShareCard, type InviteSongs } from "@/domain/invite-card";
+import type { CardImage } from "@/domain/share-card";
 
 declare global {
   interface Window {
@@ -26,12 +26,9 @@ declare global {
 interface PlaylistHeaderProps {
   playlistId: string;
   title: string;
-  /** 투표 초대 카드에 싣는 곡. 올라온 순서다. */
-  inviteSongs: InviteSongs;
-  /** 보관된 플레이리스트(ADR 0012). 곡 없는 #11 이전 카드를 보낸다. */
-  archived?: boolean;
+  /** 카톡 공유 카드. 페이지가 서명한 그림과 설명이다 (#35). */
+  share: { image: CardImage; description: string };
   shareCode: string;
-  participantCount?: number;
   announcement?: string | null;
   currentUserNickname?: string;
   currentUserAvatarUrl?: string | null;
@@ -59,10 +56,8 @@ interface PlaylistHeaderProps {
 export default function PlaylistHeader({
   playlistId,
   title,
-  inviteSongs,
-  archived = false,
+  share,
   shareCode,
-  participantCount = 0,
   announcement,
   currentUserNickname,
   currentUserAvatarUrl,
@@ -81,9 +76,8 @@ export default function PlaylistHeader({
 
   async function handleKakaoShare() {
     const url = `${window.location.origin}/playlist/${shareCode}?utm_source=kakao&utm_medium=share&utm_campaign=${shareCode}`;
-    const card = playlistShareCard({ title, archived }, participantCount, inviteSongs);
     // "10월 16일 공연 · " only while the show is ahead; never a D-day number on a card (25A).
-    const description = roomSharePrefix(showDate, new Date()) + card.description;
+    const description = roomSharePrefix(showDate, new Date()) + share.description;
 
     try {
       if (window.Kakao?.isInitialized()) {
@@ -92,7 +86,7 @@ export default function PlaylistHeader({
           content: {
             title: `🎵 ${title}`,
             description,
-            imageUrl: `${window.location.origin}/api/og?${card.query}`,
+            imageUrl: `${window.location.origin}${share.image}`,
             imageWidth: OG_IMAGE_WIDTH,
             imageHeight: OG_IMAGE_HEIGHT,
             link: { mobileWebUrl: url, webUrl: url },

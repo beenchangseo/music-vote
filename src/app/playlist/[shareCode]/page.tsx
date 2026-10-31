@@ -6,7 +6,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { shouldExposeVoters } from "@/domain/vote";
 import { BAND_PROMPT_COOKIE, parseDismissals } from "@/lib/prompt-dismissals";
 import { BASE_OPEN_GRAPH } from "@/lib/seo";
-import { inviteSongs, playlistShareCard } from "@/domain/invite-card";
+import { inviteSongs } from "@/domain/invite-card";
+import { playlistResultCards, playlistShareCard } from "@/domain/share-card";
+import { signShareCard } from "@/lib/share-card";
 import { isArchivedPlaylist } from "@/domain/playlist-archive";
 import { getMyTeams, type MyTeam } from "@/actions/team";
 import PlaylistClient from "@/components/playlist/PlaylistClient";
@@ -134,7 +136,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ...BASE_OPEN_GRAPH,
       title: metaTitle,
       description,
-      images: [`/api/og?${card.query}`],
+      images: [await signShareCard(card.card)],
     },
     twitter: {
       card: "summary_large_image",
@@ -252,12 +254,27 @@ export default async function PlaylistPage({ params }: PageProps) {
 
   songsWithScores.sort((a, b) => b.score - a.score || new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
+  // Signed here because the share buttons send them from the browser, which never holds the key (#35).
+  // The result cards are signed even before the deadline, so a page open across it can share them.
+  const participantCount = stats?.participant_count ?? 0;
+  const archived = isArchivedPlaylist(playlist);
+  const invite = playlistShareCard({ title: playlist.title, archived }, participantCount, inviteSongs((songs ?? []) as Song[]));
+  const results = playlistResultCards(
+    { title: playlist.title, archived, setlistCount: playlist.setlist_count },
+    participantCount,
+    songsWithScores,
+  );
+  const [inviteImage, decidedImage, setlistImage] = await Promise.all(
+    [invite.card, results.decided, results.setlist].map(signShareCard),
+  );
+
   return (
     <PlaylistClient
       playlist={playlist}
       songs={songsWithScores}
       shareCode={shareCode}
-      participantCount={stats?.participant_count ?? 0}
+      participantCount={participantCount}
+      shareKit={{ invite: { image: inviteImage, description: invite.description }, decided: decidedImage, setlist: setlistImage }}
       userNickname={currentUser?.nickname}
       currentUserId={currentUser?.id ?? null}
       currentUserAvatarUrl={currentUser?.avatarUrl ?? null}

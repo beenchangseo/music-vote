@@ -36,6 +36,7 @@ import {
   removeTeamMember,
   updateTeamNextShow,
 } from "../team";
+import { readShareCard } from "@/lib/share-card";
 
 const ME = { id: "user-me", nickname: "보컬", avatarUrl: null };
 const OTHER = "user-other";
@@ -141,12 +142,21 @@ describe("createTeamFromPlaylist", () => {
   it("creates the team, copies every room participant and links the room as 'promote'", async () => {
     state.admin = createFakeClient(happyPath());
 
-    await expect(createTeamFromPlaylist(ROOM, "  일코해제  ")).resolves.toEqual({
+    const created = await createTeamFromPlaylist(ROOM, "  일코해제  ");
+    expect(created).toEqual({
       success: true,
       teamId: TEAM,
       name: "일코해제",
       inviteCode: "invite-1",
       memberCount: 3,
+      shareImage: expect.any(String),
+    });
+    // The success card's invite sheet sends this picture; the route draws the new band's card.
+    await expect(readShareCard(new URL(created.success ? created.shareImage : "", "https://plypick.kr").searchParams)).resolves.toEqual({
+      kind: "band",
+      name: "일코해제",
+      members: 3,
+      showDate: null,
     });
 
     expect(state.assertPlaylistWritable).toHaveBeenCalledWith(ROOM);
@@ -987,11 +997,19 @@ describe("createBandPlaylist", () => {
   it("creates the room in the band as 'band' with the session user as creator", async () => {
     state.admin = createFakeClient(happyPath());
 
-    await expect(createBandPlaylist(TEAM, "11월 공연", undefined, 12, "allocated", 5)).resolves.toEqual({
+    const created = await createBandPlaylist(TEAM, "11월 공연", undefined, 12, "allocated", 5);
+    expect(created).toEqual({
       success: true,
       id: "room-new",
       shareCode: "share-1",
       adminToken: "token-1",
+      shareImage: expect.any(String),
+    });
+    await expect(readShareCard(new URL(created.success ? created.shareImage : "", "https://plypick.kr").searchParams)).resolves.toEqual({
+      kind: "invite",
+      title: "11월 공연",
+      participants: 0,
+      songs: { cover: [], names: [], count: 0 },
     });
 
     const [insert] = opsFor("playlists", "insert");

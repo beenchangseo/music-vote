@@ -22,6 +22,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 import JoinPage, { generateMetadata } from "../page";
+import { readShareCard } from "@/lib/share-card";
 import JoinNotFound from "../not-found";
 
 const CODE = "aB3_x-9Zq0";
@@ -79,9 +80,13 @@ describe("/join/[inviteCode]", () => {
     expect(meta.title).toBe("일코해제 · Plypick");
     expect(meta.description).toBe("10월 16일(금) 공연 · 멤버 4명");
     expect(meta.robots).toEqual({ index: false });
-    const image = String((meta.openGraph?.images as string[])[0]);
-    expect(image).toContain("variant=band");
-    expect(image).toContain("date=2026-10-16");
+    const image = new URL(String((meta.openGraph?.images as string[])[0]), "https://plypick.kr");
+    await expect(readShareCard(image.searchParams)).resolves.toEqual({
+      kind: "band",
+      name: "일코해제",
+      members: 4,
+      showDate: "2026-10-16",
+    });
   });
 });
 

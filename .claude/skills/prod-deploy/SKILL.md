@@ -23,7 +23,8 @@ description: Plypick 을 프로덕션에 내보낼 때 쓴다. main 에 머지·
 4. **배포를 확인한다.**
    - Vercel 배포가 Ready 인지 (`vercel ls` 또는 대시보드)
    - 바꾼 화면을 운영에서 한 번 열어 본다. 휴대폰 크기로
-   - 공유 카드를 바꿨다면 `/api/og?variant=…`, `/api/setlist-image/{shareCode}`, `/api/setlist-pdf/{shareCode}`
+   - 공유 카드를 바꿨다면 플레이리스트 페이지 og:image 의 `/api/og?card=v1.…`(손으로 지은 `/api/og?…` 는 서명이 없어
+     기본 카드만 나온다), `/api/setlist-image/{shareCode}`, `/api/setlist-pdf/{shareCode}`
    - 새 마이그레이션이 배포 후 순서라면 지금 적용한다
 
 ## 환경변수

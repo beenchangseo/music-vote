@@ -40,7 +40,7 @@ import { setlistEditAccess } from "@/domain/setlist";
 import type { MyTeam } from "@/actions/team";
 import type { Playlist, RoomTeam, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/domain/types";
 import { displayTitle } from "@/domain/song-meta";
-import { inviteSongs } from "@/domain/invite-card";
+import type { CardImage } from "@/domain/share-card";
 import { assignRanks } from "@/domain/vote";
 
 interface PlaylistClientProps {
@@ -61,6 +61,15 @@ interface PlaylistClientProps {
   bandPromptDismissed?: boolean;
   /** Setlist read with the page, so candidate rows can show "셋리스트에 있음" (디자인 C9). */
   initialSetlistItems?: SetlistItem[] | null;
+  /** Kakao share cards the page signed (#35). */
+  shareKit: PlaylistShareKit;
+}
+
+/** What the playlist screen's share buttons send. The page signs it on every render, so a refresh renews it. */
+export interface PlaylistShareKit {
+  invite: { image: CardImage; description: string };
+  decided: CardImage;
+  setlist: CardImage;
 }
 
 export default function PlaylistClient({
@@ -76,6 +85,7 @@ export default function PlaylistClient({
   memberCount = null,
   bandPromptDismissed = false,
   initialSetlistItems = null,
+  shareKit,
 }: PlaylistClientProps) {
   // 보관된 합주방: 로그인 도입 전 익명 합주방. 지난 기록만 읽는다.
   const isArchived = isArchivedPlaylist(playlist);
@@ -275,8 +285,6 @@ export default function PlaylistClient({
     return thumbs;
   }, [songsWithVotes]);
 
-  const invite = useMemo(() => inviteSongs(songs), [songs]);
-
   // Setlist add confirm dialog
   const [setlistConfirmSongId, setSetlistConfirmSongId] = useState<string | null>(null);
   const setlistConfirmSong = setlistConfirmSongId ? songsWithVotes.find((s) => s.id === setlistConfirmSongId) : null;
@@ -379,10 +387,8 @@ export default function PlaylistClient({
           <PlaylistHeader
             playlistId={playlist.id}
             title={playlist.title}
-            inviteSongs={invite}
-            archived={isArchived}
+            share={shareKit.invite}
             shareCode={shareCode}
-            participantCount={participantCount}
             announcement={playlist.announcement}
             currentUserNickname={userNickname}
             currentUserAvatarUrl={currentUserAvatarUrl}
@@ -513,9 +519,7 @@ export default function PlaylistClient({
                     title={playlist.title}
                     songs={songs.length}
                     participants={participantCount}
-                    topSong={songsWithVotes[0].title}
-                    topArtist={songsWithVotes[0].artist || undefined}
-                    topScore={Math.max(0, songsWithVotes[0].score)}
+                    image={shareKit.decided}
                     size="md"
                   >
                     카톡 단톡방에 결과 공유
@@ -570,7 +574,7 @@ export default function PlaylistClient({
                     title={playlist.title}
                     songs={songs.length}
                     participants={participantCount}
-                    setlistCount={setlistCount || songsWithVotes.length}
+                    image={shareKit.setlist}
                     size="md"
                   >
                     셋리스트 카톡 공유
@@ -751,6 +755,7 @@ export default function PlaylistClient({
           memberCount={justCreatedTeam.memberCount}
           nextShowAt={null}
           ownerName={nickname || null}
+          image={justCreatedTeam.shareImage}
           isOwner
           onInviteCodeChange={(inviteCode) => setJustCreatedTeam((current) => (current ? { ...current, inviteCode } : current))}
         />

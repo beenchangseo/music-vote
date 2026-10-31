@@ -3,7 +3,8 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Playlist, SetlistItem, SongWithScore } from "@/domain/types";
-import PlaylistClient from "../PlaylistClient";
+import PlaylistClient, { type PlaylistShareKit } from "../PlaylistClient";
+import type { CardImage } from "@/domain/share-card";
 
 // Another screen learns about a change by a content-free broadcast, then refetches (ADR 0010).
 // router.refresh() hands PlaylistClient a new `playlist` prop; rerender() stands in for that refetch.
@@ -156,12 +157,20 @@ const item = {
 
 type Props = Parameters<typeof PlaylistClient>[0];
 
+// The cards the page signed for the share buttons (src/app/playlist/[shareCode]/page.tsx).
+const SHARE_KIT: PlaylistShareKit = {
+  invite: { image: "/api/og?card=v1.invite.signature" as CardImage, description: "0곡 등록 | 밴드 곡 투표에 참여하세요!" },
+  decided: "/api/og?card=v1.decided.signature" as CardImage,
+  setlist: "/api/og?card=v1.setlist.signature" as CardImage,
+};
+
 function ui(overrides: Partial<Props> = {}) {
   return (
     <PlaylistClient
       playlist={playlist}
       songs={[song]}
       shareCode="abc123"
+      shareKit={SHARE_KIT}
       participantCount={2}
       userNickname="기타"
       currentUserId={MEMBER}
