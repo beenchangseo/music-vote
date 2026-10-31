@@ -512,7 +512,6 @@ export default function PlaylistClient({
                     topSong={songsWithVotes[0].title}
                     topArtist={songsWithVotes[0].artist || undefined}
                     topScore={Math.max(0, songsWithVotes[0].score)}
-                   
                     size="md"
                   >
                     카톡 단톡방에 결과 공유
@@ -568,7 +567,6 @@ export default function PlaylistClient({
                     songs={songs.length}
                     participants={participantCount}
                     setlistCount={setlistCount || songsWithVotes.length}
-                   
                     size="md"
                   >
                     셋리스트 카톡 공유
