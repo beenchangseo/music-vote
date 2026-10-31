@@ -68,9 +68,10 @@ type EventMap = {
   rehearsal_action: {
     action: "next" | "prev" | "metronome_on" | "metronome_off" | "meta_open";
   };
-  /** 플레이리스트 헤더 "전체 듣기" (후보곡 1위부터). */
+  /** "전체 듣기". candidates = 헤더 버튼(후보곡 1위부터), setlist = 셋리스트 툴바(셋리 첫 곡부터). 2026-10-31 전 기록은 모두 candidates. */
   play_all_started: {
     song_count: number;
+    source: "candidates" | "setlist";
   };
   filter_applied: {
     type: "bpm" | "meta_only" | "key" | "difficulty" | "genre";

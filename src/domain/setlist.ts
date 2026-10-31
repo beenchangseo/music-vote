@@ -52,6 +52,20 @@ export function summarizeSetlist(
   return { songCount, totalRuntime, missingDurationCount };
 }
 
+/**
+ * 셋리스트를 들을 때의 재생 순서. 곡 블록만 담고 인터벌·자작곡은 건너뛴다.
+ * 같은 곡이 두 번 들어 있으면 한 번만 넣는다. 재생 위치를 곡 id 로 찾으니 두 번 넣으면 "다음 곡"이 둘 사이를 돈다.
+ */
+export function setlistPlayOrder<S extends Pick<SongWithScore, "id">>(items: SetlistItem[], songs: S[]): S[] {
+  const songMap = new Map(songs.map((song) => [song.id, song]));
+  const order = new Map<string, S>();
+  for (const item of [...items].sort((a, b) => a.position - b.position)) {
+    const song = item.item_type === "song" && item.song_id ? songMap.get(item.song_id) : undefined;
+    if (song && !order.has(song.id)) order.set(song.id, song);
+  }
+  return [...order.values()];
+}
+
 export function formatRuntime(seconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(seconds));
   const hours = Math.floor(safeSeconds / 3600);

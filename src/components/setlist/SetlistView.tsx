@@ -8,10 +8,12 @@ import AddOriginalForm from "./AddOriginalForm";
 import IntervalBlock, { MinusCircle, MoveButton } from "./IntervalBlock";
 import SetlistItemEditModal from "./SetlistItemEditModal";
 import SetlistShareButton from "./SetlistShareButton";
+import Button from "../ui/Button";
 import ScreenToolbar from "../ui/ScreenToolbar";
 import { useDialog } from "../ui/DialogProvider";
 import { addSongToSetlist, removeSetlistItem, updateSetlistOrder } from "@/actions/setlist";
-import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, summarizeSetlist, type SetlistEditAccess } from "@/domain/setlist";
+import { track } from "@/lib/analytics";
+import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, setlistPlayOrder, summarizeSetlist, type SetlistEditAccess } from "@/domain/setlist";
 import { displayArtist, formatKey } from "@/domain/song-meta";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
 
@@ -31,6 +33,8 @@ interface Props {
   access: SetlistEditAccess;
   /** 플레이리스트 설정 버튼. 세 화면 툴바의 같은 자리에 온다. */
   actions?: React.ReactNode;
+  /** 이 곡부터 셋리 순서로 재생한다. */
+  onPlay?: (songId: string) => void;
 }
 
 /**
@@ -38,7 +42,7 @@ interface Props {
  * (시작 시각 · 곡 · 길이·BPM·키), "편집"을 누르면 ⊖ 삭제와 ▲▼ 순서 버튼이 나온다.
  * 아래 "후보곡에서 넣기"로 셋리스트 화면 안에서 곡을 채운다.
  */
-export default function SetlistView({ setlistItems, songs, playlistId, shareCode, adminToken, loading, onItemsChange, title, access, actions }: Props) {
+export default function SetlistView({ setlistItems, songs, playlistId, shareCode, adminToken, loading, onItemsChange, title, access, actions, onPlay }: Props) {
   const [isPending, startTransition] = useTransition();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAddOriginalForm, setShowAddOriginalForm] = useState(false);
@@ -60,6 +64,8 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
     return sortedItems.map((item) => (item.item_type === "interval" ? 0 : ++n));
   }, [sortedItems]);
   const intervalCount = sortedItems.length - summary.songCount;
+  const playOrder = useMemo(() => setlistPlayOrder(sortedItems, songs), [sortedItems, songs]);
+  const showEditToggle = canEdit && sortedItems.length > 0;
   const suggestions = useMemo(() => {
     const inSetlist = new Set(sortedItems.map((item) => item.song_id).filter(Boolean));
     return songs.filter((song) => !inSetlist.has(song.id));
@@ -147,7 +153,24 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
         }
         actions={
           <>
-            {canEdit && sortedItems.length > 0 && (
+            {onPlay && playOrder.length > 0 && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="min-h-11 min-w-11"
+                onClick={() => {
+                  track("play_all_started", { source: "setlist", song_count: playOrder.length });
+                  onPlay(playOrder[0].id);
+                }}
+              >
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                {/* With 편집 beside it, the label squeezes the runtime on a 360px phone. */}
+                <span className={showEditToggle ? "max-sm:sr-only" : undefined}>셋리 전체 듣기</span>
+              </Button>
+            )}
+            {showEditToggle && (
               <button
                 type="button"
                 onClick={() => setEditMode((value) => !value)}
@@ -241,18 +264,16 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
             if (!song) return null;
             const duration = effectiveSetlistDuration(item, song);
             const key = formatKey(song.key_root, song.key_mode) || song.key_memo;
-            const body = (
-              <>
-                <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-control bg-surface-elevated">
-                  {song.thumbnail_url && <Image src={song.thumbnail_url} alt="" fill sizes="48px" className="object-cover" />}
+            const songTitle = effectiveSetlistTitle(item, song);
+            const thumbnail = song.thumbnail_url && <Image src={song.thumbnail_url} alt="" fill sizes="48px" className="object-cover" />;
+            const thumbnailClass = "relative h-12 w-12 shrink-0 overflow-hidden rounded-control bg-surface-elevated";
+            const text = (
+              <span className="min-w-0 flex-1 text-left">
+                <span className="line-clamp-2 block text-body font-medium leading-snug text-text">{songTitle}</span>
+                <span className="mt-0.5 block truncate text-sm text-text-muted">
+                  {displayArtist(song.artist, song.title) || "아티스트 미입력"}
                 </span>
-                <span className="min-w-0 flex-1 text-left">
-                  <span className="line-clamp-2 block text-body font-medium leading-snug text-text">{effectiveSetlistTitle(item, song)}</span>
-                  <span className="mt-0.5 block truncate text-sm text-text-muted">
-                    {displayArtist(song.artist, song.title) || "아티스트 미입력"}
-                  </span>
-                </span>
-              </>
+              </span>
             );
             return (
               <li key={item.id} className="flex items-center gap-3 py-2">
@@ -269,10 +290,25 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
                 )}
                 {showEditControls ? (
                   <button type="button" onClick={() => setEditing(item)} className="flex min-w-0 flex-1 items-center gap-3" aria-label="곡 블록 수정">
-                    {body}
+                    <span className={thumbnailClass}>{thumbnail}</span>
+                    {text}
                   </button>
                 ) : (
-                  <span className="flex min-w-0 flex-1 items-center gap-3">{body}</span>
+                  <span className="flex min-w-0 flex-1 items-center gap-3">
+                    {onPlay ? (
+                      <button type="button" onClick={() => onPlay(song.id)} className={`group ${thumbnailClass}`} aria-label={`${songTitle} 재생`}>
+                        {thumbnail}
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/45">
+                          <svg className="ml-0.5 h-5 w-5 text-white opacity-0 transition-opacity group-hover:opacity-100" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </span>
+                      </button>
+                    ) : (
+                      <span className={thumbnailClass}>{thumbnail}</span>
+                    )}
+                    {text}
+                  </span>
                 )}
                 {showEditControls ? (
                   <span className="flex shrink-0 items-center print:hidden">

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, setlistEditAccess, setlistRows, summarizeSetlist } from "../setlist";
+import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, setlistEditAccess, setlistPlayOrder, setlistRows, summarizeSetlist } from "../setlist";
 import type { SetlistItem, SongWithScore } from "../types";
 import { FIXTURE_SONG_COUNT, FIXTURE_TOTAL_SECONDS, fixtureItems, fixtureSongs } from "./setlist-fixture";
 
@@ -136,5 +136,31 @@ describe("setlistEditAccess", () => {
     ["the token host of an archived everyone room", "read_only", { archived: true, mode: "everyone", ...tokenHost }],
   ] as const)("gives %s %s access", (_label, expected, input) => {
     expect(setlistEditAccess(input)).toBe(expected);
+  });
+});
+
+describe("setlistPlayOrder", () => {
+  const songs = ["a", "b", "c"].map((id) => ({ id }) as SongWithScore);
+  const at = (position: number, fields: Partial<SetlistItem>) =>
+    ({ ...base, id: `item-${position}`, position, ...fields }) as SetlistItem;
+  const ids = (items: SetlistItem[]) => setlistPlayOrder(items, songs).map((song) => song.id);
+
+  it.each([
+    ["follows position, not the stored order", [at(1, { song_id: "a" }), at(0, { song_id: "c" })], ["c", "a"]],
+    [
+      "skips intervals and originals",
+      [
+        at(0, { item_type: "interval", song_id: null }),
+        at(1, { song_id: "b" }),
+        at(2, { item_type: "original", song_id: null }),
+        at(3, { song_id: "a" }),
+      ],
+      ["b", "a"],
+    ],
+    ["skips a song deleted from the candidates", [at(0, { song_id: "gone" }), at(1, { song_id: "b" })], ["b"]],
+    ["plays a song listed twice once", [at(0, { song_id: "a" }), at(1, { song_id: "b" }), at(2, { song_id: "a" })], ["a", "b"]],
+    ["has nothing to play without song blocks", [at(0, { item_type: "interval", song_id: null })], []],
+  ])("%s", (_name, items, expected) => {
+    expect(ids(items)).toEqual(expected);
   });
 });
