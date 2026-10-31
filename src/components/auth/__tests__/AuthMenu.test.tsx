@@ -99,8 +99,8 @@ describe("AuthMenu 탈퇴하기", () => {
     });
     const dialog = await openDeleteConfirm();
 
-    expect(dialog).toHaveTextContent("'주말밴드' 밴드는 기타님이 맡아요.");
-    expect(dialog).toHaveTextContent("'평일밴드' 밴드는 드럼님이 맡아요.");
+    expect(dialog).toHaveTextContent("'주말밴드' 밴드는 기타님이 리더를 맡아요.");
+    expect(dialog).toHaveTextContent("'평일밴드' 밴드는 드럼님이 리더를 맡아요.");
     expect(dialog).toHaveTextContent("되돌릴 수 없어요");
     expect(actions.deleteAccount).not.toHaveBeenCalled();
   });

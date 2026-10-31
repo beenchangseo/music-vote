@@ -25,7 +25,7 @@ export type DeleteAccountResult = ActionResult<
   "not_logged_in" | "not_available" | "kakao_unlink_failed" | "write_failed"
 >;
 
-/** 탈퇴 확인창에 적을 "'밴드' 밴드는 ○○님이 맡아요" 목록. 계정 id 는 내려보내지 않는다(ADR 0011). */
+/** 탈퇴 확인창에 적을 "'밴드' 밴드는 ○○님이 리더를 맡아요" 목록. 계정 id 는 내려보내지 않는다(ADR 0011). */
 export type AccountDeletionPreview = ActionResult<
   { handovers: { bandName: string; ownerName: string }[] },
   "not_logged_in" | "read_failed"

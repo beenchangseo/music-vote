@@ -574,7 +574,7 @@ function MemberTile({
   onRemove: () => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const sub = member.role === "owner" ? "만든 사람" : member.isMe ? "나" : null;
+  const sub = member.role === "owner" ? "리더" : member.isMe ? "나" : null;
   return (
     <li
       className="relative flex flex-col items-center gap-2 text-center"

@@ -19,7 +19,7 @@ const DELETE_ACCOUNT_RECORDS =
 function deleteAccountMessage(handovers: Extract<AccountDeletionPreview, { success: true }>["handovers"]) {
   const paragraphs = [DELETE_ACCOUNT_RECORDS];
   if (handovers.length > 0) {
-    paragraphs.push(handovers.map(({ bandName, ownerName }) => `'${bandName}' 밴드는 ${ownerName}님이 맡아요.`).join("\n"));
+    paragraphs.push(handovers.map(({ bandName, ownerName }) => `'${bandName}' 밴드는 ${ownerName}님이 리더를 맡아요.`).join("\n"));
   }
   paragraphs.push("탈퇴하면 되돌릴 수 없어요.");
   return paragraphs.join("\n\n");
