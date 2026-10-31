@@ -182,7 +182,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
                 onClick={() => setEditMode((value) => !value)}
                 aria-pressed={editMode}
                 className={`inline-flex h-9 items-center rounded-pill px-4 text-sm font-semibold transition-colors ${
-                  editMode ? "bg-primary text-white hover:bg-primary-hover" : "border border-border text-text hover:bg-surface-hover"
+                  editMode ? "bg-primary text-on-primary hover:bg-primary-hover" : "border border-border text-text hover:bg-surface-hover"
                 }`}
               >
                 {editMode ? "완료" : "편집"}

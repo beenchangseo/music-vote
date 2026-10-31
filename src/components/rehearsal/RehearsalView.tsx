@@ -198,7 +198,7 @@ export default function RehearsalView({
             onClick={toggleMetronome}
             className={`inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-pill px-5 text-sm font-semibold transition-colors ${
               metronome.isPlaying
-                ? "bg-primary text-white hover:bg-primary-hover"
+                ? "bg-primary text-on-primary hover:bg-primary-hover"
                 : "border border-border text-text hover:bg-surface-hover"
             }`}
           >
@@ -262,7 +262,7 @@ export default function RehearsalView({
           onClick={() => go(1)}
           disabled={step >= songItems.length - 1}
           aria-label="다음 곡"
-          className="inline-flex h-16 w-16 items-center justify-center rounded-pill bg-primary text-white shadow-lg shadow-primary/30 transition-all hover:bg-primary-hover active:scale-95 disabled:bg-surface-hover disabled:text-text-subtle disabled:shadow-none"
+          className="inline-flex h-16 w-16 items-center justify-center rounded-pill bg-primary text-on-primary transition-all hover:bg-primary-hover active:scale-95 disabled:bg-surface-hover disabled:text-text-subtle"
         >
           <svg className="h-7 w-7" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
             <path d="M16 5h2v14h-2zM4 6.5v11a1 1 0 001.53.85l8.5-5.5a1 1 0 000-1.7l-8.5-5.5A1 1 0 004 6.5z" />

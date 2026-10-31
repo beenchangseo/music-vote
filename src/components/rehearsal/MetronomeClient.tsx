@@ -92,10 +92,10 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
           {/* Play/Stop */}
           <button
             onClick={isPlaying ? stop : start}
-            className={`w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold transition-all active:scale-95 ${
+            className={`w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold transition-all active:scale-95 ${
               isPlaying
-                ? "bg-red-600 hover:bg-red-500 shadow-lg shadow-red-600/30"
-                : "bg-primary hover:bg-primary-hover shadow-lg shadow-primary/30"
+                ? "bg-danger hover:bg-danger-hover text-on-danger"
+                : "bg-primary hover:bg-primary-hover text-on-primary"
             }`}
           >
             {isPlaying ? (

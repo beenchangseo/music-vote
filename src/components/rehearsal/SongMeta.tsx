@@ -403,7 +403,7 @@ function KeyChip({
       onClick={onClick}
       className={`h-11 min-w-[44px] px-2.5 rounded-control text-caption font-semibold transition-colors ${
         active
-          ? "bg-primary text-white"
+          ? "bg-primary text-on-primary"
           : "bg-surface-hover text-text-muted hover:text-text"
       }`}
     >

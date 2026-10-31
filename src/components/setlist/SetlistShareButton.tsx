@@ -98,7 +98,7 @@ export default function SetlistShareButton({ shareCode, title }: Props) {
 
 function ShareOption({ title, description, icon, onClick }: { title: string; description: string; icon: React.ReactNode; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="flex min-h-16 w-full items-center gap-3 rounded-xl border border-border bg-surface p-3 text-left transition-colors hover:bg-surface-hover">
+    <button type="button" onClick={onClick} className="flex min-h-16 w-full items-center gap-3 rounded-xl bg-surface-hover p-3 text-left transition-colors hover:bg-surface-elevated">
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-fg">{icon}</span>
       <span className="min-w-0"><strong className="block text-sm text-text">{title}</strong><span className="mt-0.5 block text-caption leading-relaxed text-text-muted">{description}</span></span>
     </button>
