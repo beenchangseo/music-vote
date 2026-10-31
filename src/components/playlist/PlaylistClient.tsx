@@ -40,6 +40,7 @@ import { setlistEditAccess } from "@/domain/setlist";
 import type { MyTeam } from "@/actions/team";
 import type { Playlist, RoomTeam, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/domain/types";
 import { displayTitle } from "@/domain/song-meta";
+import { inviteSongs } from "@/domain/invite-card";
 import { assignRanks } from "@/domain/vote";
 
 interface PlaylistClientProps {
@@ -274,6 +275,8 @@ export default function PlaylistClient({
     return thumbs;
   }, [songsWithVotes]);
 
+  const invite = useMemo(() => inviteSongs(songs), [songs]);
+
   // Setlist add confirm dialog
   const [setlistConfirmSongId, setSetlistConfirmSongId] = useState<string | null>(null);
   const setlistConfirmSong = setlistConfirmSongId ? songsWithVotes.find((s) => s.id === setlistConfirmSongId) : null;
@@ -376,7 +379,8 @@ export default function PlaylistClient({
           <PlaylistHeader
             playlistId={playlist.id}
             title={playlist.title}
-            songCount={songs.length}
+            inviteSongs={invite}
+            archived={isArchived}
             shareCode={shareCode}
             participantCount={participantCount}
             announcement={playlist.announcement}

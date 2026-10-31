@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
 import { DEFAULT_OG_IMAGE } from "@/lib/seo";
 import { formatShowDate } from "@/domain/team";
+import { inviteSongsLine, parseInviteSongs, type InviteCover, type InviteSongs } from "@/domain/invite-card";
 
 export const runtime = "edge";
 // The project's function region (vercel.json `regions`: icn1). On "auto" it ran in sin1.
@@ -16,6 +17,18 @@ const CACHE_HEADERS = {
   "Vercel-CDN-Cache-Control": "max-age=604800",
   "Vercel-Cache-Tag": "og-card",
 };
+// A card drawn without any song picture (YouTube slow, or every cover video gone) is not what the
+// query asks for, so the CDN keeps it only a minute and the next scrape tries again.
+const COVER_MISSED_CACHE_HEADERS = {
+  ...CACHE_HEADERS,
+  "Cache-Control": "public, max-age=60",
+  "Vercel-CDN-Cache-Control": "max-age=60",
+};
+
+// Upper bound on fetching the song pictures. They load alongside the fonts; past this the invite
+// card draws with the pictures it has, or the text-only card if none, instead of keeping Kakao's
+// scraper waiting.
+const COVER_TIMEOUT_MS = 1000;
 
 // Pretendard via CDN — satori(ImageResponse)는 OTF/TTF 만 지원, WOFF2 불가
 // (이전: woff2-subset → 매 요청 "Unsupported OpenType signature wO" 로 빈 PNG 반환)
@@ -32,6 +45,48 @@ async function loadFont(weight: 700 | 800): Promise<ArrayBuffer> {
   // Fail the request instead of drawing a fontless card the CDN would then keep.
   if (!res.ok) throw new Error(`Pretendard ${weight} fetch failed: ${res.status}`);
   return res.arrayBuffer();
+}
+
+/** A cover picture as a data URI. `letterboxed`: hqdefault, a 4:3 picture with the 16:9 frame between black bars. */
+type CoverPicture = { src: string; letterboxed: boolean };
+
+// YouTube thumbnail sizes, sharpest first. The lone 470px cover wants more than mqdefault's 320×180;
+// maxresdefault (1280×720) is missing for some videos, hqdefault (480×360) always exists.
+const LONE_SIZES = ["maxresdefault", "hqdefault", "mqdefault"];
+const TILE_SIZES = ["mqdefault"];
+
+/** The sharpest of `sizes` that loaded. All are asked at once: a missing size has taken 1.3s to 404. */
+async function loadPicture(id: string, sizes: string[], signal: AbortSignal): Promise<CoverPicture | null> {
+  const pictures = await Promise.all(
+    sizes.map(async (size) => {
+      try {
+        const res = await fetch(`https://img.youtube.com/vi/${id}/${size}.jpg`, { signal });
+        if (!res.ok) return null;
+        return { src: `data:image/jpeg;base64,${base64(await res.arrayBuffer())}`, letterboxed: size === "hqdefault" };
+      } catch {
+        return null;
+      }
+    }),
+  );
+  return pictures.find((picture) => picture !== null) ?? null;
+}
+
+/**
+ * The cover's pictures, fetched before drawing so the wait is bounded. Four tiles only if all four
+ * loaded, otherwise the first that did, so one deleted video does not cost the whole cover.
+ */
+async function loadCover(cover: InviteCover): Promise<CoverPicture[]> {
+  const signal = AbortSignal.timeout(COVER_TIMEOUT_MS);
+  const sizes = cover.length === 1 ? LONE_SIZES : TILE_SIZES;
+  const loaded = (await Promise.all(cover.map((id) => loadPicture(id, sizes, signal)))).filter((p) => p !== null);
+  return loaded.length === 4 ? loaded : loaded.slice(0, 1);
+}
+
+function base64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(binary);
 }
 
 type Variant = "home" | "playlist" | "decided" | "setlist" | "band";
@@ -67,9 +122,13 @@ export async function GET(request: NextRequest) {
   // Exact show date only (25A). The caller already dropped past dates; a malformed value shows nothing.
   const showDate = formatShowDate(searchParams.get("date") || "");
 
-  const [fontBold, fontExtraBold] = await Promise.all([
+  const invite = variant === "playlist" ? parseInviteSongs(searchParams) : null;
+  const wantsCover = !!invite && invite.count > 0 && invite.cover.length > 0;
+
+  const [fontBold, fontExtraBold, cover] = await Promise.all([
     loadFont(700),
     loadFont(800),
+    wantsCover ? loadCover(invite.cover) : [],
   ]);
 
   let body: React.ReactNode;
@@ -91,6 +150,8 @@ export async function GET(request: NextRequest) {
     />;
   } else if (variant === "band") {
     body = <BandView name={title} showDate={showDate} members={members} />;
+  } else if (invite && cover.length > 0) {
+    body = <InviteView title={title} participants={participants} songs={invite} cover={cover} />;
   } else if (variant === "playlist") {
     body = <PlaylistView
       title={title}
@@ -134,7 +195,7 @@ export async function GET(request: NextRequest) {
   return new Response(png, {
     headers: {
       "Content-Type": "image/png",
-      ...CACHE_HEADERS,
+      ...(wantsCover && cover.length === 0 ? COVER_MISSED_CACHE_HEADERS : CACHE_HEADERS),
       ...(isSiteCard ? {} : { "X-Robots-Tag": "noindex" }),
     },
   });
@@ -172,16 +233,15 @@ function Logo({ size = 64 }: { size?: number }) {
 
 function Brand() {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 14,
-        position: "absolute",
-        top: 48,
-        left: 56,
-      }}
-    >
+    <div style={{ display: "flex", position: "absolute", top: 48, left: 56 }}>
+      <BrandMark />
+    </div>
+  );
+}
+
+function BrandMark() {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
       <Logo size={44} />
       <div style={{ display: "flex", flexDirection: "column" }}>
         <span style={{ fontSize: 28, fontWeight: 800, color: C.text, lineHeight: 1 }}>
@@ -305,6 +365,105 @@ function PlaylistView({
         {participants > 0 && <Stat label="명 참여" value={participants} />}
         <div style={{ display: "flex", marginLeft: "auto" }}>
           <CTAPill>지금 투표하기 →</CTAPill>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** 투표 초대 카드 (#11 안 A). 왼쪽 2×2 곡 커버, 오른쪽에 제목과 먼저 올라온 곡 이름. */
+function InviteView({
+  title,
+  participants,
+  songs,
+  cover,
+}: {
+  title: string;
+  participants: number;
+  songs: InviteSongs;
+  cover: CoverPicture[];
+}) {
+  // 30px text in the 522px column, less the note mark: about 16 Hangul-wide characters.
+  const line = inviteSongsLine(songs, 16);
+  const tile = cover.length >= 4 ? 235 : 470;
+  // A letterboxed 4:3 picture drawn 4/3 larger, centered, so the frame clips its black bars off.
+  const zoomed = (tile * 4) / 3;
+  return (
+    <div style={{ width: "100%", height: "100%", display: "flex", padding: 80, gap: 48 }}>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          width: 470,
+          height: 470,
+          flexShrink: 0,
+          borderRadius: 28,
+          overflow: "hidden",
+          background: "#2a3441",
+        }}
+      >
+        {cover.map(({ src, letterboxed }, i) => {
+          const size = letterboxed ? zoomed : tile;
+          const margin = letterboxed ? (tile - zoomed) / 2 : 0;
+          return (
+            // eslint-disable-next-line @next/next/no-img-element -- satori draws plain <img>
+            <img key={i} src={src} alt="" width={size} height={size} style={{ width: size, height: size, margin, objectFit: "cover" }} />
+          );
+        })}
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0, height: 470 }}>
+        <BrandMark />
+
+        <div style={{ display: "flex", flexDirection: "column", marginTop: "auto" }}>
+          <div
+            style={{
+              display: "flex",
+              alignSelf: "flex-start",
+              padding: "10px 20px",
+              borderRadius: 999,
+              background: C.brandSoft,
+              color: C.brand,
+              fontSize: 22,
+              fontWeight: 700,
+              marginBottom: 22,
+            }}
+          >
+            🎤 투표 진행 중
+          </div>
+
+          <div
+            style={{
+              display: "block",
+              lineClamp: 2,
+              wordBreak: "keep-all",
+              fontSize: 64,
+              fontWeight: 800,
+              color: C.text,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.12,
+              marginBottom: 16,
+            }}
+          >
+            {title}
+          </div>
+
+          {line.names && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 30, fontWeight: 700, color: C.textMuted }}>
+              <span style={{ color: C.brand, flexShrink: 0 }}>♪</span>
+              <span style={{ overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", minWidth: 0 }}>{line.names}</span>
+              {line.more && <span style={{ flexShrink: 0, whiteSpace: "nowrap" }}>{line.more}</span>}
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: "auto", paddingTop: 28 }}>
+          <div style={{ display: "flex", fontSize: 26, fontWeight: 700, color: C.textMuted, whiteSpace: "nowrap" }}>
+            {participants > 0 ? `${songs.count}곡 · ${participants}명 참여` : `${songs.count}곡`}
+          </div>
+          <div style={{ display: "flex", marginLeft: "auto" }}>
+            <CTAPill>지금 투표하기 →</CTAPill>
+          </div>
         </div>
       </div>
     </div>
