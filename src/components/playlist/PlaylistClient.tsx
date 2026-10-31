@@ -435,7 +435,7 @@ export default function PlaylistClient({
               role="status"
               className="mt-3 animate-fade-in"
               action={
-                <Link href="/" className="inline-flex min-h-11 items-center font-semibold text-primary-fg underline-offset-2 hover:underline">
+                <Link href="/" className="font-semibold text-primary-fg underline-offset-2 hover:underline">
                   새 플레이리스트 만들기 →
                 </Link>
               }

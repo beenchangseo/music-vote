@@ -4,7 +4,7 @@ type Tone = "info" | "warning";
 
 interface InlineNoticeProps extends HTMLAttributes<HTMLDivElement> {
   tone?: Tone;
-  /** 아래 줄에 붙는 링크나 버튼 하나. */
+  /** 아래 줄에 붙는 링크나 버튼 하나. 누르는 높이 44px 은 여기서 준다. */
   action?: ReactNode;
 }
 
@@ -29,7 +29,7 @@ export default function InlineNotice({ tone = "info", action, className = "", ch
       {icons[tone]}
       <div className="min-w-0 flex-1">
         {children}
-        {action && <div className="mt-1">{action}</div>}
+        {action && <div className="mt-1 flex *:inline-flex *:min-h-11 *:items-center">{action}</div>}
       </div>
     </div>
   );
