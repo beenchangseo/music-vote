@@ -100,16 +100,18 @@ export default function DesignPage() {
         <StateHeader />
         {BUTTON_VARIANTS.map((variant) => (
           <StateRow key={variant} label={variant}>
-            <Button variant={variant}>저장</Button>
+            <Button variant={variant} className={CELL}>
+              저장
+            </Button>
             <HoverSample>
-              <Button variant={variant} tabIndex={-1}>
+              <Button variant={variant} tabIndex={-1} className={CELL}>
                 저장
               </Button>
             </HoverSample>
-            <Button variant={variant} disabled>
+            <Button variant={variant} disabled className={CELL}>
               저장
             </Button>
-            <Button variant={variant} loading>
+            <Button variant={variant} loading className={CELL}>
               저장
             </Button>
           </StateRow>
@@ -134,12 +136,12 @@ export default function DesignPage() {
       <Section title="Chip">
         <StateHeader labels={["기본", "hover", "선택", "비활성"]} />
         <StateRow label="chip">
-          <Chip>메타 있음</Chip>
+          <Chip>전체</Chip>
           <HoverSample>
-            <Chip tabIndex={-1}>메타 있음</Chip>
+            <Chip tabIndex={-1}>전체</Chip>
           </HoverSample>
-          <Chip selected>메타 있음</Chip>
-          <Chip disabled>메타 있음</Chip>
+          <Chip selected>전체</Chip>
+          <Chip disabled>전체</Chip>
         </StateRow>
       </Section>
 
@@ -244,14 +246,14 @@ function TokenLabel({ token }: { token: { name: string; value: string; utility: 
 }
 
 const STATES = ["기본", "hover", "비활성", "로딩"];
+/** A state cell narrow enough for four in a row at 390px. */
+const CELL = "w-full px-0!";
 
 function StateHeader({ labels = STATES }: { labels?: string[] }) {
   return (
-    <div className="flex gap-2 pl-16 text-caption text-text-muted">
+    <div className="grid grid-cols-4 gap-2 pl-16 text-caption text-text-muted">
       {labels.map((l) => (
-        <span key={l} className="flex-1">
-          {l}
-        </span>
+        <span key={l}>{l}</span>
       ))}
     </div>
   );
@@ -261,7 +263,7 @@ function StateRow({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="mt-2 flex items-center gap-2">
       <span className="w-14 shrink-0 text-caption text-text-muted">{label}</span>
-      <div className="flex flex-1 flex-wrap items-center gap-2 [&>*]:flex-1">{children}</div>
+      <div className="grid flex-1 grid-cols-4 items-center justify-items-start gap-2">{children}</div>
     </div>
   );
 }

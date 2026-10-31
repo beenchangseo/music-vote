@@ -23,7 +23,7 @@ const Chip = forwardRef<HTMLButtonElement, ChipProps>(function Chip(
       ref={ref}
       type={type}
       aria-pressed={selected}
-      className={`inline-flex h-control-md shrink-0 items-center gap-1 whitespace-nowrap rounded-pill border px-3 text-caption font-semibold transition-colors ${skin} ${className}`}
+      className={`inline-flex h-control-md shrink-0 items-center gap-1 whitespace-nowrap rounded-pill border px-3 text-caption font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${skin} ${className}`}
       {...rest}
     >
       {children}
