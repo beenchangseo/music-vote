@@ -435,7 +435,7 @@ function NowRoomCard({ room }: { room: TeamRoom }) {
     <Card padding="none" role="region" aria-label="지금 플레이리스트" className="mt-6 transition-transform active:scale-[0.99]">
       <Link href={`/playlist/${room.shareCode}`} className="block rounded-card p-4">
         <span className="flex items-center gap-4">
-          <RoomCover thumbs={room.coverThumbs} sizes="88px" className="h-22 w-22 shrink-0 shadow-lg" />
+          <RoomCover thumbs={room.coverThumbs} sizes="88px" className="h-22 w-22 shrink-0" />
           <span className="min-w-0 flex-1">
             <span className="block text-caption font-semibold text-text-muted">지금 플레이리스트</span>
             <span className="mt-0.5 line-clamp-2 block break-keep text-h4 font-bold text-text">{room.title}</span>
