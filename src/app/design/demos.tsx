@@ -169,7 +169,14 @@ export function NoticeDemo() {
   }
   return (
     <div className="space-y-3">
-      <NoticeCard onDismiss={() => setOpen(false)} actions={<Button size="sm">밴드 이름 정하고 만들기</Button>}>
+      <NoticeCard
+        onDismiss={() => setOpen(false)}
+        actions={
+          <Button variant="tonal" size="sm">
+            밴드 이름 정하고 만들기
+          </Button>
+        }
+      >
         이 멤버 그대로 다음 공연도 해요? 밴드로 묶어두면 다음 플레이리스트는 버튼 한 번이에요
       </NoticeCard>
       <NoticeCard

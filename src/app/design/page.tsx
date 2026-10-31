@@ -266,7 +266,7 @@ export default function DesignPage() {
         </div>
       </Section>
 
-      <Section title="NoticeCard · InlineNotice" note="안내 카드는 늘 닫을 수 있어요. 상태가 이어지는 동안 남아야 하는 안내는 InlineNotice. InlineNotice 의 동작은 누르는 높이가 44px 이에요.">
+      <Section title="NoticeCard · InlineNotice" note="안내 카드는 늘 닫을 수 있어요. 카드의 동작은 tonal 이고, 카톡으로 보내는 동작만 kakao 예요. 상태가 이어지는 동안 남아야 하는 안내는 InlineNotice. InlineNotice 의 동작은 누르는 높이가 44px 이에요.">
         <NoticeDemo />
         <div className="mt-4 space-y-3">
           <InlineNotice>투표는 내일 오후 6시에 마감돼요.</InlineNotice>
