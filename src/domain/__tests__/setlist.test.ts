@@ -94,18 +94,19 @@ describe("cumulativeStarts", () => {
 });
 
 describe("한 셋리스트는 셋리스트 탭과 내보내기에서 같은 곡 수와 총 시간이다", () => {
-  it("셋리스트 탭은 곡·자작곡·인터벌을 더해 4곡 14:28 이다", () => {
+  it("셋리스트 탭은 곡·자작곡·인터벌을 더하고 지워진 곡은 빼서 4곡 16:28 이다", () => {
     expect(summarizeSetlist(fixtureItems, fixtureSongs)).toEqual({
       songCount: FIXTURE_SONG_COUNT,
       totalRuntime: FIXTURE_TOTAL_SECONDS,
       missingDurationCount: 1,
     });
-    expect(formatRuntime(FIXTURE_TOTAL_SECONDS)).toBe("14:28");
+    expect(formatRuntime(FIXTURE_TOTAL_SECONDS)).toBe("16:28");
   });
 
   it("이미지·PDF 는 자작곡까지 셋리스트 탭과 같은 번호와 시간으로 그린다", () => {
     const rows = setlistRows(fixtureItems, fixtureSongs);
     expect(rows).toEqual([
+      { kind: "interval", title: "사운드 체크", description: "모니터 볼륨 맞추기", duration: 120 },
       { kind: "song", number: 1, title: "첫 곡", artist: "첫 곡 밴드", bpm: null, duration: 200 },
       { kind: "interval", title: "기타 셋업 변경", description: null, duration: 180 },
       { kind: "song", number: 2, title: "시간 모르는 곡", artist: "시간 모르는 곡 밴드", bpm: null, duration: null },

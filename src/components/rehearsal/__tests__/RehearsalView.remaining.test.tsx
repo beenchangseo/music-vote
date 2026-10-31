@@ -14,10 +14,10 @@ vi.mock("../../ui/DialogProvider", () => ({
 }));
 vi.mock("next/image", () => ({ default: (props: { alt: string }) => <span aria-label={props.alt} /> }));
 
-function renderRehearsal() {
-  render(
+function rehearsal(setlistItems = fixtureItems) {
+  return (
     <RehearsalView
-      setlistItems={fixtureItems}
+      setlistItems={setlistItems}
       songs={fixtureSongs}
       comments={[]}
       playlistId="playlist"
@@ -25,8 +25,12 @@ function renderRehearsal() {
       nickname="베이스"
       loading={false}
       onCommentsChange={vi.fn()}
-    />,
+    />
   );
+}
+
+function renderRehearsal() {
+  return render(rehearsal());
 }
 
 describe("RehearsalView remaining time", () => {
@@ -40,11 +44,27 @@ describe("RehearsalView remaining time", () => {
   it("keeps the interval and original between two songs in the next song's remaining time", () => {
     renderRehearsal();
     fireEvent.click(screen.getByRole("button", { name: "다음 곡" }));
-    // 14:28 minus the first song (3:20). The 3:00 setup change is still ahead.
+    // 16:28 minus the opening sound check (2:00) and the first song (3:20). The 3:00 setup change is still ahead.
     expect(screen.getByText("남은 11:08")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "다음 곡" }));
     // The original (3:45) and the last song (4:23) are left.
     expect(screen.getByText("남은 8:08")).toBeInTheDocument();
+  });
+
+  it("stays on the new last song when the song it was on is removed from the setlist", () => {
+    const { rerender } = renderRehearsal();
+    fireEvent.click(screen.getByRole("button", { name: "다음 곡" }));
+    fireEvent.click(screen.getByRole("button", { name: "다음 곡" }));
+    expect(screen.getByText("3 / 3")).toBeInTheDocument();
+
+    rerender(rehearsal(fixtureItems.filter((item) => item.song_id !== "c")));
+    expect(screen.getByRole("heading", { name: "시간 모르는 곡" })).toBeInTheDocument();
+    expect(screen.getByText("2 / 2")).toBeInTheDocument();
+    expect(screen.getByText("마지막 곡이에요")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "이전 곡" }));
+    expect(screen.getByRole("heading", { name: "첫 곡" })).toBeInTheDocument();
+    expect(screen.getByText("1 / 2")).toBeInTheDocument();
   });
 });

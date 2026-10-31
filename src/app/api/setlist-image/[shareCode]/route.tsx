@@ -211,7 +211,7 @@ export async function GET(
         >
           {visible.map((row, index) => {
             const isInterval = row.kind === "interval";
-            const subtitle = row.kind === "song" ? row.artist : row.kind === "original" ? row.description || "자작곡" : null;
+            const subtitle = row.kind === "song" ? row.artist : row.kind === "original" && !row.description ? "자작곡" : null;
 
             return (
               <div
@@ -264,7 +264,7 @@ export async function GET(
                   >
                     {row.title}
                   </span>
-                  {isInterval && row.description && (
+                  {row.kind !== "song" && row.description && (
                     <span style={{ fontSize: 20, color: C.textMuted, marginTop: 4, fontWeight: 700, whiteSpace: "pre-wrap" }}>
                       {row.description}
                     </span>
