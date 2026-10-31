@@ -2,23 +2,14 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import Card from "../ui/Card";
 import Button, { buttonClassName } from "../ui/Button";
-import IconButton from "../ui/IconButton";
+import NoticeCard from "../ui/NoticeCard";
 import CreateBandSheet, { type BandCandidate, type CreatedBand } from "./CreateBandSheet";
 import { dismissBandPrompt, hasBandPromptDismissal, migrateLegacyDismissal } from "@/lib/prompt-dismissals";
 
 function subscribeStorage(callback: () => void) {
   window.addEventListener("storage", callback);
   return () => window.removeEventListener("storage", callback);
-}
-
-function CloseIcon() {
-  return (
-    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-    </svg>
-  );
 }
 
 /**
@@ -63,18 +54,18 @@ export default function BandPromptCard({ playlistId, adminToken, dismissed, onCr
   if (closed) return null;
 
   return (
-    <Card variant="outline" className="mb-3 flex items-start gap-3">
-      <div className="min-w-0 flex-1">
-        <p className="text-sm leading-relaxed text-text">
-          이 멤버 그대로 다음 공연도 해요? 밴드로 묶어두면 다음 플레이리스트는 버튼 한 번이에요
-        </p>
-        <Button size="sm" className="mt-3 min-h-11" onClick={() => setSheetOpen(true)}>
-          밴드 이름 정하고 만들기
-        </Button>
-      </div>
-      <IconButton bare aria-label="안내 닫기" onClick={dismiss} className="-my-2 -mr-2">
-        <CloseIcon />
-      </IconButton>
+    <>
+      <NoticeCard
+        className="mb-3"
+        onDismiss={dismiss}
+        actions={
+          <Button size="sm" onClick={() => setSheetOpen(true)}>
+            밴드 이름 정하고 만들기
+          </Button>
+        }
+      >
+        이 멤버 그대로 다음 공연도 해요? 밴드로 묶어두면 다음 플레이리스트는 버튼 한 번이에요
+      </NoticeCard>
       <CreateBandSheet
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
@@ -86,7 +77,7 @@ export default function BandPromptCard({ playlistId, adminToken, dismissed, onCr
           onCreated(band);
         }}
       />
-    </Card>
+    </>
   );
 }
 
@@ -102,22 +93,22 @@ export function HomeBandCard({ candidate, dismissed }: { candidate: BandCandidat
   if (closed) return null;
 
   return (
-    <Card variant="outline" className="mt-5 flex items-start gap-3">
-      <div className="min-w-0 flex-1">
-        <p className="text-sm leading-relaxed text-text">
-          <span className="block truncate font-semibold">「{candidate.title}」</span>
-          멤버 {candidate.memberCount}명, 다음 공연도 같이 해요?
-        </p>
+    <>
+      <NoticeCard
+        className="mt-5"
+        title={<span className="block truncate">「{candidate.title}」</span>}
+        onDismiss={dismiss}
+        actions={
+          <Button size="sm" onClick={() => setSheetOpen(true)}>
+            이 멤버로 밴드 만들기
+          </Button>
+        }
+      >
+        <p>멤버 {candidate.memberCount}명, 다음 공연도 같이 해요?</p>
         {candidate.memberPreview.length > 0 && (
-          <p className="mt-1 truncate text-caption text-text-muted">{candidate.memberPreview.join(", ")}</p>
+          <p className="mt-1 truncate text-caption">{candidate.memberPreview.join(", ")}</p>
         )}
-        <Button size="sm" className="mt-3 min-h-11" onClick={() => setSheetOpen(true)}>
-          이 멤버로 밴드 만들기
-        </Button>
-      </div>
-      <IconButton bare aria-label="안내 닫기" onClick={dismiss} className="-my-2 -mr-2">
-        <CloseIcon />
-      </IconButton>
+      </NoticeCard>
       <CreateBandSheet
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
@@ -127,7 +118,7 @@ export function HomeBandCard({ candidate, dismissed }: { candidate: BandCandidat
         target={candidate}
         participantOnlyTitle={null}
       />
-    </Card>
+    </>
   );
 }
 
@@ -145,25 +136,32 @@ export function BandCreatedCard({
   onDismiss: () => void;
 }) {
   return (
-    <Card role="status" className="mb-3 flex items-start gap-3">
-      <svg className="mt-0.5 h-5 w-5 shrink-0 text-success" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-      </svg>
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-text">밴드를 만들었어요</p>
-        <p className="mt-0.5 truncate text-caption text-text-muted">
-          {band.name} · 멤버 {band.memberCount}명
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Button variant="kakao" onClick={onShare}>카톡으로 알리기</Button>
+    <NoticeCard
+      role="status"
+      className="mb-3"
+      tone="success"
+      icon={
+        <svg className="size-4.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+      }
+      title="밴드를 만들었어요"
+      onDismiss={onDismiss}
+      dismissLabel="닫기"
+      actions={
+        <>
+          <Button variant="kakao" onClick={onShare}>
+            카톡으로 알리기
+          </Button>
           <Link href={`/band/${band.teamId}`} className={buttonClassName({ variant: "tonal", size: "md" })}>
             밴드 홈
           </Link>
-        </div>
-      </div>
-      <IconButton bare aria-label="닫기" onClick={onDismiss} className="-my-2 -mr-2">
-        <CloseIcon />
-      </IconButton>
-    </Card>
+        </>
+      }
+    >
+      <p className="truncate">
+        {band.name} · 멤버 {band.memberCount}명
+      </p>
+    </NoticeCard>
   );
 }
