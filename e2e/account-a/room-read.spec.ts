@@ -65,8 +65,9 @@ test.describe("account-a: fixed test room screens", () => {
     await expect(page.getByText("셋리스트에 곡을 넣으면 순서대로 진행할 수 있어요")).toHaveCount(0);
 
     await expect(page.getByText(/^1 \/ \d+$/)).toBeVisible(); // progress "1 / N"
-    await expect(page.getByRole("button", { name: /^BPM (\d+ 고치기|적어두기)$/ })).toBeVisible();
-    await expect(page.getByText("이 곡 코멘트")).toBeVisible();
-    await expect(page.getByRole("button", { name: "이전 곡" })).toBeVisible();
+    const current = page.getByRole("region", { name: "지금 곡" });
+    await expect(current.getByRole("button", { name: /^BPM (\d+ 고치기|적어두기)$/ })).toBeVisible();
+    await expect(current.getByRole("button", { name: /^코멘트 \d+ · 눌러서 보기$/ })).toBeVisible();
+    await expect(current.getByRole("button", { name: "이전 곡" })).toBeVisible();
   });
 });

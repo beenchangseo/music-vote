@@ -66,7 +66,7 @@ type EventMap = {
   };
   /** 합주 탭에서 누른 것. 합주 탭의 1순위 기능을 데이터로 정하려고 잰다 (2026-10-05). 탭 템포는 tap_tempo_used. */
   rehearsal_action: {
-    action: "next" | "prev" | "metronome_on" | "metronome_off" | "meta_open";
+    action: "next" | "prev" | "jump" | "metronome_on" | "metronome_off" | "meta_open";
   };
   /** "전체 듣기". candidates = 헤더 버튼(후보곡 1위부터), setlist = 셋리스트 툴바(셋리 첫 곡부터). 2026-10-31 전 기록은 모두 candidates. */
   play_all_started: {
