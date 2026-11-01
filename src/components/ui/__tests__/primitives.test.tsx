@@ -42,6 +42,18 @@ describe("Button", () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
+  it("says whether a toggle is on, and is a toggle only where its off look differs from the primary on look", () => {
+    const { rerender } = render(<Button variant="tonal" pressed={false}>메트로놈</Button>);
+    expect(screen.getByRole("button", { name: "메트로놈" })).toHaveAttribute("aria-pressed", "false");
+    rerender(<Button variant="tonal" pressed>메트로놈</Button>);
+    expect(screen.getByRole("button", { name: "메트로놈" })).toHaveAttribute("aria-pressed", "true");
+
+    // @ts-expect-error A button without a variant is primary, which already looks pressed.
+    void (<Button pressed>켜기</Button>);
+    // @ts-expect-error Kakao keeps its brand yellow.
+    void (<Button variant="kakao" pressed={false}>공유</Button>);
+  });
+
   it("marks a Kakao action with the speech bubble whether it is yellow or tonal", () => {
     render(
       <>

@@ -3,19 +3,24 @@ import { ButtonHTMLAttributes, forwardRef } from "react";
 type Variant = "primary" | "tonal" | "ghost" | "danger" | "kakao";
 type Size = "sm" | "md" | "lg" | "icon" | "toolbar" | "toolbar-compact";
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: Variant;
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   size?: Size;
   loading?: boolean;
   fullWidth?: boolean;
   /** 카카오 말풍선을 글자 앞에 붙인다. kakao 변형은 기본으로 붙는다. */
   kakaoMark?: boolean;
-  /**
-   * 켜고 끄는 버튼의 켜진 상태. 켜지면 primary 로 칠하고 aria-pressed 를 단다.
-   * 글자는 두 상태에서 같게 둔다. 바뀌면 폭이 바뀌어 줄이 꺾인다.
-   */
-  pressed?: boolean;
-}
+} & (
+    | { variant?: Variant; pressed?: undefined }
+    | {
+        /** 켜진 모습이 primary 라서, 꺼진 모습이 primary·kakao 인 버튼은 켜고 끄는 버튼이 될 수 없다. */
+        variant: Exclude<Variant, "primary" | "kakao">;
+        /**
+         * 켜고 끄는 버튼의 켜진 상태. 켜지면 primary 로 칠하고 aria-pressed 를 단다.
+         * 글자는 두 상태에서 같게 둔다. 바뀌면 폭이 바뀌어 줄이 꺾인다.
+         */
+        pressed?: boolean;
+      }
+  );
 
 const variantClasses: Record<Variant, string> = {
   primary:
