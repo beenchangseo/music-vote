@@ -231,4 +231,20 @@ describe("PlaylistClient setlist sync", () => {
     expect(realtime.notifyChange).toHaveBeenCalledTimes(1);
     expect(fetchSetlistItems).toHaveBeenCalledTimes(1);
   });
+
+  it("takes the removed song out of another member's list drawn while the removal was on the way, when the list after it cannot be read", async () => {
+    const inSetlist = { ...item("candidate"), item_type: "song", song_id: candidate.id } as SetlistItem;
+    render(<PlaylistClient playlist={playlist} songs={[candidate]} shareCode="abc123" participantCount={2} userNickname="보컬" currentUserId="owner" team={null} initialSetlistItems={[inSetlist, item("theirs")]} />);
+    let landRemoval: (result: { success: true; items: null }) => void = () => {};
+    vi.mocked(removeSetlistItem).mockReturnValue(new Promise((resolve) => (landRemoval = resolve)));
+    // Read before the delete reached the server, with another member's new block.
+    vi.mocked(fetchSetlistItems).mockResolvedValueOnce([inSetlist, item("theirs"), item("new")]).mockReturnValue(new Promise(() => {}));
+
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Plastic Love 셋리에서 빼기" })));
+    await act(async () => realtime.onRemoteChange());
+    await act(async () => landRemoval({ success: true, items: null }));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
+
+    expect(shown()).toBe("theirs,new");
+  });
 });

@@ -28,24 +28,35 @@ const interval = at(2, { item_type: "interval", label: "기타 셋업 변경", d
 const cherry = at(3, { song_id: "cherry" });
 const setlist = [pretty, hidden, interval, cherry];
 
-function Room({ initial, onItemsChange }: { initial: SetlistItem[]; onItemsChange: (items: SetlistItem[]) => void }) {
+/** Holds the setlist like PlaylistClient. onItemsChange sees the list the room ends up with; remote is another member's change. */
+function Room({ initial, onItemsChange, remote }: { initial: SetlistItem[]; onItemsChange: (items: SetlistItem[]) => void; remote?: SetlistItem[] }) {
   const [items, setItems] = useState(initial);
   return (
-    <SetlistView
-      setlistItems={items}
-      songs={songs}
-      playlistId="p"
-      shareCode="abc123"
-      adminToken={null}
-      loading={false}
-      onItemsChange={(next) => {
-        onItemsChange(next);
-        setItems(next);
-      }}
-      title="10월 합주"
-      access="edit"
-      onPlay={vi.fn()}
-    />
+    <>
+      {remote && (
+        <button type="button" onClick={() => setItems(remote)}>
+          다른 멤버의 변경
+        </button>
+      )}
+      <SetlistView
+        setlistItems={items}
+        songs={songs}
+        playlistId="p"
+        shareCode="abc123"
+        adminToken={null}
+        loading={false}
+        onItemsChange={(next) =>
+          setItems((current) => {
+            const drawn = typeof next === "function" ? next(current) : next;
+            onItemsChange(drawn);
+            return drawn;
+          })
+        }
+        title="10월 합주"
+        access="edit"
+        onPlay={vi.fn()}
+      />
+    </>
   );
 }
 
@@ -55,9 +66,9 @@ async function openEditMode() {
   await screen.findByRole("button", { name: "맨 끝에 넣기" });
 }
 
-async function renderRoom(initial: SetlistItem[] = setlist, { edit = true } = {}) {
+async function renderRoom(initial: SetlistItem[] = setlist, { edit = true, remote }: { edit?: boolean; remote?: SetlistItem[] } = {}) {
   const onItemsChange = vi.fn();
-  render(<Room initial={initial} onItemsChange={onItemsChange} />);
+  render(<Room initial={initial} onItemsChange={onItemsChange} remote={remote} />);
   if (edit) await openEditMode();
   return onItemsChange;
 }
@@ -272,6 +283,22 @@ describe("SetlistView edit mode: removing", () => {
 
     await waitFor(() => expect(onItemsChange).toHaveBeenCalledWith([pretty, hidden, cherry]));
     expect(handles()).toEqual(["「예뻤어」 끌어서 순서 바꾸기", "「벚꽃 엔딩」 끌어서 순서 바꾸기"]);
+  });
+
+  it("keeps another member's block drawn during the delete when the list after it cannot be read", async () => {
+    const love = at(4, { song_id: "love" });
+    const onItemsChange = await renderRoom(setlist, { remote: [...setlist, love] });
+    dialog.showDanger.mockResolvedValue(true);
+    const saved = deferred<{ success: true; items: null }>();
+    vi.mocked(removeSetlistItem).mockReturnValue(saved.promise);
+
+    fireEvent.click(within(rowOf("「기타 셋업 변경」 끌어서 순서 바꾸기")).getByRole("button", { name: "삭제" }));
+    await waitFor(() => expect(removeSetlistItem).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole("button", { name: "다른 멤버의 변경" }));
+    await act(async () => saved.resolve({ success: true, items: null }));
+
+    expect(onItemsChange).toHaveBeenLastCalledWith([pretty, hidden, cherry, love]);
+    expect(handles()).toEqual(["「예뻤어」 끌어서 순서 바꾸기", "「벚꽃 엔딩」 끌어서 순서 바꾸기", "「사랑하긴 했었나요」 끌어서 순서 바꾸기"]);
   });
 
   it("puts the block back and says why when the delete is refused", async () => {

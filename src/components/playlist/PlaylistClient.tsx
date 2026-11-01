@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef, type SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Image from "next/image";
@@ -197,11 +197,14 @@ export default function PlaylistClient({
 
   const { notifyChange, requestRefresh } = usePlaylistRealtime(shareCode, handleRemoteChange);
 
-  /** 서버에 닿은 셋리스트를 그리고 다른 화면에 알린다. null 이면 쓰기는 닿았지만 목록을 못 읽었으니 지금 목록을 둔다. */
+  /**
+   * 서버에 닿은 셋리스트를 그리고 다른 화면에 알린다. 쓰기는 닿았지만 목록을 못 읽었으면 지금 목록을 고치는 함수를 받는다.
+   * 누를 때의 목록으로 그리면 쓰기를 기다리는 동안 그린 다른 멤버의 변경을 덮는다.
+   */
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
-  const applySetlistItems = useCallback((items: SetlistItem[] | null) => {
+  const applySetlistItems = useCallback((items: SetStateAction<SetlistItem[]>) => {
     setlistReadsRef.current.drawn = setlistReadsRef.current.started;
-    if (items) setSetlistItems(items);
+    setSetlistItems((current) => (typeof items === "function" ? current && items(current) : items));
     notifyChange();
     // The write's answer can be older than a read that already landed with another member's later change.
     refetchSetlist().catch(requestRefresh);
@@ -325,7 +328,7 @@ export default function PlaylistClient({
     setSetlistItems((prev) => prev?.filter((entry) => entry.id !== item.id) ?? prev);
     const result = await removeSetlistItem(playlist.id, adminToken, item.id, shareCode).catch(() => null);
     if (result?.success) {
-      applySetlistItems(result.items);
+      applySetlistItems(result.items ?? ((entries) => entries.filter((entry) => entry.id !== item.id)));
       return;
     }
     setSetlistItems(previous);
