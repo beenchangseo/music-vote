@@ -52,7 +52,7 @@ export default function SetlistItemEditModal(props: Props) {
   }
 
   async function reset() {
-    const ok = await showConfirm("투표 리스트의 원본 제목과 시간으로 초기화할까요?");
+    const ok = await showConfirm("후보곡 탭에 보이는 제목과 영상 길이로 돌아가요.", "고친 제목과 시간을 되돌릴까요?");
     if (!ok) return;
     startTransition(async () => {
       try {

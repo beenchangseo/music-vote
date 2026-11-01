@@ -1,6 +1,8 @@
 // 곡 카드에 외부 악보·코드 검색 사이트 4개 단축 링크.
 // 한국 가요/팝/락 커버 시나리오에 맞춰 우선순위.
 
+import { displayArtist, displayTitle } from "@/domain/song-meta";
+
 interface SheetMusicLinksProps {
   title: string;
   artist?: string | null;
@@ -44,9 +46,10 @@ const SITES: Site[] = [
   },
 ];
 
-function buildQuery(title: string, artist?: string | null): string {
-  if (artist && artist.trim()) return `${artist.trim()} ${title.trim()}`;
-  return title.trim();
+function buildQuery(title: string, channel?: string | null): string {
+  const artist = displayArtist(channel, title);
+  const song = displayTitle(title);
+  return artist ? `${artist} ${song}` : song;
 }
 
 export default function SheetMusicLinks({ title, artist }: SheetMusicLinksProps) {

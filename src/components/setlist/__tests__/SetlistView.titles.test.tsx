@@ -16,7 +16,9 @@ vi.mock("@/actions/setlist", () => ({
   updateIntervalItem: vi.fn(),
   updateOriginalItem: vi.fn(),
 }));
-vi.mock("../../ui/DialogProvider", () => ({ useDialog: () => ({ showAlert: vi.fn(), showDanger: vi.fn(), showConfirm: vi.fn() }) }));
+const showConfirm = vi.hoisted(() => vi.fn());
+
+vi.mock("../../ui/DialogProvider", () => ({ useDialog: () => ({ showAlert: vi.fn(), showDanger: vi.fn(), showConfirm }) }));
 vi.mock("../SetlistShareButton", () => ({ default: () => null }));
 
 const song = (id: string, title: string) =>
@@ -61,7 +63,10 @@ async function openEditMode() {
   await screen.findByRole("button", { name: "맨 끝에 넣기" });
 }
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  showConfirm.mockReset();
+});
 
 describe("SetlistView song titles", () => {
   it("shows the title the candidates tab shows, or the setlist's own title over it", () => {
@@ -87,6 +92,16 @@ describe("SetlistView song titles", () => {
     fireEvent.click(screen.getByRole("button", { name: "「예뻤어」 제목 고치기" }));
     const sheet = screen.getByRole("dialog", { name: "곡 블록 수정" });
     expect(within(sheet).getByDisplayValue("예뻤어")).toBeInTheDocument();
+  });
+
+  it("warns that reset brings back the title and length the candidates tab shows", async () => {
+    renderSetlist();
+    await openEditMode();
+
+    fireEvent.click(screen.getByRole("button", { name: "「벚꽃 엔딩 (밴드 편곡)」 제목 고치기" }));
+    fireEvent.click(within(screen.getByRole("dialog", { name: "곡 블록 수정" })).getByRole("button", { name: "초기화" }));
+
+    expect(showConfirm).toHaveBeenCalledWith("후보곡 탭에 보이는 제목과 영상 길이로 돌아가요.", "고친 제목과 시간을 되돌릴까요?");
   });
 
   it("offers candidates in the insert sheet by the title the candidates tab shows", async () => {
