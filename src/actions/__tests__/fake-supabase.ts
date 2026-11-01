@@ -17,7 +17,7 @@ export type FakeOp = {
   columns?: string;
   /**
    * eq/in filters keyed by column. Other operators are keyed as "op:column"
-   * (is:team_id, neq:playlist_id) and or() filters as "or".
+   * (is:team_id, neq:playlist_id, lt:deadline) and or() filters as "or".
    */
   filters: Record<string, unknown>;
   orders: { column: string; ascending: boolean }[];
@@ -33,6 +33,8 @@ interface FakeBuilder extends PromiseLike<FakeResult> {
   select(columns?: string, options?: unknown): FakeBuilder;
   eq(column: string, value: unknown): FakeBuilder;
   neq(column: string, value: unknown): FakeBuilder;
+  lt(column: string, value: unknown): FakeBuilder;
+  gt(column: string, value: unknown): FakeBuilder;
   is(column: string, value: unknown): FakeBuilder;
   in(column: string, values: unknown[]): FakeBuilder;
   or(filters: string): FakeBuilder;
@@ -76,6 +78,14 @@ export function createFakeClient(respond: (op: FakeOp) => FakeResult = () => ({ 
         },
         neq(column, value) {
           op.filters[`neq:${column}`] = value;
+          return builder;
+        },
+        lt(column, value) {
+          op.filters[`lt:${column}`] = value;
+          return builder;
+        },
+        gt(column, value) {
+          op.filters[`gt:${column}`] = value;
           return builder;
         },
         is(column, value) {

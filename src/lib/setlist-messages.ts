@@ -35,7 +35,7 @@ export function setlistMessage(reason: string): string {
   return SETLIST_REASON_MESSAGES[reason as SetlistReason] ?? SETLIST_FALLBACK_MESSAGE;
 }
 
-/** 데이터베이스 함수(v26)가 RAISE 한 코드 중 화면에 그대로 돌려줄 것. 나머지는 write_failed 다. */
+/** 데이터베이스 함수(v26·v27)가 RAISE 한 코드 중 화면에 그대로 돌려줄 것. 나머지는 write_failed 다. */
 export function setlistReasonFromDatabase(message: string | undefined): SetlistReason {
   return message === "playlist_not_found" ||
     message === "slot_gone" ||

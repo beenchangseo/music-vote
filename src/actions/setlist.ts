@@ -24,7 +24,7 @@ function cleanBlockFields(kind: "interval" | "original", item: BlockFieldsInput)
   return clean;
 }
 
-/** v26 함수가 돌려준 셋리스트. 모양이 다르면 null. */
+/** v26·v27 함수가 돌려준 셋리스트. 모양이 다르면 null. */
 function setlistFrom(data: unknown): SetlistItem[] | null {
   const items = (data as { items?: unknown } | null)?.items;
   return Array.isArray(items) ? (items as SetlistItem[]) : null;
@@ -44,39 +44,32 @@ export async function getSetlistItems(playlistId: string): Promise<SetlistItem[]
   return (data || []) as SetlistItem[];
 }
 
+/**
+ * 셋리스트를 확정하고 확정된 셋리를 돌려준다. 빈 셋리면 songIds 순서대로 채우고, 블록이 이미 있으면 지금 셋리 그대로
+ * 확정한다. confirm_setlist(v27)가 넣기·순서 저장과 같은 잠금 안에서 한다.
+ */
 export async function confirmSetlist(
   playlistId: string,
   adminToken: string | null,
   songIds: string[],
   shareCode: string,
-) {
+): Promise<SetlistItemsResult> {
   await assertPlaylistAdmin(playlistId, adminToken);
-  const admin = createAdminClient();
-  const { error: updateError } = await admin
-    .from("playlists")
-    .update({ setlist_confirmed: true })
-    .eq("id", playlistId);
-  if (updateError) throw new Error("셋리스트 확정에 실패했습니다.");
 
-  const items = songIds.map((songId, i) => ({
-    playlist_id: playlistId,
-    position: i,
-    item_type: "song" as const,
-    song_id: songId,
-    label: null,
-    description: null,
-    duration_seconds: 0,
-    title_override: null,
-    duration_override_seconds: null,
-  }));
-  const { error: insertError } = await admin.from("setlist_items").insert(items);
-  if (insertError) {
-    await admin.from("playlists").update({ setlist_confirmed: false }).eq("id", playlistId);
-    throw new Error("셋리스트 항목 추가에 실패했습니다.");
+  const { data, error } = await createAdminClient().rpc("confirm_setlist", {
+    p_playlist_id: playlistId,
+    p_song_ids: songIds,
+  });
+  if (error) {
+    const reason = setlistReasonFromDatabase(error.message);
+    if (reason === "write_failed") console.error("confirmSetlist", playlistId, error.code);
+    return { success: false, reason };
   }
+  const items = setlistFrom(data);
+  if (!items) return { success: false, reason: "write_failed" };
 
   revalidatePath(`/playlist/${shareCode}`);
-  return { success: true };
+  return { success: true, items };
 }
 
 export async function updateIntervalItem(

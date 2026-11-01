@@ -572,18 +572,20 @@ export default function PlaylistClient({
                       onClick={async () => {
                         const topSongIds = songsWithVotes.slice(0, setlistCount).map((s) => s.id);
                         if (!adminToken) return;
-                        const ok = await showConfirm(`상위 ${setlistCount}곡으로 셋리스트를 확정하시겠습니까?`);
+                        const ok = await showConfirm(
+                          setlistItems?.length ? "지금 셋리스트로 확정할까요?" : `상위 ${setlistCount}곡으로 셋리스트를 확정하시겠습니까?`,
+                        );
                         if (!ok) return;
-                        try {
-                          await confirmSetlist(playlist.id, adminToken, topSongIds, shareCode);
-                          track("setlist_confirmed", {
-                            song_count: topSongIds.length,
-                            auto: false,
-                          });
-                          notifyChange();
-                        } catch {
-                          showAlert("셋리스트 확정에 실패했습니다.");
+                        const result = await confirmSetlist(playlist.id, adminToken, topSongIds, shareCode).catch(() => null);
+                        if (!result?.success) {
+                          showAlert(result && result.reason !== "write_failed" ? setlistMessage(result.reason) : "셋리스트 확정에 실패했습니다.");
+                          return;
                         }
+                        track("setlist_confirmed", {
+                          song_count: result.items.filter((item) => item.item_type !== "interval").length,
+                          auto: false,
+                        });
+                        applySetlistItems(result.items);
                       }}
                       className="px-5 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white text-sm font-semibold transition-all active:scale-95"
                     >
