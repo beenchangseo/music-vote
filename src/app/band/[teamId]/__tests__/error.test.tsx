@@ -12,7 +12,6 @@ describe("BandError", () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     const retry = vi.fn();
     const reset = vi.fn();
-    // The props Next 16.4 hands to error.tsx (next/dist/client/components/error-boundary.js).
     const boundaryProps = { error: new Error("boom"), reset, retry };
 
     render(<BandError {...boundaryProps} />);

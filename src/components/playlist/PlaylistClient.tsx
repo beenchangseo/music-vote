@@ -112,7 +112,7 @@ export default function PlaylistClient({
       const found = myPlaylists.find(
         (p: { id?: string; shareCode?: string }) => p.id === playlist.id || p.shareCode === shareCode
       );
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is only readable after hydration.
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- unchanged mount-time read; moving it to useSyncExternalStore (as MyPlaylists.tsx does) is its own change.
       setAdminToken(found?.adminToken || null);
     } catch { /* ignore */ }
   // eslint-disable-next-line react-hooks/exhaustive-deps
