@@ -1,7 +1,11 @@
 <!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
 <!-- END:nextjs-agent-rules -->
 
 # Plypick 에이전트 가이드
@@ -156,7 +160,7 @@ Variable(한국어) + Geist(영문) 폴백.
 
 - 로컬 빌드는 `NODE_ENV=production npx next build` 로 돌린다. 운영자의 Claude Code 전역 설정(`~/.claude/settings.json` 의
   `env`)이 `NODE_ENV=development` 를 넣어서, 그대로 빌드하면 `/_global-error` prerender 가 `useContext` null 로 실패한다.
-  예전에는 Next 16.2.1 회귀로 알았지만 원인은 환경변수였다. Vercel 은 production 으로 빌드한다.
+  Next 회귀가 아니라 환경변수가 원인이다(16.2.1·16.4.3 에서 같다). Vercel 은 production 으로 빌드한다.
 - Node 는 `.nvmrc` 의 24.22.1 이다(`nvm use`). `package.json` `engines.node` 는 `^24.22.1` 이라 Vercel 은 24.x 의
   최신 패치를 고르고, 로컬에서 더 낮은 Node 로 설치하면 npm 이 경고만 한다. `>=` 범위로 바꾸면 Vercel 이 26.x 로 올라간다.
 - `src/lib/youtube-iframe.ts` 의 `YT` namespace 는 ambient declare 다. `export type { YT }` 로만 내보내고 value import 하지 않는다.

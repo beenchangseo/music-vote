@@ -116,6 +116,7 @@ export default function AuthMenu({ nickname, avatarUrl, embedded = false }: Auth
     }
     // A full load, not router.push: the client router cache still holds the signed-in pages.
     if (result.success) {
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- the full load is the point, see above.
       window.location.assign("/");
       return;
     }

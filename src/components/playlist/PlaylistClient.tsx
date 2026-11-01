@@ -112,6 +112,7 @@ export default function PlaylistClient({
       const found = myPlaylists.find(
         (p: { id?: string; shareCode?: string }) => p.id === playlist.id || p.shareCode === shareCode
       );
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is only readable after hydration.
       setAdminToken(found?.adminToken || null);
     } catch { /* ignore */ }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -140,6 +141,7 @@ export default function PlaylistClient({
   }, [isArchived, loggedIn, playlist.id, showAlert]);
 
   // Lazy load setlist items on first mode switch
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- useState setters are stable; eslint-plugin-react-hooks 7.1 lists them as missing deps in this component.
   const handleModeChange = useCallback(async (mode: ViewMode) => {
     window.scrollTo({ top: 0 });
     setNavMode(mode);
@@ -168,6 +170,7 @@ export default function PlaylistClient({
 
   // 다른 참여자의 변경 알림. 셋리스트·댓글은 서버 렌더가 아니라
   // 클라이언트가 따로 받아둔 값이라 이미 열어본 목록만 다시 받아온다.
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
   const handleRemoteChange = useCallback(() => {
     router.refresh();
     if (setlistItems !== null) {
@@ -180,6 +183,7 @@ export default function PlaylistClient({
 
   const { notifyChange } = usePlaylistRealtime(shareCode, handleRemoteChange);
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
   const handleAllowanceChange = useCallback((usedVotes: number, voteLimit: number) => {
     setAllowance((current) => (current ? { ...current, usedVotes, voteLimit } : current));
   }, []);
