@@ -157,6 +157,8 @@ Variable(한국어) + Geist(영문) 폴백.
 - 로컬 빌드는 `NODE_ENV=production npx next build` 로 돌린다. 운영자의 Claude Code 전역 설정(`~/.claude/settings.json` 의
   `env`)이 `NODE_ENV=development` 를 넣어서, 그대로 빌드하면 `/_global-error` prerender 가 `useContext` null 로 실패한다.
   예전에는 Next 16.2.1 회귀로 알았지만 원인은 환경변수였다. Vercel 은 production 으로 빌드한다.
+- Node 는 `.nvmrc` 의 24.22.1 이다(`nvm use`). `package.json` `engines.node` 는 `^24.22.1` 이라 Vercel 은 24.x 의
+  최신 패치를 고르고, 로컬에서 더 낮은 Node 로 설치하면 npm 이 경고만 한다. `>=` 범위로 바꾸면 Vercel 이 26.x 로 올라간다.
 - `src/lib/youtube-iframe.ts` 의 `YT` namespace 는 ambient declare 다. `export type { YT }` 로만 내보내고 value import 하지 않는다.
 - Spotify audio-features 는 2024-11 부터 신규 앱에 막혔다. BPM·키는 직접 입력과 탭 템포, 외부 도구 링크로 채운다.
 - 익명 모드에서는 `SongWithScore.votes` 를 채우지 않는다. 계정 식별자는 어느 모드에서도 내려보내지 않는다(`docs/adr/0011`).
