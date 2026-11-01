@@ -173,27 +173,25 @@ export default function PlaylistClient({
   // dropped. The read that applySetlistItems starts after every landed write covers anything it carried.
   const setlistVersionRef = useRef(0);
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
-  const refetchSetlist = useCallback(() => {
+  const refetchSetlist = useCallback(async () => {
     const version = setlistVersionRef.current;
-    getSetlistItems(playlist.id)
-      .then((items) => {
-        if (version === setlistVersionRef.current) setSetlistItems(items);
-      })
-      .catch(() => undefined);
+    const items = await getSetlistItems(playlist.id);
+    if (version === setlistVersionRef.current) setSetlistItems(items);
   }, [playlist.id]);
 
   // 다른 참여자의 변경 알림. 셋리스트·댓글은 서버 렌더가 아니라
   // 클라이언트가 따로 받아둔 값이라 이미 열어본 목록만 다시 받아온다.
+  // A failed read rejects, so usePlaylistRealtime tries again instead of waiting for the next change.
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
-  const handleRemoteChange = useCallback(() => {
+  const handleRemoteChange = useCallback(async () => {
     router.refresh();
-    if (setlistItems !== null) refetchSetlist();
-    if (comments !== null) {
-      getComments(playlist.id).then(setComments).catch(() => undefined);
-    }
+    await Promise.all([
+      setlistItems !== null && refetchSetlist(),
+      comments !== null && getComments(playlist.id).then(setComments),
+    ]);
   }, [router, playlist.id, setlistItems, comments, refetchSetlist]);
 
-  const { notifyChange } = usePlaylistRealtime(shareCode, handleRemoteChange);
+  const { notifyChange, requestRefresh } = usePlaylistRealtime(shareCode, handleRemoteChange);
 
   /** 서버에 닿은 셋리스트를 그리고 다른 화면에 알린다. */
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
@@ -202,8 +200,8 @@ export default function PlaylistClient({
     setSetlistItems(items);
     notifyChange();
     // The write's answer can be older than a read that already landed with another member's later change.
-    refetchSetlist();
-  }, [notifyChange, refetchSetlist]);
+    refetchSetlist().catch(requestRefresh);
+  }, [notifyChange, refetchSetlist, requestRefresh]);
 
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
   const handleAllowanceChange = useCallback((usedVotes: number, voteLimit: number) => {

@@ -6,7 +6,7 @@ import { getSetlistItems } from "@/actions/setlist";
 import type { Playlist, SetlistItem } from "@/domain/types";
 import PlaylistClient from "../PlaylistClient";
 
-const realtime = vi.hoisted(() => ({ onRemoteChange: () => {}, notifyChange: vi.fn() }));
+const realtime = vi.hoisted(() => ({ onRemoteChange: (): Promise<void> | void => {}, notifyChange: vi.fn(), requestRefresh: vi.fn() }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }), usePathname: () => "/playlist/abc123" }));
 vi.mock("next/image", () => ({ default: () => null }));
@@ -17,9 +17,9 @@ vi.mock("@/actions/member", () => ({ registerPlaylistMember: vi.fn().mockResolve
 vi.mock("@/actions/setlist", () => ({ getSetlistItems: vi.fn() }));
 vi.mock("@/actions/comment", () => ({ getComments: vi.fn().mockResolvedValue([]) }));
 vi.mock("@/hooks/usePlaylistRealtime", () => ({
-  usePlaylistRealtime: (_shareCode: string, onRemoteChange: () => void) => {
+  usePlaylistRealtime: (_shareCode: string, onRemoteChange: () => Promise<void> | void) => {
     realtime.onRemoteChange = onRemoteChange;
-    return { notifyChange: realtime.notifyChange };
+    return { notifyChange: realtime.notifyChange, requestRefresh: realtime.requestRefresh };
   },
 }));
 vi.mock("@/hooks/usePlaylistVotes", () => ({
@@ -99,6 +99,7 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.mocked(getSetlistItems).mockReset();
   realtime.notifyChange.mockReset();
+  realtime.requestRefresh.mockReset();
 });
 
 describe("PlaylistClient setlist sync", () => {
@@ -121,13 +122,36 @@ describe("PlaylistClient setlist sync", () => {
     expect(shown()).toBe("theirs");
   });
 
+  it("reports a failed read to the realtime hook so the change is read again, not dropped", async () => {
+    openSetlist();
+    vi.mocked(getSetlistItems).mockRejectedValueOnce(new Error("429")).mockResolvedValueOnce([item("theirs")]);
+
+    await act(async () => expect(realtime.onRemoteChange()).rejects.toThrow());
+    expect(shown()).toBe("first");
+
+    await act(async () => realtime.onRemoteChange());
+    expect(shown()).toBe("theirs");
+  });
+
+  it("asks the realtime hook to refresh when the read after my write fails", async () => {
+    openSetlist();
+    vi.mocked(getSetlistItems).mockRejectedValueOnce(new Error("429"));
+
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "내 쓰기" })));
+
+    expect(shown()).toBe("mine");
+    expect(realtime.requestRefresh).toHaveBeenCalledTimes(1);
+  });
+
   it("drops a read that overlapped my write and reads again, so neither an old list nor their change is lost", async () => {
     openSetlist();
     const overlapped = deferred();
     const again = deferred();
     vi.mocked(getSetlistItems).mockReturnValueOnce(overlapped.promise).mockReturnValueOnce(again.promise);
 
-    act(() => realtime.onRemoteChange());
+    act(() => {
+      void realtime.onRemoteChange();
+    });
     fireEvent.click(screen.getByRole("button", { name: "내 쓰기" }));
     await act(async () => overlapped.resolve([item("first")]));
 
