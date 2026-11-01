@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createFakeClient, type FakeOp, type FakeResult } from "@/actions/__tests__/fake-supabase";
 
 const db = vi.hoisted(() => ({ respond: ((): FakeResult => ({ data: [] })) as (op: FakeOp) => FakeResult, ops: [] as FakeOp[] }));
@@ -15,12 +15,17 @@ import { GET } from "../route";
 
 const PLAYLIST_ID = "22222222-2222-4222-8222-222222222222";
 
-function get() {
-  return GET(new Request(`https://plypick.kr/api/playlist/${PLAYLIST_ID}/comments`), { params: Promise.resolve({ playlistId: PLAYLIST_ID }) });
+function get(playlistId = PLAYLIST_ID) {
+  return GET(new Request(`https://plypick.kr/api/playlist/${playlistId}/comments`), { params: Promise.resolve({ playlistId }) });
 }
 
 beforeEach(() => {
+  db.ops = [];
   vi.spyOn(console, "error").mockImplementation(() => undefined);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe("GET /api/playlist/[playlistId]/comments", () => {
@@ -31,6 +36,7 @@ describe("GET /api/playlist/[playlistId]/comments", () => {
     const response = await get();
 
     expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
     expect(await response.json()).toEqual(comments);
     expect(db.ops[0]).toMatchObject({ table: "songs", filters: { playlist_id: PLAYLIST_ID } });
     expect(db.ops[1]).toMatchObject({ table: "comments", filters: { song_id: ["s1", "s2"] } });
@@ -56,5 +62,14 @@ describe("GET /api/playlist/[playlistId]/comments", () => {
     const response = await get();
 
     expect(response.status).toBe(500);
+  });
+
+  it.each(["not-a-uuid", "../setlist", ""])("answers 404 for %j without reading or logging, so a bad link cannot fill the logs", async (playlistId) => {
+    const response = await get(playlistId);
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(db.ops).toHaveLength(0);
+    expect(console.error).not.toHaveBeenCalled();
   });
 });
