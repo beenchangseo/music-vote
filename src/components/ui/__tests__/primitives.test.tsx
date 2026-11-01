@@ -3,9 +3,11 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import Button from "../Button";
+import Card from "../Card";
 import Chip from "../Chip";
 import IconButton from "../IconButton";
 import Input from "../Input";
+import { ListRowButton } from "../ListRow";
 
 afterEach(cleanup);
 
@@ -38,6 +40,18 @@ describe("Button", () => {
     render(<Button disabled onClick={onClick}>삭제</Button>);
     fireEvent.click(screen.getByRole("button", { name: "삭제" }));
     expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("says whether a toggle is on, and is a toggle only where its off look differs from the primary on look", () => {
+    const { rerender } = render(<Button variant="tonal" pressed={false}>메트로놈</Button>);
+    expect(screen.getByRole("button", { name: "메트로놈" })).toHaveAttribute("aria-pressed", "false");
+    rerender(<Button variant="tonal" pressed>메트로놈</Button>);
+    expect(screen.getByRole("button", { name: "메트로놈" })).toHaveAttribute("aria-pressed", "true");
+
+    // @ts-expect-error A button without a variant is primary, which already looks pressed.
+    void (<Button pressed>켜기</Button>);
+    // @ts-expect-error Kakao keeps its brand yellow.
+    void (<Button variant="kakao" pressed={false}>공유</Button>);
   });
 
   it("marks a Kakao action with the speech bubble whether it is yellow or tonal", () => {
@@ -94,5 +108,49 @@ describe("Input", () => {
   it("lets the caller override aria-invalid", () => {
     render(<Input aria-label="곡 링크" invalid aria-invalid="false" />);
     expect(screen.getByRole("textbox", { name: "곡 링크" })).toHaveAttribute("aria-invalid", "false");
+  });
+});
+
+describe("Card", () => {
+  it("keeps what is being typed above its footer when the footer opens and closes", () => {
+    const card = (footer: React.ReactNode) => (
+      <Card footer={footer}>
+        <input aria-label="메모" />
+      </Card>
+    );
+    const { rerender } = render(card(null));
+    const memo = screen.getByRole("textbox", { name: "메모" });
+    memo.focus();
+    fireEvent.change(memo, { target: { value: "브릿지" } });
+
+    rerender(card(<p>코멘트</p>));
+    expect(screen.getByText("코멘트")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "메모" })).toHaveValue("브릿지");
+    expect(screen.getByRole("textbox", { name: "메모" })).toHaveFocus();
+
+    rerender(card(false));
+    expect(screen.queryByText("코멘트")).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "메모" })).toHaveValue("브릿지");
+    expect(screen.getByRole("textbox", { name: "메모" })).toHaveFocus();
+  });
+});
+
+describe("ListRowButton", () => {
+  it("is one button that does not submit a form, with only phrasing content inside", () => {
+    const onSubmit = vi.fn((e: React.FormEvent) => e.preventDefault());
+    const onClick = vi.fn();
+    render(
+      <form onSubmit={onSubmit}>
+        <ListRowButton leading={<span>2</span>} trailing={<span>4:56</span>} onClick={onClick}>
+          <span className="block">벚꽃 엔딩</span>
+        </ListRowButton>
+      </form>,
+    );
+    const row = screen.getByRole("button", { name: /벚꽃 엔딩/ });
+    fireEvent.click(row);
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onSubmit).not.toHaveBeenCalled();
+    // A <button> may hold only phrasing content. A <div> inside it is invalid HTML.
+    expect(row.querySelector("div, p, h1, h2, h3, ul, li")).toBeNull();
   });
 });

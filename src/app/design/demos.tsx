@@ -8,7 +8,7 @@ import NoticeCard from "@/components/ui/NoticeCard";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import Switch from "@/components/ui/Switch";
 import TabBar from "@/components/ui/TabBar";
-import ListRow, { ListGroup } from "@/components/ui/ListRow";
+import ListRow, { ListGroup, ListRowButton } from "@/components/ui/ListRow";
 import Avatar from "@/components/ui/Avatar";
 import GuitarIcon from "@/components/ui/GuitarIcon";
 import { useDialog } from "@/components/ui/DialogProvider";
@@ -217,6 +217,26 @@ export function ListGroupDemo() {
           </ListRow>
         ))}
       </ListGroup>
+      <p className="mt-4 text-caption font-semibold text-text-muted">줄 전체가 눌리는 행 (ListRowButton, 합주 단계)</p>
+      <div className="mt-2">
+        {[
+          ["1", "예뻤어", "4:44"],
+          ["2", "벚꽃 엔딩", "4:56"],
+        ].map(([number, title, length]) => (
+          <ListRowButton
+            key={title}
+            className="px-1"
+            leading={
+              <span className="grid size-7 place-items-center rounded-pill border-2 border-border-strong text-caption font-semibold tabular-nums text-text-muted">
+                {number}
+              </span>
+            }
+            trailing={<span className="text-caption tabular-nums text-text-muted">{length}</span>}
+          >
+            <span className="block truncate text-sm font-medium text-text">{title}</span>
+          </ListRowButton>
+        ))}
+      </div>
     </div>
   );
 }

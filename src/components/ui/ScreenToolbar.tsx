@@ -1,5 +1,8 @@
+"use client";
+
 import type { ComponentPropsWithRef, ReactNode } from "react";
-import { buttonClassName } from "./Button";
+import Button from "./Button";
+import { publishScreenToolbarHeight } from "./chrome-inset";
 
 interface ScreenToolbarProps {
   /** 이 화면에서 가장 큰 숫자. */
@@ -22,7 +25,7 @@ interface ScreenToolbarProps {
  */
 export default function ScreenToolbar({ stat, caption, actions, children }: ScreenToolbarProps) {
   return (
-    <div className="sticky top-0 z-20 -mx-4 mt-3 mb-3 border-b border-border bg-bg/95 px-4 pb-3 pt-2 backdrop-blur-sm print:hidden">
+    <div ref={publishScreenToolbarHeight} className="sticky top-0 z-20 -mx-4 mt-3 mb-3 border-b border-border bg-bg/95 px-4 pb-3 pt-2 backdrop-blur-sm print:hidden">
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-h3 font-bold leading-tight tabular-nums text-text">{stat}</p>
@@ -60,14 +63,9 @@ type ToolbarButtonProps = Omit<ComponentPropsWithRef<"button">, "className" | "c
 // One look per row: a mix of filled and bare buttons at the same height reads as different sizes.
 export function ToolbarButton({ icon, label, compact = false, pressed, type = "button", ...rest }: ToolbarButtonProps) {
   return (
-    <button
-      type={type}
-      aria-pressed={pressed}
-      className={buttonClassName({ variant: pressed ? "primary" : "tonal", size: compact ? "toolbar-compact" : "toolbar" })}
-      {...rest}
-    >
+    <Button type={type} variant="tonal" size={compact ? "toolbar-compact" : "toolbar"} pressed={pressed} {...rest}>
       {icon}
       <span className={compact ? "max-sm:sr-only" : undefined}>{label}</span>
-    </button>
+    </Button>
   );
 }

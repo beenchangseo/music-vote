@@ -204,6 +204,13 @@
 .hover\:rotate-y-12:hover.hover\:rotate-x-6:hover { transform: rotateY(12deg) rotateX(6deg); }
 .animate-gradient { background-size: 200% 200%; animation: gradient 8s ease infinite; }
 
+/* 붙어 있는 막대(위 ScreenToolbar, 아래 TabBar·MiniPlayer 막대)는 자기 높이를 알린다(components/ui/chrome-inset.ts).
+ * scrollIntoView·포커스로 끌어온 내용이 막대 밑에 숨지 않게 그만큼 비운다. 막대가 없는 화면은 0 이다. */
+html {
+  scroll-padding-top: var(--screen-toolbar-height, 0px);
+  scroll-padding-bottom: calc(var(--tab-bar-height, 0px) + var(--mini-player-height, 0px));
+}
+
 /* Body 기본 한국어 가독성 */
 body {
   font-feature-settings: "ss01", "ss02", "cv01", "cv09";

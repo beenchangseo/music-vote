@@ -1,18 +1,56 @@
-import type { HTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
 
-interface ListRowProps extends HTMLAttributes<HTMLDivElement> {
+interface RowSlots {
   leading?: ReactNode;
   trailing?: ReactNode;
+  children?: ReactNode;
+}
+
+const rowLayout = "flex min-h-row items-center gap-3 py-2";
+
+function Slots({ as: Slot, leading, trailing, children }: RowSlots & { as: "div" | "span" }) {
+  return (
+    <>
+      {leading && <Slot className="flex shrink-0 items-center">{leading}</Slot>}
+      <Slot className="min-w-0 flex-1">{children}</Slot>
+      {trailing && <Slot className="flex shrink-0 items-center gap-1">{trailing}</Slot>}
+    </>
+  );
 }
 
 /** 설정·멤버 한 줄 (56px). [앞: 아바타·아이콘][가운데: 제목·설명][뒤: 스위치·스테퍼·버튼]. */
-export default function ListRow({ leading, trailing, className = "", children, ...rest }: ListRowProps) {
+export default function ListRow({ leading, trailing, className = "", children, ...rest }: RowSlots & HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`flex min-h-row items-center gap-3 py-2 ${className}`} {...rest}>
-      {leading && <div className="flex shrink-0 items-center">{leading}</div>}
-      <div className="min-w-0 flex-1">{children}</div>
-      {trailing && <div className="flex shrink-0 items-center gap-1">{trailing}</div>}
+    <div className={`${rowLayout} ${className}`} {...rest}>
+      <Slots as="div" leading={leading} trailing={trailing}>
+        {children}
+      </Slots>
     </div>
+  );
+}
+
+/**
+ * 줄 전체가 눌리는 ListRow. 버튼 안에는 글자·span 만 둘 수 있어서 칸도 span 으로 그린다.
+ * 그래서 칸에는 div·p 대신 span 을 넣고, 버튼이나 링크는 넣지 않는다.
+ */
+export function ListRowButton({
+  leading,
+  trailing,
+  className = "",
+  children,
+  type = "button",
+  ...rest
+}: RowSlots & ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      type={type}
+      className={`${rowLayout} w-full rounded-control text-left transition-colors hover:bg-surface-hover ${className}`}
+      {...rest}
+    >
+      <Slots as="span" leading={leading} trailing={trailing}>
+        {children}
+      </Slots>
+    </button>
   );
 }
 

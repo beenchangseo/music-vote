@@ -108,6 +108,8 @@ verification/     TLA+ 형식 검증 (verify-vote-quota 스킬)
 **크기.** 모서리 `rounded-badge` 6 · `rounded-control` 12(버튼·입력·칩) · `rounded-card` 16 · `rounded-t-sheet` 24 ·
 `rounded-pill`. 높이 `h-control-sm` 36(누르는 영역은 44) · `h-control-md` 44 · `h-control-lg` 52, 행 `min-h-row` 56(설정·멤버)
 · `min-h-row-song` 72(곡). 그림자는 `shadow-float` 하나이고 시트·토스트·FAB 에만 쓴다. 다른 층은 표면 색으로 만든다.
+화면에 붙는 막대(`ScreenToolbar`·`TabBar`·`MiniPlayer` 막대)는 `ui/chrome-inset.ts` 로 자기 높이를 알리고, `html` 의
+scroll-padding 이 그만큼 비운다. 막대 밑으로 스크롤되는 여백을 `scroll-mt-*` 같은 숫자로 따로 적지 않는다.
 타이포는 `text-display`·`text-h1`~`text-h4`·`text-body`·`text-sm`·`text-caption`, 한국어 줄간격 1.5 이상. 폰트는 Pretendard
 Variable(한국어) + Geist(영문) 폴백.
 
@@ -119,18 +121,23 @@ Variable(한국어) + Geist(영문) 폴백.
 
 - `Button`: variant `primary`·`tonal`·`ghost`·`danger`·`kakao`, size `sm`·`md`·`lg`·`icon`, `loading`(aria-busy).
   버튼처럼 보이는 `<Link>` 는 `buttonClassName()`. 카카오 노랑은 `kakao` 변형으로만 칠한다(말풍선 표시를 그린다).
+- 켜고 끄는 버튼은 `pressed` 다(켜지면 primary, `aria-pressed`). `ToolbarButton` 의 `pressed` 도 같은 것이다. 켜고 꺼도
+  폭이 그대로여야 한다. 폭이 바뀌면 좁은 화면에서 줄이 꺾여 카드가 길어진다. 글자는 두 상태에서 같게 두거나(메트로놈)
+  같은 글자 수의 한글로만 바꾸고(편집 ↔ 완료. Pretendard 한글은 글자 폭이 같다), 켜졌을 때만 움직이는 표시(박자 점)도
+  꺼졌을 때 자리를 둔다.
 - 채운 `primary` 버튼은 화면에 하나다. 나란한 보조 동작은 `tonal`, 덜 중요한 동작은 `ghost`. 같은 일을 하는 버튼을 두
   개 두지 않는다. 나란한 버튼 둘은 `ButtonGroup`(같은 폭).
 - 고르기: 필터·켜고 끄는 선택지는 `Chip`(36px, 누르는 영역 44px), 한 화면 안 보기·방식 하나는 `SegmentedControl`
   (radiogroup), 켜고 끄기는 `Switch`(label 을 주면 줄 전체가 눌린다), 화면 아래 탭은 `TabBar`.
 - 목록: 곡은 `SongRow`(카드 없이 72px, 48px 커버, 고정 폭 `RankNumber`), 설정·멤버는 `ListRow`(56px)를 시트 안에서
-  `ListGroup` 으로 묶는다. 사람은 `Avatar`·`AvatarStack`, 메타·상태는 `Badge`(neutral·primary·warning).
+  `ListGroup` 으로 묶는다. 줄 전체가 눌리면 `ListRowButton` 이다. 버튼 안에 div 를 둘 수 없어 칸이 span 이다. 사람은 `Avatar`·`AvatarStack`, 메타·상태는 `Badge`(neutral·primary·warning).
 - 안내: 닫을 수 있는 안내는 `NoticeCard`(늘 닫기가 있고, 닫힘 기억은 부르는 쪽), 상태가 이어지는 동안 남는 안내는
   `InlineNotice`, 빈 목록은 `EmptyState`(screen·inline). 성공 확인을 띄우는 토스트는 아직 없다.
 - 입력: `Field`(라벨 위, 도움말·오류 아래, aria 를 이어 준다) 안에 `Input`·`Textarea`.
 - `Modal` 은 모바일 시트다(surface 바탕, 그래버, 위 모서리 24, `shadow-float`). 시트 안 묶음·칸은 `surface-hover` 로
   한 단계 올린다. `useDialog()`(`DialogProvider`): alert·confirm·danger 확인창.
-- `Card`: variant `default`·`elevated`·`outline`, 그림자 없음. `IconButton`: tone `default`·`danger`·`brand`, `bare`, 44px,
+- `Card`: variant `default`·`elevated`·`outline`·`selected`(목록에서 지금 고른 한 장, `border-primary-fg`), 그림자 없음. 카드 끝까지
+  닿는 아래 칸(펼친 코멘트)은 `footer` 다. 음수 margin 으로 padding 을 지우지 않는다. `IconButton`: tone `default`·`danger`·`brand`, `bare`, 44px,
   `aria-label` 필수. `ScreenToolbar`: 후보곡·셋리스트·합주 상단의 숫자와 동작. 동작은 `ToolbarButton`(44px, `compact` 면
   640px 아래에서 아이콘만)으로만 그린다.
 - 크기는 prop 이 정한다. `Button`·`IconButton`·`Chip` 의 className 에 높이·폭·여백·모서리·글자 크기를 덧칠하면 eslint 가

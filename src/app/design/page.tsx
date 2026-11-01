@@ -132,6 +132,16 @@ export default function DesignPage() {
             +
           </Button>
         </div>
+        <h3 className="mt-6 text-sm font-semibold text-text-muted">켜고 끄기</h3>
+        <p className="mt-1 text-caption text-text-subtle">pressed 를 주면 켜진 쪽이 primary 예요. 글자는 그대로 둬서 켜고 꺼도 폭이 같아요.</p>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <Button variant="tonal" size="sm" pressed={false}>
+            메트로놈
+          </Button>
+          <Button variant="tonal" size="sm" pressed>
+            메트로놈
+          </Button>
+        </div>
         <Button size="lg" fullWidth className="mt-3">
           fullWidth
         </Button>
@@ -209,12 +219,16 @@ export default function DesignPage() {
 
       <Section title="Card">
         <div className="space-y-3">
-          {(["default", "elevated", "outline"] as const).map((variant) => (
+          {(["default", "elevated", "outline", "selected"] as const).map((variant) => (
             <Card key={variant} variant={variant}>
               <p className="text-sm font-semibold text-text">{variant}</p>
               <p className="text-sm text-text-muted">단톡방에 초대 링크를 보내면 바로 들어와요</p>
             </Card>
           ))}
+          <Card variant="selected" padding="sm" footer={<p className="p-3 text-sm text-text-muted">footer 는 카드 끝까지 닿아요</p>}>
+            <p className="text-sm font-semibold text-text">footer</p>
+            <p className="text-sm text-text-muted">펼친 코멘트처럼 카드 끝까지 닿는 아래 칸</p>
+          </Card>
         </div>
       </Section>
 

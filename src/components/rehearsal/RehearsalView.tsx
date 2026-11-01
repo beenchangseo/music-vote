@@ -1,8 +1,12 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { Fragment, useEffect, useId, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
 import ScreenToolbar from "../ui/ScreenToolbar";
 import Image from "next/image";
+import Badge from "../ui/Badge";
+import Button from "../ui/Button";
+import Card from "../ui/Card";
+import { ListRowButton } from "../ui/ListRow";
 import SongMeta from "./SongMeta";
 import CommentSection from "./CommentSection";
 import { useDialog } from "../ui/DialogProvider";
@@ -10,8 +14,10 @@ import { useMetronome, useTapTempo } from "@/hooks/useMetronome";
 import { updateSongMeta } from "@/actions/song";
 import { track } from "@/lib/analytics";
 import { displayArtist, formatKey } from "@/domain/song-meta";
-import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, summarizeSetlist } from "@/domain/setlist";
+import { formatRuntime, rehearsalSteps, type RehearsalInterval, type RehearsalStep } from "@/domain/setlist";
 import type { SetlistItem, SongWithScore, Comment } from "@/domain/types";
+
+type Step = RehearsalStep<SongWithScore>;
 
 interface RehearsalViewProps {
   setlistItems: SetlistItem[];
@@ -41,52 +47,50 @@ export default function RehearsalView({
   loading,
   onCommentsChange,
 }: RehearsalViewProps) {
-  const [index, setIndex] = useState(0);
+  const [selected, setSelected] = useState<{ id: string; index: number } | null>(null);
   const [showMeta, setShowMeta] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   // 탭 템포 값. 탭하는 동안과 저장이 끝날 때까지만 서버 값 대신 보인다.
   const [tapped, setTapped] = useState<{ songId: string; bpm: number; saving: boolean } | null>(null);
+  const [originalBpm, setOriginalBpm] = useState<Record<string, number>>({});
   const [isSavingBpm, startSavingBpm] = useTransition();
   const { showAlert } = useDialog();
 
-  const songMap = useMemo(() => {
-    const map: Record<string, SongWithScore> = {};
-    for (const s of songs) map[s.id] = s;
-    return map;
-  }, [songs]);
+  const { steps, trailing } = useMemo(() => rehearsalSteps(setlistItems, songs), [setlistItems, songs]);
+  const found = selected ? steps.findIndex((s) => s.id === selected.id) : -1;
+  const step = found >= 0 ? found : Math.min(selected?.index ?? 0, steps.length - 1);
+  const current: Step | undefined = steps[step];
+  // 다른 멤버가 순서를 바꾸거나 지금 장을 지워도 고른 장과 그 자리를 지금 목록 기준으로 맞춘다.
+  // 그래야 지금 장이 지워졌을 때 지금 순서에서 바로 뒤 장으로 넘어가고, 넘어간 장을 계속 따라간다.
+  if (selected && current && (selected.id !== current.id || selected.index !== step)) {
+    setSelected({ id: current.id, index: step });
+  }
+  const currentSong = current?.kind === "song" ? current.song : null;
+  const { cardRef, nextRef, prevRef, follow } = useFollowCurrentStep(current?.id);
 
-  const sortedItems = useMemo(() => [...setlistItems].sort((a, b) => a.position - b.position), [setlistItems]);
-  const songItems = useMemo(
-    () => sortedItems.filter((i) => i.item_type === "song" && i.song_id && songMap[i.song_id]),
-    [sortedItems, songMap]
-  );
-
-  const step = Math.min(index, songItems.length - 1);
-  const current = songItems[step];
-  const currentSong = current?.song_id ? songMap[current.song_id] : null;
-  const next = songItems[step + 1];
-  const nextSong = next?.song_id ? songMap[next.song_id] : null;
-
-  // 곡 사이 인터벌·자작곡은 다음 곡으로 넘긴 뒤에 하므로, 앞 곡이 끝난 시각부터 센다.
-  const remaining = useMemo(() => {
-    const { totalRuntime } = summarizeSetlist(sortedItems, songs);
-    const previous = songItems[step - 1];
-    if (!previous) return totalRuntime;
-    return totalRuntime - cumulativeStarts(sortedItems, songs)[sortedItems.indexOf(previous) + 1];
-  }, [sortedItems, songItems, songs, step]);
-
-  const tappedBpm =
-    tapped && tapped.songId === currentSong?.id && (!tapped.saving || isSavingBpm) ? tapped.bpm : null;
-  const bpm = tappedBpm ?? currentSong?.tempo_bpm ?? 0;
+  const pendingBpm = (songId: string) =>
+    tapped && tapped.songId === songId && (!tapped.saving || isSavingBpm) ? tapped.bpm : null;
+  const bpmOf = (s: Step) =>
+    s.kind === "original" ? (originalBpm[s.id] ?? 0) : (pendingBpm(s.song.id) ?? s.song.tempo_bpm ?? 0);
+  const tappedBpm = currentSong ? pendingBpm(currentSong.id) : null;
+  const bpm = current ? bpmOf(current) : 0;
   const metronome = useMetronome(bpm || 120);
 
+  function keepTappedBpm(target: Step, value: number) {
+    if (target.kind === "original") setOriginalBpm((saved) => ({ ...saved, [target.id]: value }));
+    else setTapped({ songId: target.song.id, bpm: value, saving: false });
+  }
+
   // 묶음이 끝나면 한 번 저장한다. 실패하면 전환이 끝나면서 서버 값으로 돌아간다.
-  function saveTappedBpm(songId: string, value: number, tapCount: number) {
+  function commitTappedBpm(target: Step, value: number, tapCount: number) {
     track("tap_tempo_used", { taps: tapCount });
-    setTapped({ songId, bpm: value, saving: true });
-    if (songMap[songId]?.tempo_bpm === value) return;
+    if (target.kind === "original") return;
+    const { song } = target;
+    setTapped({ songId: song.id, bpm: value, saving: true });
+    if (song.tempo_bpm === value) return;
     startSavingBpm(async () => {
       try {
-        await updateSongMeta(songId, playlistId, shareCode, { tempoBpm: value });
+        await updateSongMeta(song.id, playlistId, shareCode, { tempoBpm: value });
       } catch {
         showAlert("BPM 을 저장하지 못했어요. 다시 탭해 주세요.");
       }
@@ -102,7 +106,7 @@ export default function RehearsalView({
     );
   }
 
-  if (songItems.length === 0 || !currentSong || !current) {
+  if (!current) {
     return (
       <div className="mt-6 py-16 text-center text-text-subtle">
         <p className="text-h4 font-medium">합주 모드</p>
@@ -111,14 +115,16 @@ export default function RehearsalView({
     );
   }
 
-  const duration = effectiveSetlistDuration(current, currentSong);
-  const artist = displayArtist(currentSong.artist, currentSong.title);
-  const songComments = comments.filter((c) => c.song_id === currentSong.id);
-  const progress = Math.round(((step + 1) / songItems.length) * 100);
+  const hasNext = step < steps.length - 1;
+  const upNext = steps[step + 1]?.before ?? trailing;
+  const songComments = currentSong ? comments.filter((c) => c.song_id === currentSong.id) : [];
 
-  function go(delta: -1 | 1) {
-    setIndex(Math.min(songItems.length - 1, Math.max(0, step + delta)));
-    track("rehearsal_action", { action: delta === 1 ? "next" : "prev" });
+  function goTo(target: number, action: "next" | "prev" | "jump") {
+    const index = Math.min(steps.length - 1, Math.max(0, target));
+    if (metronome.isPlaying && !bpmOf(steps[index])) metronome.stop();
+    setSelected({ id: steps[index].id, index });
+    follow();
+    track("rehearsal_action", { action });
   }
 
   function openMeta() {
@@ -127,182 +133,379 @@ export default function RehearsalView({
   }
 
   function toggleMetronome() {
-    if (!bpm) {
-      openMeta();
-      return;
-    }
     track("rehearsal_action", { action: metronome.isPlaying ? "metronome_off" : "metronome_on" });
     metronome.toggle();
   }
+
+  // BPM 이 없으면 메트로놈은 막지 않고 BPM 입력칸으로 보낸다. 입력칸이 없는 자작곡만 막고, 탭 템포가 BPM 을 채운다.
+  const metronomeAction =
+    bpm || metronome.isPlaying
+      ? { pressed: metronome.isPlaying, "aria-label": bpm ? `메트로놈 ${bpm} BPM` : undefined, onClick: toggleMetronome }
+      : currentSong
+        ? { "aria-label": "메트로놈, BPM 적고 켜기", onClick: openMeta }
+        : { "aria-label": "메트로놈, 탭 템포로 BPM 맞추기", disabled: true };
+
+  const card = (
+    <Card
+      ref={cardRef}
+      variant="selected"
+      padding="sm"
+      role="region"
+      aria-label="지금 곡"
+      aria-current="step"
+      className="my-2 scroll-my-2"
+      footer={
+        currentSong && showComments ? (
+          <CommentSection
+            songId={currentSong.id}
+            comments={songComments}
+            nickname={nickname}
+            shareCode={shareCode}
+            onCommentsChange={onCommentsChange}
+            allComments={comments}
+          />
+        ) : null
+      }
+    >
+      <div className="flex items-center gap-3">
+        <StepCover step={current} size="card" />
+        <div className="min-w-0 flex-1">
+          <p className="text-caption font-semibold text-primary-fg">지금</p>
+          <h2 className="line-clamp-2 break-keep text-h4 font-bold leading-snug text-text">{current.title}</h2>
+          <p className="truncate text-sm text-text-muted">
+            <StepSubtitle step={current} />
+          </p>
+        </div>
+      </div>
+
+      {/*
+        합주실에서 악기 들고 볼 때 필요한 값들.
+        비어 있으면 그 자리를 눌러 바로 채운다 — 종전에는 접힌 `키·BPM 적어두기` 를
+        펼치고, 그 안의 `메타 추가` 를 또 눌러야 입력칸이 나왔다. 두 번 접혀 있었다.
+      */}
+      {currentSong ? (
+        // 한 줄로 둔다. 남는 폭이 모자라면 키 칸만 줄고 긴 메모는 말줄임한다. BPM·길이는 글자 수가 정해져 있다.
+        <div className="mt-3 grid grid-cols-[minmax(0,auto)_auto_auto] justify-start gap-2">
+          {[
+            { label: "키", value: formatKey(currentSong.key_root, currentSong.key_mode) || currentSong.key_memo },
+            { label: "BPM", value: bpm ? String(bpm) : null },
+            { label: "길이", value: current.duration != null ? formatRuntime(current.duration) : null },
+          ].map(({ label, value }) => (
+            <Button
+              key={label}
+              variant="tonal"
+              size="sm"
+              fullWidth
+              onClick={openMeta}
+              aria-label={value ? `${label} ${value} 고치기` : `${label} 적어두기`}
+            >
+              {/* 이름과 값은 자작곡 배지처럼 gap-1 로 붙여서, 320px 에서도 키 칸에 메모 글자 자리가 남는다. */}
+              <span className="flex min-w-0 items-center gap-1">
+                <span className="shrink-0 text-caption font-normal text-text-muted">{label}</span>
+                <span className={`min-w-0 truncate font-bold tabular-nums ${value ? "" : "text-text-muted"}`}>{value ?? "적기"}</span>
+              </span>
+            </Button>
+          ))}
+        </div>
+      ) : (
+        // 곡 행이 없는 장은 고친 값을 저장할 곳이 없다. 그래서 눌러지는 버튼이 아니라 배지로 보여 준다.
+        (current.duration != null || bpm > 0) && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {current.duration != null && (
+              <Badge className="gap-1">
+                길이<span>{formatRuntime(current.duration)}</span>
+              </Badge>
+            )}
+            {bpm > 0 && (
+              <Badge className="gap-1">
+                BPM<span>{bpm}</span>
+              </Badge>
+            )}
+          </div>
+        )
+      )}
+
+      {/*
+        메트로놈. 페이지를 나가면 합주 흐름이 끊긴다. 탭 템포가 바로 옆에서 BPM 을 채운다.
+        BPM 이 있든 없든, 켜든 끄든 글자와 박자 점이 같아서 폭이 그대로다. 그래서 320px 에서도 한 줄이고
+        장을 넘겨도 탭 템포가 제자리에 있다. BPM 은 바로 위 BPM 칸이 보여 주고, 스크린 리더는 이름으로 읽는다.
+      */}
+      <div className="mt-2 flex flex-wrap gap-2">
+        <Button variant="tonal" size="sm" {...metronomeAction}>
+          메트로놈
+          <span className="flex items-center gap-1" aria-hidden>
+            {Array.from({ length: metronome.beatsPerBar }, (_, i) => (
+              <span
+                key={i}
+                className={`size-1.5 rounded-pill transition-colors ${!metronome.isPlaying ? "bg-border-strong" : metronome.beat === i ? "bg-on-primary" : "bg-on-primary/35"}`}
+              />
+            ))}
+          </span>
+        </Button>
+        <TapTempoButton
+          key={current.id}
+          onTempo={(value) => keepTappedBpm(current, value)}
+          onCommit={(value, tapCount) => commitTappedBpm(current, value, tapCount)}
+        />
+      </div>
+
+      {/* 입력칸은 바로 편집 상태로 연다. 접힌 것을 또 펼치게 하지 않는다. */}
+      {showMeta && currentSong && (
+        <div className="mt-3 overflow-hidden rounded-card border border-border text-left animate-fade-in">
+          {/*
+            입력칸은 열 때의 값을 들고 있다가 blur 에 전부 저장한다. 곡을 넘기거나 탭 템포가
+            저장되면 새 값으로 다시 열어서, 옛 BPM 이 탭 결과를 덮어쓰지 않게 한다.
+          */}
+          <SongMeta
+            key={`${currentSong.id}:${tapped?.songId === currentSong.id && tapped.saving ? tapped.bpm : ""}`}
+            song={tappedBpm !== null ? { ...currentSong, tempo_bpm: tappedBpm } : currentSong}
+            playlistId={playlistId}
+            shareCode={shareCode}
+            defaultOpen
+            onClose={() => setShowMeta(false)}
+          />
+        </div>
+      )}
+
+      <div className="mt-3 flex gap-2">
+        <Button
+          ref={prevRef}
+          variant="tonal"
+          size="lg"
+          aria-label="이전 곡"
+          disabled={step === 0}
+          onClick={() => goTo(step - 1, "prev")}
+        >
+          <svg className="size-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <path d="M6 5h2v14H6zM20 6.5v11a1 1 0 01-1.53.85l-8.5-5.5a1 1 0 010-1.7l8.5-5.5A1 1 0 0120 6.5z" />
+          </svg>
+        </Button>
+        <Button
+          ref={nextRef}
+          variant={hasNext ? "primary" : "tonal"}
+          size="lg"
+          className="flex-1"
+          disabled={!hasNext}
+          onClick={() => goTo(step + 1, "next")}
+        >
+          {hasNext ? "다음으로" : "마지막 곡이에요"}
+          {hasNext && (
+            <svg className="size-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <path d="M16 5h2v14h-2zM4 6.5v11a1 1 0 001.53.85l8.5-5.5a1 1 0 000-1.7l-8.5-5.5A1 1 0 004 6.5z" />
+            </svg>
+          )}
+        </Button>
+      </div>
+
+      {currentSong && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mt-2"
+          aria-expanded={showComments}
+          onClick={() => setShowComments((open) => !open)}
+        >
+          코멘트 {songComments.length} · {showComments ? "접기" : "눌러서 보기"}
+        </Button>
+      )}
+    </Card>
+  );
 
   return (
     <div>
       {/* 진행 상황. 합주 시간 관리는 밴드의 실제 문제다. */}
       <ScreenToolbar
-        stat={`${step + 1} / ${songItems.length}`}
-        caption={remaining > 0 ? <span>남은 {formatRuntime(remaining)}</span> : undefined}
+        stat={`${step + 1} / ${steps.length}`}
+        caption={current.remaining > 0 ? <span>남은 {formatRuntime(current.remaining)}</span> : undefined}
       >
-        <div className="mt-2 h-1 overflow-hidden rounded-pill bg-surface-hover">
-          <div className="h-1 rounded-pill bg-primary transition-[width] duration-300" style={{ width: `${progress}%` }} />
+        <div className="mt-2 flex gap-1" aria-hidden>
+          {steps.map((s, j) => (
+            <span
+              key={s.id}
+              className={`h-1.5 flex-1 rounded-pill transition-colors ${
+                j < step ? "bg-primary/60" : j === step ? "bg-primary-fg" : "bg-surface-hover"
+              }`}
+            />
+          ))}
         </div>
       </ScreenToolbar>
 
-      {/* 지금 곡 (YouTube Music 재생 화면): 큰 커버, 제목, 키·BPM·길이 칩. */}
-      <section aria-label="지금 곡" className="pt-2 text-center">
-        <div className="relative mx-auto h-44 w-44 overflow-hidden rounded-card bg-surface-elevated shadow-xl shadow-black/40">
-          {currentSong.thumbnail_url && (
-            <Image src={currentSong.thumbnail_url} alt="" fill sizes="176px" className="object-cover" />
-          )}
-        </div>
-        <h2 className="mt-5 line-clamp-2 break-keep text-h3 font-bold leading-snug text-text">
-          {effectiveSetlistTitle(current, currentSong)}
-        </h2>
-        {artist && <p className="mt-1 text-sm text-text-muted">{artist}</p>}
-
-        {/*
-          합주실에서 악기 들고 볼 때 필요한 값들.
-          비어 있으면 그 자리를 눌러 바로 채운다 — 종전에는 접힌 `키·BPM 적어두기` 를
-          펼치고, 그 안의 `메타 추가` 를 또 눌러야 입력칸이 나왔다. 두 번 접혀 있었다.
-        */}
-        <div className="mt-4 flex flex-wrap justify-center gap-2">
-          {[
-            { label: "우리 키", value: formatKey(currentSong.key_root, currentSong.key_mode) || currentSong.key_memo },
-            { label: "BPM", value: bpm ? String(bpm) : null },
-            { label: "길이", value: duration != null ? formatRuntime(duration) : null },
-          ].map(({ label, value }) => (
-            <button
-              key={label}
-              type="button"
-              onClick={openMeta}
-              aria-label={value ? `${label} ${value} 고치기` : `${label} 적어두기`}
-              className={`inline-flex min-h-11 items-center gap-1.5 rounded-pill px-4 text-sm transition-colors ${
-                value
-                  ? "bg-surface-hover text-text hover:bg-surface-elevated"
-                  : "border border-dashed border-border-strong text-text-subtle hover:border-primary/60 hover:text-text"
-              }`}
-            >
-              <span className="text-caption text-text-muted">{label}</span>
-              <span className="font-bold tabular-nums">{value ?? "적기"}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* 메트로놈. 페이지를 나가면 합주 흐름이 끊긴다. 탭 템포가 바로 옆에서 BPM 을 채운다. */}
-        <div className="mt-3 flex justify-center gap-2">
-          <button
-            type="button"
-            onClick={toggleMetronome}
-            className={`inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-pill px-5 text-sm font-semibold transition-colors ${
-              metronome.isPlaying
-                ? "bg-primary text-on-primary hover:bg-primary-hover"
-                : "border border-border text-text hover:bg-surface-hover"
-            }`}
-          >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-              <path d="M9 3h6l4 18H5z" />
-              <path d="M12 17V8" />
-            </svg>
-            {!bpm ? "BPM 적고 메트로놈 켜기" : metronome.isPlaying ? `메트로놈 끄기 · ${bpm}` : `메트로놈 · ${bpm}`}
-            {metronome.isPlaying && (
-              <span className="ml-1 flex items-center gap-1" aria-hidden>
-                {Array.from({ length: metronome.beatsPerBar }, (_, i) => (
-                  <span
-                    key={i}
-                    className={`h-1.5 w-1.5 rounded-pill transition-colors ${metronome.beat === i ? "bg-white" : "bg-white/35"}`}
-                  />
+      <div className="pt-1">
+        {steps.map((s, j) => (
+          <Fragment key={s.id}>
+            {/* 지금 카드 위의 인터벌은 맨 앞 인터벌까지 지난 것이다. 남은 시간도 이 장이 시작하는 시각부터 센다. */}
+            {j !== step + 1 &&
+              s.before.map((interval) => <IntervalLine key={interval.id} interval={interval} past={j <= step} />)}
+            {j === step ? (
+              <>
+                {card}
+                {upNext.map((interval) => (
+                  <NextHint key={interval.id} interval={interval} />
                 ))}
-              </span>
+              </>
+            ) : (
+              <StepRow step={s} number={j + 1} done={j < step} onSelect={() => goTo(j, "jump")} />
             )}
-          </button>
-          <TapTempoButton
-            key={currentSong.id}
-            onTempo={(value) => setTapped({ songId: currentSong.id, bpm: value, saving: false })}
-            onCommit={(value, tapCount) => saveTappedBpm(currentSong.id, value, tapCount)}
-          />
-        </div>
-
-        {/* 입력칸은 바로 편집 상태로 연다. 접힌 것을 또 펼치게 하지 않는다. */}
-        {showMeta && (
-          <div className="mt-4 overflow-hidden rounded-card border border-border text-left animate-fade-in">
-            {/*
-              입력칸은 열 때의 값을 들고 있다가 blur 에 전부 저장한다. 곡을 넘기거나 탭 템포가
-              저장되면 새 값으로 다시 열어서, 옛 BPM 이 탭 결과를 덮어쓰지 않게 한다.
-            */}
-            <SongMeta
-              key={`${currentSong.id}:${tapped?.songId === currentSong.id && tapped.saving ? tapped.bpm : ""}`}
-              song={tappedBpm !== null ? { ...currentSong, tempo_bpm: tappedBpm } : currentSong}
-              playlistId={playlistId}
-              shareCode={shareCode}
-              defaultOpen
-              onClose={() => setShowMeta(false)}
-            />
-          </div>
-        )}
-      </section>
-
-      {/* 곡 이동 (재생 화면 컨트롤처럼 크게). */}
-      <div className="mt-6 flex items-center justify-center gap-6">
-        <button
-          type="button"
-          onClick={() => go(-1)}
-          disabled={step === 0}
-          aria-label="이전 곡"
-          className="inline-flex h-14 w-14 items-center justify-center rounded-pill bg-surface-hover text-text transition-all hover:bg-surface-elevated active:scale-95 disabled:opacity-30"
-        >
-          <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-            <path d="M6 5h2v14H6zM20 6.5v11a1 1 0 01-1.53.85l-8.5-5.5a1 1 0 010-1.7l8.5-5.5A1 1 0 0120 6.5z" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          onClick={() => go(1)}
-          disabled={step >= songItems.length - 1}
-          aria-label="다음 곡"
-          className="inline-flex h-16 w-16 items-center justify-center rounded-pill bg-primary text-on-primary transition-all hover:bg-primary-hover active:scale-95 disabled:bg-surface-hover disabled:text-text-subtle"
-        >
-          <svg className="h-7 w-7" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-            <path d="M16 5h2v14h-2zM4 6.5v11a1 1 0 001.53.85l8.5-5.5a1 1 0 000-1.7l-8.5-5.5A1 1 0 004 6.5z" />
-          </svg>
-        </button>
+          </Fragment>
+        ))}
+        {hasNext && trailing.map((interval) => <IntervalLine key={interval.id} interval={interval} past={false} />)}
       </div>
-
-      {/* 다음 곡 (YouTube Music "다음 트랙"). */}
-      <div className="mt-6">
-        <p className="text-caption font-semibold text-text-subtle">다음</p>
-        {nextSong && next ? (
-          <button
-            type="button"
-            onClick={() => go(1)}
-            className="-mx-2 mt-1 flex min-h-14 w-[calc(100%+1rem)] items-center gap-3 rounded-control px-2 text-left transition-colors hover:bg-surface-hover"
-          >
-            <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-control bg-surface-elevated">
-              {nextSong.thumbnail_url && <Image src={nextSong.thumbnail_url} alt="" fill sizes="44px" className="object-cover" />}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium text-text">{effectiveSetlistTitle(next, nextSong)}</span>
-              {displayArtist(nextSong.artist, nextSong.title) && (
-                <span className="block truncate text-caption text-text-muted">{displayArtist(nextSong.artist, nextSong.title)}</span>
-              )}
-            </span>
-          </button>
-        ) : (
-          <p className="mt-1 text-sm text-text-muted">마지막 곡이에요</p>
-        )}
-      </div>
-
-      {/* 이 곡의 코멘트만 */}
-      <section className="mt-6 overflow-hidden rounded-card bg-surface">
-        <p className="px-4 pb-1 pt-3 text-sm font-semibold text-text">이 곡 코멘트</p>
-        <CommentSection
-          songId={currentSong.id}
-          comments={songComments}
-          nickname={nickname}
-          shareCode={shareCode}
-          onCommentsChange={onCommentsChange}
-          allComments={comments}
-        />
-      </section>
     </div>
+  );
+}
+
+/**
+ * 넘긴 뒤 지금 카드를 화면 안에 두고 포커스를 그 카드의 이동 버튼으로 옮긴다.
+ * 카드는 장마다 목록의 다른 자리에 새로 그려져서, 누른 버튼과 함께 포커스가 사라진다.
+ */
+function useFollowCurrentStep(stepId: string | undefined) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const nextRef = useRef<HTMLButtonElement>(null);
+  const prevRef = useRef<HTMLButtonElement>(null);
+  const pending = useRef(false);
+
+  useEffect(() => {
+    if (!pending.current) return;
+    pending.current = false;
+    const smooth = window.matchMedia?.("(prefers-reduced-motion: no-preference)").matches;
+    cardRef.current?.scrollIntoView?.({ block: "nearest", behavior: smooth ? "smooth" : "auto" });
+    const next = nextRef.current;
+    (next && !next.disabled ? next : prevRef.current)?.focus({ preventScroll: true });
+  }, [stepId]);
+
+  return {
+    cardRef,
+    nextRef,
+    prevRef,
+    follow: () => {
+      pending.current = true;
+    },
+  };
+}
+
+function StepCover({ step, size }: { step: Step; size: "card" | "row" }) {
+  const box = size === "card" ? "size-16" : "size-9";
+  if (step.kind === "original") {
+    return (
+      <span className={`grid ${box} shrink-0 place-items-center rounded-control bg-primary-tint text-primary-fg`}>
+        <svg className={size === "card" ? "size-7" : "size-4"} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+          <path d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      </span>
+    );
+  }
+  return (
+    <span className={`relative ${box} shrink-0 overflow-hidden rounded-control bg-surface-elevated`}>
+      {step.song.thumbnail_url && (
+        <Image src={step.song.thumbnail_url} alt="" fill sizes={size === "card" ? "64px" : "36px"} className="object-cover" />
+      )}
+    </span>
+  );
+}
+
+function StepSubtitle({ step }: { step: Step }) {
+  if (step.kind === "song") return <>{displayArtist(step.song.artist, step.song.title)}</>;
+  return (
+    <>
+      <span className="text-primary-fg">자작곡</span>
+      {step.description && ` · ${step.description}`}
+    </>
+  );
+}
+
+/**
+ * 지나간 곡은 커버와 표시만 흐리고 글자는 한 단계 낮은 색으로 둔다. 글자까지 흐리면 4.5:1 이 안 나온다.
+ * 이름은 제목과 끝남만이다. 아티스트·길이까지 이름에 넣으면 제목을 품은 아티스트가 한 번 더 읽혀서 설명으로 뺐다.
+ */
+function StepRow({ step, number, done, onSelect }: { step: Step; number: number; done: boolean; onSelect: () => void }) {
+  const id = useId();
+  return (
+    <ListRowButton
+      onClick={onSelect}
+      aria-label={done ? `${step.title}, 끝남` : step.title}
+      aria-describedby={step.duration != null ? `${id}-sub ${id}-len` : `${id}-sub`}
+      className={stepInset}
+      leading={
+        <StepLead
+          className={done ? "opacity-55" : ""}
+          marker={
+            done ? (
+              <span className="grid size-full place-items-center rounded-pill bg-success-soft text-success">
+                <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+              </span>
+            ) : (
+              <span className="grid size-full place-items-center rounded-pill border-2 border-border-strong text-caption font-semibold tabular-nums text-text-muted">
+                {number}
+              </span>
+            )
+          }
+        >
+          <StepCover step={step} size="row" />
+        </StepLead>
+      }
+      trailing={
+        step.duration != null && (
+          <span id={`${id}-len`} className={`text-caption tabular-nums ${done ? "text-text-subtle" : "text-text-muted"}`}>
+            {formatRuntime(step.duration)}
+          </span>
+        )
+      }
+    >
+      <span className={`block truncate text-sm font-medium ${done ? "text-text-muted" : "text-text"}`}>{step.title}</span>
+      <span id={`${id}-sub`} className={`block truncate text-caption ${done ? "text-text-subtle" : "text-text-muted"}`}>
+        <StepSubtitle step={step} />
+      </span>
+    </ListRowButton>
+  );
+}
+
+function ClockIcon({ className }: { className: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+      <path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+}
+
+/** 단계 행과 인터벌 줄이 같이 쓰는 좌우 여백. */
+const stepInset = "px-1";
+
+/**
+ * [표시 칸][내용]. 단계 행은 표시 칸에 번호·끝남 원을, 인터벌 줄은 빈 칸을 둔다.
+ * 같은 칸과 같은 간격을 지나서 인터벌 줄의 시계가 행의 커버와 같은 세로줄에 선다.
+ */
+function StepLead({ marker, className = "", children }: { marker?: ReactNode; className?: string; children: ReactNode }) {
+  return (
+    <span className={`flex min-w-0 items-center gap-3 ${className}`}>
+      <span className="grid size-7 shrink-0 place-items-center">{marker}</span>
+      {children}
+    </span>
+  );
+}
+
+function IntervalLine({ interval, past }: { interval: RehearsalInterval; past: boolean }) {
+  return (
+    <p className={`${stepInset} flex min-h-8 items-center text-caption text-warning ${past ? "opacity-70" : ""}`}>
+      <StepLead>
+        <span className="flex min-w-0 items-center gap-1.5">
+          <ClockIcon className="size-3.5 shrink-0" />
+          <span className="min-w-0 truncate font-semibold">{interval.title}</span>
+          {interval.duration > 0 && <span className="shrink-0 tabular-nums">· {formatRuntime(interval.duration)}</span>}
+        </span>
+      </StepLead>
+    </p>
+  );
+}
+
+function NextHint({ interval }: { interval: RehearsalInterval }) {
+  return (
+    <p className="mb-1 flex min-h-11 items-center gap-2 rounded-control border border-warning/45 bg-warning-tint/60 px-3 text-sm text-warning">
+      <ClockIcon className="size-4 shrink-0" />
+      <span className="min-w-0 truncate font-semibold">다음: {interval.title}</span>
+      {interval.duration > 0 && <span className="shrink-0 tabular-nums">· {formatRuntime(interval.duration)}</span>}
+    </p>
   );
 }
 
@@ -319,9 +522,10 @@ function TapTempoButton({
 }) {
   const { tap, tapCount, tapsToFill } = useTapTempo(onCommit);
   return (
-    <button
-      type="button"
-      className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-pill border border-border px-5 text-sm font-semibold text-text transition-colors hover:bg-surface-hover active:scale-95"
+    <Button
+      variant="tonal"
+      size="sm"
+      className="shrink-0"
       onClick={() => {
         const value = tap();
         if (value !== null) onTempo(value);
@@ -332,10 +536,10 @@ function TapTempoButton({
         {Array.from({ length: tapsToFill }, (_, i) => (
           <span
             key={i}
-            className={`h-1.5 w-1.5 rounded-pill transition-colors ${i < tapCount ? "bg-primary" : "bg-border-strong"}`}
+            className={`size-1.5 rounded-pill transition-colors ${i < tapCount ? "bg-primary" : "bg-border-strong"}`}
           />
         ))}
       </span>
-    </button>
+    </Button>
   );
 }

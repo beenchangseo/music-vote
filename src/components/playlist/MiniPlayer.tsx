@@ -5,6 +5,7 @@ import Image from "next/image";
 import type { PlayerState, PlayerActions } from "@/hooks/usePlayerQueue";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
 import { trapTabKey } from "../ui/focus-trap";
+import { publishMiniPlayerHeight } from "../ui/chrome-inset";
 import { displayArtist } from "@/domain/song-meta";
 
 interface MiniPlayerProps {
@@ -274,7 +275,7 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
           </section>
         </div>
       ) : (
-        <>
+        <div ref={publishMiniPlayerHeight}>
           {/* Thin progress line along the top edge (YouTube Music mini player). */}
           <div className="h-0.5 w-full bg-surface-hover" aria-hidden>
             <div className="h-0.5 bg-text transition-[width] duration-500 ease-linear" style={{ width: `${ratio * 100}%` }} />
@@ -318,7 +319,7 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
               </svg>
             </button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );
