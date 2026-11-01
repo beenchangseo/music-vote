@@ -5,16 +5,17 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Image from "next/image";
 import AddIntervalForm from "./AddIntervalForm";
 import AddOriginalForm from "./AddOriginalForm";
-import IntervalBlock, { MinusCircle, MoveButton } from "./IntervalBlock";
+import { IntervalBlock, MoveButton, OriginalBlock, SongBlock } from "./BlockCards";
 import SetlistItemEditModal from "./SetlistItemEditModal";
 import SetlistShareButton from "./SetlistShareButton";
+import { RailEnd, RailStart } from "./TimelineRail";
 import Button from "../ui/Button";
 import ScreenToolbar from "../ui/ScreenToolbar";
 import { useDialog } from "../ui/DialogProvider";
 import { addSongToSetlist, removeSetlistItem, updateSetlistOrder } from "@/actions/setlist";
 import { track } from "@/lib/analytics";
-import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, setlistPlayOrder, summarizeSetlist, type SetlistEditAccess } from "@/domain/setlist";
-import { displayArtist, formatKey } from "@/domain/song-meta";
+import { formatRuntime, moveSetlistBlock, setlistBlocks, setlistPlayOrder, summarizeSetlist, type SetlistEditAccess } from "@/domain/setlist";
+import { displayArtist } from "@/domain/song-meta";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
 import type { PlayerState } from "@/hooks/usePlayerQueue";
 
@@ -40,11 +41,6 @@ interface Props {
   player?: Pick<PlayerState, "currentSongId" | "source" | "isPlaying">;
 }
 
-/**
- * 셋리스트 (Spotify 플레이리스트 Mix·편집 화면 문법). 평소에는 공연 순서를 읽는 목록
- * (시작 시각 · 곡 · 길이·BPM·키), "편집"을 누르면 ⊖ 삭제와 ▲▼ 순서 버튼이 나온다.
- * 아래 "후보곡에서 넣기"로 셋리스트 화면 안에서 곡을 채운다.
- */
 export default function SetlistView({ setlistItems, songs, playlistId, shareCode, adminToken, loading, onItemsChange, title, access, actions, onPlay, player }: Props) {
   const [isPending, startTransition] = useTransition();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -60,15 +56,10 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
   const sortedItems = useMemo(() => [...setlistItems].sort((a, b) => a.position - b.position), [setlistItems]);
   const summary = useMemo(() => summarizeSetlist(sortedItems, songs), [sortedItems, songs]);
   // 공연 순서를 짤 때 알고 싶은 건 곡 길이가 아니라 "이 곡 시작할 때 몇 분 지났나"다.
-  const starts = useMemo(() => cumulativeStarts(sortedItems, songs), [sortedItems, songs]);
-  // 인터벌을 건너뛴 곡 번호. 화면에는 "3번째 곡"이 보여야지 "5번째 항목"이 아니다.
-  const songNumbers = useMemo(() => {
-    let n = 0;
-    return sortedItems.map((item) => (item.item_type === "interval" ? 0 : ++n));
-  }, [sortedItems]);
-  const intervalCount = sortedItems.length - summary.songCount;
+  const blocks = useMemo(() => setlistBlocks(sortedItems, songs), [sortedItems, songs]);
+  const intervalCount = blocks.filter((block) => block.kind === "interval").length;
   const playOrder = useMemo(() => setlistPlayOrder(sortedItems, songs), [sortedItems, songs]);
-  const showEditToggle = canEdit && sortedItems.length > 0;
+  const showEditToggle = canEdit && blocks.length > 0;
   const showHostOnlyNotice = access === "locked_to_host";
   const playingSongId = player?.source === "setlist" && player.isPlaying ? player.currentSongId : null;
   const suggestions = useMemo(() => {
@@ -78,7 +69,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
   const visibleSuggestions = showAllSuggestions ? suggestions : suggestions.slice(0, COLLAPSED_SUGGESTIONS);
   // ▲▼ 로 옮긴 행이 순간이동하지 않고 움직이는 게 보이게 한다.
   const [listParent] = useAutoAnimate({ duration: 250, easing: "ease-in-out" });
-  const showEditControls = canEdit && editMode;
+  const showEditControls = showEditToggle && editMode;
 
   function replaceItem(next: SetlistItem) {
     onItemsChange(setlistItems.map((item) => item.id === next.id ? next : item));
@@ -86,11 +77,9 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
 
   function move(index: number, delta: -1 | 1) {
     const target = index + delta;
-    if (!canEdit || target < 0 || target >= sortedItems.length) return;
+    if (!canEdit || target < 0 || target >= blocks.length) return;
     const previous = [...setlistItems];
-    const next = [...sortedItems];
-    [next[index], next[target]] = [next[target], next[index]];
-    const reordered = next.map((item, position) => ({ ...item, position }));
+    const reordered = moveSetlistBlock(setlistItems, blocks, index, target);
     onItemsChange(reordered);
     startTransition(async () => {
       try {
@@ -158,7 +147,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
         }
         actions={
           <>
-            {onPlay && playOrder.length > 0 && (
+            {!showEditControls && onPlay && playOrder.length > 0 && (
               <Button
                 variant="tonal"
                 size="sm"
@@ -177,193 +166,63 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
               </Button>
             )}
             {showEditToggle && (
-              <button
-                type="button"
-                onClick={() => setEditMode((value) => !value)}
-                aria-pressed={editMode}
-                className={`inline-flex h-9 items-center rounded-pill px-4 text-sm font-semibold transition-colors ${
-                  editMode ? "bg-primary text-on-primary hover:bg-primary-hover" : "border border-border text-text hover:bg-surface-hover"
-                }`}
-              >
-                {editMode ? "완료" : "편집"}
-              </button>
+              <Button variant={showEditControls ? "primary" : "tonal"} size="sm" aria-pressed={showEditControls} onClick={() => setEditMode((value) => !value)}>
+                {showEditControls ? "완료" : "편집"}
+              </Button>
             )}
             {/* Two lines on a phone, so the runtime keeps its cell. */}
             {showHostOnlyNotice && <span className="px-1 text-caption text-text-muted max-sm:max-w-20 break-keep">방장만 편집할 수 있어요</span>}
-            <SetlistShareButton shareCode={shareCode} title={title} />
-            {actions}
+            {!showEditControls && <SetlistShareButton shareCode={shareCode} title={title} />}
+            {!showEditControls && actions}
           </>
         }
       />
 
-      {sortedItems.length === 0 ? (
+      {blocks.length === 0 ? (
         <div className="py-10 text-center text-text-subtle">
           <p className="text-lg font-medium">셋리스트가 비어있어요</p>
           <p className="mt-1 text-sm">{canEdit ? "아래 후보곡에서 공연할 곡을 넣어 보세요." : "투표 리스트에서 곡을 추가해보세요."}</p>
         </div>
       ) : (
-        <ol ref={listParent} className={isPending ? "opacity-70" : ""}>
-          {sortedItems.map((item, index) => {
-            if (item.item_type === "interval") {
+        <>
+          <ol ref={listParent} aria-label="셋리스트" className={isPending ? "opacity-70" : ""}>
+            {blocks.map((block, index) => {
+              const edit = () => setEditing(block.item);
+              const drop = () => remove(block.item.id);
+              const nowPlaying = block.kind === "song" && block.song.id === playingSongId;
               return (
-                <li key={item.id}>
-                  <IntervalBlock
-                    item={item}
-                    index={index}
-                    total={sortedItems.length}
-                    editMode={showEditControls}
-                    onEdit={() => setEditing(item)}
-                    onMoveUp={() => move(index, -1)}
-                    onMoveDown={() => move(index, 1)}
-                    onRemove={() => remove(item.id)}
-                  />
-                </li>
-              );
-            }
-            if (item.item_type === "original") {
-              const originalDuration = item.duration_seconds > 0 ? item.duration_seconds : null;
-              const originalBody = (
-                <>
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-primary/15 text-primary-fg">
-                    <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-                      <path d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </span>
-                  <span className="min-w-0 flex-1 text-left">
-                    <span className="line-clamp-2 block text-body font-medium leading-snug text-text">{item.label || "자작곡"}</span>
-                    <span className="mt-0.5 block truncate text-sm text-text-muted">{item.description || "자작곡"}</span>
-                  </span>
-                </>
-              );
-              return (
-                <li key={item.id} className="flex items-center gap-3 py-2">
-                  {showEditControls ? (
-                    <button onClick={() => remove(item.id)} className="-ml-1 flex h-11 w-11 shrink-0 items-center justify-center text-danger-fg print:hidden" aria-label="삭제">
-                      <MinusCircle />
-                    </button>
-                  ) : (
-                    <span className="w-10 shrink-0 text-right">
-                      <span className="block text-caption font-semibold leading-none tabular-nums text-text">{formatRuntime(starts[index])}</span>
-                      <span className="mt-1 block text-[10px] leading-none tabular-nums text-text-subtle">{songNumbers[index]}</span>
-                    </span>
-                  )}
-                  {showEditControls ? (
-                    <button type="button" onClick={() => setEditing(item)} className="flex min-w-0 flex-1 items-center gap-3" aria-label="자작곡 수정">
-                      {originalBody}
-                    </button>
-                  ) : (
-                    <span className="flex min-w-0 flex-1 items-center gap-3">{originalBody}</span>
-                  )}
-                  {showEditControls ? (
-                    <span className="flex shrink-0 items-center print:hidden">
-                      <MoveButton direction="up" disabled={index === 0} onClick={() => move(index, -1)} />
-                      <MoveButton direction="down" disabled={index === sortedItems.length - 1} onClick={() => move(index, 1)} />
-                    </span>
-                  ) : (
-                    <span className={`shrink-0 text-caption tabular-nums ${originalDuration != null ? "text-text-muted" : "text-warning"}`}>
-                      {originalDuration != null ? formatRuntime(originalDuration) : "시간 없음"}
-                    </span>
-                  )}
-                </li>
-              );
-            }
-            const song = item.song_id ? songMap.get(item.song_id) : null;
-            if (!song) return null;
-            const duration = effectiveSetlistDuration(item, song);
-            const key = formatKey(song.key_root, song.key_mode) || song.key_memo;
-            const songTitle = effectiveSetlistTitle(item, song);
-            const nowPlaying = song.id === playingSongId;
-            const thumbnail = song.thumbnail_url && <Image src={song.thumbnail_url} alt="" fill sizes="48px" className="object-cover" />;
-            const thumbnailClass = "relative h-12 w-12 shrink-0 overflow-hidden rounded-control bg-surface-elevated";
-            const text = (
-              <span className="min-w-0 flex-1 text-left">
-                <span className="line-clamp-2 block text-body font-medium leading-snug text-text">{songTitle}</span>
-                <span className="mt-0.5 block truncate text-sm text-text-muted">
-                  {displayArtist(song.artist, song.title) || "아티스트 미입력"}
-                </span>
-              </span>
-            );
-            return (
-              <li key={item.id} className="flex items-center gap-3 py-2" aria-current={nowPlaying ? "true" : undefined}>
-                {showEditControls ? (
-                  <button onClick={() => remove(item.id)} className="-ml-1 flex h-11 w-11 shrink-0 items-center justify-center text-danger-fg print:hidden" aria-label="삭제">
-                    <MinusCircle />
-                  </button>
-                ) : (
-                  // 누적 시간이 주인공이고 순서 번호는 보조다.
-                  <span className="w-10 shrink-0 text-right">
-                    <span className="block text-caption font-semibold leading-none tabular-nums text-text">{formatRuntime(starts[index])}</span>
-                    <span className="mt-1 block text-[10px] leading-none tabular-nums text-text-subtle">{songNumbers[index]}</span>
-                  </span>
-                )}
-                {showEditControls ? (
-                  <button type="button" onClick={() => setEditing(item)} className="flex min-w-0 flex-1 items-center gap-3" aria-label="곡 블록 수정">
-                    <span className={thumbnailClass}>{thumbnail}</span>
-                    {text}
-                  </button>
-                ) : (
-                  <span className="flex min-w-0 flex-1 items-center gap-3">
-                    {onPlay ? (
-                      <button type="button" onClick={() => onPlay(song.id)} className={`group ${thumbnailClass}`} aria-label={`${songTitle} 재생`}>
-                        {thumbnail}
-                        <span
-                          className={`absolute inset-0 flex items-center justify-center transition-colors ${
-                            nowPlaying ? "bg-black/45" : "group-hover:bg-black/45"
-                          }`}
-                        >
-                          {nowPlaying ? (
-                            <span className="flex h-4 items-end gap-0.5" aria-hidden>
-                              {["0ms", "150ms", "300ms"].map((delay) => (
-                                <span key={delay} className="h-full w-0.5 origin-bottom animate-eq-bar rounded-full bg-accent-play" style={{ animationDelay: delay }} />
-                              ))}
-                            </span>
-                          ) : (
-                            // Always shown: a phone has no hover to reveal that the cover plays.
-                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black/45">
-                              <svg className="ml-px h-3.5 w-3.5 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                                <path d="M8 5v14l11-7z" />
-                              </svg>
-                            </span>
-                          )}
-                        </span>
-                      </button>
+                <li key={block.item.id} className="grid grid-cols-[minmax(0,1fr)_3.5rem]" aria-current={nowPlaying ? "true" : undefined}>
+                  <div className="flex flex-col justify-center py-1">
+                    {block.kind === "song" ? (
+                      <SongBlock
+                        item={block.item}
+                        song={block.song}
+                        editing={showEditControls}
+                        onEdit={edit}
+                        onRemove={drop}
+                        nowPlaying={nowPlaying}
+                        onPlay={onPlay && (() => onPlay(block.song.id))}
+                      />
+                    ) : block.kind === "original" ? (
+                      <OriginalBlock item={block.item} editing={showEditControls} onEdit={edit} onRemove={drop} />
                     ) : (
-                      <span className={thumbnailClass}>{thumbnail}</span>
+                      <IntervalBlock item={block.item} editing={showEditControls} onEdit={edit} onRemove={drop} />
                     )}
-                    {text}
-                  </span>
-                )}
-                {showEditControls ? (
-                  <span className="flex shrink-0 items-center print:hidden">
-                    <MoveButton direction="up" disabled={index === 0} onClick={() => move(index, -1)} />
-                    <MoveButton direction="down" disabled={index === sortedItems.length - 1} onClick={() => move(index, 1)} />
-                  </span>
-                ) : (
-                  // Spotify Mix: length on top, tempo and key as small badges underneath.
-                  <span className="flex shrink-0 flex-col items-end gap-1">
-                    <span className={`text-caption tabular-nums ${duration != null ? "text-text-muted" : "text-warning"}`}>
-                      {duration != null ? formatRuntime(duration) : "시간 없음"}
+                  </div>
+                  {showEditControls ? (
+                    <span className="flex flex-col items-center justify-center print:hidden">
+                      <MoveButton direction="up" disabled={index === 0} onClick={() => move(index, -1)} />
+                      <MoveButton direction="down" disabled={index === blocks.length - 1} onClick={() => move(index, 1)} />
                     </span>
-                    {(song.tempo_bpm || key) && (
-                      <span className="flex items-center gap-1">
-                        {song.tempo_bpm ? (
-                          <span className="rounded-md bg-surface-elevated px-1.5 text-[11px] font-semibold leading-5 tabular-nums text-text-muted">
-                            {song.tempo_bpm} BPM
-                          </span>
-                        ) : null}
-                        {key && (
-                          <span className="max-w-[4.5rem] truncate rounded-md bg-primary/15 px-1.5 text-[11px] font-semibold leading-5 text-primary-fg">
-                            {key}
-                          </span>
-                        )}
-                      </span>
-                    )}
-                  </span>
-                )}
-              </li>
-            );
-          })}
-        </ol>
+                  ) : (
+                    <RailStart kind={block.kind} previous={blocks[index - 1]?.kind} start={block.start} />
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+          {!showEditControls && <RailEnd last={blocks[blocks.length - 1].kind} total={summary.totalRuntime} />}
+        </>
       )}
 
       {canEdit && (

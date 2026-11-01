@@ -261,12 +261,22 @@ export async function removeSong(
   const isAdder = user.id === song.added_by_user_id;
   if (!isHost && !isAdder) throw new Error("이 곡을 삭제할 권한이 없습니다.");
 
-  const { error } = await admin
+  // 곡을 먼저 지우면 FK(ON DELETE SET NULL)가 song_id 를 비워서 이 곡의 셋리스트 블록을 더는 찾을 수 없다.
+  // 셋리스트에 없는 곡이면 0행이 지워지고, 그건 실패가 아니다.
+  const { error: blocksError } = await admin
+    .from("setlist_items")
+    .delete()
+    .eq("song_id", songId)
+    .eq("playlist_id", playlistId);
+  if (blocksError) throw new Error("곡 삭제에 실패했습니다.");
+
+  const { data: deleted, error } = await admin
     .from("songs")
     .delete()
     .eq("id", songId)
-    .eq("playlist_id", playlistId);
-  if (error) throw new Error("곡 삭제에 실패했습니다.");
+    .eq("playlist_id", playlistId)
+    .select("id");
+  if (error || !deleted || deleted.length === 0) throw new Error("곡 삭제에 실패했습니다.");
 
   revalidatePath(`/playlist/${shareCode}`);
   return { success: true };

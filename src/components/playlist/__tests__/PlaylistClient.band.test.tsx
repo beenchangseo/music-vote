@@ -31,6 +31,7 @@ vi.mock("@/hooks/usePlayerQueue", () => ({
   }),
 }));
 vi.mock("../PlaylistHeader", () => ({ default: () => null }));
+vi.mock("../PlaylistTitleBar", () => ({ default: () => null }));
 vi.mock("../AddSongForm", () => ({ default: () => null }));
 vi.mock("../SongCard", () => ({ default: () => null }));
 vi.mock("../MiniPlayer", () => ({ default: () => null }));
@@ -113,6 +114,7 @@ function ui(overrides: Partial<Props> = {}) {
 beforeEach(() => {
   window.localStorage.clear();
   document.cookie = "plypick_band_prompt_dismissed=; Path=/; Max-Age=0";
+  vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
 });
 
 afterEach(() => {

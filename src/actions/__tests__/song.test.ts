@@ -28,7 +28,8 @@ vi.mock("@/lib/youtube-data", () => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-import { addSong } from "../song";
+import { getCurrentUser } from "@/lib/auth";
+import { addSong, removeSong } from "../song";
 
 const ROOM = "room-new";
 const TEAM = "team-1";
@@ -152,5 +153,85 @@ describe("addSong E4 key/BPM carry-over", () => {
     await expect(addSong(ROOM, URL, "share")).resolves.toMatchObject({ success: true, prefilledMeta: false });
     expect(songInsert()).toBeDefined();
     log.mockRestore();
+  });
+});
+
+describe("removeSong", () => {
+  const SONG = "song-1";
+  const HOST = "user-1";
+  const songRow = (overrides: Record<string, unknown> = {}) =>
+    ok({ id: SONG, added_by_user_id: "user-2", playlists: { creator_user_id: HOST }, ...overrides });
+
+  function respond({ song = songRow(), setlistDelete = ok([{ id: "block-1" }]), songDelete = ok([{ id: SONG }]) } = {}) {
+    return (op: FakeOp): FakeResult => {
+      if (op.table === "songs" && op.action === "select") return song;
+      if (op.table === "setlist_items" && op.action === "delete") return setlistDelete;
+      if (op.table === "songs" && op.action === "delete") return songDelete;
+      return ok();
+    };
+  }
+
+  const deletes = () => state.admin.ops.filter((op) => op.action === "delete").map((op) => [op.table, op.filters]);
+
+  beforeEach(() => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ id: HOST, nickname: "기타", avatarUrl: null } as Awaited<ReturnType<typeof getCurrentUser>>);
+  });
+
+  it("deletes the song's setlist blocks first, since the song delete would only null their song_id", async () => {
+    state.admin = createFakeClient(respond());
+
+    await expect(removeSong(SONG, ROOM, "share")).resolves.toEqual({ success: true });
+
+    expect(deletes()).toEqual([
+      ["setlist_items", { song_id: SONG, playlist_id: ROOM }],
+      ["songs", { id: SONG, playlist_id: ROOM }],
+    ]);
+  });
+
+  it("lets the member who added the song delete it and its blocks", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ id: "user-2", nickname: "베이스", avatarUrl: null } as Awaited<ReturnType<typeof getCurrentUser>>);
+    state.admin = createFakeClient(respond());
+
+    await expect(removeSong(SONG, ROOM, "share")).resolves.toEqual({ success: true });
+    expect(deletes().map(([table]) => table)).toEqual(["setlist_items", "songs"]);
+  });
+
+  it("still deletes a song that no setlist uses", async () => {
+    state.admin = createFakeClient(respond({ setlistDelete: ok([]) }));
+
+    await expect(removeSong(SONG, ROOM, "share")).resolves.toEqual({ success: true });
+    expect(deletes().map(([table]) => table)).toEqual(["setlist_items", "songs"]);
+  });
+
+  it("keeps the song when its setlist blocks could not be deleted", async () => {
+    state.admin = createFakeClient(respond({ setlistDelete: { data: null, error: { message: "boom" } } }));
+
+    await expect(removeSong(SONG, ROOM, "share")).rejects.toThrow("곡 삭제에 실패했습니다.");
+    expect(deletes().map(([table]) => table)).toEqual(["setlist_items"]);
+  });
+
+  it("fails when the song delete matched no row", async () => {
+    state.admin = createFakeClient(respond({ songDelete: ok([]) }));
+
+    await expect(removeSong(SONG, ROOM, "share")).rejects.toThrow("곡 삭제에 실패했습니다.");
+    expect(state.admin.ops.find((op) => op.table === "songs" && op.action === "delete")?.returning).toBe(true);
+  });
+
+  it.each([
+    ["a logged-out viewer", () => vi.mocked(getCurrentUser).mockResolvedValue(null), songRow(), "로그인이 필요합니다."],
+    [
+      "a member who neither hosts nor added the song",
+      () => vi.mocked(getCurrentUser).mockResolvedValue({ id: "user-3", nickname: "드럼", avatarUrl: null } as Awaited<ReturnType<typeof getCurrentUser>>),
+      songRow(),
+      "이 곡을 삭제할 권한이 없습니다.",
+    ],
+    ["an archived playlist", () => undefined, songRow({ playlists: { creator_user_id: null } }), "보관된 플레이리스트예요."],
+    ["a song from another playlist", () => undefined, ok(null), "곡을 찾을 수 없습니다."],
+  ])("deletes nothing for %s", async (_label, arrange, song, message) => {
+    arrange();
+    state.admin = createFakeClient(respond({ song }));
+
+    await expect(removeSong(SONG, ROOM, "share")).rejects.toThrow(message);
+    expect(deletes()).toEqual([]);
   });
 });
