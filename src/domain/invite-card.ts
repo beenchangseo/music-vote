@@ -52,29 +52,6 @@ export function inviteSongs(songs: readonly InviteSong[]): InviteSongs {
   };
 }
 
-/** /api/og 의 투표 초대 카드 쿼리. 이미지 라우트가 곡을 다시 조회하지 않도록 그릴 것을 모두 싣는다. */
-export function inviteCardParams(title: string, participants: number, songs: InviteSongs): URLSearchParams {
-  const params = new URLSearchParams({
-    variant: "playlist",
-    title,
-    songs: String(songs.count),
-    participants: String(participants),
-  });
-  if (songs.cover.length > 0) params.set("cover", songs.cover.join(","));
-  for (const name of songs.names) params.append("name", name);
-  return params;
-}
-
-/** inviteCardParams 의 반대. 쿼리는 누구나 고칠 수 있으니 영상 id 가 아닌 값은 버린다. */
-export function parseInviteSongs(params: URLSearchParams): InviteSongs {
-  const count = parseInt(params.get("songs") ?? "", 10);
-  return {
-    cover: toCover((params.get("cover") ?? "").split(",")),
-    names: params.getAll("name").map(clipName).filter(Boolean).slice(0, NAME_COUNT),
-    count: count > 0 ? count : 0,
-  };
-}
-
 /** Pretendard 굵은 글씨의 대략 폭. 한글·가나·한자는 1em, 공백은 0.28em, 나머지는 0.56em. */
 function widthEm(text: string): number {
   let em = 0;
@@ -105,26 +82,4 @@ export function inviteDescription(songs: InviteSongs, participants: number): str
   const { names, more } = inviteSongsLine(songs);
   const lead = names ? [names, more].filter(Boolean).join(" ") : `${songs.count}곡 등록`;
   return participants > 0 ? `${lead} · ${participants}명 참여 중` : `${lead} | 밴드 곡 투표에 참여하세요!`;
-}
-
-/**
- * 카톡 공유 버튼과 링크 미리보기가 같이 보내는 카드. `query` 는 `/api/og?` 뒤에 붙는다.
- * 보관된 플레이리스트(ADR 0012)는 투표를 받지 않으니 "투표 진행 중" 카드를 보내지 않는다.
- * #11 이전의 홈 카드 URL 과 "N곡 등록" 문구를 글자 그대로 둬서 이미 퍼진 미리보기와도 같다.
- */
-export function playlistShareCard(
-  playlist: { title: string; archived: boolean },
-  participants: number,
-  songs: InviteSongs,
-): { query: string; description: string } {
-  if (playlist.archived) {
-    return {
-      query: `title=${encodeURIComponent(playlist.title)}&songs=${songs.count}&participants=${participants}`,
-      description: inviteDescription({ cover: [], names: [], count: songs.count }, participants),
-    };
-  }
-  return {
-    query: inviteCardParams(playlist.title, participants, songs).toString(),
-    description: inviteDescription(songs, participants),
-  };
 }

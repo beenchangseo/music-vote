@@ -11,6 +11,7 @@ import { getVotingSettings } from "@/actions/member";
 import { track } from "@/lib/analytics";
 import { TEAM_NAME_MAX } from "@/domain/team";
 import { teamMessage } from "@/lib/team-messages";
+import type { CardImage } from "@/domain/share-card";
 
 /** 방에서 막 만든 밴드. 방에 머무는 성공 카드와 초대 시트가 쓴다 (D30A·R6). */
 export interface CreatedBand {
@@ -18,6 +19,8 @@ export interface CreatedBand {
   name: string;
   inviteCode: string;
   memberCount: number;
+  /** 초대 시트의 카톡 카드. 액션이 서명했다 (#35). */
+  shareImage: CardImage;
 }
 
 /** 홈에서 고르는 "같이 투표한 멤버" 플레이리스트 (DR3): 내가 방장 · 밴드 없음 · 로그인 멤버 ≥ 2. */
@@ -114,6 +117,7 @@ function PromoteBody({
           name: result.name,
           inviteCode: result.inviteCode,
           memberCount: result.memberCount,
+          shareImage: result.shareImage,
         });
         return null;
       }}

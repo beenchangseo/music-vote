@@ -10,5 +10,6 @@ export default defineConfig({
   test: {
     // Playwright specs (npm run test:e2e) use the same *.spec.ts naming; keep them out of vitest.
     exclude: [...configDefaults.exclude, "e2e/**", ".claude/worktrees/**"],
+    env: { OG_SIGNING_SECRET: "vitest-og-signing-secret-0123456789abcdef" },
   },
 });

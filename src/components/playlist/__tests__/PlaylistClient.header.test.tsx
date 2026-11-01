@@ -3,7 +3,8 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Playlist, RoomTeam } from "@/domain/types";
-import PlaylistClient from "../PlaylistClient";
+import PlaylistClient, { type PlaylistShareKit } from "../PlaylistClient";
+import type { CardImage } from "@/domain/share-card";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }), usePathname: () => "/playlist/abc123" }));
 vi.mock("next/image", () => ({ default: () => null }));
@@ -65,11 +66,16 @@ const playlist: Playlist = {
   team_id: TEAM,
 };
 const band: RoomTeam = { id: TEAM, name: "일코해제", nextShowAt: null, isMember: true };
+const SHARE_KIT: PlaylistShareKit = {
+  invite: { image: "/api/og?card=v1.invite.signature" as CardImage, description: "0곡 등록 | 밴드 곡 투표에 참여하세요!" },
+  decided: "/api/og?card=v1.decided.signature" as CardImage,
+  setlist: "/api/og?card=v1.setlist.signature" as CardImage,
+};
 
 type Props = Parameters<typeof PlaylistClient>[0];
 
 function renderRoom(overrides: Partial<Props> = {}) {
-  render(<PlaylistClient playlist={playlist} songs={[]} shareCode="abc123" participantCount={2} userNickname="보컬" currentUserId={OWNER} team={band} {...overrides} />);
+  render(<PlaylistClient playlist={playlist} songs={[]} shareCode="abc123" shareKit={SHARE_KIT} participantCount={2} userNickname="보컬" currentUserId={OWNER} team={band} {...overrides} />);
 }
 
 const roomActions = () => ["카카오톡 공유", "공지", "플레이리스트 메뉴"].map((name) => screen.queryByRole("button", { name }));

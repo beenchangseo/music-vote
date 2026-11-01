@@ -4,7 +4,8 @@ import { useState } from "react";
 import Button from "../ui/Button";
 import { track } from "@/lib/analytics";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
-import { bandShareDescription, roomSharePrefix, shareableShowDate } from "@/domain/team";
+import { bandShareDescription, roomSharePrefix } from "@/domain/team";
+import type { CardImage } from "@/domain/share-card";
 
 declare global {
   interface Window {
@@ -39,13 +40,11 @@ type KakaoShareButtonProps = ShareLink & {
   members?: number;
   /** Band card only: the band owner's name, used when the owner is still alone (DR13). */
   ownerName?: string | null;
-  /** OG image params (forwarded to /api/og). */
+  /** Counts for the Kakao message text. */
   songs?: number;
   participants?: number;
-  topSong?: string;
-  topArtist?: string;
-  topScore?: number;
-  setlistCount?: number;
+  /** The card picture the server signed (src/lib/share-card.ts). The browser cannot make one (#35). */
+  image: CardImage;
   /** UI */
   children?: React.ReactNode;
   className?: string;
@@ -102,38 +101,6 @@ const variantContent = (
   }
 };
 
-const buildOgUrl = (
-  origin: string,
-  variant: ShareVariant,
-  params: Pick<
-    KakaoShareButtonProps,
-    | "title"
-    | "songs"
-    | "participants"
-    | "topSong"
-    | "topArtist"
-    | "topScore"
-    | "setlistCount"
-    | "members"
-  > & { date?: string | null },
-) => {
-  const sp = new URLSearchParams({
-    variant,
-    title: params.title,
-  });
-  if (params.members != null) sp.set("members", String(params.members));
-  if (params.date) sp.set("date", params.date);
-  if (params.songs != null) sp.set("songs", String(params.songs));
-  if (params.participants != null)
-    sp.set("participants", String(params.participants));
-  if (params.topSong) sp.set("topSong", params.topSong);
-  if (params.topArtist) sp.set("topArtist", params.topArtist);
-  if (params.topScore != null) sp.set("topScore", String(params.topScore));
-  if (params.setlistCount != null)
-    sp.set("setlistCount", String(params.setlistCount));
-  return `${origin}/api/og?${sp.toString()}`;
-};
-
 export default function KakaoShareButton({
   shareCode,
   linkPath,
@@ -145,10 +112,7 @@ export default function KakaoShareButton({
   ownerName = null,
   songs = 0,
   participants = 0,
-  topSong,
-  topArtist,
-  topScore,
-  setlistCount,
+  image,
   children,
   className = "",
   ariaLabel,
@@ -162,16 +126,6 @@ export default function KakaoShareButton({
     const url = linkPath
       ? `${origin}${linkPath}?utm_source=kakao&utm_medium=share&variant=${variant}`
       : `${origin}/playlist/${shareCode}?utm_source=kakao&utm_medium=share&utm_campaign=${shareCode}&variant=${variant}`;
-    const ogUrl = buildOgUrl(origin, variant, {
-      title,
-      songs,
-      participants,
-      topSong,
-      topArtist,
-      topScore,
-      setlistCount,
-      ...(variant === "band" ? { members, date: shareableShowDate(showDate, new Date()) } : {}),
-    });
     const c = variantContent(variant, title, description, songs, participants, showDate, members, ownerName);
 
     // Kakao Share path
@@ -182,7 +136,7 @@ export default function KakaoShareButton({
           content: {
             title: c.title,
             description: c.description,
-            imageUrl: ogUrl,
+            imageUrl: `${origin}${image}`,
             imageWidth: OG_IMAGE_WIDTH,
             imageHeight: OG_IMAGE_HEIGHT,
             link: { mobileWebUrl: url, webUrl: url },

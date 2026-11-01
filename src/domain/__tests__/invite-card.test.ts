@@ -1,12 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  inviteCardParams,
-  inviteDescription,
-  inviteSongs,
-  inviteSongsLine,
-  parseInviteSongs,
-  type InviteSongs,
-} from "../invite-card";
+import { inviteDescription, inviteSongs, inviteSongsLine, type InviteSongs } from "../invite-card";
 
 // Real titles from the 2026-10 walkthrough room, added in this order.
 const NANGMAN = { title: "[MV] 체리필터 - 낭만고양이 | Cherryfilter - Romantic Cat", youtube_video_id: "oSlqhkPa3no", created_at: "2026-10-01T10:00:00+00:00" };
@@ -71,51 +64,6 @@ describe("inviteSongs", () => {
     ["대한민국응원가요🇰🇷🇰🇷🇰🇷", "대한민국응원가요🇰🇷🇰🇷🇰🇷"],
   ])("clips the long name %j to %j", (title, name) => {
     expect(inviteSongs([{ ...NANGMAN, title }]).names).toEqual([name]);
-  });
-});
-
-describe("inviteCardParams and parseInviteSongs", () => {
-  const five = inviteSongs([NANGMAN, BEOTKKOT, YORUSHIKA, YEPPEOSSEO, SMILED]);
-
-  it("draws the vote invite card with the playlist's title and counts", () => {
-    const params = inviteCardParams("UX 워크스루 테스트", 3, five);
-    expect(params.get("variant")).toBe("playlist");
-    expect(params.get("title")).toBe("UX 워크스루 테스트");
-    expect(params.get("songs")).toBe("5");
-    expect(params.get("participants")).toBe("3");
-  });
-
-  it.each([
-    ["five songs", five],
-    ["one song", inviteSongs([NANGMAN])],
-    ["no songs", inviteSongs([])],
-  ])("the image route reads back what the share sent: %s", (_, songs) => {
-    expect(parseInviteSongs(new URLSearchParams(inviteCardParams("합주", 0, songs).toString()))).toEqual(songs);
-  });
-
-  const parse = (query: string) => parseInviteSongs(new URLSearchParams(query));
-
-  it.each<[string, string, InviteSongs]>([
-    [
-      "anything that is not a YouTube video id is dropped, so the route never fetches a URL it was handed",
-      "songs=2&cover=https://evil.example/x.png,../../a,oSlqhkPa3no",
-      { cover: ["oSlqhkPa3no"], names: [], count: 2 },
-    ],
-    ["two or three pictures make a single cover", "songs=3&cover=oSlqhkPa3no,tXV7dfvSefo", { cover: ["oSlqhkPa3no"], names: [], count: 3 }],
-    [
-      "more than four pictures keep the first four",
-      `songs=9&cover=${[...ALL_IDS, "8XqtC-sD2sY"].join(",")}`,
-      { cover: ALL_IDS, names: [], count: 9 },
-    ],
-    [
-      "more than two names keep the first two, clipped",
-      "songs=3&name=Don't Look Back in Anger&name=예뻤어&name=벚꽃 엔딩",
-      { cover: [], names: ["Don't Look…", "예뻤어"], count: 3 },
-    ],
-    ["a missing or broken song count is zero", "songs=-4&cover=oSlqhkPa3no", { cover: ["oSlqhkPa3no"], names: [], count: 0 }],
-    ["an old link without songs is an empty card", "variant=playlist&title=합주", { cover: [], names: [], count: 0 }],
-  ])("%s", (_, query, expected) => {
-    expect(parse(query)).toEqual(expected);
   });
 });
 

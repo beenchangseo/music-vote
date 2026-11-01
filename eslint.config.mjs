@@ -36,6 +36,23 @@ const eslintConfig = defineConfig([
     },
   },
   {
+    // In the browser the signing key is undefined, so a signer imported there would quietly share the site card.
+    files: ["src/components/**/*.{ts,tsx}", "src/hooks/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/lib/share-card", "**/lib/share-card"],
+              message: "공유 카드 그림은 서버(페이지·액션)가 signShareCard 로 서명해 prop 으로 내린다 (#35).",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ["src/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-syntax": [
