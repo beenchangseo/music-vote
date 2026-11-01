@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, moveSetlistBlock, setlistBlocks, setlistEditAccess, setlistPlayOrder, setlistRows, summarizeSetlist } from "../setlist";
+import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, moveSetlistBlock, parseBlockFields, setlistBlocks, setlistBlockTitle, setlistEditAccess, setlistInsertSlots, setlistPlayOrder, setlistRows, summarizeSetlist } from "../setlist";
 import type { SetlistItem, SongWithScore } from "../types";
 import { FIXTURE_SONG_COUNT, FIXTURE_TOTAL_SECONDS, fixtureItems, fixtureSongs } from "./setlist-fixture";
 
@@ -208,48 +208,121 @@ describe("setlistBlocks", () => {
   });
 
   describe("moveSetlistBlock", () => {
-    const moved = (items: SetlistItem[], from: number, to: number) =>
-      moveSetlistBlock(items, setlistBlocks(items, songs), from, to).map((item) => [item.id, item.position]);
+    const moved = (items: SetlistItem[], activeId: string, overId: string) =>
+      moveSetlistBlock(items, setlistBlocks(items, songs), activeId, overId)?.map((item) => [item.id, item.position]);
 
     it.each([
-      ["위 블록과 자리를 바꾼다", [a(0), interval(1), b(2)], 2, 1, [["item-0", 0], ["item-2", 1], ["item-1", 2]]],
-      ["여러 칸을 건너 옮긴다", [a(0), interval(1), b(2)], 0, 2, [["item-1", 0], ["item-2", 1], ["item-0", 2]]],
+      ["위 블록 자리에 놓으면 둘이 자리를 바꾼다", [a(0), interval(1), b(2)], "item-2", "item-1", [["item-0", 0], ["item-2", 1], ["item-1", 2]]],
+      ["여러 칸을 건너 옮긴다", [a(0), interval(1), b(2)], "item-0", "item-2", [["item-1", 0], ["item-2", 1], ["item-0", 2]]],
       [
         "그린 블록끼리만 자리를 바꾸고 지워진 곡 블록은 제자리에 둔다",
         [deleted(0), a(1), deleted(2), b(3)],
-        1,
-        0,
+        "item-3",
+        "item-1",
         [["item-0", 0], ["item-3", 1], ["item-2", 2], ["item-1", 3]],
       ],
       [
         "다른 멤버가 막 넣어 아직 후보곡 목록에 없는 곡 블록은 끝으로 밀리지 않는다",
         [a(0), at(1, { song_id: "fresh" }), interval(2), b(3)],
-        1,
-        0,
+        "item-2",
+        "item-0",
         [["item-2", 0], ["item-1", 1], ["item-0", 2], ["item-3", 3]],
       ],
       [
         "숨은 블록 바로 뒤로 내려도 숨은 블록은 움직이지 않는다",
         [a(0), at(1, { song_id: "fresh" }), b(2)],
-        0,
-        1,
+        "item-0",
+        "item-2",
         [["item-2", 0], ["item-1", 1], ["item-0", 2]],
       ],
       [
         "position 에 빈자리가 있어도 순서대로 0부터 다시 매긴다",
         [at(4, { song_id: "a" }), at(9, { song_id: "fresh" }), at(7, { song_id: "b" })],
-        1,
-        0,
+        "item-7",
+        "item-4",
         [["item-7", 0], ["item-4", 1], ["item-9", 2]],
       ],
-    ])("%s", (_name, items, from, to, expected) => {
-      expect(moved(items, from, to)).toEqual(expected);
+    ])("%s", (_name, items, activeId, overId, expected) => {
+      expect(moved(items, activeId, overId)).toEqual(expected);
+    });
+
+    it.each([
+      ["제자리에 놓으면", [a(0), b(1)], "item-0", "item-0"],
+      ["끄는 사이 다른 멤버가 끈 블록을 지웠으면", [a(0), b(1)], "item-9", "item-1"],
+      ["놓을 블록이 그 사이 사라졌으면", [a(0), b(1)], "item-0", "item-9"],
+      ["놓을 자리가 숨은 블록이면", [a(0), at(1, { song_id: "fresh" }), b(2)], "item-0", "item-1"],
+    ])("%s 아무것도 바꾸지 않는다", (_name, items, activeId, overId) => {
+      expect(moveSetlistBlock(items, setlistBlocks(items, songs), activeId, overId)).toBeNull();
     });
 
     it("숨은 블록까지 모든 항목을 한 번씩 돌려준다", () => {
       const items = [deleted(0), a(1), at(2, { song_id: "fresh" }), interval(3), b(4)];
-      const ids = moveSetlistBlock(items, setlistBlocks(items, songs), 2, 0).map((item) => item.id);
+      const ids = moveSetlistBlock(items, setlistBlocks(items, songs), "item-4", "item-1")!.map((item) => item.id);
       expect([...ids].sort()).toEqual(items.map((item) => item.id).sort());
     });
+  });
+
+  describe("setlistInsertSlots", () => {
+    const slots = (items: SetlistItem[]) =>
+      setlistInsertSlots(setlistBlocks(items, songs), 999).map(({ slot, after, start }) => [slot.before, after?.item.id ?? null, start]);
+
+    it.each([
+      [
+        "블록마다 그 위에 하나, 맨 끝에 하나를 둔다",
+        [a(0), interval(1), b(2)],
+        [["item-0", null, 0], ["item-1", "item-0", 200], ["item-2", "item-1", 260], [null, "item-2", 999]],
+      ],
+      [
+        "맨 앞 (+) 는 숨은 블록이 아니라 첫 그린 블록 앞이다",
+        [deleted(0), a(1)],
+        [["item-1", null, 0], [null, "item-1", 999]],
+      ],
+      [
+        "그린 블록 사이에 숨은 블록이 있어도 아래 블록 앞에 넣고 위 블록을 보여 준다",
+        [a(0), at(1, { song_id: "fresh" }), b(2)],
+        [["item-0", null, 0], ["item-2", "item-0", 200], [null, "item-2", 999]],
+      ],
+      ["그린 블록이 없으면 맨 끝 하나뿐이다", [deleted(0)], [[null, null, 999]]],
+    ])("%s", (_name, items, expected) => {
+      expect(slots(items)).toEqual(expected);
+    });
+  });
+
+  it.each([
+    ["곡은 셋리스트에서 고친 제목", setlistBlocks([at(0, { song_id: "a", title_override: "공연용" })], [{ ...songs[0], title: "원곡" }]), "공연용"],
+    ["곡은 고친 제목이 없으면 후보곡 제목", setlistBlocks([a(0)], [{ ...songs[0], title: "원곡" }]), "원곡"],
+    ["인터벌은 이름", setlistBlocks([at(0, { item_type: "interval", label: "멘트" })], []), "멘트"],
+    ["이름 없는 인터벌", setlistBlocks([at(0, { item_type: "interval", label: null })], []), "인터벌"],
+    ["이름 없는 자작곡", setlistBlocks([at(0, { item_type: "original", label: "" })], []), "자작곡"],
+  ])("setlistBlockTitle: %s", (_name, [block], expected) => {
+    expect(setlistBlockTitle(block)).toBe(expected);
+  });
+});
+
+describe("parseBlockFields", () => {
+  const fields = (overrides: Partial<{ label: string; description: string; durationSeconds: number }> = {}) => ({
+    label: "기타 셋업 변경",
+    description: "",
+    durationSeconds: 60,
+    ...overrides,
+  });
+
+  it("앞뒤 공백을 지우고 빈 설명은 없음으로 둔다", () => {
+    expect(parseBlockFields("interval", fields({ label: "  멘트 ", description: "  " }))).toEqual({ label: "멘트", description: null, durationSeconds: 60 });
+  });
+
+  it.each([
+    ["인터벌 이름 50자", "interval", fields({ label: "가".repeat(50) }), true],
+    ["인터벌 이름 51자", "interval", fields({ label: "가".repeat(51) }), false],
+    ["자작곡 이름 100자", "original", fields({ label: "가".repeat(100) }), true],
+    ["자작곡 이름 101자", "original", fields({ label: "가".repeat(101) }), false],
+    ["빈 이름", "interval", fields({ label: "   " }), false],
+    ["설명 200자", "original", fields({ description: "가".repeat(200) }), true],
+    ["설명 201자", "original", fields({ description: "가".repeat(201) }), false],
+    ["시간 0초", "interval", fields({ durationSeconds: 0 }), true],
+    ["음수 시간", "interval", fields({ durationSeconds: -1 }), false],
+    ["소수 시간", "original", fields({ durationSeconds: 1.5 }), false],
+  ] as const)("%s", (_name, kind, input, ok) => {
+    expect(parseBlockFields(kind, input) !== null).toBe(ok);
   });
 });

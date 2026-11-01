@@ -116,12 +116,17 @@ export function setlistBlocks<S extends RuntimeSong>(items: SetlistItem[], songs
 }
 
 /**
- * 그린 블록끼리만 순서를 바꾸고, 그리지 않은 블록은 제자리에 둔다.
+ * 끈 블록을 놓은 블록 자리로 옮긴다. 그린 블록끼리만 순서를 바꾸고, 그리지 않은 블록은 제자리에 둔다.
  * 그리지 않은 블록이 지워진 곡만은 아니다. 실시간 재조회 중에는 다른 멤버가 막 넣은 곡 블록이 후보곡 목록보다 먼저
- * 도착해 잠깐 안 보인다. 그 사이 ▲▼ 로 그 블록을 옮기면 모두의 셋리스트에서 자리가 바뀐다.
+ * 도착해 잠깐 안 보인다. 그 사이 그 블록을 옮기면 모두의 셋리스트에서 자리가 바뀐다.
+ * id 로 찾으니 끄는 사이 재조회로 목록이 바뀌어도 놓는 순간의 목록 기준이다. 옮길 게 없으면 null.
+ * 서버의 reorder_setlist_items(v26)도 화면이 모르는 블록을 같은 규칙으로 제자리에 둔다.
  */
-export function moveSetlistBlock(items: SetlistItem[], blocks: SetlistBlock<unknown>[], from: number, to: number): SetlistItem[] {
+export function moveSetlistBlock(items: SetlistItem[], blocks: SetlistBlock<unknown>[], activeId: string, overId: string): SetlistItem[] | null {
   const drawn = blocks.map((block) => block.item);
+  const from = drawn.findIndex((item) => item.id === activeId);
+  const to = drawn.findIndex((item) => item.id === overId);
+  if (from < 0 || to < 0 || from === to) return null;
   const [picked] = drawn.splice(from, 1);
   drawn.splice(to, 0, picked);
   const drawnIds = new Set(drawn.map((item) => item.id));
@@ -129,6 +134,51 @@ export function moveSetlistBlock(items: SetlistItem[], blocks: SetlistBlock<unkn
   return [...items]
     .sort((a, b) => a.position - b.position)
     .map((item, position) => ({ ...(drawnIds.has(item.id) ? drawn[nextDrawn++] : item), position }));
+}
+
+/** 새 블록이 들어갈 자리: `before` 블록 바로 앞. null 은 맨 끝. */
+export type SetlistSlot = { before: string | null };
+
+/** 셋리스트에 새로 넣는 블록. 곡은 후보곡 id 만 보낸다. */
+export type NewSetlistBlock =
+  | { kind: "song"; songId: string }
+  | { kind: "interval" | "original"; label: string; description: string; durationSeconds: number };
+
+/** 편집 모드의 (+) 한 줄. 서버에 보낼 자리와, 시트가 보여 줄 바로 위 블록·시작 시각. */
+export interface SetlistInsertSlot<S> {
+  slot: SetlistSlot;
+  after: SetlistBlock<S> | null;
+  start: number;
+}
+
+/**
+ * 블록마다 그 위에 (+) 하나, 맨 끝에 하나. 기준은 그린 블록뿐이라 숨은 블록은 넣을 자리의 기준이 되지 않는다.
+ * 기준이 위치 숫자가 아니라 블록 id 라서, 그 사이 다른 멤버가 넣거나 옮겨도 "이 블록 앞"이 지켜진다.
+ */
+export function setlistInsertSlots<S>(blocks: SetlistBlock<S>[], totalRuntime: number): SetlistInsertSlot<S>[] {
+  const slots = blocks.map((block, index) => ({ slot: { before: block.item.id }, after: blocks[index - 1] ?? null, start: block.start }));
+  return [...slots, { slot: { before: null }, after: blocks[blocks.length - 1] ?? null, start: totalRuntime }];
+}
+
+export function setlistBlockTitle(block: SetlistBlock<Pick<SongWithScore, "title">>): string {
+  if (block.kind === "song") return effectiveSetlistTitle(block.item, block.song);
+  return block.item.label || (block.kind === "interval" ? "인터벌" : "자작곡");
+}
+
+export const BLOCK_LABEL_MAX = { interval: 50, original: 100 } as const;
+export const BLOCK_DESCRIPTION_MAX = 200;
+
+/** 인터벌·자작곡 입력 검사. 넣기와 고치기가 같이 쓴다. 어긋나면 null. */
+export function parseBlockFields(
+  kind: "interval" | "original",
+  fields: { label: string; description: string; durationSeconds: number },
+): { label: string; description: string | null; durationSeconds: number } | null {
+  const label = fields.label.trim();
+  const description = fields.description.trim();
+  if (!label || label.length > BLOCK_LABEL_MAX[kind]) return null;
+  if (description.length > BLOCK_DESCRIPTION_MAX) return null;
+  if (!Number.isInteger(fields.durationSeconds) || fields.durationSeconds < 0) return null;
+  return { label, description: description || null, durationSeconds: fields.durationSeconds };
 }
 
 type RowItem = RuntimeItem & Pick<SetlistItem, "label" | "description" | "title_override">;

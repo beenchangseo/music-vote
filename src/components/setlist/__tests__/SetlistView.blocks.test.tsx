@@ -1,16 +1,14 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { updateSetlistOrder } from "@/actions/setlist";
 import type { SetlistEditAccess } from "@/domain/setlist";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
 import SetlistView from "../SetlistView";
 
 vi.mock("next/image", () => ({ default: () => null }));
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
-vi.mock("@/actions/setlist", () => ({ addSongToSetlist: vi.fn(), removeSetlistItem: vi.fn(), updateSetlistOrder: vi.fn() }));
-vi.mock("@formkit/auto-animate/react", () => ({ useAutoAnimate: () => [vi.fn()] }));
+vi.mock("@/actions/setlist", () => ({ insertSetlistBlock: vi.fn(), removeSetlistItem: vi.fn(), updateSetlistOrder: vi.fn() }));
 vi.mock("../../ui/DialogProvider", () => ({ useDialog: () => ({ showAlert: vi.fn(), showDanger: vi.fn() }) }));
 vi.mock("../SetlistShareButton", () => ({ default: () => null }));
 
@@ -41,10 +39,7 @@ function renderSetlist(setlistItems: SetlistItem[], access: SetlistEditAccess = 
 
 const setlistBlocks = () => within(screen.getByRole("list", { name: "셋리스트" })).getAllByRole("listitem");
 
-afterEach(() => {
-  cleanup();
-  vi.mocked(updateSetlistOrder).mockReset();
-});
+afterEach(cleanup);
 
 describe("SetlistView blocks", () => {
   const setlist = [
@@ -90,7 +85,6 @@ describe("SetlistView with a song deleted from the candidates", () => {
     at(3, { item_type: "interval", label: "멘트", duration_seconds: 60 }),
     at(4, { song_id: "cherry" }),
   ];
-  const visible = new Set(["item-1", "item-3", "item-4"]);
 
   it("runs the rail through the deleted songs and counts only the blocks it draws", () => {
     renderSetlist(setlist);
@@ -106,31 +100,12 @@ describe("SetlistView with a song deleted from the candidates", () => {
     expect(screen.getByText("셋리스트가 비어있어요")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "편집" })).not.toBeInTheDocument();
   });
-
-  it("moves a block past a deleted song in one press", async () => {
-    const onItemsChange = renderSetlist(setlist, "edit");
-    fireEvent.click(screen.getByRole("button", { name: "편집" }));
-    const [first, interval, last] = setlistBlocks();
-
-    expect(within(first).getByRole("button", { name: "위로" })).toBeDisabled();
-    expect(within(last).getByRole("button", { name: "아래로" })).toBeDisabled();
-
-    fireEvent.click(within(interval).getByRole("button", { name: "위로" }));
-
-    const reordered: SetlistItem[] = onItemsChange.mock.calls[0][0];
-    const shown = [...reordered].sort((x, y) => x.position - y.position).filter((item) => visible.has(item.id));
-    expect(shown.map((item) => item.id)).toEqual(["item-3", "item-1", "item-4"]);
-    await waitFor(() => expect(updateSetlistOrder).toHaveBeenCalled());
-    const ids: string[] = vi.mocked(updateSetlistOrder).mock.calls[0][2];
-    expect(ids.filter((id) => visible.has(id))).toEqual(["item-3", "item-1", "item-4"]);
-    expect([...ids].sort()).toEqual(setlist.map((item) => item.id).sort());
-  });
 });
 
 describe("SetlistView edit mode", () => {
   const setlist = [at(0, { song_id: "pretty" }), at(1, { item_type: "interval", label: "멘트", duration_seconds: 60 }), at(2, { item_type: "original", label: "자작곡" })];
 
-  it("trades the rail for remove and reorder controls on every block", () => {
+  it("trades the rail for remove and a drag handle on every block", () => {
     renderSetlist(setlist, "edit");
     expect(screen.queryAllByRole("button", { name: "삭제" })).toHaveLength(0);
 
@@ -138,8 +113,7 @@ describe("SetlistView edit mode", () => {
 
     for (const block of setlistBlocks()) {
       expect(within(block).getByRole("button", { name: "삭제" })).toBeInTheDocument();
-      expect(within(block).getByRole("button", { name: "위로" })).toBeInTheDocument();
-      expect(within(block).getByRole("button", { name: "아래로" })).toBeInTheDocument();
+      expect(within(block).getByRole("button", { name: /끌어서 순서 바꾸기$/ })).toBeInTheDocument();
       expect(within(block).queryByTestId("rail-start")).not.toBeInTheDocument();
     }
     expect(screen.queryByTestId("rail-end")).not.toBeInTheDocument();
