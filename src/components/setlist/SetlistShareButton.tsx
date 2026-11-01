@@ -57,7 +57,6 @@ export default function SetlistShareButton({ shareCode, title }: Props) {
   return (
     <>
       <ToolbarButton
-        variant="ghost"
         label="내보내기"
         icon={
           <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>

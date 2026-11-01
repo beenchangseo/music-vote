@@ -39,9 +39,10 @@ export default function ScreenToolbar({ stat, caption, actions, children }: Scre
   );
 }
 
-type ToolbarButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className" | "children"> & {
+type ToolbarButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className" | "children" | "aria-pressed"> & {
   label: string;
-  variant?: "primary" | "tonal" | "ghost";
+  /** 켜고 끄는 동작(편집 ↔ 완료)이 켜진 상태. 켜지면 primary 로 칠하고 aria-pressed 를 단다. */
+  pressed?: boolean;
 } & (
     | {
         icon: ReactNode;
@@ -56,11 +57,13 @@ type ToolbarButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "classNa
  * 높이는 44px 다. 아이콘만 남는 상태가 IconButton·`size="icon"` 과 같은 44px 정사각이라 누르는 영역을
  * 따로 늘릴 일이 없고, 왼쪽 숫자와 캡션 두 줄도 그 높이라 툴바가 높아지지 않는다.
  */
-export function ToolbarButton({ icon, label, compact = false, variant = "tonal", type = "button", ...rest }: ToolbarButtonProps) {
+// One look per row: a mix of filled and bare buttons at the same height reads as different sizes.
+export function ToolbarButton({ icon, label, compact = false, pressed, type = "button", ...rest }: ToolbarButtonProps) {
   return (
     <button
       type={type}
-      className={buttonClassName({ variant, size: "toolbar", className: compact ? "max-sm:size-control-md max-sm:px-0" : "" })}
+      aria-pressed={pressed}
+      className={buttonClassName({ variant: pressed ? "primary" : "tonal", size: "toolbar", className: compact ? "max-sm:size-control-md max-sm:px-0" : "" })}
       {...rest}
     >
       {icon}

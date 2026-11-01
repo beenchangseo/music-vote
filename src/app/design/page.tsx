@@ -235,7 +235,7 @@ export default function DesignPage() {
                   }
                 />
                 <ToolbarButton label="편집" />
-                <ToolbarButton variant="ghost" label="내보내기" />
+                <ToolbarButton label="내보내기" />
               </>
             }
           />

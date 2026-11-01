@@ -164,8 +164,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
             {showEditToggle && (
               <ToolbarButton
                 label={showEditControls ? "완료" : "편집"}
-                variant={showEditControls ? "primary" : "tonal"}
-                aria-pressed={showEditControls}
+                pressed={showEditControls}
                 onClick={() => setEditMode((value) => !value)}
               />
             )}
