@@ -9,8 +9,7 @@ import { IntervalBlock, MoveButton, OriginalBlock, SongBlock } from "./BlockCard
 import SetlistItemEditModal from "./SetlistItemEditModal";
 import SetlistShareButton from "./SetlistShareButton";
 import { RailEnd, RailStart } from "./TimelineRail";
-import Button from "../ui/Button";
-import ScreenToolbar from "../ui/ScreenToolbar";
+import ScreenToolbar, { ToolbarButton } from "../ui/ScreenToolbar";
 import { useDialog } from "../ui/DialogProvider";
 import { addSongToSetlist, removeSetlistItem, updateSetlistOrder } from "@/actions/setlist";
 import { track } from "@/lib/analytics";
@@ -33,15 +32,13 @@ interface Props {
   onItemsChange: (items: SetlistItem[]) => void;
   title: string;
   access: SetlistEditAccess;
-  /** 플레이리스트 설정 버튼. 세 화면 툴바의 같은 자리에 온다. */
-  actions?: React.ReactNode;
   /** 이 곡부터 셋리 순서로 재생한다. */
   onPlay?: (songId: string) => void;
   /** 지금 플레이어. 셋리 큐에서 재생 중인 행에 표시를 달고, 전체 듣기가 새 재생인지 가른다. */
   player?: Pick<PlayerState, "currentSongId" | "source" | "isPlaying">;
 }
 
-export default function SetlistView({ setlistItems, songs, playlistId, shareCode, adminToken, loading, onItemsChange, title, access, actions, onPlay, player }: Props) {
+export default function SetlistView({ setlistItems, songs, playlistId, shareCode, adminToken, loading, onItemsChange, title, access, onPlay, player }: Props) {
   const [isPending, startTransition] = useTransition();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAddOriginalForm, setShowAddOriginalForm] = useState(false);
@@ -148,32 +145,33 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
         actions={
           <>
             {!showEditControls && onPlay && playOrder.length > 0 && (
-              <Button
-                variant="tonal"
-                size="sm"
-                className="min-h-11 min-w-11"
+              <ToolbarButton
+                label="셋리 전체 듣기"
+                icon={
+                  <svg className="size-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                }
+                // With 편집 or the host-only notice beside it, the label squeezes the runtime on a 360px phone.
+                compact={showEditToggle || showHostOnlyNotice}
                 onClick={() => {
                   // Counted like the header's 전체 듣기: only a start from an empty player, so the two sources compare.
                   if (!player?.currentSongId) track("play_all_started", { source: "setlist", song_count: playOrder.length });
                   onPlay(playOrder[0].id);
                 }}
-              >
-                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-                {/* With 편집 or the host-only notice beside it, the label squeezes the runtime on a 360px phone. */}
-                <span className={showEditToggle || showHostOnlyNotice ? "max-sm:sr-only" : undefined}>셋리 전체 듣기</span>
-              </Button>
+              />
             )}
             {showEditToggle && (
-              <Button variant={showEditControls ? "primary" : "tonal"} size="sm" aria-pressed={showEditControls} onClick={() => setEditMode((value) => !value)}>
-                {showEditControls ? "완료" : "편집"}
-              </Button>
+              <ToolbarButton
+                label={showEditControls ? "완료" : "편집"}
+                variant={showEditControls ? "primary" : "tonal"}
+                aria-pressed={showEditControls}
+                onClick={() => setEditMode((value) => !value)}
+              />
             )}
             {/* Two lines on a phone, so the runtime keeps its cell. */}
             {showHostOnlyNotice && <span className="px-1 text-caption text-text-muted max-sm:max-w-20 break-keep">방장만 편집할 수 있어요</span>}
             {!showEditControls && <SetlistShareButton shareCode={shareCode} title={title} />}
-            {!showEditControls && actions}
           </>
         }
       />

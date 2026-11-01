@@ -1,11 +1,12 @@
-import type { ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { buttonClassName } from "./Button";
 
 interface ScreenToolbarProps {
   /** 이 화면에서 가장 큰 숫자. */
   stat: ReactNode;
   /** 숫자 아래 한 줄. */
   caption?: ReactNode;
-  /** 오른쪽 동작. 44px 버튼을 넣는다. */
+  /** 오른쪽 동작. 버튼은 `ToolbarButton` 만 넣는다. */
   actions?: ReactNode;
   /** 툴바 안쪽, 숫자 아래에 붙는 것 (진행 막대 등). */
   children?: ReactNode;
@@ -35,5 +36,35 @@ export default function ScreenToolbar({ stat, caption, actions, children }: Scre
       </div>
       {children}
     </div>
+  );
+}
+
+type ToolbarButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className" | "children"> & {
+  label: string;
+  variant?: "primary" | "tonal" | "ghost";
+} & (
+    | {
+        icon: ReactNode;
+        /** 640px 아래에서 글자를 숨기고 `size="icon"` 과 같은 정사각이 된다. 스크린 리더는 label 을 읽는다. */
+        compact?: boolean;
+      }
+    | { icon?: never; compact?: never }
+  );
+
+/**
+ * ScreenToolbar 의 동작 버튼. 툴바 동작은 모두 이것으로 그려서 높이·여백·글자·모서리를 한 곳에서 정한다.
+ * 높이는 44px 다. 아이콘만 남는 상태가 IconButton·`size="icon"` 과 같은 44px 정사각이라 누르는 영역을
+ * 따로 늘릴 일이 없고, 왼쪽 숫자와 캡션 두 줄도 그 높이라 툴바가 높아지지 않는다.
+ */
+export function ToolbarButton({ icon, label, compact = false, variant = "tonal", type = "button", ...rest }: ToolbarButtonProps) {
+  return (
+    <button
+      type={type}
+      className={buttonClassName({ variant, size: "toolbar", className: compact ? "max-sm:size-control-md max-sm:px-0" : "" })}
+      {...rest}
+    >
+      {icon}
+      <span className={compact ? "max-sm:sr-only" : undefined}>{label}</span>
+    </button>
   );
 }
