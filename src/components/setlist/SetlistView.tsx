@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from "react";
+import { startTransition as startModeSwitch, useCallback, useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { BlockCard } from "./BlockCards";
 import InsertSheet, { type InsertStep } from "./InsertSheet";
-import SetlistEditList, { type InsertTarget } from "./SetlistEditList";
+import type { InsertTarget } from "./SetlistEditList";
 import SetlistItemEditModal from "./SetlistItemEditModal";
 import SetlistShareButton from "./SetlistShareButton";
 import { RailEnd, RailStart } from "./TimelineRail";
@@ -30,6 +31,13 @@ import type { PlayerState } from "@/hooks/usePlayerQueue";
 
 /** "후보곡에서 넣기"는 점수 높은 5곡 + 더 보기. */
 const COLLAPSED_SUGGESTIONS = 5;
+
+// dnd-kit rides in this chunk, so members who only read the setlist never download it. It has no `loading` on purpose.
+// Without one next/dynamic adds no Suspense of its own, and the edit-mode switch is a transition, so the view list stays
+// on screen until the chunk is in. The prefetch below calls this same loader. An import() written inside dynamic() gets
+// a wrapper chunk of its own, which costs one more round trip after the tap.
+const loadEditList = () => import("./SetlistEditList");
+const SetlistEditList = dynamic(loadEditList);
 
 interface Props {
   setlistItems: SetlistItem[];
@@ -80,6 +88,12 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
   const visibleSuggestions = showAllSuggestions ? suggestions : suggestions.slice(0, COLLAPSED_SUGGESTIONS);
   const showEditControls = showEditToggle && editMode;
   const editToggleRef = useRef<HTMLButtonElement>(null);
+
+  // Fetched once 편집 is on screen, so the tap swaps lists at once. A swap that lands more than 500ms after the tap counts
+  // as layout shift, and a slow phone network takes that long to bring the chunk.
+  useEffect(() => {
+    if (showEditToggle) void loadEditList();
+  }, [showEditToggle]);
 
   // The view list has no handle to focus. It takes an insert only from the empty setlist, whose add buttons vanish once
   // the block lands, so focus goes to the toggle that opens the handles.
@@ -196,7 +210,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
                 label={showEditControls ? "완료" : "편집"}
                 pressed={showEditControls}
                 onClick={() => {
-                  setEditMode((value) => !value);
+                  startModeSwitch(() => setEditMode((value) => !value));
                   setFocusItemId(null);
                 }}
               />

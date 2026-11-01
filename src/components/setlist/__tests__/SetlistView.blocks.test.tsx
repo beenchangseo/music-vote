@@ -105,11 +105,12 @@ describe("SetlistView with a song deleted from the candidates", () => {
 describe("SetlistView edit mode", () => {
   const setlist = [at(0, { song_id: "pretty" }), at(1, { item_type: "interval", label: "멘트", duration_seconds: 60 }), at(2, { item_type: "original", label: "자작곡" })];
 
-  it("trades the rail for remove and a drag handle on every block", () => {
+  it("trades the rail for remove and a drag handle on every block", async () => {
     renderSetlist(setlist, "edit");
     expect(screen.queryAllByRole("button", { name: "삭제" })).toHaveLength(0);
 
     fireEvent.click(screen.getByRole("button", { name: "편집" }));
+    await screen.findByRole("button", { name: "맨 끝에 넣기" });
 
     for (const block of setlistBlocks()) {
       expect(within(block).getByRole("button", { name: "삭제" })).toBeInTheDocument();
@@ -119,11 +120,11 @@ describe("SetlistView edit mode", () => {
     expect(screen.queryByTestId("rail-end")).not.toBeInTheDocument();
   });
 
-  it("leaves only 완료 in the toolbar while editing", () => {
+  it("leaves only 완료 in the toolbar while editing", async () => {
     renderSetlist(setlist, "edit");
     fireEvent.click(screen.getByRole("button", { name: "편집" }));
 
-    expect(screen.getByRole("button", { name: "완료" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "완료" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "셋리 전체 듣기" })).not.toBeInTheDocument();
   });
 });

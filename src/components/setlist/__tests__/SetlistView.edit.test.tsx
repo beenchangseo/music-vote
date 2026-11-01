@@ -49,10 +49,16 @@ function Room({ initial, onItemsChange }: { initial: SetlistItem[]; onItemsChang
   );
 }
 
-function renderRoom(initial: SetlistItem[] = setlist, { edit = true } = {}) {
+/** The edit list is a separate chunk, so edit mode is ready once its last (+) is on screen. */
+async function openEditMode() {
+  fireEvent.click(screen.getByRole("button", { name: "편집" }));
+  await screen.findByRole("button", { name: "맨 끝에 넣기" });
+}
+
+async function renderRoom(initial: SetlistItem[] = setlist, { edit = true } = {}) {
   const onItemsChange = vi.fn();
   render(<Room initial={initial} onItemsChange={onItemsChange} />);
-  if (edit) fireEvent.click(screen.getByRole("button", { name: "편집" }));
+  if (edit) await openEditMode();
   return onItemsChange;
 }
 
@@ -88,11 +94,11 @@ afterEach(() => {
 });
 
 describe("SetlistView edit mode: (+) rows", () => {
-  it("puts a (+) above every drawn block and one at the end, and none outside edit mode", () => {
-    renderRoom(setlist, { edit: false });
+  it("puts a (+) above every drawn block and one at the end, and none outside edit mode", async () => {
+    await renderRoom(setlist, { edit: false });
     expect(screen.queryByRole("button", { name: "맨 끝에 넣기" })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "편집" }));
+    await openEditMode();
 
     expect(screen.getAllByRole("button", { name: /에 넣기$/ }).map((button) => button.getAttribute("aria-label"))).toEqual([
       "맨 앞에 넣기",
@@ -104,7 +110,7 @@ describe("SetlistView edit mode: (+) rows", () => {
   });
 
   it("inserts an interval at the (+) it was opened from and focuses the new block", async () => {
-    const onItemsChange = renderRoom();
+    const onItemsChange = await renderRoom();
     const added = at(9, { id: "new", item_type: "interval", label: "멘트", duration_seconds: 60 });
     const after = [pretty, hidden, { ...added, position: 2 }, { ...interval, position: 3 }, { ...cherry, position: 4 }];
     vi.mocked(insertSetlistBlock).mockResolvedValue({ success: true, itemId: "new", items: after });
@@ -128,7 +134,7 @@ describe("SetlistView edit mode: (+) rows", () => {
   });
 
   it("offers only candidates not in the setlist and inserts the picked one at that spot", async () => {
-    renderRoom();
+    await renderRoom();
     vi.mocked(insertSetlistBlock).mockResolvedValue({ success: true, itemId: "new", items: setlist });
 
     fireEvent.click(screen.getByRole("button", { name: "맨 앞에 넣기" }));
@@ -143,7 +149,7 @@ describe("SetlistView edit mode: (+) rows", () => {
   });
 
   it("keeps the sheet open with the reason when the insert is refused", async () => {
-    const onItemsChange = renderRoom();
+    const onItemsChange = await renderRoom();
     vi.mocked(insertSetlistBlock).mockResolvedValue({ success: false, reason: "not_editor" });
 
     fireEvent.click(screen.getByRole("button", { name: "맨 끝에 넣기" }));
@@ -159,7 +165,7 @@ describe("SetlistView edit mode: (+) rows", () => {
   });
 
   it("closes the sheet and says so when the block under the (+) is gone", async () => {
-    renderRoom();
+    await renderRoom();
     vi.mocked(insertSetlistBlock).mockResolvedValue({ success: false, reason: "slot_gone" });
 
     fireEvent.click(screen.getByRole("button", { name: "맨 앞에 넣기" }));
@@ -172,8 +178,8 @@ describe("SetlistView edit mode: (+) rows", () => {
 });
 
 describe("SetlistView edit mode: reordering", () => {
-  it("gives every block a handle in the rail cell instead of ▲▼ and start times", () => {
-    renderRoom();
+  it("gives every block a handle in the rail cell instead of ▲▼ and start times", async () => {
+    await renderRoom();
 
     expect(handles()).toEqual(["「예뻤어」 끌어서 순서 바꾸기", "「기타 셋업 변경」 끌어서 순서 바꾸기", "「벚꽃 엔딩」 끌어서 순서 바꾸기"]);
     expect(screen.queryByRole("button", { name: "위로" })).not.toBeInTheDocument();
@@ -183,7 +189,7 @@ describe("SetlistView edit mode: reordering", () => {
   });
 
   it("moves a block two places down from the keyboard, keeps the deleted song in its slot, and saves the whole order", async () => {
-    const onItemsChange = renderRoom();
+    const onItemsChange = await renderRoom();
     const saved = [{ ...interval, position: 0 }, { ...hidden, position: 1 }, { ...cherry, position: 2 }, { ...pretty, position: 3 }];
     vi.mocked(updateSetlistOrder).mockResolvedValue({ success: true, items: saved });
 
@@ -204,7 +210,7 @@ describe("SetlistView edit mode: reordering", () => {
   });
 
   it("saves nothing when the move is cancelled with Escape", async () => {
-    renderRoom();
+    await renderRoom();
 
     const handle = screen.getByRole("button", { name: "「벚꽃 엔딩」 끌어서 순서 바꾸기" });
     handle.focus();
@@ -220,7 +226,7 @@ describe("SetlistView edit mode: reordering", () => {
   });
 
   it("puts the order back and says why when the save is refused", async () => {
-    const onItemsChange = renderRoom();
+    const onItemsChange = await renderRoom();
     vi.mocked(updateSetlistOrder).mockResolvedValue({ success: false, reason: "not_editor" });
 
     const handle = screen.getByRole("button", { name: "「벚꽃 엔딩」 끌어서 순서 바꾸기" });
@@ -240,7 +246,7 @@ describe("SetlistView edit mode: reordering", () => {
 
 describe("SetlistView edit mode: removing", () => {
   it("hides the block at once and then draws the setlist the server returns", async () => {
-    const onItemsChange = renderRoom();
+    const onItemsChange = await renderRoom();
     dialog.showDanger.mockResolvedValue(true);
     const saved = deferred<{ success: true; items: SetlistItem[] }>();
     vi.mocked(removeSetlistItem).mockReturnValue(saved.promise);
@@ -258,7 +264,7 @@ describe("SetlistView edit mode: removing", () => {
   });
 
   it("puts the block back and says why when the delete is refused", async () => {
-    const onItemsChange = renderRoom();
+    const onItemsChange = await renderRoom();
     dialog.showDanger.mockResolvedValue(true);
     vi.mocked(removeSetlistItem).mockResolvedValue({ success: false, reason: "not_editor" });
 
@@ -271,8 +277,8 @@ describe("SetlistView edit mode: removing", () => {
 });
 
 describe("SetlistView add areas", () => {
-  it("keeps the bottom add buttons for an empty setlist and opens the sheet on that form", () => {
-    renderRoom([], { edit: false });
+  it("keeps the bottom add buttons for an empty setlist and opens the sheet on that form", async () => {
+    await renderRoom([], { edit: false });
 
     fireEvent.click(screen.getByRole("button", { name: "인터벌 블록 추가" }));
 
@@ -282,7 +288,7 @@ describe("SetlistView add areas", () => {
   });
 
   it("hands focus to 편집 after the first block lands in an empty setlist, and says what was added", async () => {
-    renderRoom([], { edit: false });
+    await renderRoom([], { edit: false });
     const added = at(0, { id: "new", item_type: "interval", label: "멘트", duration_seconds: 60 });
     vi.mocked(insertSetlistBlock).mockResolvedValue({ success: true, itemId: "new", items: [added] });
 
@@ -298,19 +304,19 @@ describe("SetlistView add areas", () => {
     expect(screen.getByText("「멘트」 블록을 넣었어요")).toHaveAttribute("role", "status");
   });
 
-  it("drops the bottom add buttons once the setlist has blocks, and hides the candidate list while editing", () => {
-    renderRoom(setlist, { edit: false });
+  it("drops the bottom add buttons once the setlist has blocks, and hides the candidate list while editing", async () => {
+    await renderRoom(setlist, { edit: false });
 
     expect(screen.queryByRole("button", { name: "인터벌 블록 추가" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "후보곡에서 넣기" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "편집" }));
+    await openEditMode();
 
     expect(screen.queryByRole("heading", { name: "후보곡에서 넣기" })).not.toBeInTheDocument();
   });
 
   it("appends a suggested candidate at the end", async () => {
-    const onItemsChange = renderRoom(setlist, { edit: false });
+    const onItemsChange = await renderRoom(setlist, { edit: false });
     vi.mocked(insertSetlistBlock).mockResolvedValue({ success: true, itemId: "new", items: setlist });
 
     fireEvent.click(screen.getByRole("button", { name: "사랑하긴 했었나요 셋리스트에 넣기" }));
