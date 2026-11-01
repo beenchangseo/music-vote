@@ -24,7 +24,8 @@ import RehearsalView from "../rehearsal/RehearsalView";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
 import { usePlaylistVotes } from "@/hooks/usePlaylistVotes";
 import { usePlaylistRealtime } from "@/hooks/usePlaylistRealtime";
-import { getSetlistItems, confirmSetlist, addSongToSetlist, removeSetlistItem } from "@/actions/setlist";
+import { getSetlistItems, confirmSetlist, insertSetlistBlock, removeSetlistItem } from "@/actions/setlist";
+import { setlistMessage } from "@/lib/setlist-messages";
 import { getComments } from "@/actions/comment";
 import { track } from "@/lib/analytics";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
@@ -168,20 +169,41 @@ export default function PlaylistClient({
     }
   }, [playlist.id, setlistItems, comments, loadingSetlist, loadingComments]);
 
+  // Bumped whenever a setlist write of mine lands. A read in flight across a bump may predate that write, so it is
+  // dropped. The read that applySetlistItems starts after every landed write covers anything it carried.
+  const setlistVersionRef = useRef(0);
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
+  const refetchSetlist = useCallback(() => {
+    const version = setlistVersionRef.current;
+    getSetlistItems(playlist.id)
+      .then((items) => {
+        if (version === setlistVersionRef.current) setSetlistItems(items);
+      })
+      .catch(() => undefined);
+  }, [playlist.id]);
+
   // 다른 참여자의 변경 알림. 셋리스트·댓글은 서버 렌더가 아니라
   // 클라이언트가 따로 받아둔 값이라 이미 열어본 목록만 다시 받아온다.
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
   const handleRemoteChange = useCallback(() => {
     router.refresh();
-    if (setlistItems !== null) {
-      getSetlistItems(playlist.id).then(setSetlistItems).catch(() => undefined);
-    }
+    if (setlistItems !== null) refetchSetlist();
     if (comments !== null) {
       getComments(playlist.id).then(setComments).catch(() => undefined);
     }
-  }, [router, playlist.id, setlistItems, comments]);
+  }, [router, playlist.id, setlistItems, comments, refetchSetlist]);
 
   const { notifyChange } = usePlaylistRealtime(shareCode, handleRemoteChange);
+
+  /** 서버에 닿은 셋리스트를 그리고 다른 화면에 알린다. */
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
+  const applySetlistItems = useCallback((items: SetlistItem[]) => {
+    setlistVersionRef.current += 1;
+    setSetlistItems(items);
+    notifyChange();
+    // The write's answer can be older than a read that already landed with another member's later change.
+    refetchSetlist();
+  }, [notifyChange, refetchSetlist]);
 
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
   const handleAllowanceChange = useCallback((usedVotes: number, voteLimit: number) => {
@@ -299,25 +321,24 @@ export default function PlaylistClient({
     if (!ok) return;
     const previous = setlistItems;
     setSetlistItems((prev) => prev?.filter((entry) => entry.id !== item.id) ?? prev);
-    try {
-      await removeSetlistItem(playlist.id, adminToken, item.id, shareCode);
-      notifyChange();
-    } catch {
-      setSetlistItems(previous);
-      showAlert("셋리스트에서 빼지 못했어요.");
+    const result = await removeSetlistItem(playlist.id, adminToken, item.id, shareCode).catch(() => null);
+    if (result?.success) {
+      applySetlistItems(result.items);
+      return;
     }
+    setSetlistItems(previous);
+    showAlert(result && result.reason !== "write_failed" ? setlistMessage(result.reason) : "셋리스트에서 빼지 못했어요.");
   }
 
   async function handleConfirmAddToSetlist() {
     if (!setlistConfirmSongId) return;
-    try {
-      const item = await addSongToSetlist(playlist.id, adminToken, setlistConfirmSongId, shareCode);
-      setSetlistItems((prev) => prev ? [...prev, item] : [item]);
-      setSetlistConfirmSongId(null);
-      notifyChange();
-    } catch {
-      showAlert("셋리스트 추가에 실패했습니다.");
+    const result = await insertSetlistBlock(playlist.id, { before: null }, { kind: "song", songId: setlistConfirmSongId }, shareCode).catch(() => null);
+    if (!result?.success) {
+      showAlert(setlistMessage(result?.reason ?? "write_failed"));
+      return;
     }
+    applySetlistItems(result.items);
+    setSetlistConfirmSongId(null);
   }
 
   // 한 줄 메타. 있는 것만 가운뎃점으로 잇는다. 곡 수가 맨 앞이다 (후보곡 툴바가 없어졌다).
@@ -668,10 +689,7 @@ export default function PlaylistClient({
               shareCode={shareCode}
               adminToken={adminToken}
               loading={loadingSetlist}
-              onItemsChange={(items) => {
-                setSetlistItems(items);
-                notifyChange();
-              }}
+              onItemsChange={applySetlistItems}
               title={playlist.title}
               access={setlistAccess}
               onPlay={handlePlayFromSetlist}

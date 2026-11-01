@@ -1,25 +1,43 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { startTransition as startModeSwitch, useCallback, useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
-import AddIntervalForm from "./AddIntervalForm";
-import AddOriginalForm from "./AddOriginalForm";
-import { IntervalBlock, MoveButton, OriginalBlock, SongBlock } from "./BlockCards";
+import { BlockCard } from "./BlockCards";
+import InsertSheet, { type InsertStep } from "./InsertSheet";
+import type { InsertTarget } from "./SetlistEditList";
 import SetlistItemEditModal from "./SetlistItemEditModal";
 import SetlistShareButton from "./SetlistShareButton";
 import { RailEnd, RailStart } from "./TimelineRail";
 import ScreenToolbar, { ToolbarButton } from "../ui/ScreenToolbar";
 import { useDialog } from "../ui/DialogProvider";
-import { addSongToSetlist, removeSetlistItem, updateSetlistOrder } from "@/actions/setlist";
+import { insertSetlistBlock, removeSetlistItem, updateSetlistOrder } from "@/actions/setlist";
 import { track } from "@/lib/analytics";
-import { formatRuntime, moveSetlistBlock, setlistBlocks, setlistPlayOrder, summarizeSetlist, type SetlistEditAccess } from "@/domain/setlist";
+import { setlistMessage } from "@/lib/setlist-messages";
+import {
+  formatRuntime,
+  moveSetlistBlock,
+  setlistBlocks,
+  setlistBlockTitle,
+  setlistInsertSlots,
+  setlistPlayOrder,
+  summarizeSetlist,
+  type NewSetlistBlock,
+  type SetlistEditAccess,
+} from "@/domain/setlist";
 import { displayArtist } from "@/domain/song-meta";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
 import type { PlayerState } from "@/hooks/usePlayerQueue";
 
 /** "후보곡에서 넣기"는 점수 높은 5곡 + 더 보기. */
 const COLLAPSED_SUGGESTIONS = 5;
+
+// dnd-kit rides in this chunk, so members who only read the setlist never download it. It has no `loading` on purpose.
+// Without one next/dynamic adds no Suspense of its own, and the edit-mode switch is a transition, so the view list stays
+// on screen until the chunk is in. The prefetch below calls this same loader. An import() written inside dynamic() gets
+// a wrapper chunk of its own, which costs one more round trip after the tap.
+const loadEditList = () => import("./SetlistEditList");
+const SetlistEditList = dynamic(loadEditList);
 
 interface Props {
   setlistItems: SetlistItem[];
@@ -29,6 +47,7 @@ interface Props {
   shareCode: string;
   adminToken: string | null;
   loading: boolean;
+  /** 서버에 닿은 셋리스트. 받는 쪽이 다른 화면에 알린다. */
   onItemsChange: (items: SetlistItem[]) => void;
   title: string;
   access: SetlistEditAccess;
@@ -40,8 +59,11 @@ interface Props {
 
 export default function SetlistView({ setlistItems, songs, playlistId, shareCode, adminToken, loading, onItemsChange, title, access, onPlay, player }: Props) {
   const [isPending, startTransition] = useTransition();
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [showAddOriginalForm, setShowAddOriginalForm] = useState(false);
+  // A drop or a removal shows at once and falls back to the server list when the write settles or fails.
+  const [shownItems, showItems] = useOptimistic(setlistItems, (current: SetlistItem[], change: (items: SetlistItem[]) => SetlistItem[]) => change(current));
+  const [inserting, setInserting] = useState<{ target: InsertTarget; step: InsertStep } | null>(null);
+  const [focusItemId, setFocusItemId] = useState<string | null>(null);
+  const [status, setStatus] = useState("");
   const [editing, setEditing] = useState<SetlistItem | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [showAllSuggestions, setShowAllSuggestions] = useState(false);
@@ -50,7 +72,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
   const canEdit = access === "edit";
 
   const songMap = useMemo(() => new Map(songs.map((song) => [song.id, song])), [songs]);
-  const sortedItems = useMemo(() => [...setlistItems].sort((a, b) => a.position - b.position), [setlistItems]);
+  const sortedItems = useMemo(() => [...shownItems].sort((a, b) => a.position - b.position), [shownItems]);
   const summary = useMemo(() => summarizeSetlist(sortedItems, songs), [sortedItems, songs]);
   // 공연 순서를 짤 때 알고 싶은 건 곡 길이가 아니라 "이 곡 시작할 때 몇 분 지났나"다.
   const blocks = useMemo(() => setlistBlocks(sortedItems, songs), [sortedItems, songs]);
@@ -64,58 +86,79 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
     return songs.filter((song) => !inSetlist.has(song.id));
   }, [songs, sortedItems]);
   const visibleSuggestions = showAllSuggestions ? suggestions : suggestions.slice(0, COLLAPSED_SUGGESTIONS);
-  // ▲▼ 로 옮긴 행이 순간이동하지 않고 움직이는 게 보이게 한다.
-  const [listParent] = useAutoAnimate({ duration: 250, easing: "ease-in-out" });
   const showEditControls = showEditToggle && editMode;
+  const editToggleRef = useRef<HTMLButtonElement>(null);
+
+  // Fetched once 편집 is on screen, so the tap swaps lists at once. A swap that lands more than 500ms after the tap counts
+  // as layout shift, and a slow phone network takes that long to bring the chunk.
+  useEffect(() => {
+    if (showEditToggle) void loadEditList();
+  }, [showEditToggle]);
+
+  // The view list has no handle to focus. It takes an insert only from the empty setlist, whose add buttons vanish once
+  // the block lands, so focus goes to the toggle that opens the handles.
+  useEffect(() => {
+    if (focusItemId && !showEditControls) editToggleRef.current?.focus();
+  }, [focusItemId, showEditControls]);
 
   function replaceItem(next: SetlistItem) {
     onItemsChange(setlistItems.map((item) => item.id === next.id ? next : item));
   }
 
-  function move(index: number, delta: -1 | 1) {
-    const target = index + delta;
-    if (!canEdit || target < 0 || target >= blocks.length) return;
-    const previous = [...setlistItems];
-    const reordered = moveSetlistBlock(setlistItems, blocks, index, target);
-    onItemsChange(reordered);
+  function reorder(activeId: string, overId: string) {
+    const next = moveSetlistBlock(shownItems, blocks, activeId, overId);
+    if (!canEdit || !next) return;
     startTransition(async () => {
-      try {
-        await updateSetlistOrder(playlistId, adminToken, reordered.map((item) => item.id), shareCode);
-      } catch (error) {
-        onItemsChange(previous);
-        showAlert(error instanceof Error ? error.message : "순서 변경에 실패했습니다.");
-      }
+      showItems(() => next);
+      const result = await updateSetlistOrder(playlistId, adminToken, next.map((item) => item.id), shareCode).catch(() => null);
+      if (result?.success) onItemsChange(result.items);
+      else showAlert(setlistMessage(result?.reason ?? "write_failed"));
     });
+  }
+
+  /** 넣으면 null, 시트에 남길 문구가 있으면 그 문구. */
+  async function insert(target: InsertTarget, block: NewSetlistBlock): Promise<string | null> {
+    const result = await insertSetlistBlock(playlistId, target.slot, block, shareCode).catch(() => null);
+    if (!result?.success) {
+      const reason = result?.reason ?? "write_failed";
+      if (reason !== "slot_gone") return setlistMessage(reason);
+      setInserting(null);
+      showAlert(setlistMessage(reason));
+      return null;
+    }
+    onItemsChange(result.items);
+    setInserting(null);
+    setFocusItemId(result.itemId);
+    const added = setlistBlocks(result.items, songs).find((candidate) => candidate.item.id === result.itemId);
+    if (added) setStatus(`「${setlistBlockTitle(added)}」 블록을 넣었어요`);
+    return null;
   }
 
   const remove = useCallback(async (itemId: string) => {
     const ok = await showDanger("이 항목을 삭제하시겠습니까?");
     if (!ok) return;
-    const previous = [...setlistItems];
-    onItemsChange(setlistItems.filter((item) => item.id !== itemId));
     startTransition(async () => {
-      try {
-        await removeSetlistItem(playlistId, adminToken, itemId, shareCode);
-      } catch (error) {
-        onItemsChange(previous);
-        showAlert(error instanceof Error ? error.message : "삭제에 실패했습니다.");
-      }
+      showItems((items) => items.filter((item) => item.id !== itemId));
+      const result = await removeSetlistItem(playlistId, adminToken, itemId, shareCode).catch(() => null);
+      if (result?.success) onItemsChange(result.items);
+      else showAlert(setlistMessage(result?.reason ?? "write_failed"));
     });
-  }, [adminToken, onItemsChange, playlistId, setlistItems, shareCode, showAlert, showDanger]);
+  }, [adminToken, onItemsChange, playlistId, shareCode, showAlert, showDanger, showItems]);
 
   function addFromCandidates(songId: string) {
     if (!canEdit || addingSongId) return;
     setAddingSongId(songId);
     startTransition(async () => {
-      try {
-        const item = await addSongToSetlist(playlistId, adminToken, songId, shareCode);
-        onItemsChange([...setlistItems, item]);
-      } catch (error) {
-        showAlert(error instanceof Error ? error.message : "셋리스트 추가에 실패했습니다.");
-      } finally {
-        setAddingSongId(null);
-      }
+      const result = await insertSetlistBlock(playlistId, { before: null }, { kind: "song", songId }, shareCode).catch(() => null);
+      if (result?.success) onItemsChange(result.items);
+      else showAlert(setlistMessage(result?.reason ?? "write_failed"));
+      setAddingSongId(null);
     });
+  }
+
+  function openAtEnd(step: InsertStep) {
+    const slots = setlistInsertSlots(blocks, summary.totalRuntime);
+    setInserting({ target: slots[slots.length - 1], step });
   }
 
   if (loading) {
@@ -163,9 +206,13 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
             )}
             {showEditToggle && (
               <ToolbarButton
+                ref={editToggleRef}
                 label={showEditControls ? "완료" : "편집"}
                 pressed={showEditControls}
-                onClick={() => setEditMode((value) => !value)}
+                onClick={() => {
+                  startModeSwitch(() => setEditMode((value) => !value));
+                  setFocusItemId(null);
+                }}
               />
             )}
             {/* Two lines on a phone, so the runtime keeps its cell. */}
@@ -173,108 +220,81 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
             {!showEditControls && <SetlistShareButton shareCode={shareCode} title={title} />}
           </>
         }
-      />
+      >
+        {showEditControls && <p className="mt-2 text-caption text-text-muted">≡ 를 끌어 순서를 바꾸고, (+) 로 그 자리에 넣어요</p>}
+      </ScreenToolbar>
 
       {blocks.length === 0 ? (
         <div className="py-10 text-center text-text-subtle">
           <p className="text-lg font-medium">셋리스트가 비어있어요</p>
           <p className="mt-1 text-sm">{canEdit ? "아래 후보곡에서 공연할 곡을 넣어 보세요." : "투표 리스트에서 곡을 추가해보세요."}</p>
         </div>
+      ) : showEditControls ? (
+        <SetlistEditList
+          blocks={blocks}
+          totalRuntime={summary.totalRuntime}
+          saving={isPending}
+          focusItemId={focusItemId}
+          onReorder={reorder}
+          onOpenSlot={(target) => setInserting({ target, step: "choose" })}
+          onEdit={setEditing}
+          onRemove={remove}
+        />
       ) : (
         <>
-          <ol ref={listParent} aria-label="셋리스트" className={isPending ? "opacity-70" : ""}>
+          <ol aria-label="셋리스트" className={isPending ? "opacity-70" : ""}>
             {blocks.map((block, index) => {
-              const edit = () => setEditing(block.item);
-              const drop = () => remove(block.item.id);
               const nowPlaying = block.kind === "song" && block.song.id === playingSongId;
               return (
                 <li key={block.item.id} className="grid grid-cols-[minmax(0,1fr)_3.5rem]" aria-current={nowPlaying ? "true" : undefined}>
                   <div className="flex flex-col justify-center py-1">
-                    {block.kind === "song" ? (
-                      <SongBlock
-                        item={block.item}
-                        song={block.song}
-                        editing={showEditControls}
-                        onEdit={edit}
-                        onRemove={drop}
-                        nowPlaying={nowPlaying}
-                        onPlay={onPlay && (() => onPlay(block.song.id))}
-                      />
-                    ) : block.kind === "original" ? (
-                      <OriginalBlock item={block.item} editing={showEditControls} onEdit={edit} onRemove={drop} />
-                    ) : (
-                      <IntervalBlock item={block.item} editing={showEditControls} onEdit={edit} onRemove={drop} />
-                    )}
+                    <BlockCard
+                      block={block}
+                      editing={false}
+                      onEdit={() => setEditing(block.item)}
+                      onRemove={() => remove(block.item.id)}
+                      nowPlaying={nowPlaying}
+                      onPlay={block.kind === "song" && onPlay ? () => onPlay(block.song.id) : undefined}
+                    />
                   </div>
-                  {showEditControls ? (
-                    <span className="flex flex-col items-center justify-center print:hidden">
-                      <MoveButton direction="up" disabled={index === 0} onClick={() => move(index, -1)} />
-                      <MoveButton direction="down" disabled={index === blocks.length - 1} onClick={() => move(index, 1)} />
-                    </span>
-                  ) : (
-                    <RailStart kind={block.kind} previous={blocks[index - 1]?.kind} start={block.start} />
-                  )}
+                  <RailStart kind={block.kind} previous={blocks[index - 1]?.kind} start={block.start} />
                 </li>
               );
             })}
           </ol>
-          {!showEditControls && <RailEnd last={blocks[blocks.length - 1].kind} total={summary.totalRuntime} />}
+          <RailEnd last={blocks[blocks.length - 1].kind} total={summary.totalRuntime} />
         </>
       )}
+      <p role="status" className="sr-only">
+        {status}
+      </p>
 
-      {canEdit && (
-        <div className="mt-3 print:hidden">
-          {showAddForm ? (
-            <AddIntervalForm
-              playlistId={playlistId}
-              shareCode={shareCode}
-              adminToken={adminToken}
-              nextPosition={sortedItems.length}
-              onAdded={(item) => {
-                onItemsChange([...setlistItems, item]);
-                setShowAddForm(false);
-              }}
-              onCancel={() => setShowAddForm(false)}
-            />
-          ) : showAddOriginalForm ? (
-            <AddOriginalForm
-              playlistId={playlistId}
-              shareCode={shareCode}
-              adminToken={adminToken}
-              nextPosition={sortedItems.length}
-              onAdded={(item) => {
-                onItemsChange([...setlistItems, item]);
-                setShowAddOriginalForm(false);
-              }}
-              onCancel={() => setShowAddOriginalForm(false)}
-            />
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setShowAddOriginalForm(true)}
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-pill border border-dashed border-primary/30 px-4 text-sm font-medium text-primary-fg transition-colors hover:bg-primary/10"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-                자작곡 블록 추가
-              </button>
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-pill border border-dashed border-warning/40 px-4 text-sm font-medium text-warning transition-colors hover:bg-warning-soft/30"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-                인터벌 블록 추가
-              </button>
-            </div>
-          )}
+      {/* Once the setlist has blocks, adding goes through the (+) rows in edit mode (grill decision 5). */}
+      {canEdit && blocks.length === 0 && (
+        <div className="mt-3 flex flex-wrap gap-2 print:hidden">
+          <button
+            onClick={() => openAtEnd("original")}
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-pill border border-dashed border-primary/30 px-4 text-sm font-medium text-primary-fg transition-colors hover:bg-primary/10"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            자작곡 블록 추가
+          </button>
+          <button
+            onClick={() => openAtEnd("interval")}
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-pill border border-dashed border-warning/40 px-4 text-sm font-medium text-warning transition-colors hover:bg-warning-soft/30"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            인터벌 블록 추가
+          </button>
         </div>
       )}
 
       {/* Spotify "추천 곡": candidates not in the setlist yet, best score first, one tap to add. */}
-      {canEdit && suggestions.length > 0 && (
+      {canEdit && !showEditControls && suggestions.length > 0 && (
         <section aria-labelledby="setlist-suggestions" className="mt-10 print:hidden">
           <h3 id="setlist-suggestions" className="text-h3 font-bold text-text">후보곡에서 넣기</h3>
           <p className="mt-0.5 text-caption text-text-muted">점수 높은 순이에요. 넣으면 셋리스트 맨 끝에 붙어요</p>
@@ -321,6 +341,16 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
             </button>
           )}
         </section>
+      )}
+
+      {inserting && (
+        <InsertSheet
+          target={inserting.target}
+          initialStep={inserting.step}
+          candidates={suggestions}
+          onInsert={(block) => insert(inserting.target, block)}
+          onClose={() => setInserting(null)}
+        />
       )}
 
       {editing && <SetlistItemEditModal item={editing} song={editing.song_id ? songMap.get(editing.song_id) : null} playlistId={playlistId} shareCode={shareCode} adminToken={adminToken} onSaved={replaceItem} onClose={() => setEditing(null)} />}

@@ -2,47 +2,32 @@
 
 import { createAdminClient } from "@/lib/supabase/server";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
-import { assertSetlistEditor } from "@/lib/setlist-permissions";
+import { assertSetlistEditor, setlistEditorDenial } from "@/lib/setlist-permissions";
+import { setlistMessage, setlistReasonFromDatabase, type SetlistReason } from "@/lib/setlist-messages";
 import { revalidatePath } from "next/cache";
-import type { SetlistItem } from "@/domain/types";
+import { parseBlockFields, type NewSetlistBlock, type SetlistSlot } from "@/domain/setlist";
+import type { ActionResult, SetlistItem } from "@/domain/types";
 
-export interface IntervalInput {
+export interface BlockFieldsInput {
   label: string;
   description: string;
   duration_seconds: number;
-  position: number;
 }
 
-export type OriginalInput = IntervalInput;
+/** 셋리 전체를 돌려주는 쓰기. items 는 쓰기 직후 서버의 셋리스트다. */
+export type SetlistItemsResult = ActionResult<{ items: SetlistItem[] }, SetlistReason>;
+export type InsertSetlistBlockResult = ActionResult<{ itemId: string; items: SetlistItem[] }, SetlistReason>;
 
-function validateInterval(item: IntervalInput) {
-  const label = item.label.trim();
-  const description = item.description.trim();
-  if (!label || label.length > 50) {
-    throw new Error("블록 이름은 1~50자여야 합니다.");
-  }
-  if (description.length > 200) {
-    throw new Error("설명은 200자 이내여야 합니다.");
-  }
-  if (!Number.isInteger(item.duration_seconds) || item.duration_seconds < 0) {
-    throw new Error("시간은 0 이상의 정수여야 합니다.");
-  }
-  return { label, description: description || null };
+function cleanBlockFields(kind: "interval" | "original", item: BlockFieldsInput) {
+  const clean = parseBlockFields(kind, { label: item.label, description: item.description, durationSeconds: item.duration_seconds });
+  if (!clean) throw new Error(setlistMessage("invalid_block"));
+  return clean;
 }
 
-function validateOriginal(item: OriginalInput) {
-  const label = item.label.trim();
-  const description = item.description.trim();
-  if (!label || label.length > 100) {
-    throw new Error("곡 이름은 1~100자여야 합니다.");
-  }
-  if (description.length > 200) {
-    throw new Error("설명은 200자 이내여야 합니다.");
-  }
-  if (!Number.isInteger(item.duration_seconds) || item.duration_seconds < 0) {
-    throw new Error("시간은 0 이상의 정수여야 합니다.");
-  }
-  return { label, description: description || null };
+/** v26 함수가 돌려준 셋리스트. 모양이 다르면 null. */
+function setlistFrom(data: unknown): SetlistItem[] | null {
+  const items = (data as { items?: unknown } | null)?.items;
+  return Array.isArray(items) ? (items as SetlistItem[]) : null;
 }
 
 export async function getSetlistItems(playlistId: string): Promise<SetlistItem[]> {
@@ -52,7 +37,10 @@ export async function getSetlistItems(playlistId: string): Promise<SetlistItem[]
     .from("setlist_items")
     .select("*")
     .eq("playlist_id", playlistId)
-    .order("position", { ascending: true });
+    // Same tie-break as the v26 position functions, so a legacy tie draws in the order the server renumbers it.
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true });
   return (data || []) as SetlistItem[];
 }
 
@@ -91,51 +79,22 @@ export async function confirmSetlist(
   return { success: true };
 }
 
-export async function addIntervalItem(
-  playlistId: string,
-  adminToken: string | null,
-  item: IntervalInput,
-  shareCode: string,
-): Promise<SetlistItem> {
-  await assertSetlistEditor(playlistId, adminToken);
-  const clean = validateInterval(item);
-  const admin = createAdminClient();
-  const { data, error } = await admin
-    .from("setlist_items")
-    .insert({
-      playlist_id: playlistId,
-      position: item.position,
-      item_type: "interval",
-      song_id: null,
-      label: clean.label,
-      description: clean.description,
-      duration_seconds: item.duration_seconds,
-      title_override: null,
-      duration_override_seconds: null,
-    })
-    .select("*")
-    .single();
-  if (error || !data) throw new Error("인터벌 블록 추가에 실패했습니다.");
-  revalidatePath(`/playlist/${shareCode}`);
-  return data as SetlistItem;
-}
-
 export async function updateIntervalItem(
   playlistId: string,
   adminToken: string | null,
   itemId: string,
-  item: Omit<IntervalInput, "position">,
+  item: BlockFieldsInput,
   shareCode: string,
 ): Promise<SetlistItem> {
-  await assertSetlistEditor(playlistId, adminToken);
-  const clean = validateInterval({ ...item, position: 0 });
+  await assertSetlistEditor(playlistId);
+  const clean = cleanBlockFields("interval", item);
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("setlist_items")
     .update({
       label: clean.label,
       description: clean.description,
-      duration_seconds: item.duration_seconds,
+      duration_seconds: clean.durationSeconds,
     })
     .eq("id", itemId)
     .eq("playlist_id", playlistId)
@@ -147,51 +106,22 @@ export async function updateIntervalItem(
   return data as SetlistItem;
 }
 
-export async function addOriginalItem(
-  playlistId: string,
-  adminToken: string | null,
-  item: OriginalInput,
-  shareCode: string,
-): Promise<SetlistItem> {
-  await assertSetlistEditor(playlistId, adminToken);
-  const clean = validateOriginal(item);
-  const admin = createAdminClient();
-  const { data, error } = await admin
-    .from("setlist_items")
-    .insert({
-      playlist_id: playlistId,
-      position: item.position,
-      item_type: "original",
-      song_id: null,
-      label: clean.label,
-      description: clean.description,
-      duration_seconds: item.duration_seconds,
-      title_override: null,
-      duration_override_seconds: null,
-    })
-    .select("*")
-    .single();
-  if (error || !data) throw new Error("자작곡 추가에 실패했습니다.");
-  revalidatePath(`/playlist/${shareCode}`);
-  return data as SetlistItem;
-}
-
 export async function updateOriginalItem(
   playlistId: string,
   adminToken: string | null,
   itemId: string,
-  item: Omit<OriginalInput, "position">,
+  item: BlockFieldsInput,
   shareCode: string,
 ): Promise<SetlistItem> {
-  await assertSetlistEditor(playlistId, adminToken);
-  const clean = validateOriginal({ ...item, position: 0 });
+  await assertSetlistEditor(playlistId);
+  const clean = cleanBlockFields("original", item);
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("setlist_items")
     .update({
       label: clean.label,
       description: clean.description,
-      duration_seconds: item.duration_seconds,
+      duration_seconds: clean.durationSeconds,
     })
     .eq("id", itemId)
     .eq("playlist_id", playlistId)
@@ -203,48 +133,42 @@ export async function updateOriginalItem(
   return data as SetlistItem;
 }
 
-export async function addSongToSetlist(
+/**
+ * 블록을 slot 자리에 넣는다. 뒤 블록을 미는 일과 동시에 넣는 다른 편집자와의 줄 세우기는 insert_setlist_item(v26)이
+ * 한 트랜잭션 안에서 한다.
+ */
+export async function insertSetlistBlock(
   playlistId: string,
-  adminToken: string | null,
-  songId: string,
+  slot: SetlistSlot,
+  block: NewSetlistBlock,
   shareCode: string,
-): Promise<SetlistItem> {
-  await assertSetlistEditor(playlistId, adminToken);
-  const admin = createAdminClient();
-  const { data: song } = await admin
-    .from("songs")
-    .select("id")
-    .eq("id", songId)
-    .eq("playlist_id", playlistId)
-    .single();
-  if (!song) throw new Error("곡을 찾을 수 없습니다.");
+): Promise<InsertSetlistBlockResult> {
+  const fields = block.kind === "song" ? null : parseBlockFields(block.kind, block);
+  if (block.kind === "song" ? !block.songId : !fields) return { success: false, reason: "invalid_block" };
 
-  const { data: existing } = await admin
-    .from("setlist_items")
-    .select("position")
-    .eq("playlist_id", playlistId)
-    .order("position", { ascending: false })
-    .limit(1);
-  const nextPosition = existing && existing.length > 0 ? existing[0].position + 1 : 0;
+  const denial = await setlistEditorDenial(playlistId);
+  if (denial) return { success: false, reason: denial };
 
-  const { data, error } = await admin
-    .from("setlist_items")
-    .insert({
-      playlist_id: playlistId,
-      position: nextPosition,
-      item_type: "song",
-      song_id: songId,
-      label: null,
-      description: null,
-      duration_seconds: 0,
-      title_override: null,
-      duration_override_seconds: null,
-    })
-    .select("*")
-    .single();
-  if (error || !data) throw new Error("셋리스트 추가에 실패했습니다.");
+  const { data, error } = await createAdminClient().rpc("insert_setlist_item", {
+    p_playlist_id: playlistId,
+    p_before_item_id: slot.before,
+    p_item_type: block.kind,
+    p_song_id: block.kind === "song" ? block.songId : null,
+    p_label: fields?.label ?? null,
+    p_description: fields?.description ?? null,
+    p_duration_seconds: fields?.durationSeconds ?? 0,
+  });
+  if (error) {
+    const reason = setlistReasonFromDatabase(error.message);
+    if (reason === "write_failed") console.error("insertSetlistBlock", playlistId, error.code);
+    return { success: false, reason };
+  }
+  const items = setlistFrom(data);
+  const itemId = (data as { item_id?: unknown } | null)?.item_id;
+  if (!items || typeof itemId !== "string") return { success: false, reason: "write_failed" };
+
   revalidatePath(`/playlist/${shareCode}`);
-  return data as SetlistItem;
+  return { success: true, itemId, items };
 }
 
 export async function updateSongSetlistItem(
@@ -255,7 +179,7 @@ export async function updateSongSetlistItem(
   durationSeconds: number,
   shareCode: string,
 ): Promise<SetlistItem> {
-  await assertSetlistEditor(playlistId, adminToken);
+  await assertSetlistEditor(playlistId);
   const cleanTitle = title.trim();
   if (!cleanTitle || cleanTitle.length > 200) {
     throw new Error("곡 제목은 1~200자여야 합니다.");
@@ -287,7 +211,7 @@ export async function resetSongSetlistItem(
   itemId: string,
   shareCode: string,
 ): Promise<SetlistItem> {
-  await assertSetlistEditor(playlistId, adminToken);
+  await assertSetlistEditor(playlistId);
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("setlist_items")
@@ -302,24 +226,33 @@ export async function resetSongSetlistItem(
   return data as SetlistItem;
 }
 
+/**
+ * 셋리 전체 순서를 저장한다. reorder_setlist_items(v26)가 한 번에 쓰고, 화면이 모르는 블록(그 사이 다른 멤버가 넣은
+ * 것)은 제자리에 둔다.
+ */
 export async function updateSetlistOrder(
   playlistId: string,
   adminToken: string | null,
   itemIds: string[],
   shareCode: string,
-) {
-  await assertSetlistEditor(playlistId, adminToken);
-  const admin = createAdminClient();
-  for (let i = 0; i < itemIds.length; i++) {
-    const { error } = await admin
-      .from("setlist_items")
-      .update({ position: i })
-      .eq("id", itemIds[i])
-      .eq("playlist_id", playlistId);
-    if (error) throw new Error("순서 변경에 실패했습니다.");
+): Promise<SetlistItemsResult> {
+  const denial = await setlistEditorDenial(playlistId);
+  if (denial) return { success: false, reason: denial };
+
+  const { data, error } = await createAdminClient().rpc("reorder_setlist_items", {
+    p_playlist_id: playlistId,
+    p_item_ids: itemIds,
+  });
+  if (error) {
+    const reason = setlistReasonFromDatabase(error.message);
+    if (reason === "write_failed") console.error("updateSetlistOrder", playlistId, error.code);
+    return { success: false, reason };
   }
+  const items = setlistFrom(data);
+  if (!items) return { success: false, reason: "write_failed" };
+
   revalidatePath(`/playlist/${shareCode}`);
-  return { success: true };
+  return { success: true, items };
 }
 
 export async function removeSetlistItem(
@@ -327,15 +260,19 @@ export async function removeSetlistItem(
   adminToken: string | null,
   itemId: string,
   shareCode: string,
-) {
-  await assertSetlistEditor(playlistId, adminToken);
-  const admin = createAdminClient();
-  const { error } = await admin
+): Promise<SetlistItemsResult> {
+  const denial = await setlistEditorDenial(playlistId);
+  if (denial) return { success: false, reason: denial };
+  // No row count check: 0 rows means another editor removed it first, which is the end state asked for.
+  const { error } = await createAdminClient()
     .from("setlist_items")
     .delete()
     .eq("id", itemId)
     .eq("playlist_id", playlistId);
-  if (error) throw new Error("항목 삭제에 실패했습니다.");
+  if (error) {
+    console.error("removeSetlistItem", playlistId, error.code);
+    return { success: false, reason: "write_failed" };
+  }
   revalidatePath(`/playlist/${shareCode}`);
-  return { success: true };
+  return { success: true, items: await getSetlistItems(playlistId) };
 }

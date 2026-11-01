@@ -51,7 +51,6 @@ function renderView(access: SetlistEditAccess, setlistItems: SetlistItem[] = [it
 function editorControls() {
   return [
     screen.queryByRole("button", { name: "편집" }),
-    screen.queryByRole("button", { name: /자작곡 블록 추가/ }),
     screen.queryByRole("heading", { name: "후보곡에서 넣기" }),
   ];
 }

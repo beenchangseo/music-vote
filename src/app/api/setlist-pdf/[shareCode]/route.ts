@@ -58,7 +58,9 @@ export async function GET(
     .from("setlist_items")
     .select("position, item_type, song_id, label, description, duration_seconds, title_override, duration_override_seconds")
     .eq("playlist_id", playlist.id)
-    .order("position", { ascending: true });
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true });
   if (itemError) return new Response("셋리스트를 불러오지 못했습니다.", { status: 500 });
   const items = (itemRows || []) as ItemRow[];
 

@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 import Image from "next/image";
 import Badge from "../ui/Badge";
-import { effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime } from "@/domain/setlist";
+import { effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, type SetlistBlock } from "@/domain/setlist";
 import { displayArtist, formatKey } from "@/domain/song-meta";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
 import { BLOCK_TONES, type BlockKind } from "./block-tones";
@@ -193,18 +193,20 @@ export function IntervalBlock({ item, editing, onEdit, onRemove }: BlockProps) {
   );
 }
 
-export function MoveButton({ direction, disabled, onClick }: { direction: "up" | "down"; disabled: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="flex size-11 items-center justify-center rounded-pill text-text-muted transition-colors hover:bg-surface-hover hover:text-text disabled:opacity-30"
-      aria-label={direction === "up" ? "위로" : "아래로"}
-    >
-      <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.25} viewBox="0 0 24 24" aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" d={direction === "up" ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"} />
-      </svg>
-    </button>
-  );
+interface BlockCardProps {
+  block: SetlistBlock<SongWithScore>;
+  editing: boolean;
+  onEdit: () => void;
+  onRemove: () => void;
+  nowPlaying?: boolean;
+  onPlay?: () => void;
+}
+
+/** 블록 종류에 맞는 카드. 보기 목록·편집 목록·끄는 카드가 같이 쓴다. */
+export function BlockCard({ block, editing, onEdit, onRemove, nowPlaying = false, onPlay }: BlockCardProps) {
+  if (block.kind === "song") {
+    return <SongBlock item={block.item} song={block.song} editing={editing} onEdit={onEdit} onRemove={onRemove} nowPlaying={nowPlaying} onPlay={onPlay} />;
+  }
+  if (block.kind === "original") return <OriginalBlock item={block.item} editing={editing} onEdit={onEdit} onRemove={onRemove} />;
+  return <IntervalBlock item={block.item} editing={editing} onEdit={onEdit} onRemove={onRemove} />;
 }

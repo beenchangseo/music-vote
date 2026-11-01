@@ -8,7 +8,7 @@ import type { PlayerState } from "@/hooks/usePlayerQueue";
 import SetlistView from "../SetlistView";
 
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
-vi.mock("@/actions/setlist", () => ({ addSongToSetlist: vi.fn(), removeSetlistItem: vi.fn(), updateSetlistOrder: vi.fn() }));
+vi.mock("@/actions/setlist", () => ({ insertSetlistBlock: vi.fn(), removeSetlistItem: vi.fn(), updateSetlistOrder: vi.fn() }));
 vi.mock("@formkit/auto-animate/react", () => ({ useAutoAnimate: () => [vi.fn()] }));
 vi.mock("../../ui/DialogProvider", () => ({ useDialog: () => ({ showAlert: vi.fn(), showDanger: vi.fn() }) }));
 vi.mock("../SetlistShareButton", () => ({ default: () => null }));

@@ -180,6 +180,9 @@ Variable(한국어) + Geist(영문) 폴백.
   이걸 빼서 키·BPM 저장이 한동안 조용히 실패했다.
 - 공개 키로는 `songs` UPDATE, `votes` 읽기·쓰기, `teams`·`team_members` 접근이 모두 막혀 있다(`docs/adr/0013`,
   `0014`). 투표 조회는 `song_vote_summary`·`song_voters` 뷰로, 쓰기는 service_role 이나 SECURITY DEFINER 함수로 한다.
+- 셋리 블록을 넣거나 순서를 바꾸는 쓰기는 `insertSetlistBlock`·`updateSetlistOrder` 를 거쳐 v26 의
+  `insert_setlist_item`·`reorder_setlist_items` 로 한다. 둘이 같은 잠금으로 줄을 서서 동시에 넣어도 position 이
+  겹치지 않는다. `setlist_items.position` 을 직접 쓰는 새 경로를 만들지 않는다.
 
 ## 개발 도구
 

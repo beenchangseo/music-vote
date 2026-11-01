@@ -167,6 +167,11 @@ const REVOKED_RPCS = [
   ["set_member_vote_limit", { p_playlist_id: NONE, p_user_id: NONE, p_vote_limit: 1 }],
   ["apply_vote_limit_to_all", { p_playlist_id: NONE, p_vote_limit: 1 }],
 ];
+// v26 의 셋리 position 함수는 service_role 전용이다. 열리면 공유 링크만 아는 사람이 남의 셋리를 바꿀 수 있다.
+REVOKED_RPCS.push(
+  ["insert_setlist_item", { p_playlist_id: NONE, p_before_item_id: NONE, p_item_type: "interval", p_song_id: null, p_label: "점검", p_description: null, p_duration_seconds: 0 }],
+  ["reorder_setlist_items", { p_playlist_id: NONE, p_item_ids: [] }],
+);
 for (const [fn, args] of REVOKED_RPCS) {
   const probe = await anon.rpc(fn, args);
   if (probe.error?.code === "42501") report(`${fn} RPC`, "pass", "권한 거부 42501");

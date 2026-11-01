@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { buttonClassName } from "./Button";
 
 interface ScreenToolbarProps {
@@ -39,7 +39,7 @@ export default function ScreenToolbar({ stat, caption, actions, children }: Scre
   );
 }
 
-type ToolbarButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className" | "children" | "aria-pressed"> & {
+type ToolbarButtonProps = Omit<ComponentPropsWithRef<"button">, "className" | "children" | "aria-pressed"> & {
   label: string;
   /** 켜고 끄는 동작(편집 ↔ 완료)이 켜진 상태. 켜지면 primary 로 칠하고 aria-pressed 를 단다. */
   pressed?: boolean;
