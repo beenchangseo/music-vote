@@ -121,6 +121,10 @@ Variable(한국어) + Geist(영문) 폴백.
 
 - `Button`: variant `primary`·`tonal`·`ghost`·`danger`·`kakao`, size `sm`·`md`·`lg`·`icon`, `loading`(aria-busy).
   버튼처럼 보이는 `<Link>` 는 `buttonClassName()`. 카카오 노랑은 `kakao` 변형으로만 칠한다(말풍선 표시를 그린다).
+- 켜고 끄는 버튼은 `pressed` 다(켜지면 primary, `aria-pressed`). `ToolbarButton` 의 `pressed` 도 같은 것이다. 켜고 꺼도
+  폭이 그대로여야 한다. 폭이 바뀌면 좁은 화면에서 줄이 꺾여 카드가 길어진다. 글자는 두 상태에서 같게 두거나(메트로놈)
+  같은 글자 수의 한글로만 바꾸고(편집 ↔ 완료. Pretendard 한글은 글자 폭이 같다), 켜졌을 때만 움직이는 표시(박자 점)도
+  꺼졌을 때 자리를 둔다.
 - 채운 `primary` 버튼은 화면에 하나다. 나란한 보조 동작은 `tonal`, 덜 중요한 동작은 `ghost`. 같은 일을 하는 버튼을 두
   개 두지 않는다. 나란한 버튼 둘은 `ButtonGroup`(같은 폭).
 - 고르기: 필터·켜고 끄는 선택지는 `Chip`(36px, 누르는 영역 44px), 한 화면 안 보기·방식 하나는 `SegmentedControl`

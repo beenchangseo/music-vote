@@ -132,6 +132,16 @@ export default function DesignPage() {
             +
           </Button>
         </div>
+        <h3 className="mt-6 text-sm font-semibold text-text-muted">켜고 끄기</h3>
+        <p className="mt-1 text-caption text-text-subtle">pressed 를 주면 켜진 쪽이 primary 예요. 글자는 그대로 둬서 켜고 꺼도 폭이 같아요.</p>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <Button variant="tonal" size="sm" pressed={false}>
+            메트로놈
+          </Button>
+          <Button variant="tonal" size="sm" pressed>
+            메트로놈
+          </Button>
+        </div>
         <Button size="lg" fullWidth className="mt-3">
           fullWidth
         </Button>

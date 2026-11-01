@@ -133,10 +133,6 @@ export default function RehearsalView({
   }
 
   function toggleMetronome() {
-    if (!metronome.isPlaying && !bpm) {
-      openMeta();
-      return;
-    }
     track("rehearsal_action", { action: metronome.isPlaying ? "metronome_off" : "metronome_on" });
     metronome.toggle();
   }
@@ -204,36 +200,35 @@ export default function RehearsalView({
         )
       )}
 
-      {/* 메트로놈. 페이지를 나가면 합주 흐름이 끊긴다. 탭 템포가 바로 옆에서 BPM 을 채운다. */}
+      {/*
+        메트로놈. 페이지를 나가면 합주 흐름이 끊긴다. 탭 템포가 바로 옆에서 BPM 을 채운다.
+        켜고 꺼도 글자와 박자 점 자리가 같아서 폭이 그대로다. 점 자리를 두고도 320px 에서 한 줄에
+        들도록 BPM 은 글자에 넣지 않는다. 바로 위 BPM 칸이 보여 주고, 스크린 리더는 이름으로 읽는다.
+      */}
       <div className="mt-2 flex flex-wrap gap-2">
-        <Button
-          variant={metronome.isPlaying ? "primary" : "tonal"}
-          size="sm"
-          onClick={toggleMetronome}
-          disabled={!metronome.isPlaying && !currentSong && !bpm}
-        >
-          <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-            <path d="M9 3h6l4 18H5z" />
-            <path d="M12 17V8" />
-          </svg>
-          {metronome.isPlaying
-            ? `메트로놈 끄기${bpm ? ` · ${bpm}` : ""}`
-            : bpm
-              ? `메트로놈 · ${bpm}`
-              : currentSong
-                ? "BPM 적고 메트로놈 켜기"
-                : "탭 템포로 BPM 맞추기"}
-          {metronome.isPlaying && (
+        {bpm || metronome.isPlaying ? (
+          <Button
+            variant="tonal"
+            size="sm"
+            pressed={metronome.isPlaying}
+            aria-label={bpm ? `메트로놈 ${bpm} BPM` : undefined}
+            onClick={toggleMetronome}
+          >
+            메트로놈
             <span className="flex items-center gap-1" aria-hidden>
               {Array.from({ length: metronome.beatsPerBar }, (_, i) => (
                 <span
                   key={i}
-                  className={`size-1.5 rounded-pill transition-colors ${metronome.beat === i ? "bg-on-primary" : "bg-on-primary/35"}`}
+                  className={`size-1.5 rounded-pill transition-colors ${!metronome.isPlaying ? "bg-border-strong" : metronome.beat === i ? "bg-on-primary" : "bg-on-primary/35"}`}
                 />
               ))}
             </span>
-          )}
-        </Button>
+          </Button>
+        ) : (
+          <Button variant="tonal" size="sm" onClick={openMeta} disabled={!currentSong}>
+            {currentSong ? "BPM 적고 메트로놈 켜기" : "탭 템포로 BPM 맞추기"}
+          </Button>
+        )}
         <TapTempoButton
           key={current.id}
           onTempo={(value) => keepTappedBpm(current, value)}

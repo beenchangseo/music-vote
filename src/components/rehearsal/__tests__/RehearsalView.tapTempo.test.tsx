@@ -25,6 +25,25 @@ const item = (id: string, songId: string, position: number) =>
 
 let clock = 0;
 
+function stubAudioContext() {
+  vi.stubGlobal(
+    "AudioContext",
+    class {
+      state = "running";
+      currentTime = 0;
+      destination = {};
+      resume() {}
+      close() {}
+      createOscillator() {
+        return { connect() {}, frequency: {}, start() {}, stop() {} };
+      }
+      createGain() {
+        return { connect() {}, gain: { setValueAtTime() {}, exponentialRampToValueAtTime() {} } };
+      }
+    },
+  );
+}
+
 function renderRehearsal(firstBpm: number | null = null) {
   render(
     <RehearsalView
@@ -79,7 +98,7 @@ describe("RehearsalView tap tempo", () => {
 
     tap(1);
     expect(screen.getByRole("button", { name: "BPM 120 고치기" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /메트로놈 · 120/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "메트로놈 120 BPM" })).toBeInTheDocument();
     expect(updateSongMeta).not.toHaveBeenCalled();
 
     await idle();
@@ -109,6 +128,22 @@ describe("RehearsalView tap tempo", () => {
     expect(screen.getByRole("button", { name: "BPM 90 고치기" })).toBeInTheDocument();
   });
 
+  it("keeps the metronome's name and text when it is turned on and off, and says which with aria-pressed", () => {
+    stubAudioContext();
+    renderRehearsal(107);
+    const metronome = screen.getByRole("button", { name: "메트로놈 107 BPM" });
+    const text = metronome.textContent;
+    expect(metronome).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(metronome);
+    expect(screen.getByRole("button", { name: "메트로놈 107 BPM" })).toHaveAttribute("aria-pressed", "true");
+    expect(metronome.textContent).toBe(text);
+
+    fireEvent.click(metronome);
+    expect(screen.getByRole("button", { name: "메트로놈 107 BPM" })).toHaveAttribute("aria-pressed", "false");
+    expect(metronome.textContent).toBe(text);
+  });
+
   describe("on an original", () => {
     const original = { ...item("i3", "s1", 1), item_type: "original", song_id: null, label: "우리 노래", duration_seconds: 200 } as SetlistItem;
     const renderWithOriginal = () =>
@@ -133,7 +168,7 @@ describe("RehearsalView tap tempo", () => {
 
       tap(4);
       await idle();
-      expect(screen.getByRole("button", { name: /메트로놈 · 120/ })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "메트로놈 120 BPM" })).toBeEnabled();
       expect(track).toHaveBeenCalledWith("tap_tempo_used", { taps: 4 });
       expect(updateSongMeta).not.toHaveBeenCalled();
     });
@@ -147,35 +182,20 @@ describe("RehearsalView tap tempo", () => {
       tap(4, 600);
       await idle();
       go("이전 곡");
-      expect(screen.getByRole("button", { name: /메트로놈 · 120/ })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "메트로놈 120 BPM" })).toBeInTheDocument();
     });
 
     it("stops a running metronome when moving to it without a BPM", () => {
-      vi.stubGlobal(
-        "AudioContext",
-        class {
-          state = "running";
-          currentTime = 0;
-          destination = {};
-          resume() {}
-          close() {}
-          createOscillator() {
-            return { connect() {}, frequency: {}, start() {}, stop() {} };
-          }
-          createGain() {
-            return { connect() {}, gain: { setValueAtTime() {}, exponentialRampToValueAtTime() {} } };
-          }
-        },
-      );
+      stubAudioContext();
       renderWithOriginal();
-      go("메트로놈 · 100");
-      expect(screen.getByRole("button", { name: /메트로놈 끄기 · 100/ })).toBeInTheDocument();
+      go("메트로놈 100 BPM");
+      expect(screen.getByRole("button", { name: "메트로놈 100 BPM" })).toHaveAttribute("aria-pressed", "true");
 
       go("다음으로");
       expect(screen.getByRole("button", { name: "탭 템포로 BPM 맞추기" })).toBeDisabled();
 
       go("이전 곡");
-      expect(screen.getByRole("button", { name: "메트로놈 · 100" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "메트로놈 100 BPM" })).toHaveAttribute("aria-pressed", "false");
     });
   });
 

@@ -10,6 +10,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
   /** 카카오 말풍선을 글자 앞에 붙인다. kakao 변형은 기본으로 붙는다. */
   kakaoMark?: boolean;
+  /**
+   * 켜고 끄는 버튼의 켜진 상태. 켜지면 primary 로 칠하고 aria-pressed 를 단다.
+   * 글자는 두 상태에서 같게 둔다. 바뀌면 폭이 바뀌어 줄이 꺾인다.
+   */
+  pressed?: boolean;
 }
 
 const variantClasses: Record<Variant, string> = {
@@ -62,6 +67,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
     loading = false,
     fullWidth = false,
     kakaoMark = variant === "kakao",
+    pressed,
     disabled,
     className = "",
     children,
@@ -74,7 +80,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
       ref={ref}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={buttonClassName({ variant, size, fullWidth, className })}
+      aria-pressed={pressed}
+      className={buttonClassName({ variant: pressed ? "primary" : variant, size, fullWidth, className })}
       {...rest}
     >
       {loading ? (
