@@ -6,14 +6,17 @@
 -- 하는 일
 --   insert_setlist_item   p_before_item_id 블록 바로 앞(null 이면 맨 끝)에 새 블록을 넣는다. 그 뒤 블록을 한 칸씩 민다.
 --                         지금까지는 화면이 보낸 position 을 그대로 넣거나(인터벌·자작곡) max+1 에 붙여서(곡), 두 사람이
---                         동시에 넣거나 빈자리가 있으면 position 이 겹쳤다.
+--                         동시에 넣거나 빈자리가 있으면 position 이 겹쳤다. p_before_item_id 블록을 지운 일이 먼저
+--                         커밋됐으면 slot_gone 이다. 블록 지우기는 이 잠금 밖이라, 아직 커밋되지 않은 지우기와 겹치면
+--                         새 블록은 그 블록이 있던 자리에 들어간다.
 --   reorder_setlist_items 전체 순서를 UPDATE 한 번으로 쓴다. 지금까지는 블록마다 UPDATE 를 따로 보내서, 중간에 실패하거나
 --                         넣기와 겹치면 position 이 겹쳤다. 화면이 모르는 블록(그 사이 다른 멤버가 넣은 것)은 제자리를
 --                         지킨다. 화면의 moveSetlistBlock 이 숨은 블록을 제자리에 두는 규칙과 같다. 그 사이 지워진 id 는 건너뛴다.
 --   둘 다 같은 플레이리스트의 셋리 쓰기를 트랜잭션 advisory lock 으로 줄 세우고, 0..n-1 로 다시 매기고, 셋리 전체를
 --   돌려준다. 같은 position 은 created_at·id 로 가른다(getSetlistItems 의 정렬과 같다). playlists 행을 잠그지 않아서
 --   cast_playlist_vote 의 FOR SHARE(v23)와 부딪히지 않는다.
---   권한(편집 권한·보관된 플레이리스트)은 액션이 먼저 본다. service_role 전용이다(v11 본보기).
+--   권한(편집 권한·보관된 플레이리스트)은 액션이 먼저 본다. service_role 전용이다(v11 본보기). p_playlist_id 가 null 이면
+--   둘 다 playlist_not_found 다.
 --
 -- 다시 실행해도 무해하다 (CREATE OR REPLACE · REVOKE · GRANT). 데이터를 바꾸지 않는다.
 
@@ -37,6 +40,10 @@ DECLARE
   v_index INT;
   v_item_id UUID;
 BEGIN
+  -- setlist_items.playlist_id 는 null 을 받아서, 막지 않으면 어느 플레이리스트에도 보이지 않는 행이 들어간다.
+  IF p_playlist_id IS NULL THEN
+    RAISE EXCEPTION 'playlist_not_found';
+  END IF;
   IF p_item_type IS NULL OR p_item_type NOT IN ('song', 'interval', 'original') THEN
     RAISE EXCEPTION 'invalid_block';
   END IF;
@@ -110,6 +117,10 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
+  -- null 은 어느 행과도 맞지 않아서, 막지 않으면 저장한 것처럼 빈 셋리를 돌려준다.
+  IF p_playlist_id IS NULL THEN
+    RAISE EXCEPTION 'playlist_not_found';
+  END IF;
   IF p_item_ids IS NULL OR cardinality(p_item_ids) <> (SELECT count(DISTINCT x) FROM unnest(p_item_ids) AS x) THEN
     RAISE EXCEPTION 'invalid_order';
   END IF;

@@ -17,4 +17,8 @@ describe("setlist position functions", () => {
     expect(locks).toHaveLength(2);
     expect(new Set(locks).size).toBe(1);
   });
+
+  it("refuses a null playlist in both functions, so no row lands outside a playlist", () => {
+    expect(sql.match(/IF p_playlist_id IS NULL THEN\s+RAISE EXCEPTION 'playlist_not_found';/g) ?? []).toHaveLength(2);
+  });
 });

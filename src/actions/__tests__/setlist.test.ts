@@ -76,6 +76,7 @@ describe("insertSetlistBlock", () => {
   it.each([
     ["slot_gone", "slot_gone"],
     ["song_not_found", "song_not_found"],
+    ["playlist_not_found", "playlist_not_found"],
     ["deadlock detected", "write_failed"],
   ])("maps the database answer %s to %s", async (message, reason) => {
     mocks.rpc.mockResolvedValue({ data: null, error: { code: "P0001", message } });
