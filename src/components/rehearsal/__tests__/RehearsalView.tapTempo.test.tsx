@@ -131,17 +131,17 @@ describe("RehearsalView tap tempo", () => {
   it("keeps the metronome's name and text when it is turned on and off, and says which with aria-pressed", () => {
     stubAudioContext();
     renderRehearsal(107);
-    const metronome = screen.getByRole("button", { name: "메트로놈 107 BPM" });
-    const text = metronome.textContent;
-    expect(metronome).toHaveAttribute("aria-pressed", "false");
+    const metronome = () => screen.getByRole("button", { name: "메트로놈 107 BPM" });
+    const text = metronome().textContent;
+    expect(metronome()).toHaveAttribute("aria-pressed", "false");
 
-    fireEvent.click(metronome);
-    expect(screen.getByRole("button", { name: "메트로놈 107 BPM" })).toHaveAttribute("aria-pressed", "true");
-    expect(metronome.textContent).toBe(text);
+    fireEvent.click(metronome());
+    expect(metronome()).toHaveAttribute("aria-pressed", "true");
+    expect(metronome().textContent).toBe(text);
 
-    fireEvent.click(metronome);
-    expect(screen.getByRole("button", { name: "메트로놈 107 BPM" })).toHaveAttribute("aria-pressed", "false");
-    expect(metronome.textContent).toBe(text);
+    fireEvent.click(metronome());
+    expect(metronome()).toHaveAttribute("aria-pressed", "false");
+    expect(metronome().textContent).toBe(text);
   });
 
   describe("on an original", () => {
