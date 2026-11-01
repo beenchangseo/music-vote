@@ -133,6 +133,37 @@ describe("usePlaylistRealtime", () => {
     expect(onRemoteChange).toHaveBeenCalledTimes(10);
   });
 
+  it("refreshes a remote change at the normal interval instead of waiting out a backed-off retry, and keeps backing off blind retries", async () => {
+    const onRemoteChange = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("500"))
+      .mockRejectedValueOnce(new Error("500"))
+      .mockRejectedValueOnce(new Error("500"))
+      .mockRejectedValueOnce(new Error("500"))
+      .mockResolvedValue(undefined);
+    render(<Harness onRemoteChange={onRemoteChange} />);
+
+    emitRemoteChange();
+    await act(() => vi.advanceTimersByTimeAsync(0));
+    await act(() => vi.advanceTimersByTimeAsync(5000));
+    await act(() => vi.advanceTimersByTimeAsync(10_000));
+    expect(onRemoteChange).toHaveBeenCalledTimes(3);
+
+    // The next retry is 20 seconds away when another member's change arrives a second later.
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    emitRemoteChange();
+    await act(() => vi.advanceTimersByTimeAsync(0));
+    expect(onRemoteChange).toHaveBeenCalledTimes(4);
+
+    await act(() => vi.advanceTimersByTimeAsync(39_999));
+    expect(onRemoteChange).toHaveBeenCalledTimes(4);
+    await act(() => vi.advanceTimersByTimeAsync(1));
+    expect(onRemoteChange).toHaveBeenCalledTimes(5);
+
+    await act(() => vi.advanceTimersByTimeAsync(60_000));
+    expect(onRemoteChange).toHaveBeenCalledTimes(5);
+  });
+
   it("does not retry a refresh that fails after the playlist screen is gone", async () => {
     let fail: (reason: Error) => void = () => {};
     const onRemoteChange = vi.fn(() => new Promise<void>((_, reject) => (fail = reject)));
