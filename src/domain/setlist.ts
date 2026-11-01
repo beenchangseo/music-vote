@@ -227,6 +227,7 @@ export type RehearsalStep<S> = {
   title: string;
   duration: number | null;
   before: RehearsalInterval[];
+  /** 이 장이 시작하는 시각부터 끝까지. 이 장으로 넘어왔으면 그 앞 인터벌은 이미 지났다. */
   remaining: number;
 } & ({ kind: "song"; song: S } | { kind: "original"; description: string | null });
 
@@ -237,7 +238,6 @@ export function rehearsalSteps<S extends RuntimeSong & Pick<SongWithScore, "titl
   const { totalRuntime } = summarizeSetlist(items, songs);
   const steps: RehearsalStep<S>[] = [];
   let pending: RehearsalInterval[] = [];
-  let previousEnd = 0;
 
   for (const block of setlistBlocks(items, songs)) {
     const { item } = block;
@@ -246,14 +246,13 @@ export function rehearsalSteps<S extends RuntimeSong & Pick<SongWithScore, "titl
       pending.push({ id: item.id, title: item.label || "인터벌", duration: duration ?? 0 });
       continue;
     }
-    const base = { id: item.id, duration, before: pending, remaining: totalRuntime - previousEnd };
+    const base = { id: item.id, duration, before: pending, remaining: totalRuntime - block.start };
     steps.push(
       block.kind === "song"
         ? { ...base, kind: "song", song: block.song, title: effectiveSetlistTitle(item, block.song) }
         : { ...base, kind: "original", title: item.label || "자작곡", description: item.description },
     );
     pending = [];
-    previousEnd = block.start + (duration ?? 0);
   }
 
   return { steps, trailing: pending };

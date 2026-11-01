@@ -36,18 +36,22 @@ function renderRehearsal() {
 describe("RehearsalView remaining time", () => {
   afterEach(cleanup);
 
-  it("starts from the same total as the setlist tab, intervals and originals included", () => {
+  it("starts from the setlist tab's total less the opening sound check, which is over once the first song is on", () => {
     renderRehearsal();
-    expect(screen.getByText(`남은 ${formatRuntime(FIXTURE_TOTAL_SECONDS)}`)).toBeInTheDocument();
+    expect(screen.getByText(`남은 ${formatRuntime(FIXTURE_TOTAL_SECONDS - 120)}`)).toBeInTheDocument();
   });
 
-  it("keeps the interval after a song in the next step's remaining time", () => {
+  it("counts the interval in the 다음 hint as over once 다음으로 is pressed", () => {
     renderRehearsal();
+    expect(screen.getByText("다음: 기타 셋업 변경")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "다음으로" }));
-    // 16:28 minus the opening sound check (2:00) and the first song (3:20). The 3:00 setup change is still ahead.
-    expect(screen.getByText("남은 11:08")).toBeInTheDocument();
+    // 16:28 minus the sound check (2:00), the first song (3:20) and the setup change (3:00).
+    expect(screen.getByText("2 / 4")).toBeInTheDocument();
+    expect(screen.getByText("남은 8:08")).toBeInTheDocument();
 
+    // The song before has no length, so the original starts at the same point.
     fireEvent.click(screen.getByRole("button", { name: "다음으로" }));
+    expect(screen.getByText("3 / 4")).toBeInTheDocument();
     expect(screen.getByText("남은 8:08")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "다음으로" }));

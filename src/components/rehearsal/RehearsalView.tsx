@@ -344,8 +344,9 @@ export default function RehearsalView({
       <div className="pt-1">
         {steps.map((s, j) => (
           <Fragment key={s.id}>
+            {/* 지금 카드 위의 인터벌은 맨 앞 인터벌까지 지난 것이다. 남은 시간도 이 장이 시작하는 시각부터 센다. */}
             {j !== step + 1 &&
-              s.before.map((interval) => <IntervalLine key={interval.id} interval={interval} past={j < step} />)}
+              s.before.map((interval) => <IntervalLine key={interval.id} interval={interval} past={j <= step} />)}
             {j === step ? (
               <>
                 {card}
