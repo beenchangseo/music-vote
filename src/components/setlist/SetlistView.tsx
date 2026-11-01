@@ -8,7 +8,7 @@ import InsertSheet, { type InsertStep } from "./InsertSheet";
 import type { InsertTarget } from "./SetlistEditList";
 import SetlistItemEditModal from "./SetlistItemEditModal";
 import SetlistShareButton from "./SetlistShareButton";
-import { RailEnd, RailStart } from "./TimelineRail";
+import { RailEnd, RailRow } from "./TimelineRail";
 import ScreenToolbar, { ToolbarButton } from "../ui/ScreenToolbar";
 import { useDialog } from "../ui/DialogProvider";
 import { insertSetlistBlock, removeSetlistItem, updateSetlistOrder } from "@/actions/setlist";
@@ -243,26 +243,23 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
       ) : (
         <>
           <ol aria-label="셋리스트" className={isPending ? "opacity-70" : ""}>
-            {blocks.map((block, index) => {
+            {blocks.map((block) => {
               const nowPlaying = block.kind === "song" && block.song.id === playingSongId;
               return (
-                <li key={block.item.id} className="grid grid-cols-[minmax(0,1fr)_3.5rem]" aria-current={nowPlaying ? "true" : undefined}>
-                  <div className="flex flex-col justify-center py-1">
-                    <BlockCard
-                      block={block}
-                      editing={false}
-                      onEdit={() => setEditing(block.item)}
-                      onRemove={() => remove(block.item.id)}
-                      nowPlaying={nowPlaying}
-                      onPlay={block.kind === "song" && onPlay ? () => onPlay(block.song.id) : undefined}
-                    />
-                  </div>
-                  <RailStart kind={block.kind} previous={blocks[index - 1]?.kind} start={block.start} />
-                </li>
+                <RailRow key={block.item.id} kind={block.kind} start={block.start} current={nowPlaying}>
+                  <BlockCard
+                    block={block}
+                    editing={false}
+                    onEdit={() => setEditing(block.item)}
+                    onRemove={() => remove(block.item.id)}
+                    nowPlaying={nowPlaying}
+                    onPlay={block.kind === "song" && onPlay ? () => onPlay(block.song.id) : undefined}
+                  />
+                </RailRow>
               );
             })}
           </ol>
-          <RailEnd last={blocks[blocks.length - 1].kind} total={summary.totalRuntime} />
+          <RailEnd total={summary.totalRuntime} />
         </>
       )}
       <p role="status" className="sr-only">
