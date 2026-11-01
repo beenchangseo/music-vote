@@ -260,15 +260,19 @@ export async function removeSetlistItem(
   adminToken: string | null,
   itemId: string,
   shareCode: string,
-) {
-  await assertSetlistEditor(playlistId);
-  const admin = createAdminClient();
-  const { error } = await admin
+): Promise<SetlistItemsResult> {
+  const denial = await setlistEditorDenial(playlistId);
+  if (denial) return { success: false, reason: denial };
+  // No row count check: 0 rows means another editor removed it first, which is the end state asked for.
+  const { error } = await createAdminClient()
     .from("setlist_items")
     .delete()
     .eq("id", itemId)
     .eq("playlist_id", playlistId);
-  if (error) throw new Error("항목 삭제에 실패했습니다.");
+  if (error) {
+    console.error("removeSetlistItem", playlistId, error.code);
+    return { success: false, reason: "write_failed" };
+  }
   revalidatePath(`/playlist/${shareCode}`);
-  return { success: true };
+  return { success: true, items: await getSetlistItems(playlistId) };
 }

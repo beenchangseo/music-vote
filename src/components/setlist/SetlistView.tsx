@@ -51,8 +51,8 @@ interface Props {
 
 export default function SetlistView({ setlistItems, songs, playlistId, shareCode, adminToken, loading, onItemsChange, title, access, onPlay, player }: Props) {
   const [isPending, startTransition] = useTransition();
-  // A drop shows its order at once and falls back to the server list when the save settles or fails.
-  const [shownItems, showItems] = useOptimistic(setlistItems);
+  // A drop or a removal shows at once and falls back to the server list when the write settles or fails.
+  const [shownItems, showItems] = useOptimistic(setlistItems, (current: SetlistItem[], change: (items: SetlistItem[]) => SetlistItem[]) => change(current));
   const [inserting, setInserting] = useState<{ target: InsertTarget; step: InsertStep } | null>(null);
   const [focusItemId, setFocusItemId] = useState<string | null>(null);
   const [status, setStatus] = useState("");
@@ -88,7 +88,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
     const next = moveSetlistBlock(shownItems, blocks, activeId, overId);
     if (!canEdit || !next) return;
     startTransition(async () => {
-      showItems(next);
+      showItems(() => next);
       const result = await updateSetlistOrder(playlistId, adminToken, next.map((item) => item.id), shareCode).catch(() => null);
       if (result?.success) onItemsChange(result.items);
       else showAlert(setlistMessage(result?.reason ?? "write_failed"));
@@ -116,17 +116,13 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
   const remove = useCallback(async (itemId: string) => {
     const ok = await showDanger("이 항목을 삭제하시겠습니까?");
     if (!ok) return;
-    const previous = [...setlistItems];
-    onItemsChange(setlistItems.filter((item) => item.id !== itemId));
     startTransition(async () => {
-      try {
-        await removeSetlistItem(playlistId, adminToken, itemId, shareCode);
-      } catch (error) {
-        onItemsChange(previous);
-        showAlert(error instanceof Error ? error.message : "삭제에 실패했습니다.");
-      }
+      showItems((items) => items.filter((item) => item.id !== itemId));
+      const result = await removeSetlistItem(playlistId, adminToken, itemId, shareCode).catch(() => null);
+      if (result?.success) onItemsChange(result.items);
+      else showAlert(setlistMessage(result?.reason ?? "write_failed"));
     });
-  }, [adminToken, onItemsChange, playlistId, setlistItems, shareCode, showAlert, showDanger]);
+  }, [adminToken, onItemsChange, playlistId, shareCode, showAlert, showDanger, showItems]);
 
   function addFromCandidates(songId: string) {
     if (!canEdit || addingSongId) return;

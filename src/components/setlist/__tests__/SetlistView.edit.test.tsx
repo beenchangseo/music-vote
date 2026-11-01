@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { insertSetlistBlock, updateSetlistOrder } from "@/actions/setlist";
+import { insertSetlistBlock, removeSetlistItem, updateSetlistOrder } from "@/actions/setlist";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
 import SetlistView from "../SetlistView";
 
@@ -59,6 +59,13 @@ function renderRoom(initial: SetlistItem[] = setlist, { edit = true } = {}) {
 const list = () => screen.getByRole("list", { name: "셋리스트" });
 const handles = () => within(list()).getAllByRole("button", { name: /끌어서 순서 바꾸기$/ }).map((button) => button.getAttribute("aria-label"));
 const tick = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+const rowOf = (handleName: string) => screen.getByRole("button", { name: handleName }).closest("li") as HTMLElement;
+
+function deferred<T>() {
+  let resolve: (value: T) => void = () => {};
+  const promise = new Promise<T>((done) => (resolve = done));
+  return { promise, resolve };
+}
 
 beforeEach(() => {
   // jsdom has no layout. Lay rows out by their place in the list so the keyboard sensor can find neighbours.
@@ -75,7 +82,9 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.mocked(insertSetlistBlock).mockReset();
   vi.mocked(updateSetlistOrder).mockReset();
+  vi.mocked(removeSetlistItem).mockReset();
   dialog.showAlert.mockReset();
+  dialog.showDanger.mockReset();
 });
 
 describe("SetlistView edit mode: (+) rows", () => {
@@ -225,6 +234,38 @@ describe("SetlistView edit mode: reordering", () => {
 
     await waitFor(() => expect(dialog.showAlert).toHaveBeenCalledWith("방장만 셋리스트를 편집할 수 있어요"));
     await waitFor(() => expect(handles()).toEqual(["「예뻤어」 끌어서 순서 바꾸기", "「기타 셋업 변경」 끌어서 순서 바꾸기", "「벚꽃 엔딩」 끌어서 순서 바꾸기"]));
+    expect(onItemsChange).not.toHaveBeenCalled();
+  });
+});
+
+describe("SetlistView edit mode: removing", () => {
+  it("hides the block at once and then draws the setlist the server returns", async () => {
+    const onItemsChange = renderRoom();
+    dialog.showDanger.mockResolvedValue(true);
+    const saved = deferred<{ success: true; items: SetlistItem[] }>();
+    vi.mocked(removeSetlistItem).mockReturnValue(saved.promise);
+
+    fireEvent.click(within(rowOf("「기타 셋업 변경」 끌어서 순서 바꾸기")).getByRole("button", { name: "삭제" }));
+
+    await waitFor(() => expect(handles()).toEqual(["「예뻤어」 끌어서 순서 바꾸기", "「벚꽃 엔딩」 끌어서 순서 바꾸기"]));
+    expect(onItemsChange).not.toHaveBeenCalled();
+
+    const after = [pretty, hidden, { ...cherry, position: 2 }];
+    await act(async () => saved.resolve({ success: true, items: after }));
+
+    expect(removeSetlistItem).toHaveBeenCalledWith("p", null, "item-2", "abc123");
+    expect(onItemsChange).toHaveBeenCalledWith(after);
+  });
+
+  it("puts the block back and says why when the delete is refused", async () => {
+    const onItemsChange = renderRoom();
+    dialog.showDanger.mockResolvedValue(true);
+    vi.mocked(removeSetlistItem).mockResolvedValue({ success: false, reason: "not_editor" });
+
+    fireEvent.click(within(rowOf("「벚꽃 엔딩」 끌어서 순서 바꾸기")).getByRole("button", { name: "삭제" }));
+
+    await waitFor(() => expect(dialog.showAlert).toHaveBeenCalledWith("방장만 셋리스트를 편집할 수 있어요"));
+    await waitFor(() => expect(handles()).toHaveLength(3));
     expect(onItemsChange).not.toHaveBeenCalled();
   });
 });

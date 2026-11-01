@@ -318,13 +318,13 @@ export default function PlaylistClient({
     if (!ok) return;
     const previous = setlistItems;
     setSetlistItems((prev) => prev?.filter((entry) => entry.id !== item.id) ?? prev);
-    try {
-      await removeSetlistItem(playlist.id, adminToken, item.id, shareCode);
-      notifyChange();
-    } catch {
-      setSetlistItems(previous);
-      showAlert("셋리스트에서 빼지 못했어요.");
+    const result = await removeSetlistItem(playlist.id, adminToken, item.id, shareCode).catch(() => null);
+    if (result?.success) {
+      applySetlistItems(result.items);
+      return;
     }
+    setSetlistItems(previous);
+    showAlert(result && result.reason !== "write_failed" ? setlistMessage(result.reason) : "셋리스트에서 빼지 못했어요.");
   }
 
   async function handleConfirmAddToSetlist() {

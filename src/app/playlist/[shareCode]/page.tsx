@@ -194,7 +194,8 @@ export default async function PlaylistPage({ params }: PageProps) {
         ? admin.from("playlist_members").select("user_id", { count: "exact", head: true }).eq("playlist_id", playlist.id)
         : Promise.resolve(null),
       // Candidate rows mark songs already in the setlist (디자인 C9). Closed to the public key (v18), like getSetlistItems.
-      admin.from("setlist_items").select("*").eq("playlist_id", playlist.id).order("position", { ascending: true }),
+      // Same tie-break as getSetlistItems and the v26 position functions.
+      admin.from("setlist_items").select("*").eq("playlist_id", playlist.id).order("position", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true }),
     ]);
 
   // Payload rules per field: the band link and name only reach members (the name also reaches the

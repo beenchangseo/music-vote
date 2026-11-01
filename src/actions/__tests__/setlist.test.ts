@@ -13,7 +13,7 @@ vi.mock("@/lib/setlist-permissions", () => ({ setlistEditorDenial: mocks.denial,
 vi.mock("@/lib/playlist-admin", () => ({ assertPlaylistAdmin: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 
-import { getSetlistItems, insertSetlistBlock, updateSetlistOrder } from "../setlist";
+import { getSetlistItems, insertSetlistBlock, removeSetlistItem, updateSetlistOrder } from "../setlist";
 
 const items = [{ id: "item-1", position: 0 }, { id: "new", position: 1 }];
 const interval = { kind: "interval", label: "  멘트 ", description: "", durationSeconds: 60 } as const;
@@ -113,6 +113,39 @@ describe("updateSetlistOrder", () => {
     mocks.rpc.mockResolvedValue({ data: null, error: { code: "P0001", message: "invalid_order" } });
 
     await expect(updateSetlistOrder("p", null, ["item-1", "item-1"], "abc123")).resolves.toEqual({ success: false, reason: "invalid_order" });
+  });
+});
+
+describe("removeSetlistItem", () => {
+  function fake(deleteError: { message: string } | null = null) {
+    const { client, ops } = createFakeClient((op) => (op.action === "delete" ? { error: deleteError } : { data: items }));
+    mocks.from.mockImplementation(client.from);
+    return ops;
+  }
+
+  it("removes the block from this playlist and returns the setlist the server now has", async () => {
+    const ops = fake();
+
+    const result = await removeSetlistItem("p", null, "item-9", "abc123");
+
+    expect(ops[0]).toMatchObject({ table: "setlist_items", action: "delete", filters: { id: "item-9", playlist_id: "p" } });
+    expect(result).toEqual({ success: true, items });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/playlist/abc123");
+  });
+
+  it("returns the reason without deleting when the editor may not edit", async () => {
+    const ops = fake();
+    mocks.denial.mockResolvedValue("archived");
+
+    await expect(removeSetlistItem("p", null, "item-9", "abc123")).resolves.toEqual({ success: false, reason: "archived" });
+    expect(ops).toHaveLength(0);
+  });
+
+  it("fails when the delete fails", async () => {
+    fake({ message: "boom" });
+
+    await expect(removeSetlistItem("p", null, "item-9", "abc123")).resolves.toEqual({ success: false, reason: "write_failed" });
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 });
 
