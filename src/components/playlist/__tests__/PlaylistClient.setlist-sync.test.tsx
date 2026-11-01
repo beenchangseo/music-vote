@@ -102,10 +102,11 @@ afterEach(() => {
 });
 
 describe("PlaylistClient setlist sync", () => {
-  it("tells the other screens once a setlist write has landed", () => {
+  it("tells the other screens once a setlist write has landed", async () => {
     openSetlist();
+    vi.mocked(getSetlistItems).mockResolvedValue([item("mine")]);
 
-    fireEvent.click(screen.getByRole("button", { name: "내 쓰기" }));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "내 쓰기" })));
 
     expect(shown()).toBe("mine");
     expect(realtime.notifyChange).toHaveBeenCalledTimes(1);
@@ -134,6 +135,18 @@ describe("PlaylistClient setlist sync", () => {
     expect(getSetlistItems).toHaveBeenCalledTimes(2);
 
     await act(async () => again.resolve([item("mine"), item("theirs")]));
+
+    expect(shown()).toBe("mine,theirs");
+  });
+
+  it("keeps their change when a read that already had it lands before my write's answer", async () => {
+    openSetlist();
+    vi.mocked(getSetlistItems).mockResolvedValue([item("mine"), item("theirs")]);
+
+    await act(async () => realtime.onRemoteChange());
+    expect(shown()).toBe("mine,theirs");
+
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "내 쓰기" })));
 
     expect(shown()).toBe("mine,theirs");
   });

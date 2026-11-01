@@ -169,15 +169,15 @@ export default function PlaylistClient({
     }
   }, [playlist.id, setlistItems, comments, loadingSetlist, loadingComments]);
 
-  // Bumped whenever a setlist write of mine lands. A read that was in flight across a bump may predate that write,
-  // so it is dropped and read again rather than painted over the newer list.
+  // Bumped whenever a setlist write of mine lands. A read in flight across a bump may predate that write, so it is
+  // dropped. The read that applySetlistItems starts after every landed write covers anything it carried.
   const setlistVersionRef = useRef(0);
-  const refetchSetlist = useCallback(function refetch() {
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
+  const refetchSetlist = useCallback(() => {
     const version = setlistVersionRef.current;
     getSetlistItems(playlist.id)
       .then((items) => {
         if (version === setlistVersionRef.current) setSetlistItems(items);
-        else refetch();
       })
       .catch(() => undefined);
   }, [playlist.id]);
@@ -196,11 +196,14 @@ export default function PlaylistClient({
   const { notifyChange } = usePlaylistRealtime(shareCode, handleRemoteChange);
 
   /** 서버에 닿은 셋리스트를 그리고 다른 화면에 알린다. */
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
   const applySetlistItems = useCallback((items: SetlistItem[]) => {
     setlistVersionRef.current += 1;
     setSetlistItems(items);
     notifyChange();
-  }, [notifyChange]);
+    // The write's answer can be older than a read that already landed with another member's later change.
+    refetchSetlist();
+  }, [notifyChange, refetchSetlist]);
 
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
   const handleAllowanceChange = useCallback((usedVotes: number, voteLimit: number) => {
