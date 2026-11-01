@@ -171,6 +171,8 @@ const REVOKED_RPCS = [
 REVOKED_RPCS.push(
   ["insert_setlist_item", { p_playlist_id: NONE, p_before_item_id: NONE, p_item_type: "interval", p_song_id: null, p_label: "점검", p_description: null, p_duration_seconds: 0 }],
   ["reorder_setlist_items", { p_playlist_id: NONE, p_item_ids: [] }],
+  // v27. 열리면 공유 링크만 아는 사람이 남의 셋리를 확정할 수 있다.
+  ["confirm_setlist", { p_playlist_id: NONE, p_song_ids: [] }],
 );
 for (const [fn, args] of REVOKED_RPCS) {
   const probe = await anon.rpc(fn, args);
