@@ -73,6 +73,22 @@ describe("SetlistView song titles", () => {
     expect(screen.getByRole("button", { name: "사랑하긴 했었나요 셋리스트에 넣기" })).toBeInTheDocument();
   });
 
+  it("names every edit button by its block in edit mode and opens the song sheet on that title", async () => {
+    renderSetlist();
+    await openEditMode();
+
+    expect(within(list()).getAllByRole("button", { name: /고치기$/ }).map((button) => button.getAttribute("aria-label"))).toEqual([
+      "「예뻤어」 제목 고치기",
+      "「벚꽃 엔딩 (밴드 편곡)」 제목 고치기",
+      "「멘트」 인터벌 고치기",
+      "「우리 노래」 자작곡 고치기",
+    ]);
+
+    fireEvent.click(screen.getByRole("button", { name: "「예뻤어」 제목 고치기" }));
+    const sheet = screen.getByRole("dialog", { name: "곡 블록 수정" });
+    expect(within(sheet).getByDisplayValue("예뻤어")).toBeInTheDocument();
+  });
+
   it("offers candidates in the insert sheet by the title the candidates tab shows", async () => {
     renderSetlist();
     await openEditMode();
