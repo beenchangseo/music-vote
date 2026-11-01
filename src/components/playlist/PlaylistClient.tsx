@@ -169,14 +169,18 @@ export default function PlaylistClient({
     }
   }, [playlist.id, setlistItems, comments, loadingSetlist, loadingComments]);
 
-  // Bumped whenever a setlist write of mine lands. A read in flight across a bump may predate that write, so it is
-  // dropped. The read that applySetlistItems starts after every landed write covers anything it carried.
-  const setlistVersionRef = useRef(0);
+  // Each read takes the next number and draws only if nothing newer has: a read that lands after a later read, or one
+  // in flight when a write of mine lands, may carry an older list. A write marks every read started so far as drawn,
+  // and the read that applySetlistItems starts after it covers anything they carried.
+  const setlistReadsRef = useRef({ started: 0, drawn: 0 });
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
   const refetchSetlist = useCallback(async () => {
-    const version = setlistVersionRef.current;
+    const reads = setlistReadsRef.current;
+    const read = ++reads.started;
     const items = await fetchSetlistItems(playlist.id);
-    if (version === setlistVersionRef.current) setSetlistItems(items);
+    if (read <= reads.drawn) return;
+    reads.drawn = read;
+    setSetlistItems(items);
   }, [playlist.id]);
 
   // 다른 참여자의 변경 알림. 셋리스트·댓글은 서버 렌더가 아니라
@@ -196,7 +200,7 @@ export default function PlaylistClient({
   /** 서버에 닿은 셋리스트를 그리고 다른 화면에 알린다. null 이면 쓰기는 닿았지만 목록을 못 읽었으니 지금 목록을 둔다. */
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
   const applySetlistItems = useCallback((items: SetlistItem[] | null) => {
-    setlistVersionRef.current += 1;
+    setlistReadsRef.current.drawn = setlistReadsRef.current.started;
     if (items) setSetlistItems(items);
     notifyChange();
     // The write's answer can be older than a read that already landed with another member's later change.

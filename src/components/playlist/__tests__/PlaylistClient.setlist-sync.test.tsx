@@ -185,6 +185,39 @@ describe("PlaylistClient setlist sync", () => {
     expect(shown()).toBe("mine,theirs");
   });
 
+  it("keeps the newer list when an older read of another member's changes lands after it", async () => {
+    openSetlist();
+    const older = deferred();
+    const newer = deferred();
+    vi.mocked(fetchSetlistItems).mockReturnValueOnce(older.promise).mockReturnValueOnce(newer.promise);
+
+    act(() => {
+      void realtime.onRemoteChange();
+      void realtime.onRemoteChange();
+    });
+    await act(async () => newer.resolve([item("second")]));
+    await act(async () => older.resolve([item("first")]));
+
+    expect(shown()).toBe("second");
+  });
+
+  it("draws a read that lands first while a newer read is still on the way", async () => {
+    openSetlist();
+    const older = deferred();
+    const newer = deferred();
+    vi.mocked(fetchSetlistItems).mockReturnValueOnce(older.promise).mockReturnValueOnce(newer.promise);
+
+    act(() => {
+      void realtime.onRemoteChange();
+      void realtime.onRemoteChange();
+    });
+    await act(async () => older.resolve([item("one")]));
+    expect(shown()).toBe("one");
+
+    await act(async () => newer.resolve([item("one"), item("two")]));
+    expect(shown()).toBe("one,two");
+  });
+
   it("keeps the setlist on screen when a removal from the candidates lands but the list after it cannot be read", async () => {
     const inSetlist = { ...item("candidate"), item_type: "song", song_id: candidate.id } as SetlistItem;
     render(<PlaylistClient playlist={playlist} songs={[candidate]} shareCode="abc123" participantCount={2} userNickname="보컬" currentUserId="owner" team={null} initialSetlistItems={[inSetlist, item("theirs")]} />);
