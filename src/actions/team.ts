@@ -46,6 +46,7 @@ import {
   validateNextShowDate,
   validateTeamName,
 } from "@/domain/team";
+import { effectiveSetlistTitle } from "@/domain/setlist";
 import { compareTimestamps } from "@/domain/timestamp";
 import { isValidDefaultVoteLimit } from "@/domain/vote";
 import type { TeamReason } from "@/lib/team-messages";
@@ -730,7 +731,7 @@ export async function getTeamHome(teamId: string): Promise<TeamHomeView | null> 
       const list = setlistByRoom.get(item.playlist_id) ?? [];
       list.push({
         songId: item.song_id,
-        title: item.title_override || song.title,
+        title: effectiveSetlistTitle(item, song),
         artist: song.artist ?? null,
         position: item.position,
         videoId: song.youtube_video_id ?? null,

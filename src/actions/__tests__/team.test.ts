@@ -594,7 +594,7 @@ describe("getTeamHome", () => {
       item_type: "song",
       song_id: "s2",
       title_override: null,
-      songs: { title: "Creep", artist: "Radiohead", youtube_video_id: "v2", thumbnail_url: thumb("v2") },
+      songs: { title: "Radiohead - Creep (Official Video)", artist: "Radiohead", youtube_video_id: "v2", thumbnail_url: thumb("v2") },
     },
     {
       playlist_id: "room-old",

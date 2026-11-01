@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMetronome } from "@/hooks/useMetronome";
 import Link from "next/link";
+import { displayTitle } from "@/domain/song-meta";
 import type { Song } from "@/domain/types";
 
 interface MetronomeClientProps {
@@ -134,13 +135,13 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
               <option value="">곡 선택...</option>
               {songs.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.title} ({s.tempo_bpm} BPM)
+                  {displayTitle(s.title)} ({s.tempo_bpm} BPM)
                 </option>
               ))}
             </select>
             {selectedSong && (
               <p className="text-center text-caption text-text-subtle mt-2">
-                현재: <span className="text-primary-fg">{selectedSong.title}</span> · {selectedSong.tempo_bpm} BPM
+                현재: <span className="text-primary-fg">{displayTitle(selectedSong.title)}</span> · {selectedSong.tempo_bpm} BPM
               </p>
             )}
           </div>

@@ -745,7 +745,7 @@ export default function PlaylistClient({
                 <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
                   <Image
                     src={setlistConfirmSong.thumbnail_url}
-                    alt={setlistConfirmSong.title}
+                    alt={displayTitle(setlistConfirmSong.title)}
                     fill
                     sizes="48px"
                     className="object-cover"
@@ -753,7 +753,7 @@ export default function PlaylistClient({
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-text truncate">{setlistConfirmSong.title}</p>
+                <p className="text-sm font-medium text-text truncate">{displayTitle(setlistConfirmSong.title)}</p>
                 {setlistConfirmSong.artist && (
                   <p className="text-caption text-text-muted truncate">{setlistConfirmSong.artist}</p>
                 )}

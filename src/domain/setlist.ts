@@ -1,3 +1,4 @@
+import { displayTitle } from "./song-meta";
 import type { SetlistEditMode, SetlistItem, SongWithScore } from "./types";
 
 type RuntimeItem = Pick<SetlistItem, "item_type" | "song_id" | "duration_seconds" | "duration_override_seconds">;
@@ -7,7 +8,7 @@ export function effectiveSetlistTitle(
   item: Pick<SetlistItem, "title_override">,
   song: Pick<SongWithScore, "title">,
 ): string {
-  return item.title_override?.trim() || song.title;
+  return item.title_override?.trim() || displayTitle(song.title);
 }
 
 export function effectiveSetlistDuration(

@@ -25,7 +25,7 @@ import {
   type NewSetlistBlock,
   type SetlistEditAccess,
 } from "@/domain/setlist";
-import { displayArtist } from "@/domain/song-meta";
+import { displayArtist, displayTitle } from "@/domain/song-meta";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
 import type { PlayerState } from "@/hooks/usePlayerQueue";
 
@@ -305,7 +305,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
                   {song.thumbnail_url && <Image src={song.thumbnail_url} alt="" fill sizes="44px" className="object-cover" />}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-text">{song.title}</span>
+                  <span className="block truncate text-sm font-medium text-text">{displayTitle(song.title)}</span>
                   <span className="block truncate text-caption text-text-muted">
                     {displayArtist(song.artist, song.title) || "아티스트 미입력"}
                     <span className="mx-1 text-text-subtle" aria-hidden>·</span>
@@ -316,7 +316,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
                   type="button"
                   onClick={() => addFromCandidates(song.id)}
                   disabled={!!addingSongId}
-                  aria-label={`${song.title} 셋리스트에 넣기`}
+                  aria-label={`${displayTitle(song.title)} 셋리스트에 넣기`}
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-pill text-text-muted transition-colors hover:bg-surface-hover hover:text-primary-fg disabled:opacity-40"
                 >
                   {addingSongId === song.id ? (
