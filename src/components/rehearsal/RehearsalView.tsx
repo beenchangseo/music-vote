@@ -59,6 +59,11 @@ export default function RehearsalView({
   const found = selected ? steps.findIndex((s) => s.id === selected.id) : -1;
   const step = found >= 0 ? found : Math.min(selected?.index ?? 0, steps.length - 1);
   const current: Step | undefined = steps[step];
+  // 다른 멤버가 순서를 바꾸거나 지금 장을 지워도 고른 장과 그 자리를 지금 목록 기준으로 맞춘다.
+  // 그래야 지금 장이 지워졌을 때 지금 순서에서 바로 뒤 장으로 넘어가고, 넘어간 장을 계속 따라간다.
+  if (selected && current && (selected.id !== current.id || selected.index !== step)) {
+    setSelected({ id: current.id, index: step });
+  }
   const currentSong = current?.kind === "song" ? current.song : null;
   const { cardRef, nextRef, prevRef, follow } = useFollowCurrentStep(current?.id);
 

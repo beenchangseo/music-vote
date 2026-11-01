@@ -118,6 +118,53 @@ describe("RehearsalView steps", () => {
     expect(screen.getByText("1 / 3")).toBeInTheDocument();
   });
 
+  describe("when another member edits the setlist", () => {
+    const view = (items: SetlistItem[]) => (
+      <RehearsalView
+        setlistItems={items}
+        songs={fixtureSongs}
+        comments={[]}
+        playlistId="playlist"
+        shareCode="share"
+        nickname="베이스"
+        loading={false}
+        onCommentsChange={vi.fn()}
+      />
+    );
+    const at = (id: string, position: number) => ({ ...fixtureItems.find((item) => item.id === id)!, position });
+    const without = (items: SetlistItem[], id: string) => items.filter((item) => item.id !== id);
+    // Steps in fixture order: 첫 곡 (item-1), 시간 모르는 곡 (item-3), 우리 노래 (item-5), 끝 곡 (item-6).
+    const swapped = [...without(without(fixtureItems, "item-3"), "item-5"), at("item-3", 5), at("item-5", 3)];
+
+    it("moves to the step after the current one in the new order when the current step is moved, then deleted", () => {
+      const { rerender } = render(view(fixtureItems));
+      fireEvent.click(screen.getByRole("button", { name: /시간 모르는 곡/ }));
+      expect(screen.getByText("2 / 4")).toBeInTheDocument();
+
+      rerender(view(swapped));
+      expect(within(currentCard()).getByRole("heading", { name: "시간 모르는 곡" })).toBeInTheDocument();
+      expect(screen.getByText("3 / 4")).toBeInTheDocument();
+
+      rerender(view(without(swapped, "item-3")));
+      expect(within(currentCard()).getByRole("heading", { name: "끝 곡" })).toBeInTheDocument();
+      expect(screen.getByText("3 / 3")).toBeInTheDocument();
+    });
+
+    it("stays on the step it moved to after a delete when that step is moved later", () => {
+      const { rerender } = render(view(fixtureItems));
+      fireEvent.click(screen.getByRole("button", { name: /시간 모르는 곡/ }));
+
+      const deleted = without(fixtureItems, "item-3");
+      rerender(view(deleted));
+      expect(within(currentCard()).getByRole("heading", { name: "우리 노래" })).toBeInTheDocument();
+      expect(screen.getByText("2 / 3")).toBeInTheDocument();
+
+      rerender(view([...without(deleted, "item-5"), at("item-5", 7)]));
+      expect(within(currentCard()).getByRole("heading", { name: "우리 노래" })).toBeInTheDocument();
+      expect(screen.getByText("3 / 3")).toBeInTheDocument();
+    });
+  });
+
   it("keeps keyboard focus on the moving card's controls and marks finished steps for screen readers", () => {
     renderRehearsal();
     next();
