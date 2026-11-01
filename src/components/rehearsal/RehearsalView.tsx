@@ -147,8 +147,7 @@ export default function RehearsalView({
       aria-current="step"
       className="my-2 scroll-my-2"
       footer={
-        currentSong &&
-        showComments && (
+        currentSong && showComments ? (
           <CommentSection
             songId={currentSong.id}
             comments={songComments}
@@ -157,7 +156,7 @@ export default function RehearsalView({
             onCommentsChange={onCommentsChange}
             allComments={comments}
           />
-        )
+        ) : null
       }
     >
       <div className="flex items-center gap-3">

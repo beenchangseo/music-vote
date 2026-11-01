@@ -3,6 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import Button from "../Button";
+import Card from "../Card";
 import Chip from "../Chip";
 import IconButton from "../IconButton";
 import Input from "../Input";
@@ -95,6 +96,30 @@ describe("Input", () => {
   it("lets the caller override aria-invalid", () => {
     render(<Input aria-label="곡 링크" invalid aria-invalid="false" />);
     expect(screen.getByRole("textbox", { name: "곡 링크" })).toHaveAttribute("aria-invalid", "false");
+  });
+});
+
+describe("Card", () => {
+  it("keeps what is being typed above its footer when the footer opens and closes", () => {
+    const card = (footer: React.ReactNode) => (
+      <Card footer={footer}>
+        <input aria-label="메모" />
+      </Card>
+    );
+    const { rerender } = render(card(null));
+    const memo = screen.getByRole("textbox", { name: "메모" });
+    memo.focus();
+    fireEvent.change(memo, { target: { value: "브릿지" } });
+
+    rerender(card(<p>코멘트</p>));
+    expect(screen.getByText("코멘트")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "메모" })).toHaveValue("브릿지");
+    expect(screen.getByRole("textbox", { name: "메모" })).toHaveFocus();
+
+    rerender(card(false));
+    expect(screen.queryByText("코멘트")).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "메모" })).toHaveValue("브릿지");
+    expect(screen.getByRole("textbox", { name: "메모" })).toHaveFocus();
   });
 });
 
