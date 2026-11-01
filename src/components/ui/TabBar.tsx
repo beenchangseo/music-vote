@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { segmentItemClass } from "./SegmentedControl";
+import { publishTabBarHeight } from "./chrome-inset";
 
 export interface TabBarItem<T extends string> {
   id: T;
@@ -22,7 +23,7 @@ interface TabBarProps<T extends string> {
  */
 export default function TabBar<T extends string>({ items, value, onChange, "aria-label": label }: TabBarProps<T>) {
   return (
-    <nav aria-label={label} className="fixed inset-x-0 bottom-0 z-40 bg-bg print:hidden">
+    <nav ref={publishTabBarHeight} aria-label={label} className="fixed inset-x-0 bottom-0 z-40 bg-bg print:hidden">
       <div className="mx-auto flex h-dock max-w-lg items-center px-4">
         <div className="flex w-full gap-1 rounded-card bg-surface p-1">
           {items.map((item) => {

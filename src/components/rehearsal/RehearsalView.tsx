@@ -151,7 +151,7 @@ export default function RehearsalView({
       role="region"
       aria-label="지금 곡"
       aria-current="step"
-      className="my-2 scroll-mb-28 scroll-mt-32"
+      className="my-2 scroll-my-2"
     >
       <div className="flex items-center gap-3">
         <StepCover step={current} size="card" />

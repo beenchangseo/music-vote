@@ -1,5 +1,8 @@
+"use client";
+
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { buttonClassName } from "./Button";
+import { publishScreenToolbarHeight } from "./chrome-inset";
 
 interface ScreenToolbarProps {
   /** 이 화면에서 가장 큰 숫자. */
@@ -22,7 +25,7 @@ interface ScreenToolbarProps {
  */
 export default function ScreenToolbar({ stat, caption, actions, children }: ScreenToolbarProps) {
   return (
-    <div className="sticky top-0 z-20 -mx-4 mt-3 mb-3 border-b border-border bg-bg/95 px-4 pb-3 pt-2 backdrop-blur-sm print:hidden">
+    <div ref={publishScreenToolbarHeight} className="sticky top-0 z-20 -mx-4 mt-3 mb-3 border-b border-border bg-bg/95 px-4 pb-3 pt-2 backdrop-blur-sm print:hidden">
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-h3 font-bold leading-tight tabular-nums text-text">{stat}</p>
