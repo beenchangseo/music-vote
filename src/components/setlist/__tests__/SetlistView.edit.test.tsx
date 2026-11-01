@@ -281,6 +281,23 @@ describe("SetlistView add areas", () => {
     expect(within(sheet).getByLabelText("이름")).toBeInTheDocument();
   });
 
+  it("hands focus to 편집 after the first block lands in an empty setlist, and says what was added", async () => {
+    renderRoom([], { edit: false });
+    const added = at(0, { id: "new", item_type: "interval", label: "멘트", duration_seconds: 60 });
+    vi.mocked(insertSetlistBlock).mockResolvedValue({ success: true, itemId: "new", items: [added] });
+
+    const opener = screen.getByRole("button", { name: "인터벌 블록 추가" });
+    opener.focus();
+    fireEvent.click(opener);
+    const sheet = screen.getByRole("dialog", { name: "여기에 넣기" });
+    fireEvent.change(within(sheet).getByLabelText("이름"), { target: { value: "멘트" } });
+    fireEvent.click(within(sheet).getByRole("button", { name: "넣기" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByRole("button", { name: "편집" })).toHaveFocus();
+    expect(screen.getByText("「멘트」 블록을 넣었어요")).toHaveAttribute("role", "status");
+  });
+
   it("drops the bottom add buttons once the setlist has blocks, and hides the candidate list while editing", () => {
     renderRoom(setlist, { edit: false });
 

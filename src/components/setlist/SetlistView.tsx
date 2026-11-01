@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useOptimistic, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { BlockCard } from "./BlockCards";
 import InsertSheet, { type InsertStep } from "./InsertSheet";
@@ -79,6 +79,13 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
   }, [songs, sortedItems]);
   const visibleSuggestions = showAllSuggestions ? suggestions : suggestions.slice(0, COLLAPSED_SUGGESTIONS);
   const showEditControls = showEditToggle && editMode;
+  const editToggleRef = useRef<HTMLButtonElement>(null);
+
+  // The view list has no handle to focus. It takes an insert only from the empty setlist, whose add buttons vanish once
+  // the block lands, so focus goes to the toggle that opens the handles.
+  useEffect(() => {
+    if (focusItemId && !showEditControls) editToggleRef.current?.focus();
+  }, [focusItemId, showEditControls]);
 
   function replaceItem(next: SetlistItem) {
     onItemsChange(setlistItems.map((item) => item.id === next.id ? next : item));
@@ -185,6 +192,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
             )}
             {showEditToggle && (
               <ToolbarButton
+                ref={editToggleRef}
                 label={showEditControls ? "완료" : "편집"}
                 pressed={showEditControls}
                 onClick={() => {
