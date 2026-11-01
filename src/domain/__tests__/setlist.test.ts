@@ -34,6 +34,18 @@ describe("셋리스트 곡 제목", () => {
   });
 });
 
+describe("내보내기 아티스트 줄은 셋리스트 카드와 같은 아티스트다", () => {
+  it.each([
+    ["자동 생성 채널의 - Topic 은 뗀다", "DAY6 - Topic", "예뻤어", "DAY6"],
+    ["배급사 채널보다 제목 앞의 아티스트가 먼저다", "STONE MUSIC", "DAY6(데이식스)- 예뻤어 [가사/Lyrics]", "DAY6(데이식스)"],
+    ["핸들 같은 채널명은 아티스트로 쓰지 않는다", "kwon.orca.archive", "예뻤어", null],
+    ["채널이 없으면 비운다", null, "예뻤어", null],
+  ])("%s", (_name, artist, title, expected) => {
+    const song = { id: "song-1", title, artist, duration_seconds: 180, tempo_bpm: null } as SongWithScore;
+    expect(setlistRows([base], [song]).map((row) => row.kind === "song" && row.artist)).toEqual([expected]);
+  });
+});
+
 describe("setlist domain", () => {
   it("uses the duration override", () => {
     expect(effectiveSetlistDuration({ ...base, duration_override_seconds: 200 }, song)).toBe(200);

@@ -1,4 +1,4 @@
-import { displayTitle } from "./song-meta";
+import { displayArtist, displayTitle } from "./song-meta";
 import type { SetlistEditMode, SetlistItem, SongWithScore } from "./types";
 
 type RuntimeItem = Pick<SetlistItem, "item_type" | "song_id" | "duration_seconds" | "duration_override_seconds">;
@@ -210,7 +210,7 @@ export function setlistRows(items: RowItem[], songs: RowSong[]): SetlistRow[] {
       kind: "song",
       number,
       title: effectiveSetlistTitle(item, song),
-      artist: song.artist,
+      artist: displayArtist(song.artist, song.title),
       bpm: song.tempo_bpm,
       duration: itemRuntime(item, song),
     }];
