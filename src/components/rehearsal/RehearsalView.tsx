@@ -74,7 +74,7 @@ export default function RehearsalView({
     s.kind === "original" ? (originalBpm[s.id] ?? 0) : (pendingBpm(s.song.id) ?? s.song.tempo_bpm ?? 0);
   const tappedBpm = currentSong ? pendingBpm(currentSong.id) : null;
   const bpm = current ? bpmOf(current) : 0;
-  const metronome = useMetronome(bpm || 120);
+  const metronome = useMetronome(bpm || null);
 
   function keepTappedBpm(target: Step, value: number) {
     if (target.kind === "original") setOriginalBpm((saved) => ({ ...saved, [target.id]: value }));
@@ -121,7 +121,6 @@ export default function RehearsalView({
 
   function goTo(target: number, action: "next" | "prev" | "jump") {
     const index = Math.min(steps.length - 1, Math.max(0, target));
-    if (metronome.isPlaying && !bpmOf(steps[index])) metronome.stop();
     setSelected({ id: steps[index].id, index });
     follow();
     track("rehearsal_action", { action });
@@ -138,12 +137,11 @@ export default function RehearsalView({
   }
 
   // BPM 이 없으면 메트로놈은 막지 않고 BPM 입력칸으로 보낸다. 입력칸이 없는 자작곡만 막고, 탭 템포가 BPM 을 채운다.
-  const metronomeAction =
-    bpm || metronome.isPlaying
-      ? { pressed: metronome.isPlaying, "aria-label": bpm ? `메트로놈 ${bpm} BPM` : undefined, onClick: toggleMetronome }
-      : currentSong
-        ? { "aria-label": "메트로놈, BPM 적고 켜기", onClick: openMeta }
-        : { "aria-label": "메트로놈, 탭 템포로 BPM 맞추기", disabled: true };
+  const metronomeAction = bpm
+    ? { pressed: metronome.isPlaying, "aria-label": `메트로놈 ${bpm} BPM`, onClick: toggleMetronome }
+    : currentSong
+      ? { "aria-label": "메트로놈, BPM 적고 켜기", onClick: openMeta }
+      : { "aria-label": "메트로놈, 탭 템포로 BPM 맞추기", disabled: true };
 
   const card = (
     <Card

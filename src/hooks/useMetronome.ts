@@ -14,10 +14,12 @@ const BEATS_PER_BAR = 4;
  *
  * 전용 페이지와 합주 모드가 같은 소리를 내야 해서 훅으로 뺐다.
  * 화면은 각자 그리고 여기서는 소리와 박자만 다룬다.
+ * bpm 이 null 이 되면 켜져 있어도 꺼지고, bpm 이 돌아와도 다시 켜지지 않는다.
  */
-export function useMetronome(bpm: number) {
+export function useMetronome(bpm: number | null) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [beat, setBeat] = useState(0);
+  if (isPlaying && bpm === null) setIsPlaying(false);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -43,7 +45,7 @@ export function useMetronome(bpm: number) {
 
   const scheduler = useCallback(() => {
     const ctx = audioCtxRef.current;
-    if (!ctx) return;
+    if (!ctx || bpm === null) return;
 
     while (nextNoteTimeRef.current < ctx.currentTime + SCHEDULE_AHEAD) {
       playClick(nextNoteTimeRef.current, beatRef.current === 0);
@@ -66,8 +68,7 @@ export function useMetronome(bpm: number) {
     nextNoteTimeRef.current = ctx.currentTime;
     setBeat(0);
     setIsPlaying(true);
-    timerRef.current = setInterval(scheduler, TIMER_INTERVAL);
-  }, [scheduler]);
+  }, []);
 
   const stop = useCallback(() => {
     if (timerRef.current) {
@@ -83,7 +84,6 @@ export function useMetronome(bpm: number) {
     else start();
   }, [isPlaying, start, stop]);
 
-  // BPM 이 바뀌면 예약 루프를 새 값으로 다시 건다.
   useEffect(() => {
     if (isPlaying) {
       if (timerRef.current) clearInterval(timerRef.current);
