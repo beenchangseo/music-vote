@@ -880,6 +880,18 @@ describe("getAttachablePlaylists (DR8)", () => {
     expect(query.orders).toEqual([{ column: "created_at", ascending: false }]);
   });
 
+  it("puts the newer cover picture first within one second (Postgres drops a zero fraction)", async () => {
+    const songs = [
+      { thumbnail_url: "t-whole", created_at: "2026-10-05T00:00:00+00:00" },
+      { thumbnail_url: "t-half", created_at: "2026-10-05T00:00:00.5+00:00" },
+    ];
+    state.admin = createFakeClient(
+      router({ "team_members:select": ok({ role: "owner" }), "playlists:select": ok([{ ...rows[0], songs }]) }),
+    );
+    const result = await getAttachablePlaylists(TEAM);
+    expect(result.success && result.playlists.map((playlist) => playlist.coverThumbs)).toEqual([["t-half", "t-whole"]]);
+  });
+
   it("reports a failed read", async () => {
     state.admin = createFakeClient(router({ "team_members:select": ok({ role: "owner" }), "playlists:select": dbError() }));
     vi.spyOn(console, "error").mockImplementation(() => {});
@@ -924,6 +936,20 @@ describe("getMyTeams", () => {
     });
     expect(state.admin.ops).toHaveLength(1);
     expect(state.admin.ops[0].filters).toEqual({ user_id: ME.id });
+  });
+
+  it("puts the band joined later first within one second (Postgres drops a zero fraction)", async () => {
+    const band = (id: string) => ({ id, name: id, next_show_at: null, playlists: null });
+    state.admin = createFakeClient(
+      router({
+        "team_members:select": ok([
+          { role: "member", joined_at: "2026-10-01T00:00:00+00:00", teams: band("t-whole") },
+          { role: "member", joined_at: "2026-10-01T00:00:00.5+00:00", teams: band("t-half") },
+        ]),
+      }),
+    );
+    const { teams } = await getMyTeams();
+    expect(teams.map((team) => team.id)).toEqual(["t-half", "t-whole"]);
   });
 
   it("reports the failure with an empty list and logs when the query fails (eng E1)", async () => {

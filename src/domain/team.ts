@@ -7,6 +7,7 @@
  *
  * 화면과 서버가 함께 쓰므로 서버 전용 모듈을 import 하지 않는다.
  */
+import { compareTimestamps } from "./timestamp";
 import type { TeamRole } from "./types";
 
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
@@ -180,21 +181,13 @@ export function canPromote(
   return null;
 }
 
-// Postgres writes a timestamptz without a zero fraction ("…:00+00:00" next to "…:00.5+00:00"), and
-// localeCompare puts "." before "+", so the strings sort out of time order within one second.
-function compareJoinedAt(a: string | null, b: string | null): number {
-  const at = a ? Date.parse(a) : -Infinity;
-  const bt = b ? Date.parse(b) : -Infinity;
-  return at === bt ? 0 : at < bt ? -1 : 1;
-}
-
 /** 멤버 표시 순서: owner 먼저, 그다음 가입 순 (디자인 2A). 원본 배열은 바꾸지 않는다. */
 export function sortMembersForDisplay<T extends { role: TeamRole; joined_at: string | null }>(
   members: T[],
 ): T[] {
   return [...members].sort((a, b) => {
     if (a.role !== b.role) return a.role === "owner" ? -1 : 1;
-    return compareJoinedAt(a.joined_at, b.joined_at);
+    return compareTimestamps(a.joined_at, b.joined_at);
   });
 }
 
@@ -212,7 +205,7 @@ export function bandOwnerAfterLeaving<T extends { user_id: string; role: TeamRol
   // user_id breaks the tie so the confirm dialog and the handover pick the same person.
   const others = members
     .filter((member) => member.user_id !== leavingUserId)
-    .sort((a, b) => compareJoinedAt(a.joined_at, b.joined_at) || a.user_id.localeCompare(b.user_id));
+    .sort((a, b) => compareTimestamps(a.joined_at, b.joined_at) || a.user_id.localeCompare(b.user_id));
   const owner = others.find((member) => member.role === "owner");
   if (owner) return { kind: "kept", owner };
   return others[0] ? { kind: "promote", owner: others[0] } : { kind: "empty" };

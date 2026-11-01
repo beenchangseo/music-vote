@@ -46,6 +46,7 @@ import {
   validateNextShowDate,
   validateTeamName,
 } from "@/domain/team";
+import { compareTimestamps } from "@/domain/timestamp";
 import { isValidDefaultVoteLimit } from "@/domain/vote";
 import type { TeamReason } from "@/lib/team-messages";
 import type { ActionResult, TeamRole, VotingMode } from "@/domain/types";
@@ -868,7 +869,7 @@ export async function getAttachablePlaylists(teamId: string): Promise<GetAttacha
         [],
         nestedRows(row.songs)
           .slice()
-          .sort((a, b) => b.created_at.localeCompare(a.created_at))
+          .sort((a, b) => compareTimestamps(b.created_at, a.created_at))
           .map((song) => ({ thumbnailUrl: song.thumbnail_url })),
       ),
     })),
@@ -910,7 +911,7 @@ export async function getMyTeams(): Promise<MyTeamsResult> {
   const teams = ((data ?? []) as Row[])
     .flatMap((row) =>
       nestedRows(row.teams).map((team) => ({
-        joinedAt: row.joined_at ?? "",
+        joinedAt: row.joined_at,
         team: {
           id: team.id,
           name: team.name,
@@ -920,7 +921,7 @@ export async function getMyTeams(): Promise<MyTeamsResult> {
         },
       })),
     )
-    .sort((a, b) => b.joinedAt.localeCompare(a.joinedAt))
+    .sort((a, b) => compareTimestamps(b.joinedAt, a.joinedAt))
     .map((entry) => entry.team);
   return { teams, failed: false };
 }
