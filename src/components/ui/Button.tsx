@@ -1,7 +1,7 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
 
 type Variant = "primary" | "tonal" | "ghost" | "danger" | "kakao";
-type Size = "sm" | "md" | "lg" | "icon";
+type Size = "sm" | "md" | "lg" | "icon" | "toolbar" | "toolbar-compact";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -36,6 +36,10 @@ const sizeClasses: Record<Size, string> = {
   md: "h-control-md px-5 text-sm",
   lg: "h-control-lg px-6 text-body",
   icon: "size-control-md",
+  /** `ToolbarButton` 이 쓴다. md 높이에 sm 의 여백이라 360px 툴바에서 동작 둘·셋 옆에도 총 시간이 한 줄로 남는다. */
+  toolbar: "h-control-md px-3 text-sm",
+  // Below 640px the label hides and the button becomes the same 44px square as size="icon".
+  "toolbar-compact": "h-control-md px-3 text-sm max-sm:size-control-md max-sm:px-0",
 };
 
 /**

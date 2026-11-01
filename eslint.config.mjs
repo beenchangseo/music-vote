@@ -2,6 +2,11 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
+// Height, width, padding, radius and font-size utilities, after any variant prefix (`max-sm:px-0`) or `!`.
+// The setlist toolbar shipped 44·36·44px buttons side by side because each call site resized its own.
+const CONTROL_SIZE_UTILITY =
+  "/(^|[\\s:])!?((min-|max-)?[hw]-|size-|p[xytrblse]?-|rounded(?![a-z])|text-(xs|sm|base|lg|[2-9]?xl|caption|body|display|h[1-6])(?![\\w-]))/";
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -56,6 +61,12 @@ const eslintConfig = defineConfig([
           {
             selector: `${node}/primary-soft/]`,
             message: "primary-soft 는 지웠다. 선택·tonal 바탕은 primary-tint 를 쓴다.",
+          },
+          {
+            selector: `:matches(JSXOpeningElement[name.name=/^(Button|IconButton|Chip)$/] > JSXAttribute[name.name='className'], CallExpression[callee.name='buttonClassName'] Property[key.name='className']) ${node}${CONTROL_SIZE_UTILITY}]`,
+            message:
+              "Button·IconButton·Chip·buttonClassName 의 높이·폭·안쪽 여백·모서리·글자 크기는 size·variant prop 이 정한다. className 에는 바깥 배치만 둔다" +
+              "(m*·flex-1·shrink-0·self-*·order-*·hidden 같은 표시 여부). 꽉 찬 폭은 Button 의 fullWidth, 툴바 동작은 ToolbarButton 을 쓴다.",
           },
         ]),
       ],

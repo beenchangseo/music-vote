@@ -22,8 +22,6 @@ interface RehearsalViewProps {
   nickname: string;
   loading: boolean;
   onCommentsChange: (comments: Comment[]) => void;
-  /** 방 설정 버튼. 세 화면 툴바의 같은 자리에 온다. */
-  actions?: React.ReactNode;
 }
 
 /**
@@ -42,7 +40,6 @@ export default function RehearsalView({
   nickname,
   loading,
   onCommentsChange,
-  actions,
 }: RehearsalViewProps) {
   const [index, setIndex] = useState(0);
   const [showMeta, setShowMeta] = useState(false);
@@ -144,7 +141,6 @@ export default function RehearsalView({
       <ScreenToolbar
         stat={`${step + 1} / ${songItems.length}`}
         caption={remaining > 0 ? <span>남은 {formatRuntime(remaining)}</span> : undefined}
-        actions={actions}
       >
         <div className="mt-2 h-1 overflow-hidden rounded-pill bg-surface-hover">
           <div className="h-1 rounded-pill bg-primary transition-[width] duration-300" style={{ width: `${progress}%` }} />

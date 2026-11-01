@@ -157,7 +157,7 @@ function SheetBody({ teamId, onAttached, onClose }: { teamId: string; onAttached
                     ) : (
                       <Button
                         variant="tonal"
-                        className="min-h-11 shrink-0"
+                        className="shrink-0"
                         loading={row.status === "pending"}
                         onClick={() => attach(playlist)}
                         aria-label={`「${playlist.title}」 ${row.status === "failed" ? "다시 넣기" : "넣기"}`}

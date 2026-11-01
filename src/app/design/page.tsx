@@ -8,7 +8,7 @@ import Chip from "@/components/ui/Chip";
 import GuitarIcon from "@/components/ui/GuitarIcon";
 import IconButton from "@/components/ui/IconButton";
 import Input from "@/components/ui/Input";
-import ScreenToolbar from "@/components/ui/ScreenToolbar";
+import ScreenToolbar, { ToolbarButton } from "@/components/ui/ScreenToolbar";
 import { COLOR_GROUPS, COLORS, HEIGHTS, MOTION, RADII, SHADOWS, TYPE, contrastRatio, type ColorToken, type Pairing } from "@/components/ui/tokens";
 import Avatar, { AvatarStack } from "@/components/ui/Avatar";
 import Badge, { BADGE_TONES } from "@/components/ui/Badge";
@@ -218,15 +218,25 @@ export default function DesignPage() {
         </div>
       </Section>
 
-      <Section title="ScreenToolbar">
+      <Section title="ScreenToolbar" note="오른쪽 동작은 ToolbarButton 이에요. 모두 44px 이고, compact 는 640px 아래에서 아이콘만 남아요.">
         <div className="relative">
           <ScreenToolbar
-            stat="12곡"
-            caption="총 48분"
+            stat="48:10"
+            caption="12곡 · 인터벌 2"
             actions={
-              <IconButton bare aria-label="설정">
-                <GuitarIcon className="size-5" />
-              </IconButton>
+              <>
+                <ToolbarButton
+                  label="셋리 전체 듣기"
+                  compact
+                  icon={
+                    <svg className="size-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  }
+                />
+                <ToolbarButton label="편집" />
+                <ToolbarButton label="내보내기" />
+              </>
             }
           />
         </div>
