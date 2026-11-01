@@ -11,7 +11,8 @@ description: Plypick 의 Server Action(src/actions/*) 을 새로 만들거나 �
 ## 순서
 
 1. **어디에 둘지 정한다.**
-   - 화면(클라이언트 컴포넌트)이 부르는 쓰기·읽기 → `src/actions/<개념>.ts`
+   - 화면(클라이언트 컴포넌트)이 부르는 쓰기·읽기 → `src/actions/<개념>.ts`. 단 실시간 알림마다 다시 받는 읽기는
+     액션이 아니라 GET route 다(`AGENTS.md` 의 "새 코드를 둘 곳" 표)
    - 서버 컴포넌트·다른 액션만 부르는 헬퍼(권한 검사·여러 단계 insert) → `src/lib/` 의 일반 모듈. `"use server"` 를
      붙이지 않는다(`src/lib/room-insert.ts` 머리 주석). 같은 파일 안에서만 쓰는 함수는 export 하지 않는다
    - 입력 검사·계산 같은 순수 규칙 → `src/domain/` 함수로 빼고 표 테스트를 붙인다. 액션은 그 함수를 부른다

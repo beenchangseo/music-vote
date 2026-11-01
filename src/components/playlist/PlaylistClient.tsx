@@ -24,9 +24,9 @@ import RehearsalView from "../rehearsal/RehearsalView";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
 import { usePlaylistVotes } from "@/hooks/usePlaylistVotes";
 import { usePlaylistRealtime } from "@/hooks/usePlaylistRealtime";
-import { getSetlistItems, confirmSetlist, insertSetlistBlock, removeSetlistItem } from "@/actions/setlist";
+import { confirmSetlist, insertSetlistBlock, removeSetlistItem } from "@/actions/setlist";
 import { setlistMessage } from "@/lib/setlist-messages";
-import { getComments } from "@/actions/comment";
+import { fetchComments, fetchSetlistItems } from "@/lib/playlist-refetch";
 import { track } from "@/lib/analytics";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
 import KakaoShareButton from "../share/KakaoShareButton";
@@ -150,7 +150,7 @@ export default function PlaylistClient({
     if (mode === "setlist" && setlistItems === null && !loadingSetlist) {
       setLoadingSetlist(true);
       try {
-        const items = await getSetlistItems(playlist.id);
+        const items = await fetchSetlistItems(playlist.id);
         setSetlistItems(items);
       } catch { /* ignore */ }
       setLoadingSetlist(false);
@@ -159,8 +159,8 @@ export default function PlaylistClient({
       setLoadingComments(true);
       try {
         const [items, cmts] = await Promise.all([
-          setlistItems === null ? getSetlistItems(playlist.id) : Promise.resolve(setlistItems),
-          getComments(playlist.id),
+          setlistItems === null ? fetchSetlistItems(playlist.id) : Promise.resolve(setlistItems),
+          fetchComments(playlist.id),
         ]);
         if (setlistItems === null) setSetlistItems(items);
         setComments(cmts);
@@ -175,7 +175,7 @@ export default function PlaylistClient({
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
   const refetchSetlist = useCallback(async () => {
     const version = setlistVersionRef.current;
-    const items = await getSetlistItems(playlist.id);
+    const items = await fetchSetlistItems(playlist.id);
     if (version === setlistVersionRef.current) setSetlistItems(items);
   }, [playlist.id]);
 
@@ -187,7 +187,7 @@ export default function PlaylistClient({
     router.refresh();
     await Promise.all([
       setlistItems !== null && refetchSetlist(),
-      comments !== null && getComments(playlist.id).then(setComments),
+      comments !== null && fetchComments(playlist.id).then(setComments),
     ]);
   }, [router, playlist.id, setlistItems, comments, refetchSetlist]);
 

@@ -44,8 +44,8 @@ vi.mock("@/actions/member", () => ({
   saveVotingSettings: vi.fn(),
 }));
 vi.mock("@/actions/team", () => ({ attachPlaylistToTeam: vi.fn(), createTeamFromPlaylist: vi.fn() }));
-vi.mock("@/actions/setlist", () => ({ getSetlistItems: vi.fn().mockResolvedValue([]) }));
-vi.mock("@/actions/comment", () => ({ getComments: vi.fn().mockResolvedValue([]) }));
+vi.mock("@/lib/playlist-refetch", () => ({ fetchSetlistItems: vi.fn().mockResolvedValue([]), fetchComments: vi.fn().mockResolvedValue([]) }));
+vi.mock("@/actions/setlist", () => ({}));
 vi.mock("@/actions/song", () => ({ removeSong: vi.fn() }));
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }) }));

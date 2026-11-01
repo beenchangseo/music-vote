@@ -1,6 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/server";
+import { readSetlistItems } from "@/lib/playlist-reads";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
 import { assertSetlistEditor, setlistEditorDenial } from "@/lib/setlist-permissions";
 import { setlistMessage, setlistReasonFromDatabase, type SetlistReason } from "@/lib/setlist-messages";
@@ -28,20 +29,6 @@ function cleanBlockFields(kind: "interval" | "original", item: BlockFieldsInput)
 function setlistFrom(data: unknown): SetlistItem[] | null {
   const items = (data as { items?: unknown } | null)?.items;
   return Array.isArray(items) ? (items as SetlistItem[]) : null;
-}
-
-export async function getSetlistItems(playlistId: string): Promise<SetlistItem[]> {
-  // setlist_items is closed to the public key (v18).
-  const admin = createAdminClient();
-  const { data } = await admin
-    .from("setlist_items")
-    .select("*")
-    .eq("playlist_id", playlistId)
-    // Same tie-break as the v26 position functions, so a legacy tie draws in the order the server renumbers it.
-    .order("position", { ascending: true })
-    .order("created_at", { ascending: true })
-    .order("id", { ascending: true });
-  return (data || []) as SetlistItem[];
 }
 
 /**
@@ -257,7 +244,8 @@ export async function removeSetlistItem(
   const denial = await setlistEditorDenial(playlistId);
   if (denial) return { success: false, reason: denial };
   // No row count check: 0 rows means another editor removed it first, which is the end state asked for.
-  const { error } = await createAdminClient()
+  const admin = createAdminClient();
+  const { error } = await admin
     .from("setlist_items")
     .delete()
     .eq("id", itemId)
@@ -267,5 +255,6 @@ export async function removeSetlistItem(
     return { success: false, reason: "write_failed" };
   }
   revalidatePath(`/playlist/${shareCode}`);
-  return { success: true, items: await getSetlistItems(playlistId) };
+  // The delete landed even if this read fails. The read after every setlist write redraws the list.
+  return { success: true, items: await readSetlistItems(admin, playlistId).catch(() => []) };
 }

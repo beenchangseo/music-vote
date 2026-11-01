@@ -2,7 +2,7 @@
 import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getSetlistItems } from "@/actions/setlist";
+import { fetchSetlistItems } from "@/lib/playlist-refetch";
 import type { Playlist, SetlistItem } from "@/domain/types";
 import PlaylistClient from "../PlaylistClient";
 
@@ -14,8 +14,8 @@ vi.mock("@formkit/auto-animate/react", () => ({ useAutoAnimate: () => [vi.fn()] 
 vi.mock("../../ui/DialogProvider", () => ({ useDialog: () => ({ showAlert: vi.fn(), showConfirm: vi.fn(), showDanger: vi.fn() }) }));
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
 vi.mock("@/actions/member", () => ({ registerPlaylistMember: vi.fn().mockResolvedValue(null) }));
-vi.mock("@/actions/setlist", () => ({ getSetlistItems: vi.fn() }));
-vi.mock("@/actions/comment", () => ({ getComments: vi.fn().mockResolvedValue([]) }));
+vi.mock("@/lib/playlist-refetch", () => ({ fetchSetlistItems: vi.fn(), fetchComments: vi.fn().mockResolvedValue([]) }));
+vi.mock("@/actions/setlist", () => ({}));
 vi.mock("@/hooks/usePlaylistRealtime", () => ({
   usePlaylistRealtime: (_shareCode: string, onRemoteChange: () => Promise<void> | void) => {
     realtime.onRemoteChange = onRemoteChange;
@@ -97,7 +97,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
-  vi.mocked(getSetlistItems).mockReset();
+  vi.mocked(fetchSetlistItems).mockReset();
   realtime.notifyChange.mockReset();
   realtime.requestRefresh.mockReset();
 });
@@ -105,7 +105,7 @@ afterEach(() => {
 describe("PlaylistClient setlist sync", () => {
   it("tells the other screens once a setlist write has landed", async () => {
     openSetlist();
-    vi.mocked(getSetlistItems).mockResolvedValue([item("mine")]);
+    vi.mocked(fetchSetlistItems).mockResolvedValue([item("mine")]);
 
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "내 쓰기" })));
 
@@ -115,7 +115,7 @@ describe("PlaylistClient setlist sync", () => {
 
   it("applies another member's change when nothing of mine landed during the read", async () => {
     openSetlist();
-    vi.mocked(getSetlistItems).mockResolvedValue([item("theirs")]);
+    vi.mocked(fetchSetlistItems).mockResolvedValue([item("theirs")]);
 
     await act(async () => realtime.onRemoteChange());
 
@@ -124,7 +124,7 @@ describe("PlaylistClient setlist sync", () => {
 
   it("reports a failed read to the realtime hook so the change is read again, not dropped", async () => {
     openSetlist();
-    vi.mocked(getSetlistItems).mockRejectedValueOnce(new Error("429")).mockResolvedValueOnce([item("theirs")]);
+    vi.mocked(fetchSetlistItems).mockRejectedValueOnce(new Error("429")).mockResolvedValueOnce([item("theirs")]);
 
     await act(async () => expect(realtime.onRemoteChange()).rejects.toThrow());
     expect(shown()).toBe("first");
@@ -135,7 +135,7 @@ describe("PlaylistClient setlist sync", () => {
 
   it("asks the realtime hook to refresh when the read after my write fails", async () => {
     openSetlist();
-    vi.mocked(getSetlistItems).mockRejectedValueOnce(new Error("429"));
+    vi.mocked(fetchSetlistItems).mockRejectedValueOnce(new Error("429"));
 
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "내 쓰기" })));
 
@@ -147,7 +147,7 @@ describe("PlaylistClient setlist sync", () => {
     openSetlist();
     const overlapped = deferred();
     const again = deferred();
-    vi.mocked(getSetlistItems).mockReturnValueOnce(overlapped.promise).mockReturnValueOnce(again.promise);
+    vi.mocked(fetchSetlistItems).mockReturnValueOnce(overlapped.promise).mockReturnValueOnce(again.promise);
 
     act(() => {
       void realtime.onRemoteChange();
@@ -156,7 +156,7 @@ describe("PlaylistClient setlist sync", () => {
     await act(async () => overlapped.resolve([item("first")]));
 
     expect(shown()).toBe("mine");
-    expect(getSetlistItems).toHaveBeenCalledTimes(2);
+    expect(fetchSetlistItems).toHaveBeenCalledTimes(2);
 
     await act(async () => again.resolve([item("mine"), item("theirs")]));
 
@@ -165,7 +165,7 @@ describe("PlaylistClient setlist sync", () => {
 
   it("keeps their change when a read that already had it lands before my write's answer", async () => {
     openSetlist();
-    vi.mocked(getSetlistItems).mockResolvedValue([item("mine"), item("theirs")]);
+    vi.mocked(fetchSetlistItems).mockResolvedValue([item("mine"), item("theirs")]);
 
     await act(async () => realtime.onRemoteChange());
     expect(shown()).toBe("mine,theirs");

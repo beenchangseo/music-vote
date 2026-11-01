@@ -29,7 +29,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ```
 src/
-├── app/          라우트. 페이지·레이아웃·API route(OG·셋리스트 이미지·PDF·cron)
+├── app/          라우트. 페이지·레이아웃·API route(OG·셋리스트 이미지·PDF·cron·실시간 재조회)
 ├── actions/      "use server" Server Action. 화면이 부르는 쓰기·읽기
 ├── domain/       순수 규칙과 엔티티 타입. 프레임워크·DB·브라우저를 모른다
 ├── lib/          바깥 연결과 서버 헬퍼. supabase/·youtube·analytics·seo·kakao, 권한 검사(playlist-access 등)
@@ -59,6 +59,7 @@ verification/     TLA+ 형식 검증 (verify-vote-quota 스킬)
 |---|---|
 | 입력 검사·계산·정렬 같은 순수 규칙 | `src/domain/<개념>.ts` + `src/domain/__tests__` 표 테스트 |
 | 화면(클라이언트)이 부르는 쓰기·읽기 | `src/actions/<개념>.ts`. 절차는 `server-action` 스킬 |
+| 실시간 알림마다 다시 받는 읽기(셋리스트·댓글) | `src/app/api/playlist/[playlistId]/*/route.ts` GET + `src/lib/playlist-refetch.ts`. proxy 는 POST 를 IP·경로당 분당 30회로 세서, 액션으로 두면 같은 와이파이의 밴드가 한도에 걸린다(#45) |
 | 서버 컴포넌트나 다른 액션만 부르는 헬퍼 | `src/lib/` 일반 모듈. `"use server"` 를 붙이지 않는다 |
 | 화면 부품 | `src/components/<화면 또는 개념>/`. 여러 화면이 쓰면 개념 폴더에 둔다 |
 | 스키마·권한 변경 | `npm run db:new`. 절차는 `db-migration` 스킬 |

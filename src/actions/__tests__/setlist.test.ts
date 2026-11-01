@@ -14,7 +14,7 @@ vi.mock("@/lib/setlist-permissions", () => ({ setlistEditorDenial: mocks.denial,
 vi.mock("@/lib/playlist-admin", () => ({ assertPlaylistAdmin: mocks.assertHost }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 
-import { confirmSetlist, getSetlistItems, insertSetlistBlock, removeSetlistItem, updateSetlistOrder } from "../setlist";
+import { confirmSetlist, insertSetlistBlock, removeSetlistItem, updateSetlistOrder } from "../setlist";
 
 const items = [{ id: "item-1", position: 0 }, { id: "new", position: 1 }];
 const interval = { kind: "interval", label: "  멘트 ", description: "", durationSeconds: 60 } as const;
@@ -200,20 +200,5 @@ describe("removeSetlistItem", () => {
 
     await expect(removeSetlistItem("p", null, "item-9", "abc123")).resolves.toEqual({ success: false, reason: "write_failed" });
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
-  });
-});
-
-describe("getSetlistItems", () => {
-  it("breaks position ties the way the position functions do", async () => {
-    const { client, ops } = createFakeClient(() => ({ data: [] }));
-    mocks.from.mockImplementation(client.from);
-
-    await getSetlistItems("p");
-
-    expect(ops[0].orders).toEqual([
-      { column: "position", ascending: true },
-      { column: "created_at", ascending: true },
-      { column: "id", ascending: true },
-    ]);
   });
 });

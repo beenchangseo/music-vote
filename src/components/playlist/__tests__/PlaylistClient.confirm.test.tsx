@@ -2,7 +2,8 @@
 import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { confirmSetlist, getSetlistItems } from "@/actions/setlist";
+import { confirmSetlist } from "@/actions/setlist";
+import { fetchSetlistItems } from "@/lib/playlist-refetch";
 import { track } from "@/lib/analytics";
 import { setlistMessage } from "@/lib/setlist-messages";
 import type { Playlist, SetlistItem, SongWithScore } from "@/domain/types";
@@ -17,8 +18,8 @@ vi.mock("@formkit/auto-animate/react", () => ({ useAutoAnimate: () => [vi.fn()] 
 vi.mock("../../ui/DialogProvider", () => ({ useDialog: () => dialog }));
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
 vi.mock("@/actions/member", () => ({ registerPlaylistMember: vi.fn().mockResolvedValue(null) }));
-vi.mock("@/actions/setlist", () => ({ getSetlistItems: vi.fn(), confirmSetlist: vi.fn(), insertSetlistBlock: vi.fn(), removeSetlistItem: vi.fn() }));
-vi.mock("@/actions/comment", () => ({ getComments: vi.fn().mockResolvedValue([]) }));
+vi.mock("@/lib/playlist-refetch", () => ({ fetchSetlistItems: vi.fn(), fetchComments: vi.fn().mockResolvedValue([]) }));
+vi.mock("@/actions/setlist", () => ({ confirmSetlist: vi.fn(), insertSetlistBlock: vi.fn(), removeSetlistItem: vi.fn() }));
 vi.mock("@/hooks/usePlaylistRealtime", () => ({ usePlaylistRealtime: () => ({ notifyChange: realtime.notifyChange }) }));
 vi.mock("@/hooks/usePlaylistVotes", () => ({
   usePlaylistVotes: ({ songs }: { songs: unknown[] }) => ({ songsWithVotes: songs, pressVote: vi.fn(), isVotePending: () => false, resetVotes: vi.fn() }),
@@ -85,7 +86,7 @@ beforeEach(() => {
   // The confirm button still needs the creator's link token on this device.
   localStorage.setItem("myPlaylists", JSON.stringify([{ id: "p", shareCode: "abc123", adminToken: "token" }]));
   dialog.showConfirm.mockResolvedValue(true);
-  vi.mocked(getSetlistItems).mockReturnValue(new Promise(() => {}));
+  vi.mocked(fetchSetlistItems).mockReturnValue(new Promise(() => {}));
 });
 
 afterEach(() => {
