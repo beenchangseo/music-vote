@@ -17,6 +17,8 @@ export interface BlockFieldsInput {
 
 /** 셋리 전체를 돌려주는 쓰기. items 는 쓰기 직후 서버의 셋리스트다. */
 export type SetlistItemsResult = ActionResult<{ items: SetlistItem[] }, SetlistReason>;
+/** items 가 null 이면 삭제는 닿았지만 그 뒤 셋리스트를 읽지 못한 것이다. 빈 셋리스트가 아니다. */
+export type RemoveSetlistItemResult = ActionResult<{ items: SetlistItem[] | null }, SetlistReason>;
 export type InsertSetlistBlockResult = ActionResult<{ itemId: string; items: SetlistItem[] }, SetlistReason>;
 
 function cleanBlockFields(kind: "interval" | "original", item: BlockFieldsInput) {
@@ -240,7 +242,7 @@ export async function removeSetlistItem(
   adminToken: string | null,
   itemId: string,
   shareCode: string,
-): Promise<SetlistItemsResult> {
+): Promise<RemoveSetlistItemResult> {
   const denial = await setlistEditorDenial(playlistId);
   if (denial) return { success: false, reason: denial };
   // No row count check: 0 rows means another editor removed it first, which is the end state asked for.
@@ -256,5 +258,5 @@ export async function removeSetlistItem(
   }
   revalidatePath(`/playlist/${shareCode}`);
   // The delete landed even if this read fails. The read after every setlist write redraws the list.
-  return { success: true, items: await readSetlistItems(admin, playlistId).catch(() => []) };
+  return { success: true, items: await readSetlistItems(admin, playlistId).catch(() => null) };
 }

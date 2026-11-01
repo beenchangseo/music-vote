@@ -263,6 +263,17 @@ describe("SetlistView edit mode: removing", () => {
     expect(onItemsChange).toHaveBeenCalledWith(after);
   });
 
+  it("keeps the rest of the setlist when the delete lands but the list after it cannot be read", async () => {
+    const onItemsChange = await renderRoom();
+    dialog.showDanger.mockResolvedValue(true);
+    vi.mocked(removeSetlistItem).mockResolvedValue({ success: true, items: null });
+
+    fireEvent.click(within(rowOf("「기타 셋업 변경」 끌어서 순서 바꾸기")).getByRole("button", { name: "삭제" }));
+
+    await waitFor(() => expect(onItemsChange).toHaveBeenCalledWith([pretty, hidden, cherry]));
+    expect(handles()).toEqual(["「예뻤어」 끌어서 순서 바꾸기", "「벚꽃 엔딩」 끌어서 순서 바꾸기"]);
+  });
+
   it("puts the block back and says why when the delete is refused", async () => {
     const onItemsChange = await renderRoom();
     dialog.showDanger.mockResolvedValue(true);

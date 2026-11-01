@@ -193,11 +193,11 @@ export default function PlaylistClient({
 
   const { notifyChange, requestRefresh } = usePlaylistRealtime(shareCode, handleRemoteChange);
 
-  /** 서버에 닿은 셋리스트를 그리고 다른 화면에 알린다. */
+  /** 서버에 닿은 셋리스트를 그리고 다른 화면에 알린다. null 이면 쓰기는 닿았지만 목록을 못 읽었으니 지금 목록을 둔다. */
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
-  const applySetlistItems = useCallback((items: SetlistItem[]) => {
+  const applySetlistItems = useCallback((items: SetlistItem[] | null) => {
     setlistVersionRef.current += 1;
-    setSetlistItems(items);
+    if (items) setSetlistItems(items);
     notifyChange();
     // The write's answer can be older than a read that already landed with another member's later change.
     refetchSetlist().catch(requestRefresh);

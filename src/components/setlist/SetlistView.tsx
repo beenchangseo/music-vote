@@ -140,10 +140,10 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
     startTransition(async () => {
       showItems((items) => items.filter((item) => item.id !== itemId));
       const result = await removeSetlistItem(playlistId, adminToken, itemId, shareCode).catch(() => null);
-      if (result?.success) onItemsChange(result.items);
+      if (result?.success) onItemsChange(result.items ?? setlistItems.filter((item) => item.id !== itemId));
       else showAlert(setlistMessage(result?.reason ?? "write_failed"));
     });
-  }, [adminToken, onItemsChange, playlistId, shareCode, showAlert, showDanger, showItems]);
+  }, [adminToken, onItemsChange, playlistId, setlistItems, shareCode, showAlert, showDanger, showItems]);
 
   function addFromCandidates(songId: string) {
     if (!canEdit || addingSongId) return;

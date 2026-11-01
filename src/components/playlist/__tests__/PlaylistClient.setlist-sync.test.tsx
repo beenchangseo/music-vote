@@ -3,7 +3,8 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchSetlistItems } from "@/lib/playlist-refetch";
-import type { Playlist, SetlistItem } from "@/domain/types";
+import { removeSetlistItem } from "@/actions/setlist";
+import type { Playlist, SetlistItem, SongWithScore } from "@/domain/types";
 import PlaylistClient from "../PlaylistClient";
 
 const realtime = vi.hoisted(() => ({ onRemoteChange: (): Promise<void> | void => {}, notifyChange: vi.fn(), requestRefresh: vi.fn() }));
@@ -11,11 +12,11 @@ const realtime = vi.hoisted(() => ({ onRemoteChange: (): Promise<void> | void =>
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }), usePathname: () => "/playlist/abc123" }));
 vi.mock("next/image", () => ({ default: () => null }));
 vi.mock("@formkit/auto-animate/react", () => ({ useAutoAnimate: () => [vi.fn()] }));
-vi.mock("../../ui/DialogProvider", () => ({ useDialog: () => ({ showAlert: vi.fn(), showConfirm: vi.fn(), showDanger: vi.fn() }) }));
+vi.mock("../../ui/DialogProvider", () => ({ useDialog: () => ({ showAlert: vi.fn(), showConfirm: vi.fn(), showDanger: async () => true }) }));
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
 vi.mock("@/actions/member", () => ({ registerPlaylistMember: vi.fn().mockResolvedValue(null) }));
 vi.mock("@/lib/playlist-refetch", () => ({ fetchSetlistItems: vi.fn(), fetchComments: vi.fn().mockResolvedValue([]) }));
-vi.mock("@/actions/setlist", () => ({}));
+vi.mock("@/actions/setlist", () => ({ removeSetlistItem: vi.fn() }));
 vi.mock("@/hooks/usePlaylistRealtime", () => ({
   usePlaylistRealtime: (_shareCode: string, onRemoteChange: () => Promise<void> | void) => {
     realtime.onRemoteChange = onRemoteChange;
@@ -33,7 +34,13 @@ vi.mock("@/hooks/usePlayerQueue", () => ({
 }));
 vi.mock("../AnnouncementButton", () => ({ default: () => null }));
 vi.mock("../AddSongForm", () => ({ default: () => null }));
-vi.mock("../SongCard", () => ({ default: () => null }));
+vi.mock("../SongCard", () => ({
+  default: ({ song, onRemoveFromSetlist }: { song: SongWithScore; onRemoveFromSetlist?: (songId: string) => void }) => (
+    <button type="button" onClick={() => onRemoveFromSetlist?.(song.id)}>
+      {song.title} 셋리에서 빼기
+    </button>
+  ),
+}));
 vi.mock("../MiniPlayer", () => ({ default: () => null }));
 vi.mock("../YouTubePlayer", () => ({ default: () => null }));
 vi.mock("../RoomSettingsButton", () => ({ default: () => null }));
@@ -58,6 +65,8 @@ vi.mock("../../setlist/SetlistView", () => ({
 }));
 
 const item = (id: string) => ({ id, playlist_id: "p", position: 0, item_type: "interval", song_id: null, label: id, description: null, duration_seconds: 60, title_override: null, duration_override_seconds: null, created_at: "" }) as SetlistItem;
+
+const candidate = { id: "song-1", title: "Plastic Love", artist: "Mariya Takeuchi", youtube_video_id: "abcdefghijk", thumbnail_url: null, score: 0, votes: [], commentCount: 0, versionCount: 1 } as unknown as SongWithScore;
 
 const playlist = {
   id: "22222222-2222-4222-8222-222222222222",
@@ -98,6 +107,7 @@ afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   vi.mocked(fetchSetlistItems).mockReset();
+  vi.mocked(removeSetlistItem).mockReset();
   realtime.notifyChange.mockReset();
   realtime.requestRefresh.mockReset();
 });
@@ -173,5 +183,19 @@ describe("PlaylistClient setlist sync", () => {
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "내 쓰기" })));
 
     expect(shown()).toBe("mine,theirs");
+  });
+
+  it("keeps the setlist on screen when a removal from the candidates lands but the list after it cannot be read", async () => {
+    const inSetlist = { ...item("candidate"), item_type: "song", song_id: candidate.id } as SetlistItem;
+    render(<PlaylistClient playlist={playlist} songs={[candidate]} shareCode="abc123" participantCount={2} userNickname="보컬" currentUserId="owner" team={null} initialSetlistItems={[inSetlist, item("theirs")]} />);
+    vi.mocked(removeSetlistItem).mockResolvedValue({ success: true, items: null });
+    vi.mocked(fetchSetlistItems).mockReturnValue(new Promise(() => {}));
+
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Plastic Love 셋리에서 빼기" })));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
+
+    expect(shown()).toBe("theirs");
+    expect(realtime.notifyChange).toHaveBeenCalledTimes(1);
+    expect(fetchSetlistItems).toHaveBeenCalledTimes(1);
   });
 });

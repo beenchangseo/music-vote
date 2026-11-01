@@ -195,6 +195,13 @@ describe("removeSetlistItem", () => {
     expect(ops).toHaveLength(0);
   });
 
+  it("answers success without a list, not an empty one, when the delete landed but the read after it failed", async () => {
+    const { client } = createFakeClient((op) => (op.action === "delete" ? { error: null } : { data: null, error: { code: "57014" } }));
+    mocks.from.mockImplementation(client.from);
+
+    await expect(removeSetlistItem("p", null, "item-9", "abc123")).resolves.toEqual({ success: true, items: null });
+  });
+
   it("fails when the delete fails", async () => {
     fake({ message: "boom" });
 
