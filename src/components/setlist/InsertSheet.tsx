@@ -8,7 +8,7 @@ import ListRow, { SongRow } from "../ui/ListRow";
 import Modal from "../ui/Modal";
 import BlockForm from "./BlockForm";
 import { formatRuntime, setlistBlockTitle, type NewSetlistBlock } from "@/domain/setlist";
-import { displayArtist } from "@/domain/song-meta";
+import { displayArtist, displayTitle } from "@/domain/song-meta";
 import type { SongWithScore } from "@/domain/types";
 import type { InsertTarget } from "./SetlistEditList";
 
@@ -75,7 +75,7 @@ export default function InsertSheet({ target, initialStep = "choose", candidates
                 <SongRow
                   cover={song.thumbnail_url && <Image src={song.thumbnail_url} alt="" fill sizes="48px" className="object-cover" />}
                   trailing={
-                    <IconButton bare aria-label={`${song.title} 넣기`} disabled={pending !== null} onClick={() => insert({ kind: "song", songId: song.id })}>
+                    <IconButton bare aria-label={`${displayTitle(song.title)} 넣기`} disabled={pending !== null} onClick={() => insert({ kind: "song", songId: song.id })}>
                       {pending === song.id ? (
                         <span aria-hidden className="size-4 animate-spin rounded-pill border-2 border-border-strong border-t-primary-fg" />
                       ) : (
@@ -84,7 +84,7 @@ export default function InsertSheet({ target, initialStep = "choose", candidates
                     </IconButton>
                   }
                 >
-                  <span className="block truncate text-body font-semibold text-text">{song.title}</span>
+                  <span className="block truncate text-body font-semibold text-text">{displayTitle(song.title)}</span>
                   <span className="block truncate text-caption text-text-muted">
                     {displayArtist(song.artist, song.title) || "아티스트 미입력"}
                     {song.duration_seconds ? <span className="tabular-nums"> · {formatRuntime(song.duration_seconds)}</span> : null}

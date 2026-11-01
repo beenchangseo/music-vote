@@ -6,12 +6,37 @@ import { FIXTURE_SONG_COUNT, FIXTURE_TOTAL_SECONDS, fixtureItems, fixtureSongs }
 const song = { id: "song-1", title: "원본 제목", duration_seconds: 180 } as SongWithScore;
 const base = { id: "item-1", playlist_id: "p", position: 0, item_type: "song", song_id: song.id, label: null, description: null, duration_seconds: 0, title_override: null, duration_override_seconds: null, created_at: "" } as SetlistItem;
 
+describe("셋리스트 곡 제목", () => {
+  const youtube = { id: "song-1", title: "DAY6(데이식스)- 예뻤어 [가사/Lyrics]", artist: "DAY6", duration_seconds: 180, tempo_bpm: null } as SongWithScore;
+
+  it.each([
+    ["고친 제목이 먼저다", "공연용 예뻤어", "공연용 예뻤어"],
+    ["고친 제목 앞뒤 공백은 뗀다", "  공연용 예뻤어 ", "공연용 예뻤어"],
+    ["고친 제목이 없으면 후보곡 탭처럼 정리한 제목", null, "예뻤어"],
+    ["고친 제목이 비었으면 정리한 제목", "", "예뻤어"],
+    ["고친 제목이 공백뿐이면 정리한 제목", "   ", "예뻤어"],
+  ])("%s: 셋리스트·합주·내보내기가 같은 제목", (_name, title_override, expected) => {
+    const items = [{ ...base, title_override }];
+    const [block] = setlistBlocks(items, [youtube]);
+    expect({
+      title: effectiveSetlistTitle(items[0], youtube),
+      setlist: setlistBlockTitle(block),
+      rehearsal: rehearsalSteps(items, [youtube]).steps.map((step) => step.title),
+      export: setlistRows(items, [youtube]).map((row) => row.title),
+    }).toEqual({ title: expected, setlist: expected, rehearsal: [expected], export: [expected] });
+  });
+
+  it("후보곡이 지워진 곡 블록은 고친 제목이 있어도 어느 화면에도 그리지 않는다", () => {
+    const orphan = [{ ...base, song_id: null, title_override: "공연용 예뻤어" }];
+    expect(setlistBlocks(orphan, [youtube])).toEqual([]);
+    expect(rehearsalSteps(orphan, [youtube]).steps).toEqual([]);
+    expect(setlistRows(orphan, [youtube])).toEqual([]);
+  });
+});
+
 describe("setlist domain", () => {
-  it("uses overrides without changing the source song", () => {
-    const item = { ...base, title_override: "공연용 제목", duration_override_seconds: 200 };
-    expect(effectiveSetlistTitle(item, song)).toBe("공연용 제목");
-    expect(effectiveSetlistDuration(item, song)).toBe(200);
-    expect(song.title).toBe("원본 제목");
+  it("uses the duration override", () => {
+    expect(effectiveSetlistDuration({ ...base, duration_override_seconds: 200 }, song)).toBe(200);
   });
 
   it.each([
