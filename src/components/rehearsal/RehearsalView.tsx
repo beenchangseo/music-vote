@@ -1,11 +1,11 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { Fragment, useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
 import ScreenToolbar from "../ui/ScreenToolbar";
 import Image from "next/image";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
-import ListRow from "../ui/ListRow";
+import { ListRowButton } from "../ui/ListRow";
 import SongMeta from "./SongMeta";
 import CommentSection from "./CommentSection";
 import { useDialog } from "../ui/DialogProvider";
@@ -429,44 +429,47 @@ function StepSubtitle({ step }: { step: Step }) {
   );
 }
 
-/** 지나간 곡은 커버와 표시만 흐리고 글자는 한 단계 낮은 색으로 둔다. 글자까지 흐리면 4.5:1 이 안 나온다. */
+/**
+ * 지나간 곡은 커버와 표시만 흐리고 글자는 한 단계 낮은 색으로 둔다. 글자까지 흐리면 4.5:1 이 안 나온다.
+ * 이름은 제목과 끝남만이다. 아티스트·길이까지 이름에 넣으면 제목을 품은 아티스트가 한 번 더 읽혀서 설명으로 뺐다.
+ */
 function StepRow({ step, number, done, onSelect }: { step: Step; number: number; done: boolean; onSelect: () => void }) {
+  const id = useId();
   return (
-    <button
-      type="button"
+    <ListRowButton
       onClick={onSelect}
-      className="block w-full rounded-control px-1 text-left transition-colors hover:bg-surface-hover"
-    >
-      <ListRow
-        leading={
-          <span className={`flex items-center gap-3 ${done ? "opacity-55" : ""}`}>
-            {done ? (
-              <span className="grid size-7 shrink-0 place-items-center rounded-pill bg-success-soft text-success">
-                <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-                  <path d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="sr-only">끝남</span>
-              </span>
-            ) : (
-              <span className="grid size-7 shrink-0 place-items-center rounded-pill border-2 border-border-strong text-caption font-semibold tabular-nums text-text-muted">
-                {number}
-              </span>
-            )}
-            <StepCover step={step} size="row" />
-          </span>
-        }
-        trailing={
-          step.duration != null && (
-            <span className={`text-caption tabular-nums ${done ? "text-text-subtle" : "text-text-muted"}`}>{formatRuntime(step.duration)}</span>
-          )
-        }
-      >
-        <span className={`block truncate text-sm font-medium ${done ? "text-text-muted" : "text-text"}`}>{step.title}</span>
-        <span className={`block truncate text-caption ${done ? "text-text-subtle" : "text-text-muted"}`}>
-          <StepSubtitle step={step} />
+      aria-label={done ? `${step.title}, 끝남` : step.title}
+      aria-describedby={step.duration != null ? `${id}-sub ${id}-len` : `${id}-sub`}
+      className="px-1"
+      leading={
+        <span className={`flex items-center gap-3 ${done ? "opacity-55" : ""}`}>
+          {done ? (
+            <span className="grid size-7 shrink-0 place-items-center rounded-pill bg-success-soft text-success">
+              <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+                <path d="M5 13l4 4L19 7" />
+              </svg>
+            </span>
+          ) : (
+            <span className="grid size-7 shrink-0 place-items-center rounded-pill border-2 border-border-strong text-caption font-semibold tabular-nums text-text-muted">
+              {number}
+            </span>
+          )}
+          <StepCover step={step} size="row" />
         </span>
-      </ListRow>
-    </button>
+      }
+      trailing={
+        step.duration != null && (
+          <span id={`${id}-len`} className={`text-caption tabular-nums ${done ? "text-text-subtle" : "text-text-muted"}`}>
+            {formatRuntime(step.duration)}
+          </span>
+        )
+      }
+    >
+      <span className={`block truncate text-sm font-medium ${done ? "text-text-muted" : "text-text"}`}>{step.title}</span>
+      <span id={`${id}-sub`} className={`block truncate text-caption ${done ? "text-text-subtle" : "text-text-muted"}`}>
+        <StepSubtitle step={step} />
+      </span>
+    </ListRowButton>
   );
 }
 

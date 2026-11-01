@@ -176,6 +176,13 @@ describe("RehearsalView steps", () => {
     expect(screen.getByRole("button", { name: "이전 곡" })).toHaveFocus();
   });
 
+  it("names a step row by its title and status, and describes it by the rest of the row", () => {
+    renderRehearsal();
+    next();
+    expect(screen.getByRole("button", { name: "첫 곡, 끝남" })).toHaveAccessibleDescription("첫 곡 밴드 3:20");
+    expect(screen.getByRole("button", { name: "우리 노래" })).toHaveAccessibleDescription("자작곡 · 첫 자작곡 3:45");
+  });
+
   it("opens the current song's comments from its card", () => {
     const comment = { id: "c1", song_id: "a", nickname: "기타", content: "브릿지 빠르게", created_at: "", updated_at: "" };
     renderRehearsal({ comments: [comment] });

@@ -6,6 +6,7 @@ import Button from "../Button";
 import Chip from "../Chip";
 import IconButton from "../IconButton";
 import Input from "../Input";
+import { ListRowButton } from "../ListRow";
 
 afterEach(cleanup);
 
@@ -94,5 +95,25 @@ describe("Input", () => {
   it("lets the caller override aria-invalid", () => {
     render(<Input aria-label="곡 링크" invalid aria-invalid="false" />);
     expect(screen.getByRole("textbox", { name: "곡 링크" })).toHaveAttribute("aria-invalid", "false");
+  });
+});
+
+describe("ListRowButton", () => {
+  it("is one button that does not submit a form, with only phrasing content inside", () => {
+    const onSubmit = vi.fn((e: React.FormEvent) => e.preventDefault());
+    const onClick = vi.fn();
+    render(
+      <form onSubmit={onSubmit}>
+        <ListRowButton leading={<span>2</span>} trailing={<span>4:56</span>} onClick={onClick}>
+          <span className="block">벚꽃 엔딩</span>
+        </ListRowButton>
+      </form>,
+    );
+    const row = screen.getByRole("button", { name: /벚꽃 엔딩/ });
+    fireEvent.click(row);
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onSubmit).not.toHaveBeenCalled();
+    // A <button> may hold only phrasing content. A <div> inside it is invalid HTML.
+    expect(row.querySelector("div, p, h1, h2, h3, ul, li")).toBeNull();
   });
 });
