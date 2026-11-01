@@ -32,7 +32,7 @@
 
 ## 로컬에서 띄우기
 
-필요한 것: Node.js 20 이상(`npm run e2e:auth` 는 22.18 이상), Supabase 프로젝트, Kakao Developers 앱.
+필요한 것: Node.js 24.22.1(`.nvmrc`. `nvm use` 로 맞춘다), Supabase 프로젝트, Kakao Developers 앱.
 
 1. 의존성을 설치한다.
 
