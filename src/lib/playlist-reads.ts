@@ -4,7 +4,7 @@ import type { Comment, SetlistItem } from "@/domain/types";
 type Admin = ReturnType<typeof createAdminClient>;
 
 /** What the screen shows of a comment. user_id stays on the server (docs/adr/0011). */
-const COMMENT_COLUMNS = "id, song_id, nickname, content, created_at, updated_at";
+export const COMMENT_COLUMNS = "id, song_id, nickname, content, created_at, updated_at";
 
 /**
  * The setlist in play order. setlist_items is closed to the public key (v18).
