@@ -105,6 +105,34 @@ describe("usePlaylistRealtime", () => {
     expect(onRemoteChange).toHaveBeenCalledTimes(2);
   });
 
+  it("waits 5, 10, 20, 40 and then 60 seconds between tries while the refresh keeps failing, and starts over after one succeeds", async () => {
+    const onRemoteChange = vi.fn().mockRejectedValue(new Error("500"));
+    render(<Harness onRemoteChange={onRemoteChange} />);
+
+    emitRemoteChange();
+    await act(() => vi.advanceTimersByTimeAsync(0));
+    expect(onRemoteChange).toHaveBeenCalledTimes(1);
+
+    for (const [retry, delay] of [5000, 10_000, 20_000, 40_000, 60_000, 60_000].entries()) {
+      await act(() => vi.advanceTimersByTimeAsync(delay - 1));
+      expect(onRemoteChange).toHaveBeenCalledTimes(retry + 1);
+      await act(() => vi.advanceTimersByTimeAsync(1));
+      expect(onRemoteChange).toHaveBeenCalledTimes(retry + 2);
+    }
+
+    onRemoteChange.mockResolvedValueOnce(undefined);
+    await act(() => vi.advanceTimersByTimeAsync(60_000));
+    expect(onRemoteChange).toHaveBeenCalledTimes(8);
+
+    emitRemoteChange();
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(onRemoteChange).toHaveBeenCalledTimes(9);
+    await act(() => vi.advanceTimersByTimeAsync(4999));
+    expect(onRemoteChange).toHaveBeenCalledTimes(9);
+    await act(() => vi.advanceTimersByTimeAsync(1));
+    expect(onRemoteChange).toHaveBeenCalledTimes(10);
+  });
+
   it("does not retry a refresh that fails after the playlist screen is gone", async () => {
     let fail: (reason: Error) => void = () => {};
     const onRemoteChange = vi.fn(() => new Promise<void>((_, reject) => (fail = reject)));

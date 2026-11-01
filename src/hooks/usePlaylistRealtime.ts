@@ -7,20 +7,25 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 const CHANGE_EVENT = "playlist_changed";
 /** 표가 몰릴 때 새로고침이 겹치지 않도록 최소 간격을 둔다. */
 const REFRESH_INTERVAL_MS = 1000;
-/** 실패한 새로고침은 다음 알림을 기다리지 않고 이만큼 뒤에 다시 받는다. 알림이 더 오지 않아도 화면이 따라잡는다. */
-const RETRY_DELAY_MS = 5000;
+/**
+ * 실패한 새로고침은 알림을 기다리지 않고 다시 받아, 알림이 더 오지 않아도 화면이 따라잡게 한다.
+ * 다시 받을 때마다 router.refresh() 와 GET 을 보내니, 계속 실패하면 간격을 두 배씩 늘린다.
+ */
+const RETRY_FIRST_MS = 5000;
+const RETRY_MAX_MS = 60_000;
 
 /**
  * 같은 합주방을 보고 있는 다른 화면에 "바뀌었다"만 알린다.
  * 값은 각자 다시 받아간다. votes 테이블 변경을 그대로 흘려보내면
  * 익명 모드에서 투표자가 드러나기 때문에 내용은 싣지 않는다.
- * onRemoteChange 가 reject 하면 RETRY_DELAY_MS 뒤에 다시 부른다.
+ * onRemoteChange 가 reject 하면 5초, 10초, 20초 … 60초 뒤에 다시 부르고, 한 번 성공하면 5초부터 다시 센다.
  */
 export function usePlaylistRealtime(shareCode: string, onRemoteChange: () => Promise<void> | void) {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const missedRef = useRef(false);
   const lastRefreshRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const failuresRef = useRef(0);
   // 콜백이 바뀔 때마다 채널을 다시 열지 않도록 최신 값만 들고 있는다.
   const onRemoteChangeRef = useRef(onRemoteChange);
   useEffect(() => {
@@ -39,10 +44,17 @@ export function usePlaylistRealtime(shareCode: string, onRemoteChange: () => Pro
       timerRef.current = null;
       missedRef.current = false;
       lastRefreshRef.current = Date.now();
-      Promise.resolve(onRemoteChangeRef.current()).catch(() => {
-        // 화면을 떠난 뒤에는 다시 받지 않는다.
-        if (channelRef.current) scheduleRefresh(RETRY_DELAY_MS);
-      });
+      Promise.resolve(onRemoteChangeRef.current()).then(
+        () => {
+          failuresRef.current = 0;
+        },
+        () => {
+          // 화면을 떠난 뒤에는 다시 받지 않는다.
+          if (!channelRef.current) return;
+          scheduleRefresh(Math.min(RETRY_FIRST_MS * 2 ** failuresRef.current, RETRY_MAX_MS));
+          failuresRef.current += 1;
+        },
+      );
     }, wait);
   }, []);
 
