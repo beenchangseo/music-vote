@@ -152,8 +152,8 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
                     <path d="M8 5v14l11-7z" />
                   </svg>
                 }
-                // With 편집 or the host-only notice beside it, the label squeezes the runtime on a 360px phone.
-                compact={showEditToggle || showHostOnlyNotice}
+                // 내보내기 always sits beside it, and with the label the runtime cell overflows on a 320px phone.
+                compact
                 onClick={() => {
                   // Counted like the header's 전체 듣기: only a start from an empty player, so the two sources compare.
                   if (!player?.currentSongId) track("play_all_started", { source: "setlist", song_count: playOrder.length });

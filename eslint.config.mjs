@@ -63,9 +63,9 @@ const eslintConfig = defineConfig([
             message: "primary-soft 는 지웠다. 선택·tonal 바탕은 primary-tint 를 쓴다.",
           },
           {
-            selector: `JSXOpeningElement[name.name=/^(Button|IconButton|Chip)$/] > JSXAttribute[name.name='className'] ${node}${CONTROL_SIZE_UTILITY}]`,
+            selector: `:matches(JSXOpeningElement[name.name=/^(Button|IconButton|Chip)$/] > JSXAttribute[name.name='className'], CallExpression[callee.name='buttonClassName'] Property[key.name='className']) ${node}${CONTROL_SIZE_UTILITY}]`,
             message:
-              "Button·IconButton·Chip 의 높이·폭·안쪽 여백·모서리·글자 크기는 size·variant prop 이 정한다. className 에는 바깥 배치만 둔다" +
+              "Button·IconButton·Chip·buttonClassName 의 높이·폭·안쪽 여백·모서리·글자 크기는 size·variant prop 이 정한다. className 에는 바깥 배치만 둔다" +
               "(m*·flex-1·shrink-0·self-*·order-*·hidden 같은 표시 여부). 꽉 찬 폭은 Button 의 fullWidth, 툴바 동작은 ToolbarButton 을 쓴다.",
           },
         ]),

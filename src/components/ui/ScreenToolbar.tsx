@@ -63,7 +63,7 @@ export function ToolbarButton({ icon, label, compact = false, pressed, type = "b
     <button
       type={type}
       aria-pressed={pressed}
-      className={buttonClassName({ variant: pressed ? "primary" : "tonal", size: "toolbar", className: compact ? "max-sm:size-control-md max-sm:px-0" : "" })}
+      className={buttonClassName({ variant: pressed ? "primary" : "tonal", size: compact ? "toolbar-compact" : "toolbar" })}
       {...rest}
     >
       {icon}

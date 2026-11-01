@@ -24,6 +24,7 @@ describe("eslint control-size rule", () => {
     '<Chip className="py-1 text-xs" />',
     "<Button className={`${extra} !px-2`} />",
     '<Button className={wide ? "max-w-40" : undefined} />',
+    '<Link href="/" className={buttonClassName({ variant: "tonal", className: "h-9" })} />',
   ])("flags %s", async (code) => {
     const errors = await controlSizeErrors(code);
     expect(errors).toHaveLength(1);
@@ -38,6 +39,7 @@ describe("eslint control-size rule", () => {
     "<Button className={`${extra} mx-auto`} />",
     '<button className="h-11 px-3 rounded-control text-sm" />',
     '<Badge className="max-w-18 truncate" />',
+    '<Link href="/" className={buttonClassName({ variant: "tonal", className: "mt-4" })} />',
   ])("allows %s", async (code) => {
     expect(await controlSizeErrors(code)).toEqual([]);
   });
