@@ -64,7 +64,7 @@ export function SongBlock({ item, song, editing, onEdit, onRemove, nowPlaying, o
   const coverClass = `relative shrink-0 overflow-hidden rounded-control bg-surface-elevated ${editing ? "size-12" : "size-14"}`;
   const text = (
     <span className="min-w-0 flex-1 text-left">
-      <span className={`line-clamp-2 text-body font-semibold leading-6 ${nowPlaying ? "text-primary-fg" : "text-text"}`}>{title}</span>
+      <span className={`line-clamp-2 break-keep-wrap text-body font-semibold leading-6 ${nowPlaying ? "text-primary-fg" : "text-text"}`}>{title}</span>
       <MetaLine name={displayArtist(song.artist, song.title) || "아티스트 미입력"} duration={duration} className="text-sm leading-5 text-text-muted" />
       {(song.tempo_bpm || key) && (
         <span className="mt-1.5 flex items-center gap-1">
@@ -124,7 +124,7 @@ export function OriginalBlock({ item, editing, onEdit, onRemove }: BlockProps) {
         </svg>
       </span>
       <span className="min-w-0 flex-1 text-left">
-        <span className="line-clamp-2 text-body font-semibold leading-6 text-text">{item.label || "자작곡"}</span>
+        <span className="line-clamp-2 break-keep-wrap text-body font-semibold leading-6 text-text">{item.label || "자작곡"}</span>
         <MetaLine
           name={<span className="font-medium text-primary-fg">자작곡</span>}
           duration={item.duration_seconds > 0 ? item.duration_seconds : null}

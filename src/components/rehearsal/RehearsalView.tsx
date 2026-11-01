@@ -171,7 +171,7 @@ export default function RehearsalView({
         <StepCover step={current} size="card" />
         <div className="min-w-0 flex-1">
           <p className="text-caption font-semibold text-primary-fg">지금</p>
-          <h2 className="line-clamp-2 break-keep text-h4 font-bold leading-snug text-text">{current.title}</h2>
+          <h2 className="line-clamp-2 break-keep-wrap text-h4 font-bold leading-snug text-text">{current.title}</h2>
           <p className="truncate text-sm text-text-muted">
             <StepSubtitle step={current} />
           </p>
