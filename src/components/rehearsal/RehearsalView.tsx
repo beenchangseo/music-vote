@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
 import ScreenToolbar from "../ui/ScreenToolbar";
 import Image from "next/image";
+import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
 import { ListRowButton } from "../ui/ListRow";
@@ -140,9 +141,6 @@ export default function RehearsalView({
     metronome.toggle();
   }
 
-  const chipClass = "inline-flex min-h-11 items-center gap-1.5 rounded-pill px-4 text-sm transition-colors";
-  const filledChip = "bg-surface-hover text-text";
-
   const card = (
     <Card
       ref={cardRef}
@@ -176,36 +174,31 @@ export default function RehearsalView({
             { label: "BPM", value: bpm ? String(bpm) : null },
             { label: "길이", value: current.duration != null ? formatRuntime(current.duration) : null },
           ].map(({ label, value }) => (
-            <button
+            <Button
               key={label}
-              type="button"
+              variant="tonal"
+              size="sm"
               onClick={openMeta}
               aria-label={value ? `${label} ${value} 고치기` : `${label} 적어두기`}
-              className={`${chipClass} ${
-                value
-                  ? `${filledChip} hover:bg-surface-elevated`
-                  : "border border-dashed border-border-strong text-text-subtle hover:border-primary/60 hover:text-text"
-              }`}
             >
-              <span className="text-caption text-text-muted">{label}</span>
-              <span className="font-bold tabular-nums">{value ?? "적기"}</span>
-            </button>
+              <span className="text-caption font-normal text-text-muted">{label}</span>
+              <span className={`font-bold tabular-nums ${value ? "" : "text-text-muted"}`}>{value ?? "적기"}</span>
+            </Button>
           ))}
         </div>
       ) : (
+        // 곡 행이 없는 장은 고친 값을 저장할 곳이 없다. 그래서 눌러지는 버튼이 아니라 배지로 보여 준다.
         (current.duration != null || bpm > 0) && (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-1.5">
             {current.duration != null && (
-              <span className={`${chipClass} ${filledChip}`}>
-                <span className="text-caption text-text-muted">길이</span>
-                <span className="font-bold tabular-nums">{formatRuntime(current.duration)}</span>
-              </span>
+              <Badge className="gap-1">
+                길이<span>{formatRuntime(current.duration)}</span>
+              </Badge>
             )}
             {bpm > 0 && (
-              <span className={`${chipClass} ${filledChip}`}>
-                <span className="text-caption text-text-muted">BPM</span>
-                <span className="font-bold tabular-nums">{bpm}</span>
-              </span>
+              <Badge className="gap-1">
+                BPM<span>{bpm}</span>
+              </Badge>
             )}
           </div>
         )
@@ -213,17 +206,13 @@ export default function RehearsalView({
 
       {/* 메트로놈. 페이지를 나가면 합주 흐름이 끊긴다. 탭 템포가 바로 옆에서 BPM 을 채운다. */}
       <div className="mt-2 flex flex-wrap gap-2">
-        <button
-          type="button"
+        <Button
+          variant={metronome.isPlaying ? "primary" : "tonal"}
+          size="sm"
           onClick={toggleMetronome}
           disabled={!metronome.isPlaying && !currentSong && !bpm}
-          className={`inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-pill px-4 text-sm font-semibold transition-colors disabled:text-text-subtle ${
-            metronome.isPlaying
-              ? "bg-primary text-on-primary hover:bg-primary-hover"
-              : "border border-border text-text hover:bg-surface-hover disabled:hover:bg-transparent"
-          }`}
         >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+          <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
             <path d="M9 3h6l4 18H5z" />
             <path d="M12 17V8" />
           </svg>
@@ -235,16 +224,16 @@ export default function RehearsalView({
                 ? "BPM 적고 메트로놈 켜기"
                 : "탭 템포로 BPM 맞추기"}
           {metronome.isPlaying && (
-            <span className="ml-1 flex items-center gap-1" aria-hidden>
+            <span className="flex items-center gap-1" aria-hidden>
               {Array.from({ length: metronome.beatsPerBar }, (_, i) => (
                 <span
                   key={i}
-                  className={`h-1.5 w-1.5 rounded-pill transition-colors ${metronome.beat === i ? "bg-white" : "bg-white/35"}`}
+                  className={`size-1.5 rounded-pill transition-colors ${metronome.beat === i ? "bg-on-primary" : "bg-on-primary/35"}`}
                 />
               ))}
             </span>
           )}
-        </button>
+        </Button>
         <TapTempoButton
           key={current.id}
           onTempo={(value) => keepTappedBpm(current, value)}
@@ -302,14 +291,15 @@ export default function RehearsalView({
 
       {currentSong && (
         <>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-2"
             aria-expanded={showComments}
             onClick={() => setShowComments((open) => !open)}
-            className="mt-1 inline-flex min-h-11 items-center text-caption text-text-muted transition-colors hover:text-text"
           >
             코멘트 {songComments.length} · {showComments ? "접기" : "눌러서 보기"}
-          </button>
+          </Button>
           {showComments && (
             <div className="-mx-3 -mb-3 border-t border-border">
               <CommentSection
@@ -514,9 +504,10 @@ function TapTempoButton({
 }) {
   const { tap, tapCount, tapsToFill } = useTapTempo(onCommit);
   return (
-    <button
-      type="button"
-      className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-pill border border-border px-4 text-sm font-semibold text-text transition-colors hover:bg-surface-hover active:scale-95"
+    <Button
+      variant="tonal"
+      size="sm"
+      className="shrink-0"
       onClick={() => {
         const value = tap();
         if (value !== null) onTempo(value);
@@ -527,10 +518,10 @@ function TapTempoButton({
         {Array.from({ length: tapsToFill }, (_, i) => (
           <span
             key={i}
-            className={`h-1.5 w-1.5 rounded-pill transition-colors ${i < tapCount ? "bg-primary" : "bg-border-strong"}`}
+            className={`size-1.5 rounded-pill transition-colors ${i < tapCount ? "bg-primary" : "bg-border-strong"}`}
           />
         ))}
       </span>
-    </button>
+    </Button>
   );
 }
