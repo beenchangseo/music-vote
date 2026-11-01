@@ -225,6 +225,10 @@ export default function DesignPage() {
               <p className="text-sm text-text-muted">단톡방에 초대 링크를 보내면 바로 들어와요</p>
             </Card>
           ))}
+          <Card variant="selected" padding="sm" footer={<p className="p-3 text-sm text-text-muted">footer 는 카드 끝까지 닿아요</p>}>
+            <p className="text-sm font-semibold text-text">footer</p>
+            <p className="text-sm text-text-muted">펼친 코멘트처럼 카드 끝까지 닿는 아래 칸</p>
+          </Card>
         </div>
       </Section>
 

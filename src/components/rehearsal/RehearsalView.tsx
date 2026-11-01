@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
+import { Fragment, useEffect, useId, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
 import ScreenToolbar from "../ui/ScreenToolbar";
 import Image from "next/image";
 import Badge from "../ui/Badge";
@@ -146,6 +146,19 @@ export default function RehearsalView({
       aria-label="지금 곡"
       aria-current="step"
       className="my-2 scroll-my-2"
+      footer={
+        currentSong &&
+        showComments && (
+          <CommentSection
+            songId={currentSong.id}
+            comments={songComments}
+            nickname={nickname}
+            shareCode={shareCode}
+            onCommentsChange={onCommentsChange}
+            allComments={comments}
+          />
+        )
+      }
     >
       <div className="flex items-center gap-3">
         <StepCover step={current} size="card" />
@@ -285,29 +298,15 @@ export default function RehearsalView({
       </div>
 
       {currentSong && (
-        <>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-2"
-            aria-expanded={showComments}
-            onClick={() => setShowComments((open) => !open)}
-          >
-            코멘트 {songComments.length} · {showComments ? "접기" : "눌러서 보기"}
-          </Button>
-          {showComments && (
-            <div className="-mx-3 -mb-3 border-t border-border">
-              <CommentSection
-                songId={currentSong.id}
-                comments={songComments}
-                nickname={nickname}
-                shareCode={shareCode}
-                onCommentsChange={onCommentsChange}
-                allComments={comments}
-              />
-            </div>
-          )}
-        </>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mt-2"
+          aria-expanded={showComments}
+          onClick={() => setShowComments((open) => !open)}
+        >
+          코멘트 {songComments.length} · {showComments ? "접기" : "눌러서 보기"}
+        </Button>
       )}
     </Card>
   );
@@ -425,22 +424,26 @@ function StepRow({ step, number, done, onSelect }: { step: Step; number: number;
       onClick={onSelect}
       aria-label={done ? `${step.title}, 끝남` : step.title}
       aria-describedby={step.duration != null ? `${id}-sub ${id}-len` : `${id}-sub`}
-      className="px-1"
+      className={stepInset}
       leading={
-        <span className={`flex items-center gap-3 ${done ? "opacity-55" : ""}`}>
-          {done ? (
-            <span className="grid size-7 shrink-0 place-items-center rounded-pill bg-success-soft text-success">
-              <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-                <path d="M5 13l4 4L19 7" />
-              </svg>
-            </span>
-          ) : (
-            <span className="grid size-7 shrink-0 place-items-center rounded-pill border-2 border-border-strong text-caption font-semibold tabular-nums text-text-muted">
-              {number}
-            </span>
-          )}
+        <StepLead
+          className={done ? "opacity-55" : ""}
+          marker={
+            done ? (
+              <span className="grid size-full place-items-center rounded-pill bg-success-soft text-success">
+                <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+              </span>
+            ) : (
+              <span className="grid size-full place-items-center rounded-pill border-2 border-border-strong text-caption font-semibold tabular-nums text-text-muted">
+                {number}
+              </span>
+            )
+          }
+        >
           <StepCover step={step} size="row" />
-        </span>
+        </StepLead>
       }
       trailing={
         step.duration != null && (
@@ -466,12 +469,32 @@ function ClockIcon({ className }: { className: string }) {
   );
 }
 
+/** 단계 행과 인터벌 줄이 같이 쓰는 좌우 여백. */
+const stepInset = "px-1";
+
+/**
+ * [표시 칸][내용]. 단계 행은 표시 칸에 번호·끝남 원을, 인터벌 줄은 빈 칸을 둔다.
+ * 같은 칸과 같은 간격을 지나서 인터벌 줄의 시계가 행의 커버와 같은 세로줄에 선다.
+ */
+function StepLead({ marker, className = "", children }: { marker?: ReactNode; className?: string; children: ReactNode }) {
+  return (
+    <span className={`flex min-w-0 items-center gap-3 ${className}`}>
+      <span className="grid size-7 shrink-0 place-items-center">{marker}</span>
+      {children}
+    </span>
+  );
+}
+
 function IntervalLine({ interval, past }: { interval: RehearsalInterval; past: boolean }) {
   return (
-    <p className={`ml-11 flex min-h-8 items-center gap-1.5 text-caption text-warning ${past ? "opacity-70" : ""}`}>
-      <ClockIcon className="size-3.5 shrink-0" />
-      <span className="min-w-0 truncate font-semibold">{interval.title}</span>
-      {interval.duration > 0 && <span className="shrink-0 tabular-nums">· {formatRuntime(interval.duration)}</span>}
+    <p className={`${stepInset} flex min-h-8 items-center text-caption text-warning ${past ? "opacity-70" : ""}`}>
+      <StepLead>
+        <span className="flex min-w-0 items-center gap-1.5">
+          <ClockIcon className="size-3.5 shrink-0" />
+          <span className="min-w-0 truncate font-semibold">{interval.title}</span>
+          {interval.duration > 0 && <span className="shrink-0 tabular-nums">· {formatRuntime(interval.duration)}</span>}
+        </span>
+      </StepLead>
     </p>
   );
 }

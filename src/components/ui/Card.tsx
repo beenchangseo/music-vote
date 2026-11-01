@@ -1,10 +1,15 @@
-import { HTMLAttributes, forwardRef } from "react";
+import { HTMLAttributes, ReactNode, forwardRef } from "react";
 
 type Variant = "default" | "elevated" | "outline" | "selected";
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: Variant;
   padding?: "none" | "sm" | "md" | "lg";
+  /**
+   * 카드 끝까지 닿는 아래 칸(펼친 코멘트 등). 위에 구분선이 그어지고, padding 은 위 내용에만 붙는다.
+   * 음수 margin 으로 padding 을 지워서 끝까지 펴지 않는다.
+   */
+  footer?: ReactNode;
 }
 
 const variantClasses: Record<Variant, string> = {
@@ -22,16 +27,23 @@ const paddingClasses = {
 };
 
 const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
-  { variant = "default", padding = "md", className = "", children, ...rest },
+  { variant = "default", padding = "md", footer, className = "", children, ...rest },
   ref,
 ) {
   return (
     <div
       ref={ref}
-      className={`rounded-card ${variantClasses[variant]} ${paddingClasses[padding]} ${className}`}
+      className={`rounded-card ${variantClasses[variant]} ${footer ? "" : paddingClasses[padding]} ${className}`}
       {...rest}
     >
-      {children}
+      {footer ? (
+        <>
+          <div className={paddingClasses[padding]}>{children}</div>
+          <div className="border-t border-border">{footer}</div>
+        </>
+      ) : (
+        children
+      )}
     </div>
   );
 });
