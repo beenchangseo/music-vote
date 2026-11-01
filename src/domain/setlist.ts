@@ -231,34 +231,30 @@ export type RehearsalStep<S> = {
 } & ({ kind: "song"; song: S } | { kind: "original"; description: string | null });
 
 export function rehearsalSteps<S extends RuntimeSong & Pick<SongWithScore, "title">>(
-  items: (RowItem & Pick<SetlistItem, "id" | "position">)[],
+  items: SetlistItem[],
   songs: S[],
 ): { steps: RehearsalStep<S>[]; trailing: RehearsalInterval[] } {
-  const sorted = [...items].sort((a, b) => a.position - b.position);
-  const songMap = new Map(songs.map((song) => [song.id, song]));
-  const starts = cumulativeStarts(sorted, songs);
-  const { totalRuntime } = summarizeSetlist(sorted, songs);
+  const { totalRuntime } = summarizeSetlist(items, songs);
   const steps: RehearsalStep<S>[] = [];
   let pending: RehearsalInterval[] = [];
   let previousEnd = 0;
 
-  sorted.forEach((item, index) => {
-    if (item.item_type === "interval") {
-      pending.push({ id: item.id, title: item.label || "인터벌", duration: itemRuntime(item, undefined) ?? 0 });
-      return;
+  for (const block of setlistBlocks(items, songs)) {
+    const { item } = block;
+    const duration = itemRuntime(item, block.kind === "song" ? block.song : undefined);
+    if (block.kind === "interval") {
+      pending.push({ id: item.id, title: item.label || "인터벌", duration: duration ?? 0 });
+      continue;
     }
-    const song = item.item_type === "song" && item.song_id ? songMap.get(item.song_id) : undefined;
-    if (item.item_type === "song" && !song) return;
-    const duration = itemRuntime(item, song);
     const base = { id: item.id, duration, before: pending, remaining: totalRuntime - previousEnd };
     steps.push(
-      song
-        ? { ...base, kind: "song", song, title: effectiveSetlistTitle(item, song) }
+      block.kind === "song"
+        ? { ...base, kind: "song", song: block.song, title: effectiveSetlistTitle(item, block.song) }
         : { ...base, kind: "original", title: item.label || "자작곡", description: item.description },
     );
     pending = [];
-    previousEnd = starts[index] + (duration ?? 0);
-  });
+    previousEnd = block.start + (duration ?? 0);
+  }
 
   return { steps, trailing: pending };
 }

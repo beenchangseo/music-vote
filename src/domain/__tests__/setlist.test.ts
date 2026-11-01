@@ -434,6 +434,19 @@ describe("rehearsalSteps", () => {
     expect(steps[1]).toMatchObject({ kind: "original", description: "첫 자작곡" });
   });
 
+  it("셋리스트 탭이 그리는 블록을 같은 순서로 모두 지나고 셋리스트 탭이 빼는 블록은 같이 뺀다", () => {
+    const lists = [
+      fixtureItems,
+      [songItem("a"), songItem("gone"), interval("멘트", 60), deleted(), original("우리 노래", 225), songItem("c")],
+      [{ ...songItem("c"), position: 99 }, interval("셋업", 30), songItem("a")],
+    ];
+    for (const items of lists) {
+      const { steps, trailing } = rehearsalSteps(items, songs);
+      const walked = [...steps.flatMap((step) => [...step.before.map((iv) => iv.id), step.id]), ...trailing.map((iv) => iv.id)];
+      expect(walked).toEqual(setlistBlocks(items, songs).map((block) => block.item.id));
+    }
+  });
+
   it("같은 곡이 두 번 들면 두 장이고 장은 셋리스트 줄로 구별된다", () => {
     const items = [songItem("a"), songItem("a")];
     expect(rehearsalSteps(items, songs).steps.map((step) => step.id)).toEqual(items.map((item) => item.id));
