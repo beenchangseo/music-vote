@@ -118,69 +118,19 @@ async function processOne(
 
   const picked = scored.slice(0, pl.setlistCount);
 
-  // 4) 셋리스트 항목 삽입 (이미 항목이 있으면 자동 확정 스킵 — 사용자가 손댔을 수 있음)
-  const { count: existingCount, error: countErr } = await admin
-    .from("setlist_items")
-    .select("*", { count: "exact", head: true })
-    .eq("playlist_id", pl.id);
+  // 4) 빈 셋리면 picked 로 채우고, 블록이 있으면 사용자가 손댄 셋리 그대로 확정한다. 넣기·순서 저장과 같은 잠금 안의
+  //    한 트랜잭션이다(v27).
+  const { error: confirmErr } = await admin.rpc("confirm_setlist", {
+    p_playlist_id: pl.id,
+    p_song_ids: picked.map((s) => s.id),
+  });
 
-  if (countErr) {
+  if (confirmErr) {
     return {
       shareCode: pl.shareCode,
       playlistId: pl.id,
       result: "failed",
-      reason: countErr.message,
-    };
-  }
-
-  if ((existingCount ?? 0) > 0) {
-    // 사용자가 이미 손댐 — confirmed 플래그만 true 처리
-    await admin
-      .from("playlists")
-      .update({ setlist_confirmed: true })
-      .eq("id", pl.id);
-    revalidatePath(`/playlist/${pl.shareCode}`);
-    return {
-      shareCode: pl.shareCode,
-      playlistId: pl.id,
-      result: "confirmed",
-      reason: "items_already_exist",
-      picked: existingCount ?? 0,
-    };
-  }
-
-  const items = picked.map((s, i) => ({
-    playlist_id: pl.id,
-    position: i,
-    item_type: "song" as const,
-    song_id: s.id,
-    label: null,
-    duration_seconds: 0,
-  }));
-
-  const { error: insertErr } = await admin.from("setlist_items").insert(items);
-  if (insertErr) {
-    return {
-      shareCode: pl.shareCode,
-      playlistId: pl.id,
-      result: "failed",
-      reason: insertErr.message,
-    };
-  }
-
-  const { error: updateErr } = await admin
-    .from("playlists")
-    .update({ setlist_confirmed: true })
-    .eq("id", pl.id);
-
-  if (updateErr) {
-    // 롤백
-    await admin.from("setlist_items").delete().eq("playlist_id", pl.id);
-    return {
-      shareCode: pl.shareCode,
-      playlistId: pl.id,
-      result: "failed",
-      reason: updateErr.message,
+      reason: confirmErr.message,
     };
   }
 
