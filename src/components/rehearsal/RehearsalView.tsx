@@ -137,6 +137,14 @@ export default function RehearsalView({
     metronome.toggle();
   }
 
+  // BPM 이 없으면 메트로놈은 막지 않고 BPM 입력칸으로 보낸다. 입력칸이 없는 자작곡만 막고, 탭 템포가 BPM 을 채운다.
+  const metronomeAction =
+    bpm || metronome.isPlaying
+      ? { pressed: metronome.isPlaying, "aria-label": bpm ? `메트로놈 ${bpm} BPM` : undefined, onClick: toggleMetronome }
+      : currentSong
+        ? { "aria-label": "메트로놈, BPM 적고 켜기", onClick: openMeta }
+        : { "aria-label": "메트로놈, 탭 템포로 BPM 맞추기", disabled: true };
+
   const card = (
     <Card
       ref={cardRef}
@@ -176,9 +184,10 @@ export default function RehearsalView({
         펼치고, 그 안의 `메타 추가` 를 또 눌러야 입력칸이 나왔다. 두 번 접혀 있었다.
       */}
       {currentSong ? (
-        <div className="mt-3 flex flex-wrap gap-2">
+        // 한 줄로 둔다. 남는 폭이 모자라면 키 칸만 줄고 긴 메모는 말줄임한다. BPM·길이는 글자 수가 정해져 있다.
+        <div className="mt-3 grid grid-cols-[minmax(0,auto)_auto_auto] justify-start gap-2">
           {[
-            { label: "우리 키", value: formatKey(currentSong.key_root, currentSong.key_mode) || currentSong.key_memo },
+            { label: "키", value: formatKey(currentSong.key_root, currentSong.key_mode) || currentSong.key_memo },
             { label: "BPM", value: bpm ? String(bpm) : null },
             { label: "길이", value: current.duration != null ? formatRuntime(current.duration) : null },
           ].map(({ label, value }) => (
@@ -186,11 +195,15 @@ export default function RehearsalView({
               key={label}
               variant="tonal"
               size="sm"
+              fullWidth
               onClick={openMeta}
               aria-label={value ? `${label} ${value} 고치기` : `${label} 적어두기`}
             >
-              <span className="text-caption font-normal text-text-muted">{label}</span>
-              <span className={`font-bold tabular-nums ${value ? "" : "text-text-muted"}`}>{value ?? "적기"}</span>
+              {/* 이름과 값은 자작곡 배지처럼 gap-1 로 붙여서, 320px 에서도 키 칸에 메모 글자 자리가 남는다. */}
+              <span className="flex min-w-0 items-center gap-1">
+                <span className="shrink-0 text-caption font-normal text-text-muted">{label}</span>
+                <span className={`min-w-0 truncate font-bold tabular-nums ${value ? "" : "text-text-muted"}`}>{value ?? "적기"}</span>
+              </span>
             </Button>
           ))}
         </div>
@@ -214,33 +227,21 @@ export default function RehearsalView({
 
       {/*
         메트로놈. 페이지를 나가면 합주 흐름이 끊긴다. 탭 템포가 바로 옆에서 BPM 을 채운다.
-        켜고 꺼도 글자와 박자 점 자리가 같아서 폭이 그대로다. 점 자리를 두고도 320px 에서 한 줄에
-        들도록 BPM 은 글자에 넣지 않는다. 바로 위 BPM 칸이 보여 주고, 스크린 리더는 이름으로 읽는다.
+        BPM 이 있든 없든, 켜든 끄든 글자와 박자 점이 같아서 폭이 그대로다. 그래서 320px 에서도 한 줄이고
+        장을 넘겨도 탭 템포가 제자리에 있다. BPM 은 바로 위 BPM 칸이 보여 주고, 스크린 리더는 이름으로 읽는다.
       */}
       <div className="mt-2 flex flex-wrap gap-2">
-        {bpm || metronome.isPlaying ? (
-          <Button
-            variant="tonal"
-            size="sm"
-            pressed={metronome.isPlaying}
-            aria-label={bpm ? `메트로놈 ${bpm} BPM` : undefined}
-            onClick={toggleMetronome}
-          >
-            메트로놈
-            <span className="flex items-center gap-1" aria-hidden>
-              {Array.from({ length: metronome.beatsPerBar }, (_, i) => (
-                <span
-                  key={i}
-                  className={`size-1.5 rounded-pill transition-colors ${!metronome.isPlaying ? "bg-border-strong" : metronome.beat === i ? "bg-on-primary" : "bg-on-primary/35"}`}
-                />
-              ))}
-            </span>
-          </Button>
-        ) : (
-          <Button variant="tonal" size="sm" onClick={openMeta} disabled={!currentSong}>
-            {currentSong ? "BPM 적고 메트로놈 켜기" : "탭 템포로 BPM 맞추기"}
-          </Button>
-        )}
+        <Button variant="tonal" size="sm" {...metronomeAction}>
+          메트로놈
+          <span className="flex items-center gap-1" aria-hidden>
+            {Array.from({ length: metronome.beatsPerBar }, (_, i) => (
+              <span
+                key={i}
+                className={`size-1.5 rounded-pill transition-colors ${!metronome.isPlaying ? "bg-border-strong" : metronome.beat === i ? "bg-on-primary" : "bg-on-primary/35"}`}
+              />
+            ))}
+          </span>
+        </Button>
         <TapTempoButton
           key={current.id}
           onTempo={(value) => keepTappedBpm(current, value)}

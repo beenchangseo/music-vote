@@ -144,6 +144,16 @@ describe("RehearsalView tap tempo", () => {
     expect(metronome().textContent).toBe(text);
   });
 
+  it("keeps the metronome in its place without a BPM, and opens the BPM field from it", () => {
+    renderRehearsal();
+    const metronome = screen.getByRole("button", { name: "메트로놈, BPM 적고 켜기" });
+    expect(metronome).toHaveTextContent(/^메트로놈$/);
+    expect(metronome).not.toHaveAttribute("aria-pressed");
+
+    fireEvent.click(metronome);
+    expect(screen.getByPlaceholderText("BPM")).toBeInTheDocument();
+  });
+
   describe("on an original", () => {
     const original = { ...item("i3", "s1", 1), item_type: "original", song_id: null, label: "우리 노래", duration_seconds: 200 } as SetlistItem;
     const renderWithOriginal = () =>
@@ -164,7 +174,7 @@ describe("RehearsalView tap tempo", () => {
     it("runs the metronome at the tapped BPM without saving it, since originals have no song row", async () => {
       renderWithOriginal();
       go("다음으로");
-      expect(screen.getByRole("button", { name: "탭 템포로 BPM 맞추기" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "메트로놈, 탭 템포로 BPM 맞추기" })).toBeDisabled();
 
       tap(4);
       await idle();
@@ -192,7 +202,7 @@ describe("RehearsalView tap tempo", () => {
       expect(screen.getByRole("button", { name: "메트로놈 100 BPM" })).toHaveAttribute("aria-pressed", "true");
 
       go("다음으로");
-      expect(screen.getByRole("button", { name: "탭 템포로 BPM 맞추기" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "메트로놈, 탭 템포로 BPM 맞추기" })).toBeDisabled();
 
       go("이전 곡");
       expect(screen.getByRole("button", { name: "메트로놈 100 BPM" })).toHaveAttribute("aria-pressed", "false");
