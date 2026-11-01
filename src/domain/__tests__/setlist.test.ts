@@ -177,7 +177,7 @@ describe("setlistEditAccess", () => {
 });
 
 describe("setlistPlayOrder", () => {
-  const songs = ["a", "b", "c"].map((id) => ({ id }) as SongWithScore);
+  const songs = ["a", "b", "c"].map((id) => ({ id, title: id }) as SongWithScore);
   const at = (position: number, fields: Partial<SetlistItem>) =>
     ({ ...base, id: `item-${position}`, position, ...fields }) as SetlistItem;
   const ids = (items: SetlistItem[]) => setlistPlayOrder(items, songs).map((song) => song.id);

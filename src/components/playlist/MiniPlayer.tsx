@@ -147,7 +147,7 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
       {expanded ? (
         <div className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 pb-8">
           <div className="mt-6 min-w-0">
-            <h2 className="line-clamp-2 break-keep text-h3 font-bold leading-snug text-text">{currentSong.title}</h2>
+            <h2 className="line-clamp-2 break-keep text-h3 font-bold leading-snug text-text">{currentSong.shownTitle}</h2>
             {artist && <p className="mt-1 truncate text-body text-text-muted">{artist}</p>}
           </div>
 
@@ -262,7 +262,7 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
                         {song.thumbnail_url && <Image src={song.thumbnail_url} alt="" fill sizes="44px" className="object-cover" />}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium text-text">{song.title}</span>
+                        <span className="block truncate text-sm font-medium text-text">{song.shownTitle}</span>
                         {displayArtist(song.artist, song.title) && (
                           <span className="block truncate text-caption text-text-muted">{displayArtist(song.artist, song.title)}</span>
                         )}
@@ -286,7 +286,7 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
               type="button"
               onClick={() => setExpanded(true)}
               className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-control px-2 text-left"
-              aria-label={`${currentSong.title} 플레이어 열기`}
+              aria-label={`${currentSong.shownTitle} 플레이어 열기`}
             >
               <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-control bg-surface-elevated">
                 {currentSong.thumbnail_url && (
@@ -294,7 +294,7 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
                 )}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold text-text">{currentSong.title}</span>
+                <span className="block truncate text-sm font-semibold text-text">{currentSong.shownTitle}</span>
                 {artist && <span className="block truncate text-caption text-text-muted">{artist}</span>}
               </span>
             </button>

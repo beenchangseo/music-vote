@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { setlistPlayOrder } from "@/domain/setlist";
+import { displayTitle } from "@/domain/song-meta";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
 
 type RepeatMode = "off" | "one";
@@ -9,16 +10,18 @@ type RepeatMode = "off" | "one";
 /** 재생 순서의 출처. 후보곡은 점수 순, 셋리스트는 셋리 순서의 곡만. */
 export type QueueSource = "candidates" | "setlist";
 
+export type QueuedSong = SongWithScore & { shownTitle: string };
+
 export interface PlayerState {
   currentSongId: string | null;
   /** 아무것도 틀지 않았으면 null. */
   source: QueueSource | null;
   /** 다음·이전 곡과 플레이어의 "다음 곡" 목록이 따르는 순서. */
-  queue: SongWithScore[];
+  queue: QueuedSong[];
   repeatMode: RepeatMode;
   shuffleMode: boolean;
   isPlaying: boolean;
-  currentSong: SongWithScore | null;
+  currentSong: QueuedSong | null;
 }
 
 export interface PlayerActions {
@@ -46,19 +49,22 @@ export function usePlayerQueue(songs: SongWithScore[], setlistItems: SetlistItem
   const [shuffleMode, setShuffleMode] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
+  const candidatesQueue = useMemo(
+    () => songs.map((song) => ({ ...song, shownTitle: displayTitle(song.title) })),
+    [songs]
+  );
   const setlistQueue = useMemo(
     () => (setlistItems ? setlistPlayOrder(setlistItems, songs) : []),
     [setlistItems, songs]
   );
-  const queues: Record<QueueSource, SongWithScore[]> = { candidates: songs, setlist: setlistQueue };
+  const queues: Record<QueueSource, QueuedSong[]> = { candidates: candidatesQueue, setlist: setlistQueue };
   const currentSongId = nowPlaying?.songId ?? null;
   const source = nowPlaying?.source ?? null;
   const queue = queues[source ?? "candidates"];
 
-  // Looked up in every song, not just the queue: a song taken out of the setlist mid-play keeps playing.
   const currentSong = useMemo(
-    () => songs.find((s) => s.id === currentSongId) ?? null,
-    [songs, currentSongId]
+    () => queue.find((s) => s.id === currentSongId) ?? candidatesQueue.find((s) => s.id === currentSongId) ?? null,
+    [queue, candidatesQueue, currentSongId]
   );
 
   const playSong = useCallback((id: string, nextSource?: QueueSource) => {
