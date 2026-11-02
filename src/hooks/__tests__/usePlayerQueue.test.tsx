@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { usePlayerQueue } from "../usePlayerQueue";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
 
-const songs = ["a", "b", "c"].map((id) => ({ id }) as SongWithScore);
+const songs = ["a", "b", "c"].map((id) => ({ id, title: id }) as SongWithScore);
 
 function item(id: string, position: number, fields: Partial<SetlistItem>): SetlistItem {
   return { id, position, item_type: "song", song_id: null, ...fields } as SetlistItem;

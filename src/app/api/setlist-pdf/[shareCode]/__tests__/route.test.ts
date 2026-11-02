@@ -75,4 +75,11 @@ describe("GET /api/setlist-pdf/[shareCode]", () => {
     expect(pageCount).toBe(2);
     expect(footers).toEqual(["Plypick · 1/2", "Plypick · 2/2"]);
   });
+
+  it("prints the artist the setlist card shows, not the YouTube channel", async () => {
+    setlist = { items: fixtureItems, songs: fixtureSongs.map((song) => ({ ...song, artist: "DAY6 - Topic" })) };
+    const { printed } = await drawSetlistPdf();
+    expect(printed).toContain("DAY6 · 3:20");
+    expect(printed.filter((value) => value.includes("Topic"))).toEqual([]);
+  });
 });

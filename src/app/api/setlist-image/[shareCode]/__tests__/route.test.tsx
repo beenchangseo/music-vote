@@ -20,11 +20,13 @@ vi.mock("next/og", () => ({
 }));
 vi.mock("@/lib/supabase/server", () => ({ createAdminClient: () => fixtureAdmin() }));
 
+let setlist = { items: fixtureItems, songs: fixtureSongs };
+
 function fixtureAdmin() {
   return createFakeClient((op) => {
     if (op.table === "playlists") return { data: { id: "playlist", title: "가을 공연" } };
-    if (op.table === "setlist_items") return { data: fixtureItems };
-    return { data: fixtureSongs.filter((song) => (op.filters.id as string[]).includes(song.id)) };
+    if (op.table === "setlist_items") return { data: setlist.items };
+    return { data: setlist.songs.filter((song) => (op.filters.id as string[]).includes(song.id)) };
   }).client;
 }
 
@@ -37,6 +39,7 @@ async function drawSetlistImage() {
 
 describe("GET /api/setlist-image/[shareCode]", () => {
   beforeEach(() => {
+    setlist = { items: fixtureItems, songs: fixtureSongs };
     vi.stubGlobal("fetch", vi.fn(async () => ({ arrayBuffer: async () => new ArrayBuffer(0) })));
   });
   afterEach(() => {
@@ -60,5 +63,12 @@ describe("GET /api/setlist-image/[shareCode]", () => {
   it("draws an original's description the way it draws an interval's, so both take the same room", async () => {
     await drawSetlistImage();
     expect(screen.getByText("첫 자작곡").getAttribute("style")).toBe(screen.getByText("모니터 볼륨 맞추기").getAttribute("style"));
+  });
+
+  it("draws the artist the setlist card shows, not the YouTube channel", async () => {
+    setlist = { items: fixtureItems, songs: fixtureSongs.map((song) => ({ ...song, artist: "DAY6 - Topic" })) };
+    await drawSetlistImage();
+    expect(screen.getAllByText("DAY6")).toHaveLength(3);
+    expect(screen.queryByText(/Topic/)).not.toBeInTheDocument();
   });
 });
