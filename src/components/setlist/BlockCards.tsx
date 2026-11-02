@@ -20,7 +20,7 @@ interface CardShellProps {
 
 function CardShell({ kind, editing, onRemove, current = false, className = "", children }: CardShellProps) {
   return (
-    <div className={`flex items-center gap-3 ${current ? PLAYING_CARD : BLOCK_TONES[kind].card} ${className}`}>
+    <div className={`flex items-center gap-3 ${BLOCK_TONES[kind].radius} ${current ? PLAYING_CARD : BLOCK_TONES[kind].card} ${className}`}>
       {editing && (
         <button type="button" onClick={onRemove} className={`-mx-1 flex h-control-sm w-11 shrink-0 items-center justify-center text-danger-fg print:hidden ${touchTarget44}`} aria-label="삭제">
           <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
