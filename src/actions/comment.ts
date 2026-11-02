@@ -3,36 +3,15 @@
 import { createAdminClient, createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistWritableBySong } from "@/lib/playlist-access";
+import { COMMENT_COLUMNS } from "@/lib/playlist-reads";
 import { revalidatePath } from "next/cache";
 import type { Comment } from "@/domain/types";
-
-export async function getComments(playlistId: string): Promise<Comment[]> {
-  // songs and comments are closed to the public key (v18).
-  const admin = createAdminClient();
-
-  // Get all song IDs for this playlist
-  const { data: songs } = await admin
-    .from("songs")
-    .select("id")
-    .eq("playlist_id", playlistId);
-
-  if (!songs || songs.length === 0) return [];
-
-  const songIds = songs.map((s: { id: string }) => s.id);
-  const { data } = await admin
-    .from("comments")
-    .select("*")
-    .in("song_id", songIds)
-    .order("created_at", { ascending: true });
-
-  return (data || []) as Comment[];
-}
 
 export async function getCommentsBySong(songId: string): Promise<Comment[]> {
   const admin = createAdminClient();
   const { data } = await admin
     .from("comments")
-    .select("*")
+    .select(COMMENT_COLUMNS)
     .eq("song_id", songId)
     .order("created_at", { ascending: true });
   return (data || []) as Comment[];

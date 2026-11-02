@@ -19,7 +19,7 @@ vi.mock("@/lib/playlist-access", () => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: state.revalidatePath }));
 
-import { addOrUpdateComment, deleteComment } from "../comment";
+import { addOrUpdateComment, deleteComment, getCommentsBySong } from "../comment";
 
 const ok = (data: unknown = null): FakeResult => ({ data, error: null });
 
@@ -123,5 +123,27 @@ describe("deleteComment", () => {
 
     await expect(deleteComment("song-1", "share")).rejects.toThrow("댓글 삭제에 실패했습니다.");
     expect(state.revalidatePath).not.toHaveBeenCalled();
+  });
+});
+
+describe("getCommentsBySong", () => {
+  /** Answers like PostgREST: every column for "*", otherwise only the columns asked for. */
+  function commentsTable(rows: Record<string, unknown>[]) {
+    return createFakeClient((op) => {
+      if (!op.columns || op.columns === "*") return ok(rows);
+      const columns = op.columns.split(",").map((column) => column.trim());
+      return ok(rows.map((row) => Object.fromEntries(columns.map((column) => [column, row[column]]))));
+    });
+  }
+
+  it("answers the song's comments oldest first without the commenter's account id (ADR 0011)", async () => {
+    const shown = { id: "c1", song_id: "song-1", nickname: "드럼", content: "브릿지 템포 좋아요", created_at: "t1", updated_at: "t2" };
+    state.admin = commentsTable([{ ...shown, user_id: "account-of-drum" }]);
+
+    const comments = await getCommentsBySong("song-1");
+
+    expect(comments).toEqual([shown]);
+    expect(JSON.stringify(comments)).not.toContain("account-of-drum");
+    expect(state.admin.ops[0]).toMatchObject({ table: "comments", filters: { song_id: "song-1" }, orders: [{ column: "created_at", ascending: true }] });
   });
 });

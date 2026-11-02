@@ -11,8 +11,8 @@ vi.mock("@formkit/auto-animate/react", () => ({ useAutoAnimate: () => [vi.fn()] 
 vi.mock("../../ui/DialogProvider", () => ({ useDialog: () => ({ showAlert: vi.fn(), showConfirm: vi.fn(), showDanger: vi.fn() }) }));
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
 vi.mock("@/actions/member", () => ({ registerPlaylistMember: vi.fn().mockResolvedValue(null) }));
-vi.mock("@/actions/setlist", () => ({ getSetlistItems: vi.fn().mockResolvedValue([]) }));
-vi.mock("@/actions/comment", () => ({ getComments: vi.fn().mockResolvedValue([]) }));
+vi.mock("@/lib/playlist-refetch", () => ({ fetchSetlistItems: vi.fn().mockResolvedValue([]), fetchComments: vi.fn().mockResolvedValue([]) }));
+vi.mock("@/actions/setlist", () => ({}));
 vi.mock("@/hooks/usePlaylistRealtime", () => ({ usePlaylistRealtime: () => ({ notifyChange: vi.fn() }) }));
 vi.mock("@/hooks/usePlaylistVotes", () => ({
   usePlaylistVotes: ({ songs }: { songs: unknown[] }) => ({ songsWithVotes: songs, pressVote: vi.fn(), isVotePending: () => false, resetVotes: vi.fn() }),

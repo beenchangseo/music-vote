@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition as startModeSwitch, useCallback, useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from "react";
+import { startTransition as startModeSwitch, useCallback, useEffect, useMemo, useOptimistic, useRef, useState, useTransition, type SetStateAction } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { BlockCard } from "./BlockCards";
@@ -47,8 +47,8 @@ interface Props {
   shareCode: string;
   adminToken: string | null;
   loading: boolean;
-  /** 서버에 닿은 셋리스트. 받는 쪽이 다른 화면에 알린다. */
-  onItemsChange: (items: SetlistItem[]) => void;
+  /** 서버에 닿은 셋리스트. 쓰기는 닿았지만 목록을 못 읽었으면 지금 셋리스트를 고치는 함수다. 받는 쪽이 다른 화면에 알린다. */
+  onItemsChange: (items: SetStateAction<SetlistItem[]>) => void;
   title: string;
   access: SetlistEditAccess;
   /** 이 곡부터 셋리 순서로 재생한다. */
@@ -140,7 +140,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
     startTransition(async () => {
       showItems((items) => items.filter((item) => item.id !== itemId));
       const result = await removeSetlistItem(playlistId, adminToken, itemId, shareCode).catch(() => null);
-      if (result?.success) onItemsChange(result.items);
+      if (result?.success) onItemsChange(result.items ?? ((items) => items.filter((item) => item.id !== itemId)));
       else showAlert(setlistMessage(result?.reason ?? "write_failed"));
     });
   }, [adminToken, onItemsChange, playlistId, shareCode, showAlert, showDanger, showItems]);

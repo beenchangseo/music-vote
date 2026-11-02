@@ -9,9 +9,10 @@ import { BASE_OPEN_GRAPH } from "@/lib/seo";
 import { inviteSongs, playlistShareCard } from "@/domain/invite-card";
 import { isArchivedPlaylist } from "@/domain/playlist-archive";
 import { getMyTeams, type MyTeam } from "@/actions/team";
+import { readSetlistItems } from "@/lib/playlist-reads";
 import PlaylistClient from "@/components/playlist/PlaylistClient";
 import type { Metadata } from "next";
-import type { Playlist, RoomTeam, SetlistItem, Song, SongWithScore } from "@/domain/types";
+import type { Playlist, RoomTeam, Song, SongWithScore } from "@/domain/types";
 
 /** song_vote_summary 뷰. 점수와 내 표만 담고 다른 사람의 신원은 담지 않는다. */
 type VoteSummaryRow = {
@@ -168,7 +169,7 @@ export default async function PlaylistPage({ params }: PageProps) {
 
   // 집계 뷰가 playlist_id 를 들고 있어(v16) 곡 목록을 기다리지 않는다.
   // 밴드 조회도 같은 Promise.all 에 넣어 순차 왕복 2번을 유지한다 (eng D4).
-  const [songsResult, stats, summaryResult, votersResult, engagementResult, band, myTeams, memberCountResult, setlistResult] =
+  const [songsResult, stats, summaryResult, votersResult, engagementResult, band, myTeams, memberCountResult, setlistItems] =
     await Promise.all([
       getPlaylistSongs(playlist.id),
       getPlaylistStats(playlist.id),
@@ -193,9 +194,8 @@ export default async function PlaylistPage({ params }: PageProps) {
       wantsBandPrompt
         ? admin.from("playlist_members").select("user_id", { count: "exact", head: true }).eq("playlist_id", playlist.id)
         : Promise.resolve(null),
-      // Candidate rows mark songs already in the setlist (디자인 C9). Closed to the public key (v18), like getSetlistItems.
-      // Same tie-break as getSetlistItems and the v26 position functions.
-      admin.from("setlist_items").select("*").eq("playlist_id", playlist.id).order("position", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true }),
+      // Candidate rows mark songs already in the setlist (디자인 C9). A failed read leaves it null, so the setlist tab loads it the old way.
+      readSetlistItems(admin, playlist.id).catch(() => null),
     ]);
 
   // Payload rules per field: the band link and name only reach members (the name also reaches the
@@ -266,8 +266,7 @@ export default async function PlaylistPage({ params }: PageProps) {
       myTeams={myTeams}
       memberCount={memberCount}
       bandPromptDismissed={bandPromptDismissed}
-      // A failed read leaves it null, so the setlist tab loads it the old way.
-      initialSetlistItems={setlistResult.error ? null : ((setlistResult.data ?? []) as SetlistItem[])}
+      initialSetlistItems={setlistItems}
     />
   );
 }

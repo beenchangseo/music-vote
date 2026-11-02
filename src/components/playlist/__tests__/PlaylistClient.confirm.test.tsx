@@ -2,14 +2,15 @@
 import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { confirmSetlist, getSetlistItems } from "@/actions/setlist";
+import { confirmSetlist } from "@/actions/setlist";
+import { fetchSetlistItems } from "@/lib/playlist-refetch";
 import { track } from "@/lib/analytics";
 import { setlistMessage } from "@/lib/setlist-messages";
 import type { Playlist, SetlistItem, SongWithScore } from "@/domain/types";
 import PlaylistClient from "../PlaylistClient";
 
 const dialog = vi.hoisted(() => ({ showAlert: vi.fn(), showConfirm: vi.fn(), showDanger: vi.fn() }));
-const realtime = vi.hoisted(() => ({ notifyChange: vi.fn() }));
+const realtime = vi.hoisted(() => ({ onRemoteChange: (): Promise<void> | void => {}, notifyChange: vi.fn(), requestRefresh: vi.fn() }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }), usePathname: () => "/playlist/abc123" }));
 vi.mock("next/image", () => ({ default: () => null }));
@@ -17,9 +18,14 @@ vi.mock("@formkit/auto-animate/react", () => ({ useAutoAnimate: () => [vi.fn()] 
 vi.mock("../../ui/DialogProvider", () => ({ useDialog: () => dialog }));
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
 vi.mock("@/actions/member", () => ({ registerPlaylistMember: vi.fn().mockResolvedValue(null) }));
-vi.mock("@/actions/setlist", () => ({ getSetlistItems: vi.fn(), confirmSetlist: vi.fn(), insertSetlistBlock: vi.fn(), removeSetlistItem: vi.fn() }));
-vi.mock("@/actions/comment", () => ({ getComments: vi.fn().mockResolvedValue([]) }));
-vi.mock("@/hooks/usePlaylistRealtime", () => ({ usePlaylistRealtime: () => ({ notifyChange: realtime.notifyChange }) }));
+vi.mock("@/lib/playlist-refetch", () => ({ fetchSetlistItems: vi.fn(), fetchComments: vi.fn().mockResolvedValue([]) }));
+vi.mock("@/actions/setlist", () => ({ confirmSetlist: vi.fn(), insertSetlistBlock: vi.fn(), removeSetlistItem: vi.fn() }));
+vi.mock("@/hooks/usePlaylistRealtime", () => ({
+  usePlaylistRealtime: (_shareCode: string, onRemoteChange: () => Promise<void> | void) => {
+    realtime.onRemoteChange = onRemoteChange;
+    return { notifyChange: realtime.notifyChange, requestRefresh: realtime.requestRefresh };
+  },
+}));
 vi.mock("@/hooks/usePlaylistVotes", () => ({
   usePlaylistVotes: ({ songs }: { songs: unknown[] }) => ({ songsWithVotes: songs, pressVote: vi.fn(), isVotePending: () => false, resetVotes: vi.fn() }),
 }));
@@ -75,9 +81,15 @@ const playlist = {
   team_id: null,
 } as Playlist;
 
-async function confirmAsHost(initialSetlistItems: SetlistItem[] = []) {
+function renderAsHost(initialSetlistItems: SetlistItem[] = []) {
   render(<PlaylistClient playlist={playlist} songs={[song("top"), song("second"), song("third")]} shareCode="abc123" participantCount={2} userNickname="보컬" currentUserId="owner" team={null} initialSetlistItems={initialSetlistItems} />);
-  await act(async () => fireEvent.click(screen.getByRole("button", { name: "셋리스트 확정하기" })));
+}
+
+const clickConfirm = () => act(async () => fireEvent.click(screen.getByRole("button", { name: "셋리스트 확정하기" })));
+
+async function confirmAsHost(initialSetlistItems: SetlistItem[] = []) {
+  renderAsHost(initialSetlistItems);
+  await clickConfirm();
 }
 
 beforeEach(() => {
@@ -85,7 +97,7 @@ beforeEach(() => {
   // The confirm button still needs the creator's link token on this device.
   localStorage.setItem("myPlaylists", JSON.stringify([{ id: "p", shareCode: "abc123", adminToken: "token" }]));
   dialog.showConfirm.mockResolvedValue(true);
-  vi.mocked(getSetlistItems).mockReturnValue(new Promise(() => {}));
+  vi.mocked(fetchSetlistItems).mockReturnValue(new Promise(() => {}));
 });
 
 afterEach(() => {
@@ -121,6 +133,23 @@ describe("PlaylistClient setlist confirm", () => {
     expect(dialog.showAlert).not.toHaveBeenCalled();
     expect(screen.getByTestId("setlist")).toHaveTextContent("멘트,third,자작곡");
     expect(track).toHaveBeenCalledWith("setlist_confirmed", { song_count: 2, auto: false });
+  });
+
+  it("keeps the confirmed setlist when a read that started before the confirm lands after it", async () => {
+    let landBefore: (items: SetlistItem[]) => void = () => {};
+    vi.mocked(fetchSetlistItems).mockReturnValueOnce(new Promise((resolve) => (landBefore = resolve)));
+    vi.mocked(confirmSetlist).mockResolvedValue({ success: true, items: [block("top", 0), block("second", 1)] });
+
+    renderAsHost();
+    act(() => {
+      void realtime.onRemoteChange();
+    });
+    await clickConfirm();
+    await act(async () => landBefore([]));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
+
+    expect(screen.getByTestId("setlist")).toHaveTextContent("top,second");
+    expect(fetchSetlistItems).toHaveBeenCalledTimes(2);
   });
 
   it("confirms nothing when the host cancels the question", async () => {

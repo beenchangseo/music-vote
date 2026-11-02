@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef, type SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Image from "next/image";
@@ -24,9 +24,9 @@ import RehearsalView from "../rehearsal/RehearsalView";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
 import { usePlaylistVotes } from "@/hooks/usePlaylistVotes";
 import { usePlaylistRealtime } from "@/hooks/usePlaylistRealtime";
-import { getSetlistItems, confirmSetlist, insertSetlistBlock, removeSetlistItem } from "@/actions/setlist";
+import { confirmSetlist, insertSetlistBlock, removeSetlistItem } from "@/actions/setlist";
 import { setlistMessage } from "@/lib/setlist-messages";
-import { getComments } from "@/actions/comment";
+import { fetchComments, fetchSetlistItems } from "@/lib/playlist-refetch";
 import { track } from "@/lib/analytics";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
 import KakaoShareButton from "../share/KakaoShareButton";
@@ -150,7 +150,7 @@ export default function PlaylistClient({
     if (mode === "setlist" && setlistItems === null && !loadingSetlist) {
       setLoadingSetlist(true);
       try {
-        const items = await getSetlistItems(playlist.id);
+        const items = await fetchSetlistItems(playlist.id);
         setSetlistItems(items);
       } catch { /* ignore */ }
       setLoadingSetlist(false);
@@ -159,8 +159,8 @@ export default function PlaylistClient({
       setLoadingComments(true);
       try {
         const [items, cmts] = await Promise.all([
-          setlistItems === null ? getSetlistItems(playlist.id) : Promise.resolve(setlistItems),
-          getComments(playlist.id),
+          setlistItems === null ? fetchSetlistItems(playlist.id) : Promise.resolve(setlistItems),
+          fetchComments(playlist.id),
         ]);
         if (setlistItems === null) setSetlistItems(items);
         setComments(cmts);
@@ -169,41 +169,46 @@ export default function PlaylistClient({
     }
   }, [playlist.id, setlistItems, comments, loadingSetlist, loadingComments]);
 
-  // Bumped whenever a setlist write of mine lands. A read in flight across a bump may predate that write, so it is
-  // dropped. The read that applySetlistItems starts after every landed write covers anything it carried.
-  const setlistVersionRef = useRef(0);
+  // Each read takes the next number and draws only if nothing newer has: a read that lands after a later read, or one
+  // in flight when a write of mine lands, may carry an older list. A write marks every read started so far as drawn,
+  // and the read that applySetlistItems starts after it covers anything they carried.
+  const setlistReadsRef = useRef({ started: 0, drawn: 0 });
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
-  const refetchSetlist = useCallback(() => {
-    const version = setlistVersionRef.current;
-    getSetlistItems(playlist.id)
-      .then((items) => {
-        if (version === setlistVersionRef.current) setSetlistItems(items);
-      })
-      .catch(() => undefined);
+  const refetchSetlist = useCallback(async () => {
+    const reads = setlistReadsRef.current;
+    const read = ++reads.started;
+    const items = await fetchSetlistItems(playlist.id);
+    if (read <= reads.drawn) return;
+    reads.drawn = read;
+    setSetlistItems(items);
   }, [playlist.id]);
 
   // 다른 참여자의 변경 알림. 셋리스트·댓글은 서버 렌더가 아니라
   // 클라이언트가 따로 받아둔 값이라 이미 열어본 목록만 다시 받아온다.
+  // A failed read rejects, so usePlaylistRealtime tries again instead of waiting for the next change.
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
-  const handleRemoteChange = useCallback(() => {
+  const handleRemoteChange = useCallback(async () => {
     router.refresh();
-    if (setlistItems !== null) refetchSetlist();
-    if (comments !== null) {
-      getComments(playlist.id).then(setComments).catch(() => undefined);
-    }
+    await Promise.all([
+      setlistItems !== null && refetchSetlist(),
+      comments !== null && fetchComments(playlist.id).then(setComments),
+    ]);
   }, [router, playlist.id, setlistItems, comments, refetchSetlist]);
 
-  const { notifyChange } = usePlaylistRealtime(shareCode, handleRemoteChange);
+  const { notifyChange, requestRefresh } = usePlaylistRealtime(shareCode, handleRemoteChange);
 
-  /** 서버에 닿은 셋리스트를 그리고 다른 화면에 알린다. */
+  /**
+   * 서버에 닿은 셋리스트를 그리고 다른 화면에 알린다. 쓰기는 닿았지만 목록을 못 읽었으면 지금 목록을 고치는 함수를 받는다.
+   * 누를 때의 목록으로 그리면 쓰기를 기다리는 동안 그린 다른 멤버의 변경을 덮는다.
+   */
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
-  const applySetlistItems = useCallback((items: SetlistItem[]) => {
-    setlistVersionRef.current += 1;
-    setSetlistItems(items);
+  const applySetlistItems = useCallback((items: SetStateAction<SetlistItem[]>) => {
+    setlistReadsRef.current.drawn = setlistReadsRef.current.started;
+    setSetlistItems((current) => (typeof items === "function" ? current && items(current) : items));
     notifyChange();
     // The write's answer can be older than a read that already landed with another member's later change.
-    refetchSetlist();
-  }, [notifyChange, refetchSetlist]);
+    refetchSetlist().catch(requestRefresh);
+  }, [notifyChange, refetchSetlist, requestRefresh]);
 
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
   const handleAllowanceChange = useCallback((usedVotes: number, voteLimit: number) => {
@@ -323,7 +328,7 @@ export default function PlaylistClient({
     setSetlistItems((prev) => prev?.filter((entry) => entry.id !== item.id) ?? prev);
     const result = await removeSetlistItem(playlist.id, adminToken, item.id, shareCode).catch(() => null);
     if (result?.success) {
-      applySetlistItems(result.items);
+      applySetlistItems(result.items ?? ((entries) => entries.filter((entry) => entry.id !== item.id)));
       return;
     }
     setSetlistItems(previous);

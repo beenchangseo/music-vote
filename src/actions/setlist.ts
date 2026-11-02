@@ -1,6 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/server";
+import { readSetlistItems } from "@/lib/playlist-reads";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
 import { assertSetlistEditor, setlistEditorDenial } from "@/lib/setlist-permissions";
 import { setlistMessage, setlistReasonFromDatabase, type SetlistReason } from "@/lib/setlist-messages";
@@ -16,6 +17,8 @@ export interface BlockFieldsInput {
 
 /** 셋리 전체를 돌려주는 쓰기. items 는 쓰기 직후 서버의 셋리스트다. */
 export type SetlistItemsResult = ActionResult<{ items: SetlistItem[] }, SetlistReason>;
+/** items 가 null 이면 삭제는 닿았지만 그 뒤 셋리스트를 읽지 못한 것이다. 빈 셋리스트가 아니다. */
+export type RemoveSetlistItemResult = ActionResult<{ items: SetlistItem[] | null }, SetlistReason>;
 export type InsertSetlistBlockResult = ActionResult<{ itemId: string; items: SetlistItem[] }, SetlistReason>;
 
 function cleanBlockFields(kind: "interval" | "original", item: BlockFieldsInput) {
@@ -28,20 +31,6 @@ function cleanBlockFields(kind: "interval" | "original", item: BlockFieldsInput)
 function setlistFrom(data: unknown): SetlistItem[] | null {
   const items = (data as { items?: unknown } | null)?.items;
   return Array.isArray(items) ? (items as SetlistItem[]) : null;
-}
-
-export async function getSetlistItems(playlistId: string): Promise<SetlistItem[]> {
-  // setlist_items is closed to the public key (v18).
-  const admin = createAdminClient();
-  const { data } = await admin
-    .from("setlist_items")
-    .select("*")
-    .eq("playlist_id", playlistId)
-    // Same tie-break as the v26 position functions, so a legacy tie draws in the order the server renumbers it.
-    .order("position", { ascending: true })
-    .order("created_at", { ascending: true })
-    .order("id", { ascending: true });
-  return (data || []) as SetlistItem[];
 }
 
 /**
@@ -253,11 +242,12 @@ export async function removeSetlistItem(
   adminToken: string | null,
   itemId: string,
   shareCode: string,
-): Promise<SetlistItemsResult> {
+): Promise<RemoveSetlistItemResult> {
   const denial = await setlistEditorDenial(playlistId);
   if (denial) return { success: false, reason: denial };
   // No row count check: 0 rows means another editor removed it first, which is the end state asked for.
-  const { error } = await createAdminClient()
+  const admin = createAdminClient();
+  const { error } = await admin
     .from("setlist_items")
     .delete()
     .eq("id", itemId)
@@ -267,5 +257,6 @@ export async function removeSetlistItem(
     return { success: false, reason: "write_failed" };
   }
   revalidatePath(`/playlist/${shareCode}`);
-  return { success: true, items: await getSetlistItems(playlistId) };
+  // The delete landed even if this read fails. The read after every setlist write redraws the list.
+  return { success: true, items: await readSetlistItems(admin, playlistId).catch(() => null) };
 }
