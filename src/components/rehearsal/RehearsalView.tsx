@@ -385,7 +385,7 @@ function StepCover({ step, size }: { step: Step; size: "card" | "row" }) {
   const box = size === "card" ? "size-16" : "size-9";
   if (step.kind === "original") {
     return (
-      <span className={`grid ${box} shrink-0 place-items-center rounded-control bg-primary-tint text-primary-fg`}>
+      <span className={`grid ${box} shrink-0 place-items-center rounded-control bg-surface-elevated text-primary-fg`}>
         <svg className={size === "card" ? "size-7" : "size-4"} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
           <path d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
@@ -485,11 +485,11 @@ function StepLead({ marker, className = "", children }: { marker?: ReactNode; cl
 
 function IntervalLine({ interval, past }: { interval: RehearsalInterval; past: boolean }) {
   return (
-    <p className={`${stepInset} flex min-h-8 items-center text-caption text-warning ${past ? "opacity-70" : ""}`}>
+    <p className={`${stepInset} flex min-h-8 items-center text-caption ${past ? "text-text-subtle" : "text-text-muted"}`}>
       <StepLead>
         <span className="flex min-w-0 items-center gap-1.5">
           <ClockIcon className="size-3.5 shrink-0" />
-          <span className="min-w-0 truncate font-semibold">{interval.title}</span>
+          <span className="min-w-0 truncate font-medium">{interval.title}</span>
           {interval.duration > 0 && <span className="shrink-0 tabular-nums">· {formatRuntime(interval.duration)}</span>}
         </span>
       </StepLead>
@@ -499,9 +499,9 @@ function IntervalLine({ interval, past }: { interval: RehearsalInterval; past: b
 
 function NextHint({ interval }: { interval: RehearsalInterval }) {
   return (
-    <p className="mb-1 flex min-h-11 items-center gap-2 rounded-control border border-warning/45 bg-warning-tint/60 px-3 text-sm text-warning">
+    <p className="mb-1 flex min-h-11 items-center gap-2 rounded-control bg-surface-hover px-3 text-sm text-text-muted">
       <ClockIcon className="size-4 shrink-0" />
-      <span className="min-w-0 truncate font-semibold">다음: {interval.title}</span>
+      <span className="min-w-0 truncate font-medium">다음: {interval.title}</span>
       {interval.duration > 0 && <span className="shrink-0 tabular-nums">· {formatRuntime(interval.duration)}</span>}
     </p>
   );
