@@ -4,6 +4,7 @@ import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase/se
 import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistWritable } from "@/lib/playlist-access";
 import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/domain/playlist-archive";
+import { isHostOrAdder } from "@/domain/playlist-host";
 import { extractVideoId, fetchVideoMetadata } from "@/lib/youtube";
 import { fetchSingleVideoDetails } from "@/lib/youtube-data";
 import {
@@ -257,9 +258,7 @@ export async function removeSong(
 
   const user = await getCurrentUser();
   if (!user) throw new Error("로그인이 필요합니다.");
-  const isHost = user.id === song.playlists.creator_user_id;
-  const isAdder = user.id === song.added_by_user_id;
-  if (!isHost && !isAdder) throw new Error("이 곡을 삭제할 권한이 없습니다.");
+  if (!isHostOrAdder(song.playlists, song.added_by_user_id, user.id)) throw new Error("이 곡을 삭제할 권한이 없습니다.");
 
   // 곡을 먼저 지우면 FK(ON DELETE SET NULL)가 song_id 를 비워서 이 곡의 셋리스트 블록을 더는 찾을 수 없다.
   // 셋리스트에 없는 곡이면 0행이 지워지고, 그건 실패가 아니다.

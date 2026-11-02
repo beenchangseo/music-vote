@@ -5,6 +5,7 @@ import { assertPlaylistWritableBySong } from "@/lib/playlist-access";
 import { createAdminClient } from "@/lib/supabase/server";
 import { extractVideoId, fetchVideoMetadata } from "@/lib/youtube";
 import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/domain/playlist-archive";
+import { isHostOrAdder } from "@/domain/playlist-host";
 import type { SongVersion } from "@/domain/types";
 import { revalidatePath } from "next/cache";
 
@@ -120,9 +121,7 @@ async function assertVersionManager(versionId: string) {
   if (isArchivedPlaylist(data.songs.playlists)) throw new Error(ARCHIVED_PLAYLIST_MESSAGE);
   const user = await getCurrentUser();
   if (!user) throw new Error("로그인이 필요합니다.");
-  if (user.id !== data.songs.playlists.creator_user_id && user.id !== data.added_by_user_id) {
-    throw new Error("이 링크를 수정할 권한이 없습니다.");
-  }
+  if (!isHostOrAdder(data.songs.playlists, data.added_by_user_id, user.id)) throw new Error("이 링크를 수정할 권한이 없습니다.");
 
   return data;
 }

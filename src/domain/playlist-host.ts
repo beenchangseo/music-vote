@@ -11,3 +11,13 @@ export function hostDenial(playlist: { creator_user_id: string | null }, userId:
   if (!userId) return "not_logged_in";
   return userId === playlist.creator_user_id ? null : "not_host";
 }
+
+/** 곡과 다른 버전은 방장과 올린 사람이 고치고 지운다. 보관된 플레이리스트에서는 아무도 못 한다. */
+export function isHostOrAdder(
+  playlist: { creator_user_id: string | null },
+  addedByUserId: string | null,
+  userId: string | null | undefined,
+): boolean {
+  const denial = hostDenial(playlist, userId);
+  return denial === null || (denial === "not_host" && userId === addedByUserId);
+}
