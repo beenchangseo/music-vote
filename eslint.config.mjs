@@ -19,6 +19,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Agent worktrees are full repo copies; lint the real tree only.
     ".claude/worktrees/**",
+    // Local agent scratch (gitignored): measurement scripts there are CommonJS and not part of the app.
+    ".omc/**",
   ]),
   {
     // The dependency rule of the layout (AGENTS.md "구조"): domain knows nothing outside itself,
