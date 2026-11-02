@@ -69,6 +69,7 @@ Kakao JavaScript SDK 키는 `src/components/share/KakaoInit.tsx` 에 들어 있�
 | `npm run test:e2e` | Playwright 배포 전 게이트. 운영 DB 에 붙는다 ([`e2e/README.md`](e2e/README.md)) |
 | `npm run db:new -- "제목"` | 다음 번호 마이그레이션 파일을 템플릿으로 만든다 |
 | `npm run audit:anon` | 공개 키로 열린 읽기·쓰기 경로를 점검한다 |
+| `npm run audit:payload` | 로그아웃 플레이리스트 화면과 GET route 에 계정 id 필드가 없는지 본다. `AUDIT_SITE_URL` 로 로컬을 가리킨다 |
 | `npm run metrics:teams` | 밴드 성공 지표 (읽기 전용) |
 
 ## 배포

@@ -201,6 +201,7 @@ Variable(한국어) + Geist(영문) 폴백.
 | `npm run test:e2e` | Playwright 로컬 배포 게이트. 운영 DB 에 붙는다 |
 | `npm run db:new -- "제목"` | 다음 번호 마이그레이션 파일 |
 | `npm run audit:anon` | 공개 키로 열린 경로 점검 |
+| `npm run audit:payload` | 로그아웃 플레이리스트 화면·GET route 에 계정 id 필드가 없는지 점검 (GET 만) |
 | `npm run metrics:teams` | 밴드 성공 지표 (읽기 전용) |
 
 hook(`.claude/settings.json`, `.claude/hooks/`):
