@@ -25,19 +25,19 @@ afterEach(() => {
 
 describe("BandPromptCard dismissal (DR6)", () => {
   it("closes from 안내 닫기 and stays closed on the next visit", () => {
-    const first = render(<BandPromptCard playlistId={PLAYLIST} adminToken={null} dismissed={false} onCreated={() => {}} />);
+    const first = render(<BandPromptCard playlistId={PLAYLIST} dismissed={false} onCreated={() => {}} />);
     expect(screen.getByText(PROMPT)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "안내 닫기" }));
     expect(screen.queryByText(PROMPT)).not.toBeInTheDocument();
 
     first.unmount();
-    render(<BandPromptCard playlistId={PLAYLIST} adminToken={null} dismissed={false} onCreated={() => {}} />);
+    render(<BandPromptCard playlistId={PLAYLIST} dismissed={false} onCreated={() => {}} />);
     expect(screen.queryByText(PROMPT)).not.toBeInTheDocument();
   });
 
   it("closing it on the playlist also closes the home card for the same playlist (DR5)", () => {
-    const first = render(<BandPromptCard playlistId={PLAYLIST} adminToken={null} dismissed={false} onCreated={() => {}} />);
+    const first = render(<BandPromptCard playlistId={PLAYLIST} dismissed={false} onCreated={() => {}} />);
     fireEvent.click(screen.getByRole("button", { name: "안내 닫기" }));
     first.unmount();
 
@@ -48,7 +48,7 @@ describe("BandPromptCard dismissal (DR6)", () => {
   });
 
   it("starts closed when the server already read the dismissal", () => {
-    render(<BandPromptCard playlistId={PLAYLIST} adminToken={null} dismissed onCreated={() => {}} />);
+    render(<BandPromptCard playlistId={PLAYLIST} dismissed onCreated={() => {}} />);
     expect(screen.queryByText(PROMPT)).not.toBeInTheDocument();
   });
 });

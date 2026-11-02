@@ -214,7 +214,7 @@ describe("the host saving the setlist permission", () => {
     fireEvent.click(await screen.findByRole("radio", { name: "방장만 편집" }));
 
     await waitFor(() =>
-      expect(updateSetlistEditMode).toHaveBeenCalledWith(playlist.id, null, "host_only", "abc123"),
+      expect(updateSetlistEditMode).toHaveBeenCalledWith(playlist.id, "host_only", "abc123"),
     );
     await waitFor(() =>
       expect(broadcast).toHaveBeenCalledWith("playlist:abc123", { type: "broadcast", event: "playlist_changed", payload: {} }),

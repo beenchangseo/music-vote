@@ -88,7 +88,7 @@ export default function RoomSettingsButton({
   async function load() {
     setOpen(true);
     try {
-      const next = await getVotingSettings(playlistId, adminToken);
+      const next = await getVotingSettings(playlistId);
       setSettings(next);
       setMode(next.mode);
       setVotesAnonymous(next.votesAnonymous);
@@ -101,7 +101,7 @@ export default function RoomSettingsButton({
   }
 
   function refresh() {
-    return getVotingSettings(playlistId, adminToken).then((next) => {
+    return getVotingSettings(playlistId).then((next) => {
       setSettings(next);
       setMode(next.mode);
       setVotesAnonymous(next.votesAnonymous);
@@ -138,7 +138,6 @@ export default function RoomSettingsButton({
       try {
         await saveVotingSettings(
           playlistId,
-          adminToken,
           nextAnonymous,
           nextMode,
           defaultLimit,
@@ -175,7 +174,7 @@ export default function RoomSettingsButton({
     startTransition(async () => {
       showEditMode(next);
       try {
-        await updateSetlistEditMode(playlistId, adminToken, next, shareCode);
+        await updateSetlistEditMode(playlistId, next, shareCode);
         onSetlistEditModeChange(next);
       } catch (error) {
         showAlert(error instanceof Error ? error.message : "편집 권한 변경에 실패했습니다.");
@@ -213,7 +212,7 @@ export default function RoomSettingsButton({
 
     startTransition(async () => {
       try {
-        await resetPlaylistVotes(playlistId, adminToken, shareCode);
+        await resetPlaylistVotes(playlistId, shareCode);
         await refresh();
         onVotesReset?.();
         router.refresh();
@@ -255,7 +254,6 @@ export default function RoomSettingsButton({
       try {
         await saveVotingSettings(
           playlistId,
-          adminToken,
           votesAnonymous,
           mode,
           defaultLimit,
@@ -586,7 +584,6 @@ export default function RoomSettingsButton({
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         playlistId={playlistId}
-        adminToken={adminToken}
         source="settings"
         onCreated={(band) => {
           setCreateOpen(false);

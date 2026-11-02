@@ -11,6 +11,7 @@ export type SetlistReason =
   | "archived"
   | "not_logged_in"
   | "not_editor"
+  | "not_host"
   | "invalid_block"
   | "song_not_found"
   | "slot_gone"
@@ -24,6 +25,7 @@ const SETLIST_REASON_MESSAGES: Record<SetlistReason, string> = {
   archived: ARCHIVED_PLAYLIST_MESSAGE,
   not_logged_in: "로그인이 필요해요. 카카오로 로그인해 주세요",
   not_editor: "방장만 셋리스트를 편집할 수 있어요",
+  not_host: "방장만 셋리스트를 확정할 수 있어요",
   invalid_block: "이름과 시간을 다시 확인해 주세요",
   song_not_found: "그 후보곡을 찾을 수 없어요. 지워졌는지 확인해 주세요",
   slot_gone: "그 사이 셋리스트가 바뀌었어요. 넣을 자리를 다시 골라 주세요",

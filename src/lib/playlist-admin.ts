@@ -1,44 +1,43 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
-import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/domain/playlist-archive";
+import { ARCHIVED_PLAYLIST_MESSAGE } from "@/domain/playlist-archive";
+import { hostDenial, type HostDenial } from "@/domain/playlist-host";
 
-/**
- * 합주방 관리 권한 검사. 통과하면 void, 아니면 throw.
- *
- * - 로그인 합주방: creator_user_id === auth.uid() 면 토큰 무관 통과
- * - 보관된 합주방: 기본적으로 거부한다. 방 정리를 위한 삭제만 토큰으로 허용한다.
- */
-export async function assertPlaylistAdmin(
-  playlistId: string,
-  adminToken: string | null,
-  options: { allowArchived?: boolean } = {},
-): Promise<void> {
-  const admin = createAdminClient();
+export type PlaylistAdminDenial = "playlist_not_found" | HostDenial;
 
-  const { data: playlist } = await admin
+/** 방장 쓰기를 받을지. 되면 null, 안 되면 그 이유. 화면이 방장 버튼을 그리는 hostDenial 과 같은 판정이다. */
+export async function playlistAdminDenial(playlistId: string): Promise<PlaylistAdminDenial | null> {
+  const { data: playlist } = await createAdminClient()
     .from("playlists")
     .select("creator_user_id")
     .eq("id", playlistId)
     .single();
 
-  if (!playlist) throw new Error("플레이리스트를 찾을 수 없습니다.");
+  if (!playlist) return "playlist_not_found";
+  return hostDenial(playlist, (await getCurrentUser())?.id);
+}
 
-  if (!isArchivedPlaylist(playlist)) {
-    const user = await getCurrentUser();
-    if (user && user.id === playlist.creator_user_id) return;
-    // 본인이 아니면 토큰을 알아내도 통과시키지 않는다.
-    throw new Error("권한이 없습니다.");
-  }
+const PLAYLIST_ADMIN_ERRORS: Record<PlaylistAdminDenial, string> = {
+  playlist_not_found: "플레이리스트를 찾을 수 없습니다.",
+  archived: ARCHIVED_PLAYLIST_MESSAGE,
+  not_logged_in: "권한이 없습니다.",
+  not_host: "권한이 없습니다.",
+};
 
-  // 보관된 합주방은 방 삭제만 허용한다.
-  if (!options.allowArchived) throw new Error(ARCHIVED_PLAYLIST_MESSAGE);
-  if (!adminToken) throw new Error("권한이 없습니다.");
-  const { data: row } = await admin
+/**
+ * throw 하는 옛 모양의 방장 액션이 쓴다.
+ * archived 는 방 삭제만 넘긴다. 보관된 합주방은 남은 링크 토큰으로 지울 수만 있다(ADR 0012).
+ */
+export async function assertPlaylistAdmin(playlistId: string, archived?: { adminToken: string | null }): Promise<void> {
+  const denial = await playlistAdminDenial(playlistId);
+  if (!denial) return;
+  if (denial !== "archived" || !archived) throw new Error(PLAYLIST_ADMIN_ERRORS[denial]);
+  if (!archived.adminToken) throw new Error("권한이 없습니다.");
+
+  const { data: row } = await createAdminClient()
     .from("playlist_admin")
     .select("admin_token")
     .eq("playlist_id", playlistId)
     .single();
-  if (!row || row.admin_token !== adminToken) {
-    throw new Error("권한이 없습니다.");
-  }
+  if (!row || row.admin_token !== archived.adminToken) throw new Error("권한이 없습니다.");
 }

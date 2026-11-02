@@ -36,7 +36,6 @@ function useBandPromptDismissal(playlistId: string, dismissed: boolean) {
 
 interface BandPromptCardProps {
   playlistId: string;
-  adminToken: string | null;
   /** 서버가 읽은 닫힘 쿠키 (DR6). */
   dismissed: boolean;
   onCreated: (band: CreatedBand) => void;
@@ -47,7 +46,7 @@ interface BandPromptCardProps {
  * 보일지(방장 · 팀 없음 · 로그인 멤버 ≥ 2)는 PlaylistClient 가 정하고, 닫기 기억은 여기서 한다.
  * 닫으면 그 플레이리스트에서는(홈 카드에서도) 다시 뜨지 않는다. 쿠키를 못 쓰면 이번 화면에서만 닫힌다.
  */
-export default function BandPromptCard({ playlistId, adminToken, dismissed, onCreated }: BandPromptCardProps) {
+export default function BandPromptCard({ playlistId, dismissed, onCreated }: BandPromptCardProps) {
   const { closed, dismiss } = useBandPromptDismissal(playlistId, dismissed);
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -70,7 +69,6 @@ export default function BandPromptCard({ playlistId, adminToken, dismissed, onCr
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
         playlistId={playlistId}
-        adminToken={adminToken}
         source="card"
         onCreated={(band) => {
           setSheetOpen(false);

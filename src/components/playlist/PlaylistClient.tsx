@@ -38,6 +38,7 @@ import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import type { ViewMode } from "./NavigationBar";
 import { isArchivedPlaylist } from "@/domain/playlist-archive";
+import { hostDenial } from "@/domain/playlist-host";
 import { setlistEditAccess } from "@/domain/setlist";
 import type { MyTeam } from "@/actions/team";
 import type { Playlist, RoomTeam, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/domain/types";
@@ -119,14 +120,9 @@ export default function PlaylistClient({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Admin 판정 우선순위:
-  // 1) 로그인 모드 + 본인이 만든 플리 → creator_user_id 매칭
-  // 2) 익명 모드 + nickname == creator_nickname (DB 기반)
-  // 3) legacy adminToken fallback
-  // 보관된 합주방에서 방장 표시는 남은 링크 토큰으로만 판정한다. 방 삭제에만 쓴다.
-  const isAdmin = isArchived
-    ? !!adminToken
-    : !!currentUserId && currentUserId === playlist.creator_user_id;
+  // 링크 토큰은 플레이리스트를 만든 기기에만 남아 로그인 플레이리스트의 방장 판정에 쓰지 않는다(#47).
+  const isHost = hostDenial(playlist, currentUserId) === null;
+  const isAdmin = isArchived ? !!adminToken : isHost;
   const isExpired = playlist.deadline ? new Date(playlist.deadline) < new Date() : false;
   const setlistAccess = setlistEditAccess({ archived: isArchived, mode: playlist.setlist_edit_mode, loggedIn, isHost: isAdmin });
   const canEditSetlist = setlistAccess === "edit";
@@ -326,7 +322,7 @@ export default function PlaylistClient({
     if (!ok) return;
     const previous = setlistItems;
     setSetlistItems((prev) => prev?.filter((entry) => entry.id !== item.id) ?? prev);
-    const result = await removeSetlistItem(playlist.id, adminToken, item.id, shareCode).catch(() => null);
+    const result = await removeSetlistItem(playlist.id, item.id, shareCode).catch(() => null);
     if (result?.success) {
       applySetlistItems(result.items ?? ((entries) => entries.filter((entry) => entry.id !== item.id)));
       return;
@@ -515,7 +511,6 @@ export default function PlaylistClient({
               ) : showBandPrompt ? (
                 <BandPromptCard
                   playlistId={playlist.id}
-                  adminToken={adminToken}
                   dismissed={bandPromptDismissed}
                   onCreated={setJustCreatedTeam}
                 />
@@ -572,16 +567,15 @@ export default function PlaylistClient({
                   <p className="text-sm text-text mb-2">
                     투표가 마감되었습니다. 상위 {setlistCount}곡이 하이라이트됩니다.
                   </p>
-                  {isAdmin ? (
+                  {isHost ? (
                     <button
                       onClick={async () => {
                         const topSongIds = songsWithVotes.slice(0, setlistCount).map((s) => s.id);
-                        if (!adminToken) return;
                         const ok = await showConfirm(
                           setlistItems?.length ? "지금 셋리스트로 확정할까요?" : `상위 ${setlistCount}곡으로 셋리스트를 확정하시겠습니까?`,
                         );
                         if (!ok) return;
-                        const result = await confirmSetlist(playlist.id, adminToken, topSongIds, shareCode).catch(() => null);
+                        const result = await confirmSetlist(playlist.id, topSongIds, shareCode).catch(() => null);
                         if (!result?.success) {
                           showAlert(result && result.reason !== "write_failed" ? setlistMessage(result.reason) : "셋리스트 확정에 실패했습니다.");
                           return;
@@ -694,7 +688,6 @@ export default function PlaylistClient({
               songs={songsWithVotes}
               playlistId={playlist.id}
               shareCode={shareCode}
-              adminToken={adminToken}
               loading={loadingSetlist}
               onItemsChange={applySetlistItems}
               title={playlist.title}

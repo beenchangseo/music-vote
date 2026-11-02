@@ -45,7 +45,6 @@ interface Props {
   songs: SongWithScore[];
   playlistId: string;
   shareCode: string;
-  adminToken: string | null;
   loading: boolean;
   /** 서버에 닿은 셋리스트. 쓰기는 닿았지만 목록을 못 읽었으면 지금 셋리스트를 고치는 함수다. 받는 쪽이 다른 화면에 알린다. */
   onItemsChange: (items: SetStateAction<SetlistItem[]>) => void;
@@ -57,7 +56,7 @@ interface Props {
   player?: Pick<PlayerState, "currentSongId" | "source" | "isPlaying">;
 }
 
-export default function SetlistView({ setlistItems, songs, playlistId, shareCode, adminToken, loading, onItemsChange, title, access, onPlay, player }: Props) {
+export default function SetlistView({ setlistItems, songs, playlistId, shareCode, loading, onItemsChange, title, access, onPlay, player }: Props) {
   const [isPending, startTransition] = useTransition();
   // A drop or a removal shows at once and falls back to the server list when the write settles or fails.
   const [shownItems, showItems] = useOptimistic(setlistItems, (current: SetlistItem[], change: (items: SetlistItem[]) => SetlistItem[]) => change(current));
@@ -110,7 +109,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
     if (!canEdit || !next) return;
     startTransition(async () => {
       showItems(() => next);
-      const result = await updateSetlistOrder(playlistId, adminToken, next.map((item) => item.id), shareCode).catch(() => null);
+      const result = await updateSetlistOrder(playlistId, next.map((item) => item.id), shareCode).catch(() => null);
       if (result?.success) onItemsChange(result.items);
       else showAlert(setlistMessage(result?.reason ?? "write_failed"));
     });
@@ -139,11 +138,11 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
     if (!ok) return;
     startTransition(async () => {
       showItems((items) => items.filter((item) => item.id !== itemId));
-      const result = await removeSetlistItem(playlistId, adminToken, itemId, shareCode).catch(() => null);
+      const result = await removeSetlistItem(playlistId, itemId, shareCode).catch(() => null);
       if (result?.success) onItemsChange(result.items ?? ((items) => items.filter((item) => item.id !== itemId)));
       else showAlert(setlistMessage(result?.reason ?? "write_failed"));
     });
-  }, [adminToken, onItemsChange, playlistId, shareCode, showAlert, showDanger, showItems]);
+  }, [onItemsChange, playlistId, shareCode, showAlert, showDanger, showItems]);
 
   function addFromCandidates(songId: string) {
     if (!canEdit || addingSongId) return;
@@ -350,7 +349,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
         />
       )}
 
-      {editing && <SetlistItemEditModal item={editing} song={editing.song_id ? songMap.get(editing.song_id) : null} playlistId={playlistId} shareCode={shareCode} adminToken={adminToken} onSaved={replaceItem} onClose={() => setEditing(null)} />}
+      {editing && <SetlistItemEditModal item={editing} song={editing.song_id ? songMap.get(editing.song_id) : null} playlistId={playlistId} shareCode={shareCode} onSaved={replaceItem} onClose={() => setEditing(null)} />}
     </div>
   );
 }
