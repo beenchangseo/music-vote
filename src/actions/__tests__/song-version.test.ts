@@ -18,7 +18,7 @@ vi.mock("@/lib/youtube", async (importActual) => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-import { addSongVersion, deleteSongVersion, updateSongVersion } from "../song-version";
+import { addSongVersion, deleteSongVersion, getSongVersions, updateSongVersion } from "../song-version";
 
 const ok = (data: unknown = null): FakeResult => ({ data, error: null });
 const URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
@@ -88,5 +88,71 @@ describe("song versions on a login playlist", () => {
 
     state.admin = db("host-1", { added_by_user_id: "user-1" });
     await expect(deleteSongVersion("version-1", "share")).resolves.toEqual({ success: true });
+  });
+});
+
+describe("what the screen gets back about versions (ADR 0011)", () => {
+  const row = (id: string, addedBy: string | null) => ({
+    id,
+    song_id: "song-1",
+    youtube_url: URL,
+    youtube_video_id: "dQw4w9WgXcQ",
+    title: id,
+    thumbnail_url: null,
+    description: null,
+    added_by_user_id: addedBy,
+    added_by_nickname: "기타",
+    created_at: "t",
+    updated_at: "t",
+  });
+
+  function versions(creator: string | null) {
+    return createFakeClient((op) => {
+      if (op.table === "songs") return ok({ playlists: { creator_user_id: creator } });
+      return op.table === "song_versions" ? ok([row("theirs", "user-2"), row("mine", "user-1")]) : ok(null);
+    });
+  }
+
+  const manage = (list: { id: string; canManage: boolean }[]) => Object.fromEntries(list.map((v) => [v.id, v.canManage]));
+
+  it.each([
+    ["the member who added one", { id: "user-1", nickname: "베이스", avatarUrl: null }, "host-1", { theirs: false, mine: true }],
+    ["the host", { id: "host-1", nickname: "보컬", avatarUrl: null }, "host-1", { theirs: true, mine: true }],
+    ["a logged-out visitor", null, "host-1", { theirs: false, mine: false }],
+    ["the adder in an archived playlist", { id: "user-1", nickname: "베이스", avatarUrl: null }, null, { theirs: false, mine: false }],
+  ] as const)("tells %s which versions they manage, without any account id", async (_viewer, user, creator, expected) => {
+    state.user = user;
+    state.admin = versions(creator);
+
+    const list = await getSongVersions("song-1");
+
+    expect(manage(list)).toEqual(expected);
+    for (const id of ["user-1", "user-2", "host-1"]) expect(JSON.stringify(list)).not.toContain(id);
+    expect(state.admin.ops[0]).toMatchObject({ table: "song_versions", filters: { song_id: "song-1" } });
+  });
+
+  it("hands back an added or edited version as mine to manage, without my account id", async () => {
+    state.user = { id: "user-1", nickname: "베이스", avatarUrl: null };
+    const saved: Record<string, unknown> = row("mine", "user-1");
+    const respond = (op: FakeOp) => {
+      if (op.table === "songs") return ok({ youtube_video_id: "orig", playlist_id: "playlist-1", playlists: { creator_user_id: "host-1" } });
+      if (op.table === "song_versions" && op.action === "select" && op.filters.id) {
+        return ok({ id: "mine", song_id: "song-1", added_by_user_id: "user-1", songs: { youtube_video_id: "orig", playlists: { creator_user_id: "host-1" } } });
+      }
+      if (op.table === "song_versions" && op.action === "select") return ok([]);
+      // Like PostgREST, a write answers only the columns it asked for.
+      const columns = (op.columns ?? "").split(",").map((column) => column.trim());
+      return ok(op.returning && op.columns ? Object.fromEntries(columns.map((column) => [column, saved[column]])) : saved);
+    };
+
+    state.admin = createFakeClient(respond);
+    const added = await addSongVersion("song-1", URL, "", "share", true);
+    state.admin = createFakeClient(respond);
+    const edited = await updateSongVersion("mine", URL, "", "share", true);
+
+    for (const result of [added, edited]) {
+      expect(result).toMatchObject({ success: true, version: { id: "mine", canManage: true } });
+      expect(JSON.stringify(result)).not.toContain("user-1");
+    }
   });
 });

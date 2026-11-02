@@ -13,7 +13,7 @@ export type FakeOp = {
   row?: Record<string, unknown>;
   /** Set instead of `row` when insert() received an array. */
   rows?: Record<string, unknown>[];
-  /** Column list passed to select(), e.g. "id, playlists(title)". */
+  /** Column list passed to select(), e.g. "id, playlists(title)", also when a write asks for rows back. */
   columns?: string;
   /**
    * eq/in filters keyed by column. Other operators are keyed as "op:column"
@@ -69,7 +69,7 @@ export function createFakeClient(respond: (op: FakeOp) => FakeResult = () => ({ 
         },
         select(columns) {
           if (op.action !== "select") op.returning = true;
-          else op.columns = columns;
+          op.columns = columns;
           return builder;
         },
         eq(column, value) {

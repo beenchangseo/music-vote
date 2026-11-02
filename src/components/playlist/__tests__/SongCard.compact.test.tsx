@@ -22,7 +22,6 @@ const song = {
   youtube_video_id: "abcdefghijk",
   thumbnail_url: null,
   added_by: "지민",
-  added_by_user_id: "adder",
   key_memo: null,
   key_root: null,
   key_mode: null,
@@ -37,6 +36,7 @@ const song = {
   userVoteCount: 0,
   commentCount: 2,
   versionCount: 1,
+  canDelete: false,
 } satisfies SongWithScore;
 
 type Props = Partial<ComponentProps<typeof SongCard>>;
@@ -49,8 +49,6 @@ function renderRow(props: Props = {}) {
       nickname="멤버"
       shareCode="share"
       playlistId="playlist"
-      isAdmin={false}
-      currentUserId="other"
       viewMode="compact"
       rank={1}
       onVotePress={() => undefined}
@@ -89,7 +87,6 @@ describe("SongCard compact row (디자인 C9)", () => {
         nickname="멤버"
         shareCode="share"
         playlistId="playlist"
-        isAdmin={false}
         viewMode="compact"
         rank={1}
         onVotePress={() => undefined}
@@ -131,8 +128,6 @@ describe("SongCard compact row (디자인 C9)", () => {
         nickname="멤버"
         shareCode="share"
         playlistId="playlist"
-        isAdmin={false}
-        currentUserId="other"
         viewMode="compact"
         rank={1}
         onVotePress={() => undefined}

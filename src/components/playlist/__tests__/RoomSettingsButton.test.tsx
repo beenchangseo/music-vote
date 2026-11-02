@@ -38,8 +38,8 @@ const SETTINGS = {
   votesAnonymous: true,
   defaultVoteLimit: 3,
   members: [
-    { user_id: "u1", display_name: "보컬", vote_limit: 3, used_votes: 0 },
-    { user_id: "u2", display_name: "기타", vote_limit: 3, used_votes: 0 },
+    { user_id: "u1", display_name: "보컬", vote_limit: 3, used_votes: 0, isMe: false },
+    { user_id: "u2", display_name: "기타", vote_limit: 3, used_votes: 0, isMe: false },
   ],
   totalVotes: 0,
 };
@@ -176,6 +176,20 @@ describe("RoomSettingsButton voting controls", () => {
     expect(showConfirm).not.toHaveBeenCalled();
   });
 
+  it("hands the host's own vote count back to the room after a save, picked by the server's isMe", async () => {
+    serve({
+      members: [
+        { user_id: "u1", display_name: "기타", vote_limit: 3, used_votes: 1, isMe: false },
+        { user_id: "u2", display_name: "보컬", vote_limit: 5, used_votes: 2, isMe: true },
+      ],
+    });
+    const onAllowanceChange = vi.fn();
+    await openSettings({ onAllowanceChange });
+    fireEvent.click(screen.getByRole("radio", { name: "투표권 할당" }));
+
+    await waitFor(() => expect(onAllowanceChange).toHaveBeenCalledWith("allocated", 2, 5));
+  });
+
   it("picks the voting mode from one radio group", async () => {
     await openSettings();
     const modes = screen.getByRole("radiogroup", { name: "투표 방식" });
@@ -213,8 +227,8 @@ describe("RoomSettingsButton voting controls", () => {
     serve({
       mode: "allocated",
       members: [
-        { user_id: "u1", display_name: "보컬", vote_limit: 3, used_votes: 3 },
-        { user_id: "u2", display_name: "기타", vote_limit: 3, used_votes: 0 },
+        { user_id: "u1", display_name: "보컬", vote_limit: 3, used_votes: 3, isMe: false },
+        { user_id: "u2", display_name: "기타", vote_limit: 3, used_votes: 0, isMe: false },
       ],
     });
     await openSettings();

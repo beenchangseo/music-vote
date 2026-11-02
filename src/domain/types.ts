@@ -19,6 +19,12 @@ export interface Playlist {
 }
 
 /**
+ * 화면으로 내려보내는 플레이리스트. 계정 식별자는 어느 모드에서도 내려보내지 않으므로(docs/adr/0011)
+ * 방장 계정 id 대신 페이지가 판정한 보관 여부만 싣는다.
+ */
+export type PlaylistView = Omit<Playlist, "creator_user_id"> & { archived: boolean };
+
+/**
  * 방 화면에 내리는 밴드 정보 (계획 §3 "팀 방 페이지 데이터" 표).
  * 초대 코드는 어느 쪽에도 싣지 않는다 (R10). 방 링크는 공개라 그걸로 밴드에 들어올 수 없어야 한다.
  */
@@ -74,15 +80,19 @@ export interface SongVoteRow {
   vote_type: number; // 1 or -1
 }
 
-export interface SongWithScore extends Song {
+/** 화면으로 내려보내는 곡. 올린 사람의 계정 id 대신 지금 보는 사람이 지울 수 있는지만 싣는다(docs/adr/0011). */
+export interface SongWithScore extends Omit<Song, "added_by_user_id"> {
   score: number;
   votes: SongVoteRow[];
   userVote: number | null; // 1, -1, or null
   userVoteCount: number;
   commentCount: number;
   versionCount: number;
+  /** 방장이거나 올린 사람이다(isHostOrAdder). */
+  canDelete: boolean;
 }
 
+/** 화면으로 내려보내는 댓글. 같은 카카오 닉네임이 둘일 수 있어 내 댓글인지는 서버가 계정으로 판정한다. */
 export interface Comment {
   id: string;
   song_id: string;
@@ -90,6 +100,7 @@ export interface Comment {
   content: string;
   created_at: string;
   updated_at: string;
+  isMine: boolean;
 }
 
 export interface SetlistItem {
@@ -121,6 +132,7 @@ export interface VoteAllowance {
   usedVotes: number;
 }
 
+/** 화면으로 내려보내는 다른 버전. 올린 사람의 계정 id 대신 지금 보는 사람이 고칠 수 있는지만 싣는다. */
 export interface SongVersion {
   id: string;
   song_id: string;
@@ -129,10 +141,11 @@ export interface SongVersion {
   title: string;
   thumbnail_url: string | null;
   description: string | null;
-  added_by_user_id: string | null;
   added_by_nickname: string;
   created_at: string;
   updated_at: string;
+  /** 방장이거나 올린 사람이다(isHostOrAdder). */
+  canManage: boolean;
 }
 
 /** 코드·DB 의 team = 화면의 "밴드" (ADR 0014). */

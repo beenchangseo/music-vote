@@ -2,7 +2,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Playlist, SetlistItem, SongWithScore } from "@/domain/types";
+import type { PlaylistView, SetlistItem, SongWithScore } from "@/domain/types";
 import PlaylistClient from "../PlaylistClient";
 
 // Another screen learns about a change by a content-free broadcast, then refetches (ADR 0010).
@@ -93,11 +93,9 @@ vi.mock("../SongVersionModal", () => ({ default: () => null }));
 vi.mock("../../rehearsal/RehearsalView", () => ({ default: () => null }));
 vi.mock("../../auth/LoginButton", () => ({ default: () => null }));
 
-const OWNER = "user-owner";
-const MEMBER = "user-member";
 const HOST_ONLY_NOTICE = "방장만 편집할 수 있어요";
 
-const playlist: Playlist = {
+const playlist: PlaylistView = {
   id: "22222222-2222-4222-8222-222222222222",
   title: "10월 합주",
   share_code: "abc123",
@@ -106,7 +104,7 @@ const playlist: Playlist = {
   announcement: null,
   setlist_confirmed: false,
   creator_nickname: "보컬",
-  creator_user_id: OWNER,
+  archived: false,
   votes_anonymous: true,
   voting_mode: "free",
   default_vote_limit: 3,
@@ -124,7 +122,6 @@ const song = {
   youtube_video_id: "abcdefghijk",
   thumbnail_url: null,
   added_by: "보컬",
-  added_by_user_id: OWNER,
   key_memo: null,
   key_root: null,
   key_mode: null,
@@ -139,6 +136,7 @@ const song = {
   userVoteCount: 0,
   commentCount: 0,
   versionCount: 1,
+  canDelete: false,
 } satisfies SongWithScore;
 
 const item = {
@@ -165,7 +163,8 @@ function ui(overrides: Partial<Props> = {}) {
       shareCode="abc123"
       participantCount={2}
       userNickname="기타"
-      currentUserId={MEMBER}
+      loggedIn
+      isHost={false}
       initialSetlistItems={[item]}
       {...overrides}
     />
@@ -209,7 +208,7 @@ describe("an open member screen follows the host's setlist permission", () => {
 
 describe("the host saving the setlist permission", () => {
   it("tells the other open screens to refetch once the save lands", async () => {
-    render(ui({ currentUserId: OWNER, userNickname: "보컬", playlist: { ...playlist, setlist_edit_mode: "everyone" } }));
+    render(ui({ isHost: true, userNickname: "보컬", playlist: { ...playlist, setlist_edit_mode: "everyone" } }));
     fireEvent.click(screen.getByRole("button", { name: "플레이리스트 설정" }));
     fireEvent.click(await screen.findByRole("radio", { name: "방장만 편집" }));
 
@@ -223,7 +222,7 @@ describe("the host saving the setlist permission", () => {
 
   it("stays quiet when the save fails", async () => {
     updateSetlistEditMode.mockRejectedValue(new Error("권한 없음"));
-    render(ui({ currentUserId: OWNER, userNickname: "보컬", playlist: { ...playlist, setlist_edit_mode: "everyone" } }));
+    render(ui({ isHost: true, userNickname: "보컬", playlist: { ...playlist, setlist_edit_mode: "everyone" } }));
     fireEvent.click(screen.getByRole("button", { name: "플레이리스트 설정" }));
     fireEvent.click(await screen.findByRole("radio", { name: "방장만 편집" }));
 

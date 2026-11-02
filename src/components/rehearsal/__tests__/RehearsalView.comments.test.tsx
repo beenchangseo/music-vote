@@ -17,7 +17,7 @@ vi.mock("next/image", () => ({ default: (props: { alt: string }) => <span aria-l
 
 const song = { id: "s1", title: "첫 곡", artist: "밴드", tempo_bpm: null, key_root: null, key_mode: null, key_memo: null, duration_seconds: null, thumbnail_url: null } as SongWithScore;
 const item = { id: "i1", playlist_id: "playlist", position: 0, item_type: "song", song_id: "s1", label: null, description: null, duration_seconds: 0, title_override: null, duration_override_seconds: null, created_at: "" } as SetlistItem;
-const comment: Comment = { id: "c1", song_id: "s1", nickname: "기타", content: "브릿지 빠르게", created_at: "", updated_at: "" };
+const comment: Comment = { id: "c1", song_id: "s1", nickname: "기타", content: "브릿지 빠르게", created_at: "", updated_at: "", isMine: false };
 
 let clock = 0;
 

@@ -8,11 +8,12 @@ import { BAND_PROMPT_COOKIE, parseDismissals } from "@/lib/prompt-dismissals";
 import { BASE_OPEN_GRAPH } from "@/lib/seo";
 import { inviteSongs, playlistShareCard } from "@/domain/invite-card";
 import { isArchivedPlaylist } from "@/domain/playlist-archive";
+import { hostDenial, isHostOrAdder } from "@/domain/playlist-host";
 import { getMyTeams, type MyTeam } from "@/actions/team";
 import { readSetlistItems } from "@/lib/playlist-reads";
 import PlaylistClient from "@/components/playlist/PlaylistClient";
 import type { Metadata } from "next";
-import type { Playlist, RoomTeam, Song, SongWithScore } from "@/domain/types";
+import type { Playlist, PlaylistView, RoomTeam, Song, SongWithScore } from "@/domain/types";
 
 /** song_vote_summary 뷰. 점수와 내 표만 담고 다른 사람의 신원은 담지 않는다. */
 type VoteSummaryRow = {
@@ -162,10 +163,12 @@ export default async function PlaylistPage({ params }: PageProps) {
 
   // 익명 모드에서는 누가 어디에 찍었는지를 아예 조회하지 않는다.
   const exposeVoters = shouldExposeVoters(playlist);
-  const isRoomOwner = !!currentUser && currentUser.id === playlist.creator_user_id;
+  const viewerId = currentUser?.id ?? null;
+  // Account ids never reach the browser (docs/adr/0011), so the screen gets these answers instead.
+  const isHost = hostDenial(playlist, viewerId) === null;
   const teamId = playlist.team_id ?? null;
   // "이 플레이리스트를 내 밴드에 넣기" 후보와 안내 카드(F7) 조건은 방장 · 팀 없는 방에서만 필요하다.
-  const wantsBandPrompt = isRoomOwner && !teamId;
+  const wantsBandPrompt = isHost && !teamId;
 
   // 집계 뷰가 playlist_id 를 들고 있어(v16) 곡 목록을 기다리지 않는다.
   // 밴드 조회도 같은 Promise.all 에 넣어 순차 왕복 2번을 유지한다 (eng D4).
@@ -203,7 +206,7 @@ export default async function PlaylistPage({ params }: PageProps) {
   const roomTeam: RoomTeam | null = band
     ? {
         id: band.isMember ? band.id : null,
-        name: band.isMember || isRoomOwner ? band.name : null,
+        name: band.isMember || isHost ? band.name : null,
         nextShowAt: band.nextShowAt,
         isMember: band.isMember,
       }
@@ -233,7 +236,7 @@ export default async function PlaylistPage({ params }: PageProps) {
     engagementMap.set(row.song_id, row);
   }
 
-  const songsWithScores: SongWithScore[] = (songs || []).map((song: Song) => {
+  const songsWithScores: SongWithScore[] = (songs || []).map(({ added_by_user_id, ...song }: Song) => {
     const summary = summaryMap.get(song.id);
     const engagement = engagementMap.get(song.id);
     return {
@@ -244,8 +247,11 @@ export default async function PlaylistPage({ params }: PageProps) {
       userVoteCount: summary?.my_vote_count ?? 0,
       commentCount: engagement?.comment_count ?? 0,
       versionCount: engagement?.version_count ?? 0,
+      canDelete: isHostOrAdder(playlist, added_by_user_id, viewerId),
     };
   });
+  const { creator_user_id, ...shown } = playlist;
+  const playlistView: PlaylistView = { ...shown, archived: isArchivedPlaylist({ creator_user_id }) };
 
   // DR6: the band prompt's closed state comes with the page, so the card never pops in or out after load.
   const bandPromptDismissed =
@@ -255,12 +261,13 @@ export default async function PlaylistPage({ params }: PageProps) {
 
   return (
     <PlaylistClient
-      playlist={playlist}
+      playlist={playlistView}
       songs={songsWithScores}
       shareCode={shareCode}
       participantCount={stats?.participant_count ?? 0}
       userNickname={currentUser?.nickname}
-      currentUserId={currentUser?.id ?? null}
+      loggedIn={!!currentUser}
+      isHost={isHost}
       currentUserAvatarUrl={currentUser?.avatarUrl ?? null}
       team={roomTeam}
       myTeams={myTeams}

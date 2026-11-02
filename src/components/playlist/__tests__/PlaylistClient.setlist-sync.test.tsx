@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchSetlistItems } from "@/lib/playlist-refetch";
 import { removeSetlistItem } from "@/actions/setlist";
-import type { Playlist, SetlistItem, SongWithScore } from "@/domain/types";
+import type { PlaylistView, SetlistItem, SongWithScore } from "@/domain/types";
 import PlaylistClient from "../PlaylistClient";
 
 const realtime = vi.hoisted(() => ({ onRemoteChange: (): Promise<void> | void => {}, notifyChange: vi.fn(), requestRefresh: vi.fn() }));
@@ -77,14 +77,14 @@ const playlist = {
   announcement: null,
   setlist_confirmed: false,
   creator_nickname: "보컬",
-  creator_user_id: "owner",
+  archived: false,
   votes_anonymous: true,
   voting_mode: "free",
   default_vote_limit: 3,
   setlist_edit_mode: "everyone",
   created_at: "2026-10-01T00:00:00Z",
   team_id: null,
-} as Playlist;
+} as PlaylistView;
 
 function deferred() {
   let resolve: (items: SetlistItem[]) => void = () => {};
@@ -93,7 +93,7 @@ function deferred() {
 }
 
 function openSetlist() {
-  render(<PlaylistClient playlist={playlist} songs={[]} shareCode="abc123" participantCount={2} userNickname="보컬" currentUserId="owner" team={null} initialSetlistItems={[item("first")]} />);
+  render(<PlaylistClient playlist={playlist} songs={[]} shareCode="abc123" participantCount={2} userNickname="보컬" loggedIn isHost team={null} initialSetlistItems={[item("first")]} />);
   fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
 }
 
@@ -220,7 +220,7 @@ describe("PlaylistClient setlist sync", () => {
 
   it("keeps the setlist on screen when a removal from the candidates lands but the list after it cannot be read", async () => {
     const inSetlist = { ...item("candidate"), item_type: "song", song_id: candidate.id } as SetlistItem;
-    render(<PlaylistClient playlist={playlist} songs={[candidate]} shareCode="abc123" participantCount={2} userNickname="보컬" currentUserId="owner" team={null} initialSetlistItems={[inSetlist, item("theirs")]} />);
+    render(<PlaylistClient playlist={playlist} songs={[candidate]} shareCode="abc123" participantCount={2} userNickname="보컬" loggedIn isHost team={null} initialSetlistItems={[inSetlist, item("theirs")]} />);
     vi.mocked(removeSetlistItem).mockResolvedValue({ success: true, items: null });
     vi.mocked(fetchSetlistItems).mockReturnValue(new Promise(() => {}));
 
@@ -234,7 +234,7 @@ describe("PlaylistClient setlist sync", () => {
 
   it("takes the removed song out of another member's list drawn while the removal was on the way, when the list after it cannot be read", async () => {
     const inSetlist = { ...item("candidate"), item_type: "song", song_id: candidate.id } as SetlistItem;
-    render(<PlaylistClient playlist={playlist} songs={[candidate]} shareCode="abc123" participantCount={2} userNickname="보컬" currentUserId="owner" team={null} initialSetlistItems={[inSetlist, item("theirs")]} />);
+    render(<PlaylistClient playlist={playlist} songs={[candidate]} shareCode="abc123" participantCount={2} userNickname="보컬" loggedIn isHost team={null} initialSetlistItems={[inSetlist, item("theirs")]} />);
     let landRemoval: (result: { success: true; items: null }) => void = () => {};
     vi.mocked(removeSetlistItem).mockReturnValue(new Promise((resolve) => (landRemoval = resolve)));
     // Read before the delete reached the server, with another member's new block.

@@ -6,7 +6,7 @@ import { confirmSetlist } from "@/actions/setlist";
 import { fetchSetlistItems } from "@/lib/playlist-refetch";
 import { track } from "@/lib/analytics";
 import { setlistMessage } from "@/lib/setlist-messages";
-import type { Playlist, SetlistItem, SongWithScore } from "@/domain/types";
+import type { PlaylistView, SetlistItem, SongWithScore } from "@/domain/types";
 import PlaylistClient from "../PlaylistClient";
 
 const dialog = vi.hoisted(() => ({ showAlert: vi.fn(), showConfirm: vi.fn(), showDanger: vi.fn() }));
@@ -72,17 +72,17 @@ const playlist = {
   announcement: null,
   setlist_confirmed: false,
   creator_nickname: "보컬",
-  creator_user_id: "owner",
+  archived: false,
   votes_anonymous: true,
   voting_mode: "free",
   default_vote_limit: 3,
   setlist_edit_mode: "host_only",
   created_at: "2026-09-01T00:00:00Z",
   team_id: null,
-} as Playlist;
+} as PlaylistView;
 
 function renderAsHost(initialSetlistItems: SetlistItem[] = []) {
-  render(<PlaylistClient playlist={playlist} songs={[song("top"), song("second"), song("third")]} shareCode="abc123" participantCount={2} userNickname="보컬" currentUserId="owner" team={null} initialSetlistItems={initialSetlistItems} />);
+  render(<PlaylistClient playlist={playlist} songs={[song("top"), song("second"), song("third")]} shareCode="abc123" participantCount={2} userNickname="보컬" loggedIn isHost team={null} initialSetlistItems={initialSetlistItems} />);
 }
 
 const clickConfirm = () => act(async () => fireEvent.click(screen.getByRole("button", { name: "셋리스트 확정하기" })));
@@ -170,9 +170,16 @@ describe("PlaylistClient setlist confirm", () => {
 
   it("offers no confirm in an archived playlist, even on the device that made it", () => {
     localStorage.setItem("myPlaylists", JSON.stringify([{ id: "p", shareCode: "abc123", adminToken: "token" }]));
-    render(<PlaylistClient playlist={{ ...playlist, creator_user_id: null }} songs={[song("top"), song("second")]} shareCode="abc123" participantCount={2} userNickname="보컬" currentUserId="owner" team={null} initialSetlistItems={[]} />);
+    render(<PlaylistClient playlist={{ ...playlist, archived: true }} songs={[song("top"), song("second")]} shareCode="abc123" participantCount={2} userNickname="보컬" loggedIn isHost={false} team={null} initialSetlistItems={[]} />);
 
     expect(screen.queryByRole("button", { name: "셋리스트 확정하기" })).not.toBeInTheDocument();
+  });
+
+  it("offers no confirm to a logged-in member the page did not mark as host", () => {
+    render(<PlaylistClient playlist={playlist} songs={[song("top"), song("second")]} shareCode="abc123" participantCount={2} userNickname="기타" loggedIn isHost={false} team={null} initialSetlistItems={[]} />);
+
+    expect(screen.queryByRole("button", { name: "셋리스트 확정하기" })).not.toBeInTheDocument();
+    expect(screen.getByText("생성자가 셋리스트를 확정하면 셋리스트/합주 모드를 사용할 수 있습니다.")).toBeInTheDocument();
   });
 
   it.each([

@@ -25,7 +25,6 @@ function makeSong(overrides: Partial<SongWithScore> = {}): SongWithScore {
     youtube_video_id: "x",
     thumbnail_url: null,
     added_by: "참여자",
-    added_by_user_id: null,
     key_memo: null,
     key_root: null,
     key_mode: null,
@@ -40,6 +39,7 @@ function makeSong(overrides: Partial<SongWithScore> = {}): SongWithScore {
     userVoteCount: 0,
     commentCount: 0,
     versionCount: 0,
+    canDelete: false,
     ...overrides,
   };
 }

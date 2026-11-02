@@ -22,7 +22,6 @@ const song = {
   youtube_video_id: "abcdefghijk",
   thumbnail_url: null,
   added_by: "멤버",
-  added_by_user_id: "adder",
   key_memo: null,
   key_root: null,
   key_mode: null,
@@ -37,11 +36,12 @@ const song = {
   userVoteCount: 0,
   commentCount: 0,
   versionCount: 0,
+  canDelete: false,
 } satisfies SongWithScore;
 
-function renderCard(overrides: { isAdmin: boolean; currentUserId: string }) {
+function renderCard(canDelete: boolean) {
   return render(
-    <SongCard song={song} votingMode="free" nickname="멤버" shareCode="share" playlistId="playlist" isAdmin={overrides.isAdmin} currentUserId={overrides.currentUserId} viewMode="card" onVotePress={() => undefined} isPlaying={false} isCurrent={false} onTogglePlay={() => undefined} />,
+    <SongCard song={{ ...song, canDelete }} votingMode="free" nickname="멤버" shareCode="share" playlistId="playlist" viewMode="card" onVotePress={() => undefined} isPlaying={false} isCurrent={false} onTogglePlay={() => undefined} />,
   );
 }
 
@@ -49,20 +49,15 @@ describe("SongCard deletion permission", () => {
   beforeEach(() => removeSong.mockReset().mockResolvedValue({ success: true }));
   afterEach(cleanup);
 
-  it("lets a logged-in host request deletion even without a legacy admin token", async () => {
-    renderCard({ isAdmin: true, currentUserId: "host" });
+  // The page decides who may delete (the host or the adder, isHostOrAdder) and sends only the answer (ADR 0011).
+  it("lets the viewer the page allowed request deletion", async () => {
+    renderCard(true);
     fireEvent.click(screen.getByRole("button", { name: "곡 삭제" }));
     await waitFor(() => expect(removeSong).toHaveBeenCalledWith("song", "playlist", "share"));
   });
 
-  it("lets the song adder request deletion", async () => {
-    renderCard({ isAdmin: false, currentUserId: "adder" });
-    fireEvent.click(screen.getByRole("button", { name: "곡 삭제" }));
-    await waitFor(() => expect(removeSong).toHaveBeenCalled());
-  });
-
-  it("does not expose deletion to another participant", () => {
-    renderCard({ isAdmin: false, currentUserId: "other" });
+  it("does not expose deletion to a viewer the page did not allow", () => {
+    renderCard(false);
     expect(screen.queryByRole("button", { name: "곡 삭제" })).not.toBeInTheDocument();
   });
 });

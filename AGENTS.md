@@ -174,6 +174,7 @@ Variable(한국어) + Geist(영문) 폴백.
 - `src/lib/youtube-iframe.ts` 의 `YT` namespace 는 ambient declare 다. `export type { YT }` 로만 내보내고 value import 하지 않는다.
 - Spotify audio-features 는 2024-11 부터 신규 앱에 막혔다. BPM·키는 직접 입력과 탭 템포, 외부 도구 링크로 채운다.
 - 익명 모드에서는 `SongWithScore.votes` 를 채우지 않는다. 계정 식별자는 어느 모드에서도 내려보내지 않는다(`docs/adr/0011`).
+  화면이 계정으로 판정하던 일은 서버가 판정해 값만 내려보낸다(`isHost`·`canDelete`·`canManage`·`isMine`·`isMe`).
 - 실시간은 내용 없는 broadcast 알림 뒤 재조회다(`docs/adr/0010`). `postgres_changes` 구독은 익명 모드를 뚫으므로
   eslint 가 막는다.
 - YouTube `search.list` 는 하루 100회 쿼터를 모든 사용자가 나눠 쓴다. 키 입력마다 부르지 않고, 명시적 제출에서만
