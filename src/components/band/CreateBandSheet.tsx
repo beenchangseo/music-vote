@@ -34,7 +34,6 @@ type PromoteProps = {
   /** 방 설정 행이나 플레이리스트 안 안내 카드에서 연다. 만든 뒤 방에 머문다. */
   mode?: "promote";
   playlistId: string;
-  adminToken: string | null;
   /** team_created 이벤트의 출처. 방 설정 행이면 settings, 안내 카드면 card. */
   source: "card" | "settings";
   onCreated: (band: CreatedBand) => void;
@@ -78,7 +77,6 @@ type InputRef = { inputRef: RefObject<HTMLInputElement | null> };
 
 function PromoteBody({
   playlistId,
-  adminToken,
   source,
   onCreated,
   onClose,
@@ -89,7 +87,7 @@ function PromoteBody({
 
   useEffect(() => {
     let active = true;
-    getVotingSettings(playlistId, adminToken)
+    getVotingSettings(playlistId)
       .then((settings) => {
         if (active) setMemberNames(settings.members.map((member) => member.display_name));
       })
@@ -100,7 +98,7 @@ function PromoteBody({
     return () => {
       active = false;
     };
-  }, [playlistId, adminToken]);
+  }, [playlistId]);
 
   return (
     <NameForm

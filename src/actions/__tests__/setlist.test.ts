@@ -157,7 +157,7 @@ describe("updateSetlistOrder", () => {
   it("saves the whole order in one call and returns the setlist the server now has", async () => {
     mocks.rpc.mockResolvedValue({ data: { items }, error: null });
 
-    const result = await updateSetlistOrder("p", null, ["new", "item-1"], "abc123");
+    const result = await updateSetlistOrder("p", ["new", "item-1"], "abc123");
 
     expect(mocks.rpc).toHaveBeenCalledWith("reorder_setlist_items", { p_playlist_id: "p", p_item_ids: ["new", "item-1"] });
     expect(result).toEqual({ success: true, items });
@@ -167,14 +167,14 @@ describe("updateSetlistOrder", () => {
   it("returns the reason when the editor may not reorder", async () => {
     mocks.denial.mockResolvedValue("not_editor");
 
-    await expect(updateSetlistOrder("p", null, ["item-1"], "abc123")).resolves.toEqual({ success: false, reason: "not_editor" });
+    await expect(updateSetlistOrder("p", ["item-1"], "abc123")).resolves.toEqual({ success: false, reason: "not_editor" });
     expect(mocks.rpc).not.toHaveBeenCalled();
   });
 
   it("refuses an order that names a block twice", async () => {
     mocks.rpc.mockResolvedValue({ data: null, error: { code: "P0001", message: "invalid_order" } });
 
-    await expect(updateSetlistOrder("p", null, ["item-1", "item-1"], "abc123")).resolves.toEqual({ success: false, reason: "invalid_order" });
+    await expect(updateSetlistOrder("p", ["item-1", "item-1"], "abc123")).resolves.toEqual({ success: false, reason: "invalid_order" });
   });
 });
 
@@ -188,7 +188,7 @@ describe("removeSetlistItem", () => {
   it("removes the block from this playlist and returns the setlist the server now has", async () => {
     const ops = fake();
 
-    const result = await removeSetlistItem("p", null, "item-9", "abc123");
+    const result = await removeSetlistItem("p", "item-9", "abc123");
 
     expect(ops[0]).toMatchObject({ table: "setlist_items", action: "delete", filters: { id: "item-9", playlist_id: "p" } });
     expect(result).toEqual({ success: true, items });
@@ -199,7 +199,7 @@ describe("removeSetlistItem", () => {
     const ops = fake();
     mocks.denial.mockResolvedValue("archived");
 
-    await expect(removeSetlistItem("p", null, "item-9", "abc123")).resolves.toEqual({ success: false, reason: "archived" });
+    await expect(removeSetlistItem("p", "item-9", "abc123")).resolves.toEqual({ success: false, reason: "archived" });
     expect(ops).toHaveLength(0);
   });
 
@@ -207,13 +207,13 @@ describe("removeSetlistItem", () => {
     const { client } = createFakeClient((op) => (op.action === "delete" ? { error: null } : { data: null, error: { code: "57014" } }));
     mocks.from.mockImplementation(client.from);
 
-    await expect(removeSetlistItem("p", null, "item-9", "abc123")).resolves.toEqual({ success: true, items: null });
+    await expect(removeSetlistItem("p", "item-9", "abc123")).resolves.toEqual({ success: true, items: null });
   });
 
   it("fails when the delete fails", async () => {
     fake({ message: "boom" });
 
-    await expect(removeSetlistItem("p", null, "item-9", "abc123")).resolves.toEqual({ success: false, reason: "write_failed" });
+    await expect(removeSetlistItem("p", "item-9", "abc123")).resolves.toEqual({ success: false, reason: "write_failed" });
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 });

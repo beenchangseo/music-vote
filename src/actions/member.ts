@@ -76,11 +76,8 @@ export interface MemberVoteLimitInput {
   voteLimit: number;
 }
 
-export async function getVotingSettings(
-  playlistId: string,
-  adminToken: string | null,
-): Promise<VotingSettings> {
-  await assertPlaylistAdmin(playlistId, adminToken);
+export async function getVotingSettings(playlistId: string): Promise<VotingSettings> {
+  await assertPlaylistAdmin(playlistId);
   const admin = createAdminClient();
 
   const [{ data: playlist }, { data: members }, { data: votes }] = await Promise.all([
@@ -121,14 +118,13 @@ export async function getVotingSettings(
 
 export async function saveVotingSettings(
   playlistId: string,
-  adminToken: string | null,
   votesAnonymous: boolean,
   mode: VotingMode,
   defaultVoteLimit: number,
   memberLimits: MemberVoteLimitInput[],
   shareCode: string,
 ) {
-  await assertPlaylistAdmin(playlistId, adminToken);
+  await assertPlaylistAdmin(playlistId);
 
   if (typeof votesAnonymous !== "boolean") {
     throw new Error("투표 공개 범위가 올바르지 않습니다.");

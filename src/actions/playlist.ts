@@ -189,9 +189,8 @@ export async function updateAnnouncementPublic(
   playlistId: string,
   announcement: string,
   shareCode: string,
-  adminToken: string | null = null,
 ) {
-  await assertPlaylistAdmin(playlistId, adminToken);
+  await assertPlaylistAdmin(playlistId);
   const admin = createAdminClient();
 
   const { error } = await admin
@@ -205,12 +204,8 @@ export async function updateAnnouncementPublic(
   return { success: true };
 }
 
-export async function resetPlaylistVotes(
-  playlistId: string,
-  adminToken: string | null,
-  shareCode: string,
-) {
-  await assertPlaylistAdmin(playlistId, adminToken);
+export async function resetPlaylistVotes(playlistId: string, shareCode: string) {
+  await assertPlaylistAdmin(playlistId);
   const admin = createAdminClient();
   const { data: songs, error: songsError } = await admin
     .from("songs")
@@ -231,13 +226,8 @@ export async function resetPlaylistVotes(
   return { success: true, deletedCount: count ?? 0 };
 }
 
-export async function updateSetlistEditMode(
-  playlistId: string,
-  adminToken: string | null,
-  mode: SetlistEditMode,
-  shareCode: string,
-) {
-  await assertPlaylistAdmin(playlistId, adminToken);
+export async function updateSetlistEditMode(playlistId: string, mode: SetlistEditMode, shareCode: string) {
+  await assertPlaylistAdmin(playlistId);
   if (mode !== "everyone" && mode !== "host_only") {
     throw new Error("잘못된 셋리스트 권한입니다.");
   }
@@ -253,7 +243,7 @@ export async function updateSetlistEditMode(
 
 export async function deletePlaylist(playlistId: string, adminToken: string | null) {
   // 보관된 합주방도 방장이 직접 정리할 수 있어야 한다.
-  await assertPlaylistAdmin(playlistId, adminToken, { allowArchived: true });
+  await assertPlaylistAdmin(playlistId, { adminToken });
   const admin = createAdminClient();
   const { error } = await admin
     .from("playlists")

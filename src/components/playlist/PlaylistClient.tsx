@@ -322,7 +322,7 @@ export default function PlaylistClient({
     if (!ok) return;
     const previous = setlistItems;
     setSetlistItems((prev) => prev?.filter((entry) => entry.id !== item.id) ?? prev);
-    const result = await removeSetlistItem(playlist.id, adminToken, item.id, shareCode).catch(() => null);
+    const result = await removeSetlistItem(playlist.id, item.id, shareCode).catch(() => null);
     if (result?.success) {
       applySetlistItems(result.items ?? ((entries) => entries.filter((entry) => entry.id !== item.id)));
       return;
@@ -511,7 +511,6 @@ export default function PlaylistClient({
               ) : showBandPrompt ? (
                 <BandPromptCard
                   playlistId={playlist.id}
-                  adminToken={adminToken}
                   dismissed={bandPromptDismissed}
                   onCreated={setJustCreatedTeam}
                 />
@@ -689,7 +688,6 @@ export default function PlaylistClient({
               songs={songsWithVotes}
               playlistId={playlist.id}
               shareCode={shareCode}
-              adminToken={adminToken}
               loading={loadingSetlist}
               onItemsChange={applySetlistItems}
               title={playlist.title}

@@ -38,7 +38,6 @@ function renderView(access: SetlistEditAccess, setlistItems: SetlistItem[] = [it
         songs={[song, candidate]}
         playlistId="room"
         shareCode="share"
-        adminToken={null}
         loading={false}
         onItemsChange={vi.fn()}
         title="10월 합주"

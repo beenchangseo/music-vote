@@ -26,7 +26,6 @@ function renderSetlist(setlistItems: SetlistItem[], access: SetlistEditAccess = 
       songs={songs}
       playlistId="p"
       shareCode="abc123"
-      adminToken={null}
       loading={false}
       onItemsChange={onItemsChange}
       title="10월 합주"

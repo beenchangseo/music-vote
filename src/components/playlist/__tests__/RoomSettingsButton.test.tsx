@@ -53,7 +53,7 @@ function serve(settings: Partial<typeof SETTINGS>) {
 beforeEach(() => {
   stored = SETTINGS;
   getVotingSettings.mockReset().mockImplementation(async () => stored);
-  saveVotingSettings.mockReset().mockImplementation(async (_id: string, _token: null, votesAnonymous: boolean, mode: string) => {
+  saveVotingSettings.mockReset().mockImplementation(async (_id: string, votesAnonymous: boolean, mode: string) => {
     stored = { ...stored, votesAnonymous, mode };
   });
   showConfirm.mockReset().mockResolvedValue(true);
@@ -116,7 +116,7 @@ describe("RoomSettingsButton", () => {
 
     expect(screen.getByRole("radio", { name: "방장만 편집" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByText("방장만 셋리스트를 바꿀 수 있어요.")).toBeInTheDocument();
-    expect(updateSetlistEditMode).toHaveBeenCalledWith("playlist", null, "host_only", "share");
+    expect(updateSetlistEditMode).toHaveBeenCalledWith("playlist", "host_only", "share");
     expect(onChange).not.toHaveBeenCalled();
 
     finishSave();
@@ -146,7 +146,7 @@ describe("RoomSettingsButton voting controls", () => {
 
     fireEvent.click(anonymous);
     await waitFor(() =>
-      expect(saveVotingSettings).toHaveBeenCalledWith("playlist", null, false, "free", 3, expect.any(Array), "share"),
+      expect(saveVotingSettings).toHaveBeenCalledWith("playlist", false, "free", 3, expect.any(Array), "share"),
     );
     expect(showConfirm).toHaveBeenCalledTimes(1);
     expect(anonymous).not.toBeChecked();
@@ -171,7 +171,7 @@ describe("RoomSettingsButton voting controls", () => {
 
     fireEvent.click(anonymous);
     await waitFor(() =>
-      expect(saveVotingSettings).toHaveBeenCalledWith("playlist", null, true, "free", 3, expect.any(Array), "share"),
+      expect(saveVotingSettings).toHaveBeenCalledWith("playlist", true, "free", 3, expect.any(Array), "share"),
     );
     expect(showConfirm).not.toHaveBeenCalled();
   });
@@ -182,7 +182,7 @@ describe("RoomSettingsButton voting controls", () => {
     expect(modes).toContainElement(screen.getByRole("radio", { name: "자유 투표", checked: true }));
     fireEvent.click(screen.getByRole("radio", { name: "투표권 할당" }));
     await waitFor(() =>
-      expect(saveVotingSettings).toHaveBeenCalledWith("playlist", null, true, "allocated", 3, expect.any(Array), "share"),
+      expect(saveVotingSettings).toHaveBeenCalledWith("playlist", true, "allocated", 3, expect.any(Array), "share"),
     );
   });
 
@@ -228,7 +228,6 @@ describe("RoomSettingsButton voting controls", () => {
     await waitFor(() =>
       expect(saveVotingSettings).toHaveBeenCalledWith(
         "playlist",
-        null,
         true,
         "allocated",
         3,

@@ -169,7 +169,7 @@ describe("CreateBandSheet from a playlist (promote, unchanged)", () => {
     state.getVotingSettings.mockResolvedValue({ members: [{ display_name: "보컬" }, { display_name: "기타" }] });
     const onCreated = vi.fn();
     render(
-      <CreateBandSheet open onClose={vi.fn()} playlistId="pl-1" adminToken={null} source="settings" onCreated={onCreated} />,
+      <CreateBandSheet open onClose={vi.fn()} playlistId="pl-1" source="settings" onCreated={onCreated} />,
     );
     expect(await screen.findByText("이 플레이리스트 참여자 2명이 멤버가 돼요")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "나중에" })).toBeInTheDocument();

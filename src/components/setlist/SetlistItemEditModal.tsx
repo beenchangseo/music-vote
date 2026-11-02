@@ -12,7 +12,6 @@ interface Props {
   song?: SongWithScore | null;
   playlistId: string;
   shareCode: string;
-  adminToken: string | null;
   onSaved: (item: SetlistItem) => void;
   onClose: () => void;
 }
@@ -39,10 +38,10 @@ export default function SetlistItemEditModal(props: Props) {
     startTransition(async () => {
       try {
         const next = isInterval
-          ? await updateIntervalItem(props.playlistId, props.adminToken, props.item.id, { label: title, description, duration_seconds: duration }, props.shareCode)
+          ? await updateIntervalItem(props.playlistId, props.item.id, { label: title, description, duration_seconds: duration }, props.shareCode)
           : isOriginal
-            ? await updateOriginalItem(props.playlistId, props.adminToken, props.item.id, { label: title, description, duration_seconds: duration }, props.shareCode)
-            : await updateSongSetlistItem(props.playlistId, props.adminToken, props.item.id, title, duration, props.shareCode);
+            ? await updateOriginalItem(props.playlistId, props.item.id, { label: title, description, duration_seconds: duration }, props.shareCode)
+            : await updateSongSetlistItem(props.playlistId, props.item.id, title, duration, props.shareCode);
         props.onSaved(next);
         props.onClose();
       } catch (error) {
@@ -56,7 +55,7 @@ export default function SetlistItemEditModal(props: Props) {
     if (!ok) return;
     startTransition(async () => {
       try {
-        const next = await resetSongSetlistItem(props.playlistId, props.adminToken, props.item.id, props.shareCode);
+        const next = await resetSongSetlistItem(props.playlistId, props.item.id, props.shareCode);
         props.onSaved(next);
         props.onClose();
       } catch (error) {

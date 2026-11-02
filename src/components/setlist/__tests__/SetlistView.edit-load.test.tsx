@@ -31,7 +31,6 @@ function renderSetlist(access: SetlistEditAccess) {
       songs={songs}
       playlistId="p"
       shareCode="abc123"
-      adminToken={null}
       loading={false}
       onItemsChange={vi.fn()}
       title="10월 합주"

@@ -59,7 +59,6 @@ export async function confirmSetlist(playlistId: string, songIds: string[], shar
 
 export async function updateIntervalItem(
   playlistId: string,
-  adminToken: string | null,
   itemId: string,
   item: BlockFieldsInput,
   shareCode: string,
@@ -86,7 +85,6 @@ export async function updateIntervalItem(
 
 export async function updateOriginalItem(
   playlistId: string,
-  adminToken: string | null,
   itemId: string,
   item: BlockFieldsInput,
   shareCode: string,
@@ -151,7 +149,6 @@ export async function insertSetlistBlock(
 
 export async function updateSongSetlistItem(
   playlistId: string,
-  adminToken: string | null,
   itemId: string,
   title: string,
   durationSeconds: number,
@@ -185,7 +182,6 @@ export async function updateSongSetlistItem(
 
 export async function resetSongSetlistItem(
   playlistId: string,
-  adminToken: string | null,
   itemId: string,
   shareCode: string,
 ): Promise<SetlistItem> {
@@ -210,7 +206,6 @@ export async function resetSongSetlistItem(
  */
 export async function updateSetlistOrder(
   playlistId: string,
-  adminToken: string | null,
   itemIds: string[],
   shareCode: string,
 ): Promise<SetlistItemsResult> {
@@ -235,7 +230,6 @@ export async function updateSetlistOrder(
 
 export async function removeSetlistItem(
   playlistId: string,
-  adminToken: string | null,
   itemId: string,
   shareCode: string,
 ): Promise<RemoveSetlistItemResult> {

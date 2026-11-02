@@ -43,7 +43,6 @@ function Room({ initial, onItemsChange, remote }: { initial: SetlistItem[]; onIt
         songs={songs}
         playlistId="p"
         shareCode="abc123"
-        adminToken={null}
         loading={false}
         onItemsChange={(next) =>
           setItems((current) => {
@@ -215,7 +214,7 @@ describe("SetlistView edit mode: reordering", () => {
     }
 
     await waitFor(() => expect(onItemsChange).toHaveBeenCalledWith(saved));
-    expect(updateSetlistOrder).toHaveBeenCalledWith("p", null, ["item-2", "item-1", "item-3", "item-0"], "abc123");
+    expect(updateSetlistOrder).toHaveBeenCalledWith("p", ["item-2", "item-1", "item-3", "item-0"], "abc123");
     expect(handles()).toEqual(["「기타 셋업 변경」 끌어서 순서 바꾸기", "「벚꽃 엔딩」 끌어서 순서 바꾸기", "「예뻤어」 끌어서 순서 바꾸기"]);
     expect(document.body).toHaveTextContent("「예뻤어」 블록을 3번째에 놓았어요");
   });
@@ -270,7 +269,7 @@ describe("SetlistView edit mode: removing", () => {
     const after = [pretty, hidden, { ...cherry, position: 2 }];
     await act(async () => saved.resolve({ success: true, items: after }));
 
-    expect(removeSetlistItem).toHaveBeenCalledWith("p", null, "item-2", "abc123");
+    expect(removeSetlistItem).toHaveBeenCalledWith("p", "item-2", "abc123");
     expect(onItemsChange).toHaveBeenCalledWith(after);
   });
 
