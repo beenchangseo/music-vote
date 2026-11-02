@@ -248,11 +248,6 @@ body {
 @media print {
   body { background: white !important; color: black !important; }
   .print\:hidden { display: none !important; }
-  .print\:bg-yellow-50 { background-color: #fefce8 !important; }
-  .print\:border-yellow-300 { border-color: #fde047 !important; }
-  .print\:text-yellow-800 { color: #854d0e !important; }
-  .print\:text-yellow-600 { color: #ca8a04 !important; }
-  .print\:bg-yellow-100 { background-color: #fef9c3 !important; }
 }
 
 /* 투표를 눌렀을 때. 눌렸다는 사실만 짧게 알린다. */

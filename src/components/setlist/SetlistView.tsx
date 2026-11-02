@@ -280,7 +280,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
           </button>
           <button
             onClick={() => openAtEnd("interval")}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-pill border border-dashed border-warning/40 px-4 text-sm font-medium text-warning transition-colors hover:bg-warning-soft/30"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-pill border border-dashed border-border-strong px-4 text-sm font-medium text-text-muted transition-colors hover:bg-surface-hover"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
               <path d="M12 5v14M5 12h14" />

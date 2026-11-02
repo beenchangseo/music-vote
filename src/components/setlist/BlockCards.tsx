@@ -3,10 +3,11 @@
 import { useState, type ReactNode } from "react";
 import Image from "next/image";
 import Badge from "../ui/Badge";
+import { touchTarget44 } from "../ui/Button";
 import { effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, type SetlistBlock } from "@/domain/setlist";
 import { displayArtist, formatKey } from "@/domain/song-meta";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
-import { BLOCK_TONES, type BlockKind } from "./block-tones";
+import { BLOCK_TONES, PLAYING_CARD, type BlockKind } from "./block-tones";
 
 interface CardShellProps {
   kind: BlockKind;
@@ -18,11 +19,10 @@ interface CardShellProps {
 }
 
 function CardShell({ kind, editing, onRemove, current = false, className = "", children }: CardShellProps) {
-  const tone = BLOCK_TONES[kind];
   return (
-    <div className={`flex items-center gap-3 rounded-card border ${current ? "border-primary-fg/60" : tone.border} ${tone.fill} ${className}`}>
+    <div className={`flex items-center gap-3 ${current ? PLAYING_CARD : BLOCK_TONES[kind].card} ${className}`}>
       {editing && (
-        <button type="button" onClick={onRemove} className="-mx-1 flex size-11 shrink-0 items-center justify-center text-danger-fg print:hidden" aria-label="삭제">
+        <button type="button" onClick={onRemove} className={`-mx-1 flex h-control-sm w-11 shrink-0 items-center justify-center text-danger-fg print:hidden ${touchTarget44}`} aria-label="삭제">
           <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
             <circle cx="12" cy="12" r="9" />
             <path strokeLinecap="round" d="M8 12h8" />
@@ -65,14 +65,13 @@ function BlockTitle({ text, editing, className }: { text: string; editing: boole
   );
 }
 
-function MetaLine({ name, duration, className = "" }: { name: ReactNode; duration: number | null; className?: string }) {
-  return (
-    <span className={`flex min-w-0 ${className}`}>
-      <span className="truncate">{name}</span>
-      <span className={`shrink-0 tabular-nums ${duration == null ? "text-warning" : ""}`}>{" · "}{duration == null ? "시간 없음" : formatRuntime(duration)}</span>
-    </span>
-  );
+function Runtime({ seconds }: { seconds: number | null }) {
+  return seconds == null ? <span className="text-warning">시간 없음</span> : <>{formatRuntime(seconds)}</>;
 }
+
+const META = "text-sm leading-5 text-text-muted";
+
+const coverBox = (editing: boolean) => `shrink-0 rounded-control bg-surface-elevated ${editing ? "size-12" : "size-14"}`;
 
 interface BlockProps {
   item: SetlistItem;
@@ -92,11 +91,17 @@ export function SongBlock({ item, song, editing, onEdit, onRemove, nowPlaying, o
   const duration = effectiveSetlistDuration(item, song);
   const key = formatKey(song.key_root, song.key_mode) || song.key_memo;
   const thumbnail = song.thumbnail_url && <Image src={song.thumbnail_url} alt="" fill sizes="56px" className="object-cover" />;
-  const coverClass = `relative shrink-0 overflow-hidden rounded-control bg-surface-elevated ${editing ? "size-12" : "size-14"}`;
+  const coverClass = `relative overflow-hidden ${coverBox(editing)}`;
   const text = (
     <span className="min-w-0 flex-1 text-left">
       <BlockTitle text={title} editing={editing} className={nowPlaying ? "text-primary-fg" : "text-text"} />
-      <MetaLine name={displayArtist(song.artist, song.title) || "아티스트 미입력"} duration={duration} className="text-sm leading-5 text-text-muted" />
+      <span className={`flex min-w-0 ${META}`}>
+        <span className="truncate">{displayArtist(song.artist, song.title) || "아티스트 미입력"}</span>
+        <span className="shrink-0 tabular-nums">
+          {" · "}
+          <Runtime seconds={duration} />
+        </span>
+      </span>
       {(song.tempo_bpm || key) && (
         <span className="mt-1.5 flex items-center gap-1">
           {song.tempo_bpm ? <Badge>{song.tempo_bpm} BPM</Badge> : null}
@@ -150,18 +155,17 @@ export function OriginalBlock({ item, editing, onEdit, onRemove }: BlockProps) {
   const label = item.label || "자작곡";
   const body = (
     <>
-      <span className={`flex shrink-0 items-center justify-center rounded-control bg-primary-tint text-primary-fg ${editing ? "size-12" : "size-14"}`}>
+      <span className={`flex items-center justify-center text-primary-fg ${coverBox(editing)}`}>
         <svg className="size-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
           <path d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       </span>
       <span className="min-w-0 flex-1 text-left">
         <BlockTitle text={label} editing={editing} className="text-text" />
-        <MetaLine
-          name={<span className="font-medium text-primary-fg">자작곡</span>}
-          duration={item.duration_seconds > 0 ? item.duration_seconds : null}
-          className="text-sm leading-5 text-text-muted"
-        />
+        <span className={`flex items-center gap-1.5 tabular-nums ${META}`}>
+          <Badge tone="primary">자작곡</Badge>{" "}
+          <Runtime seconds={item.duration_seconds > 0 ? item.duration_seconds : null} />
+        </span>
         {item.description && <span className="mt-0.5 block truncate text-caption text-text-subtle">{item.description}</span>}
       </span>
     </>
@@ -191,13 +195,13 @@ export function IntervalBlock({ item, editing, onEdit, onRemove }: BlockProps) {
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
       <span className={`flex min-w-0 text-sm ${open ? "flex-wrap" : ""}`}>
-        <span className={`font-semibold ${open ? "" : "truncate"}`}>{label}</span>
+        <span className={`font-medium ${open ? "" : "truncate"}`}>{label}</span>
         <span className="shrink-0 tabular-nums">
           {item.duration_seconds > 0 && ` · ${formatRuntime(item.duration_seconds)}`}
           {editing && <EditMark />}
         </span>
       </span>
-      {item.description && !open && <span className="min-w-0 grow basis-0 truncate text-caption text-text-muted">{item.description}</span>}
+      {item.description && !open && <span className="min-w-0 grow basis-0 truncate text-caption text-text-subtle">{item.description}</span>}
       {canExpand && !editing && (
         <svg className={`ml-auto size-3 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -205,17 +209,17 @@ export function IntervalBlock({ item, editing, onEdit, onRemove }: BlockProps) {
       )}
     </>
   );
-  const lineClass = "flex min-h-11 w-full min-w-0 flex-1 items-center gap-2 text-left";
+  const lineClass = "flex min-h-control-sm w-full min-w-0 flex-1 items-center gap-2 text-left";
 
   return (
     <CardShell kind="interval" editing={editing} onRemove={onRemove} className={editing ? "pr-3 pl-2" : "px-3"}>
       <span className="min-w-0 flex-1">
         {editing ? (
-          <button type="button" onClick={onEdit} className={lineClass} aria-label={`「${label}」 인터벌 고치기`}>
+          <button type="button" onClick={onEdit} className={`${lineClass} ${touchTarget44}`} aria-label={`「${label}」 인터벌 고치기`}>
             {line}
           </button>
         ) : canExpand ? (
-          <button type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded} className={lineClass}>
+          <button type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded} className={`${lineClass} ${touchTarget44}`}>
             {line}
           </button>
         ) : (
