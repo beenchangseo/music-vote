@@ -57,14 +57,37 @@ describe("SetlistView blocks", () => {
     expect(first).toHaveTextContent("DAY6 · 4:44");
   });
 
-  it("draws an interval and an original as their own cards, neither playable", () => {
+  it("draws an interval and an original as their own blocks, neither playable", () => {
     renderSetlist(setlist);
     const [, interval, , original] = setlistBlocks();
 
     expect(interval).toHaveTextContent("기타 셋업 변경 · 1:00");
-    expect(original).toHaveTextContent("자작곡 · 3:30");
+    expect(within(original).getByText("자작곡")).toBeInTheDocument();
+    expect(original).toHaveTextContent("자작곡 3:30");
     expect(original).toHaveTextContent("브릿지 두 번");
     for (const block of [interval, original]) expect(within(block).queryByRole("button", { name: /재생/ })).not.toBeInTheDocument();
+  });
+
+  it("says an original's time is missing beside its 자작곡 label", () => {
+    renderSetlist([at(0, { item_type: "original", label: "새 곡", duration_seconds: 0 })]);
+    const [original] = setlistBlocks();
+
+    expect(within(original).getByText("자작곡")).toBeInTheDocument();
+    expect(original).toHaveTextContent("자작곡 시간 없음");
+  });
+
+  it("reads an interval's name and length before its description, and moves the description below on tap", () => {
+    renderSetlist([at(0, { item_type: "interval", label: "보컬 멘트", description: "관객에게 인사하고 다음 곡 소개", duration_seconds: 120 })]);
+    const row = screen.getByRole("button", { name: /^보컬 멘트/ });
+
+    expect(row).toHaveTextContent(/^보컬 멘트 · 2:00관객에게 인사하고 다음 곡 소개$/);
+    expect(row).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(row);
+
+    expect(row).toHaveAttribute("aria-expanded", "true");
+    expect(row).toHaveTextContent(/^보컬 멘트 · 2:00$/);
+    expect(screen.getByText("관객에게 인사하고 다음 곡 소개")).toBeVisible();
   });
 
   it("puts each block's start time on the rail and the total at its end, without order numbers", () => {

@@ -80,10 +80,16 @@ describe("SetlistView playback", () => {
     expect(track).not.toHaveBeenCalled();
   });
 
-  it("marks the row playing from the setlist queue", () => {
-    renderSetlist([at(0, { song_id: "b" }), at(1, { song_id: "a" })], { player: { currentSongId: "a", source: "setlist", isPlaying: true } });
+  it("marks the row playing from the setlist queue and no other row", () => {
+    renderSetlist([at(0, { song_id: "b" }), at(1, { song_id: "a" }), at(2, { item_type: "interval", label: "멘트" })], {
+      player: { currentSongId: "a", source: "setlist", isPlaying: true },
+    });
+    const [other, playing, interval] = screen.getAllByRole("listitem");
 
-    expect(screen.getByRole("listitem", { current: true })).toHaveTextContent("후보 1위");
+    expect(playing).toHaveTextContent("후보 1위");
+    expect(playing).toHaveAttribute("aria-current", "true");
+    expect(other).not.toHaveAttribute("aria-current");
+    expect(interval).not.toHaveAttribute("aria-current");
   });
 
   it.each<[string, Player]>([

@@ -2,26 +2,31 @@ import type { SetlistBlock } from "@/domain/setlist";
 
 export type BlockKind = SetlistBlock<unknown>["kind"];
 
-export const BLOCK_TONES: Record<BlockKind, { border: string; fill: string; segment: string; dot: string; time: string }> = {
+const CARD = "border bg-surface";
+const SOLID = "w-0.5 bg-border-strong";
+
+export const BLOCK_TONES: Record<BlockKind, { radius: string; card: string; segment: string; dot: string; time: string }> = {
   song: {
-    border: "border-border",
-    fill: "bg-surface",
-    segment: "w-0.5 bg-border-strong",
+    radius: "rounded-card",
+    card: `${CARD} border-border`,
+    segment: SOLID,
     dot: "size-2.5 bg-text-muted ring-[3px] ring-bg",
     time: "text-text",
   },
   original: {
-    border: "border-primary-fg/50",
-    fill: "bg-primary-tint/45",
-    segment: "w-0.5 bg-primary-fg/70",
+    radius: "rounded-card",
+    card: `${CARD} border-border`,
+    segment: SOLID,
     dot: "size-2.5 bg-primary-fg ring-[3px] ring-bg",
-    time: "text-primary-fg",
+    time: "text-text",
   },
   interval: {
-    border: "border-warning/45 print:border-yellow-300",
-    fill: "bg-warning-tint/60 text-warning print:text-yellow-700",
-    segment: "w-[3px] bg-warning",
-    dot: "size-2.5 border-2 border-warning bg-bg",
-    time: "text-warning",
+    radius: "rounded-control",
+    card: "bg-surface-hover text-text-muted",
+    segment: "w-0 border-l-2 border-dashed border-text-subtle",
+    dot: "size-2.5 border-2 border-text-muted bg-bg",
+    time: "text-text-muted",
   },
 };
+
+export const PLAYING_CARD = `${CARD} border-primary-fg/60`;

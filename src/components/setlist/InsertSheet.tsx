@@ -50,8 +50,8 @@ export default function InsertSheet({ target, initialStep = "choose", candidates
 
       {step === "choose" && (
         <div className="flex flex-col">
-          <Choice tone="bg-warning-tint text-warning" icon={<ClockIcon />} title="인터벌" description="셋업 변경·멘트 시간 · 기본 1:00" onClick={() => goTo("interval")} />
-          <Choice tone="bg-primary-tint text-primary-fg" icon={<NoteIcon />} title="자작곡" description="우리 곡 한 블록 · 기본 3:00" onClick={() => goTo("original")} />
+          <Choice tone="bg-surface-hover text-text-muted" icon={<ClockIcon />} title="인터벌" description="셋업 변경·멘트 시간 · 기본 1:00" onClick={() => goTo("interval")} />
+          <Choice tone="bg-surface-hover text-primary-fg" icon={<NoteIcon />} title="자작곡" description="우리 곡 한 블록 · 기본 3:00" onClick={() => goTo("original")} />
           <Choice
             tone="bg-surface-hover text-text"
             icon={<ListIcon />}

@@ -18,6 +18,7 @@ import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalList
 import { CSS } from "@dnd-kit/utilities";
 import IconButton from "../ui/IconButton";
 import { BlockCard } from "./BlockCards";
+import { BLOCK_TONES } from "./block-tones";
 import { setlistBlockTitle, setlistInsertSlots, type SetlistBlock, type SetlistInsertSlot } from "@/domain/setlist";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
 
@@ -102,7 +103,7 @@ export default function SetlistEditList({ blocks, totalRuntime, saving, focusIte
         {activeBlock && (
           <div aria-hidden className="grid grid-cols-[minmax(0,1fr)_3.5rem]">
             <div className="flex flex-col justify-center py-1">
-              <div className="rounded-card shadow-float">
+              <div className={`${BLOCK_TONES[activeBlock.kind].radius} shadow-float`}>
                 <BlockCard block={activeBlock} editing onEdit={() => undefined} onRemove={() => undefined} />
               </div>
             </div>
@@ -145,7 +146,7 @@ function SortableBlockRow({ block, insert, dragging, autoFocus, onOpenSlot, onEd
       <div ref={setNodeRef} style={{ transform: CSS.Translate.toString(transform), transition }} className="grid grid-cols-[minmax(0,1fr)_3.5rem]">
         <div className="flex flex-col justify-center py-1">
           {/* The lifted card rides in the DragOverlay; its slot keeps the size as a dashed outline. */}
-          <div className={isDragging ? "rounded-card border border-dashed border-border-strong" : undefined}>
+          <div className={isDragging ? `${BLOCK_TONES[block.kind].radius} border border-dashed border-border-strong` : undefined}>
             <div className={isDragging ? "invisible" : undefined}>
               <BlockCard block={block} editing onEdit={() => onEdit(block.item)} onRemove={() => onRemove(block.item.id)} />
             </div>
