@@ -1,6 +1,21 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/domain/playlist-archive";
+import { hostDenial, type HostDenial } from "@/domain/playlist-host";
+
+export type PlaylistAdminDenial = "playlist_not_found" | HostDenial;
+
+/** 방장 쓰기를 받을지. 되면 null, 안 되면 그 이유. 화면이 방장 버튼을 그리는 hostDenial 과 같은 판정이다. */
+export async function playlistAdminDenial(playlistId: string): Promise<PlaylistAdminDenial | null> {
+  const { data: playlist } = await createAdminClient()
+    .from("playlists")
+    .select("creator_user_id")
+    .eq("id", playlistId)
+    .single();
+
+  if (!playlist) return "playlist_not_found";
+  return hostDenial(playlist, (await getCurrentUser())?.id);
+}
 
 /**
  * 합주방 관리 권한 검사. 통과하면 void, 아니면 throw.

@@ -94,8 +94,6 @@ async function confirmAsHost(initialSetlistItems: SetlistItem[] = []) {
 
 beforeEach(() => {
   vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
-  // The confirm button still needs the creator's link token on this device.
-  localStorage.setItem("myPlaylists", JSON.stringify([{ id: "p", shareCode: "abc123", adminToken: "token" }]));
   dialog.showConfirm.mockResolvedValue(true);
   vi.mocked(fetchSetlistItems).mockReturnValue(new Promise(() => {}));
 });
@@ -115,7 +113,7 @@ describe("PlaylistClient setlist confirm", () => {
     fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
 
     expect(dialog.showConfirm).toHaveBeenCalledWith("상위 2곡으로 셋리스트를 확정하시겠습니까?");
-    expect(confirmSetlist).toHaveBeenCalledWith("p", "token", ["top", "second"], "abc123");
+    expect(confirmSetlist).toHaveBeenCalledWith("p", ["top", "second"], "abc123");
     expect(screen.getByTestId("setlist")).toHaveTextContent("top,second");
     expect(realtime.notifyChange).toHaveBeenCalled();
     expect(track).toHaveBeenCalledWith("setlist_confirmed", { song_count: 2, auto: false });
@@ -159,6 +157,35 @@ describe("PlaylistClient setlist confirm", () => {
 
     expect(confirmSetlist).not.toHaveBeenCalled();
     expect(track).not.toHaveBeenCalledWith("setlist_confirmed", expect.anything());
+  });
+
+  it("lets the host confirm from a device that never stored the link token", async () => {
+    vi.mocked(confirmSetlist).mockResolvedValue({ success: true, items: [block("top", 0), block("second", 1)] });
+
+    await confirmAsHost();
+
+    expect(dialog.showConfirm).toHaveBeenCalledWith("상위 2곡으로 셋리스트를 확정하시겠습니까?");
+    expect(confirmSetlist).toHaveBeenCalledWith("p", ["top", "second"], "abc123");
+  });
+
+  it("offers no confirm in an archived playlist, even on the device that made it", () => {
+    localStorage.setItem("myPlaylists", JSON.stringify([{ id: "p", shareCode: "abc123", adminToken: "token" }]));
+    render(<PlaylistClient playlist={{ ...playlist, creator_user_id: null }} songs={[song("top"), song("second")]} shareCode="abc123" participantCount={2} userNickname="보컬" currentUserId="owner" team={null} initialSetlistItems={[]} />);
+
+    expect(screen.queryByRole("button", { name: "셋리스트 확정하기" })).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["not_host", "방장만 셋리스트를 확정할 수 있어요"],
+    ["not_logged_in", "로그인이 필요해요. 카카오로 로그인해 주세요"],
+    ["archived", "보관된 플레이리스트예요. 지난 기록은 그대로 볼 수 있지만 새로 쓸 수는 없어요."],
+    ["playlist_not_found", "플레이리스트를 찾을 수 없어요"],
+  ] as const)("tells the host the server refused with %s", async (reason, message) => {
+    vi.mocked(confirmSetlist).mockResolvedValue({ success: false, reason });
+
+    await confirmAsHost();
+
+    expect(dialog.showAlert).toHaveBeenCalledWith(message);
   });
 
   it("tells the host why a confirm was refused, and counts no confirm", async () => {

@@ -5,13 +5,13 @@ const mocks = vi.hoisted(() => ({
   rpc: vi.fn(),
   from: vi.fn(),
   denial: vi.fn(),
-  assertHost: vi.fn(),
+  user: null as { id: string } | null,
   revalidatePath: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({ createAdminClient: () => ({ rpc: mocks.rpc, from: mocks.from }) }));
 vi.mock("@/lib/setlist-permissions", () => ({ setlistEditorDenial: mocks.denial, assertSetlistEditor: vi.fn() }));
-vi.mock("@/lib/playlist-admin", () => ({ assertPlaylistAdmin: mocks.assertHost }));
+vi.mock("@/lib/auth", () => ({ getCurrentUser: async () => mocks.user }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 
 import { confirmSetlist, insertSetlistBlock, removeSetlistItem, updateSetlistOrder } from "../setlist";
@@ -22,21 +22,23 @@ const interval = { kind: "interval", label: "  멘트 ", description: "", durati
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.denial.mockResolvedValue(null);
-  mocks.assertHost.mockResolvedValue(undefined);
 });
 
 describe("confirmSetlist", () => {
-  function tableWrites() {
-    const { client, ops } = createFakeClient();
+  const HOST = "host";
+
+  function room(playlist: { creator_user_id: string | null } | null = { creator_user_id: HOST }, user: string | null = HOST) {
+    const { client, ops } = createFakeClient((op) => (op.table === "playlists" ? { data: playlist } : { data: null }));
     mocks.from.mockImplementation(client.from);
+    mocks.user = user ? { id: user } : null;
     return () => ops.filter((op) => op.action !== "select");
   }
 
   it("fills the setlist with the top songs in rank order through the locked function and returns it", async () => {
-    const writes = tableWrites();
+    const writes = room();
     mocks.rpc.mockResolvedValue({ data: { items }, error: null });
 
-    const result = await confirmSetlist("p", null, ["song-2", "song-1"], "abc123");
+    const result = await confirmSetlist("p", ["song-2", "song-1"], "abc123");
 
     expect(mocks.rpc).toHaveBeenCalledWith("confirm_setlist", { p_playlist_id: "p", p_song_ids: ["song-2", "song-1"] });
     expect(writes()).toEqual([]);
@@ -45,11 +47,11 @@ describe("confirmSetlist", () => {
   });
 
   it("confirms a setlist that already has blocks as the server kept it, not the top songs it sent", async () => {
-    const writes = tableWrites();
+    const writes = room();
     const kept = [{ id: "band-interval", position: 0 }, { id: "band-song", position: 1 }];
     mocks.rpc.mockResolvedValue({ data: { items: kept }, error: null });
 
-    const result = await confirmSetlist("p", null, ["song-1"], "abc123");
+    const result = await confirmSetlist("p", ["song-1"], "abc123");
 
     expect(writes()).toEqual([]);
     expect(result).toEqual({ success: true, items: kept });
@@ -61,18 +63,24 @@ describe("confirmSetlist", () => {
     ["playlist_not_found", "playlist_not_found"],
     ["canceling statement due to statement timeout", "write_failed"],
   ])("maps the database answer %s to %s", async (message, reason) => {
+    room();
     mocks.rpc.mockResolvedValue({ data: null, error: { code: "P0001", message } });
 
-    await expect(confirmSetlist("p", null, ["song-1"], "abc123")).resolves.toEqual({ success: false, reason });
+    await expect(confirmSetlist("p", ["song-1"], "abc123")).resolves.toEqual({ success: false, reason });
   });
 
-  it("writes nothing for someone who is not the host", async () => {
-    const writes = tableWrites();
-    mocks.assertHost.mockRejectedValue(new Error("권한이 없습니다."));
+  it.each([
+    ["the playlist is gone", null, HOST, "playlist_not_found"],
+    ["the playlist is archived", { creator_user_id: null }, HOST, "archived"],
+    ["nobody is logged in", { creator_user_id: HOST }, null, "not_logged_in"],
+    ["a member who is not the host asks", { creator_user_id: HOST }, "member", "not_host"],
+  ] as const)("answers why and writes nothing when %s", async (_case, playlist, user, reason) => {
+    const writes = room(playlist, user);
 
-    await expect(confirmSetlist("p", null, ["song-1"], "abc123")).rejects.toThrow();
+    await expect(confirmSetlist("p", ["song-1"], "abc123")).resolves.toEqual({ success: false, reason });
     expect(mocks.rpc).not.toHaveBeenCalled();
     expect(writes()).toEqual([]);
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 });
 

@@ -2,7 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/server";
 import { readSetlistItems } from "@/lib/playlist-reads";
-import { assertPlaylistAdmin } from "@/lib/playlist-admin";
+import { playlistAdminDenial } from "@/lib/playlist-admin";
 import { assertSetlistEditor, setlistEditorDenial } from "@/lib/setlist-permissions";
 import { setlistMessage, setlistReasonFromDatabase, type SetlistReason } from "@/lib/setlist-messages";
 import { revalidatePath } from "next/cache";
@@ -37,13 +37,9 @@ function setlistFrom(data: unknown): SetlistItem[] | null {
  * 셋리스트를 확정하고 확정된 셋리를 돌려준다. 빈 셋리면 songIds 순서대로 채우고, 블록이 이미 있으면 지금 셋리 그대로
  * 확정한다. confirm_setlist(v27)가 넣기·순서 저장과 같은 잠금 안에서 한다.
  */
-export async function confirmSetlist(
-  playlistId: string,
-  adminToken: string | null,
-  songIds: string[],
-  shareCode: string,
-): Promise<SetlistItemsResult> {
-  await assertPlaylistAdmin(playlistId, adminToken);
+export async function confirmSetlist(playlistId: string, songIds: string[], shareCode: string): Promise<SetlistItemsResult> {
+  const denial = await playlistAdminDenial(playlistId);
+  if (denial) return { success: false, reason: denial };
 
   const { data, error } = await createAdminClient().rpc("confirm_setlist", {
     p_playlist_id: playlistId,
