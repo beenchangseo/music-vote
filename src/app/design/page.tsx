@@ -8,6 +8,8 @@ import Chip from "@/components/ui/Chip";
 import GuitarIcon from "@/components/ui/GuitarIcon";
 import IconButton from "@/components/ui/IconButton";
 import Input from "@/components/ui/Input";
+import PlayPauseIcon from "@/components/ui/PlayPauseIcon";
+import RoundButton, { ROUND_BARE_TONES, ROUND_DISC_TONES, RoundLink, RoundRow } from "@/components/ui/RoundButton";
 import ScreenToolbar, { ToolbarButton } from "@/components/ui/ScreenToolbar";
 import { COLOR_GROUPS, COLORS, HEIGHTS, MOTION, RADII, SHADOWS, TYPE, contrastRatio, type ColorToken, type Pairing } from "@/components/ui/tokens";
 import Avatar, { AvatarStack } from "@/components/ui/Avatar";
@@ -200,6 +202,100 @@ export default function DesignPage() {
             <GuitarIcon className="size-5" />
           </IconButton>
         </StateRow>
+      </Section>
+
+      <Section
+        title="RoundButton · RoundLink · RoundRow"
+        note="둥근 아이콘 버튼. 지름은 md 44 · lg 52 · hero 64 셋이고 글리프 크기는 버튼이 정해요(원판 없이 지름의 반, 원판 위 0.42). 플레이어·플레이리스트 머리·메트로놈 줄에서 써요. 시트·목록·폼의 네모 44 는 IconButton 이에요."
+      >
+        <StateHeader labels={["md 44", "lg 52", "hero 64"]} />
+        {ROUND_BARE_TONES.map((tone) => (
+          <StateRow key={tone} label={tone === "plain" ? "plain (재생 컨트롤 글리프)" : "ghost (Button ghost 와 같은 흐린 글리프)"}>
+            <RoundButton tone={tone} size="md" aria-label={`${tone} md`}>
+              <GuitarIcon />
+            </RoundButton>
+            <RoundButton tone={tone} size="lg" aria-label={`${tone} lg`}>
+              <GuitarIcon />
+            </RoundButton>
+            <span className="text-caption text-text-subtle">원판이 없으면 hero 가 없어요</span>
+          </StateRow>
+        ))}
+        {ROUND_DISC_TONES.map((tone) => (
+          <StateRow key={tone} label={tone}>
+            <RoundButton tone={tone} size="md" aria-label={`${tone} md`}>
+              <GuitarIcon />
+            </RoundButton>
+            <RoundButton tone={tone} size="lg" aria-label={`${tone} lg`}>
+              <GuitarIcon />
+            </RoundButton>
+            <RoundButton tone={tone} size="hero" aria-label={`${tone} hero`}>
+              <PlayPauseIcon playing={false} />
+            </RoundButton>
+          </StateRow>
+        ))}
+        <h3 className="mt-6 text-sm font-semibold text-text-muted">상태</h3>
+        <StateHeader labels={["기본", "hover", "비활성"]} />
+        {[...ROUND_BARE_TONES, ...ROUND_DISC_TONES].map((tone) => (
+          <StateRow key={tone} label={tone}>
+            <RoundButton tone={tone} size="md" aria-label={`${tone} 기본`}>
+              <GuitarIcon />
+            </RoundButton>
+            <HoverSample>
+              <RoundButton tone={tone} size="md" aria-label={`${tone} hover`} tabIndex={-1}>
+                <GuitarIcon />
+              </RoundButton>
+            </HoverSample>
+            <RoundButton tone={tone} size="md" aria-label={`${tone} 비활성`} disabled>
+              <GuitarIcon />
+            </RoundButton>
+          </StateRow>
+        ))}
+        <h3 className="mt-6 text-sm font-semibold text-text-muted">켜고 끄기</h3>
+        <p className="mt-1 text-caption text-text-subtle">tone 대신 pressed 를 줘요. 꺼지면 ghost, 켜지면 primary-fg 글리프예요. 셔플·한곡 반복.</p>
+        <div className="mt-2 flex items-center gap-2">
+          <RoundButton size="md" pressed={false} aria-label="꺼짐">
+            <GuitarIcon />
+          </RoundButton>
+          <RoundButton size="md" pressed aria-label="켜짐">
+            <GuitarIcon />
+          </RoundButton>
+        </div>
+        <h3 className="mt-6 text-sm font-semibold text-text-muted">글자 글리프 · 링크</h3>
+        <p className="mt-1 text-caption text-text-subtle">글자도 버튼이 크기를 정해요(md 18, lg 20). 링크는 RoundLink, edge=&quot;start&quot; 면 글리프가 내용 왼쪽 끝에 맞아요.</p>
+        <div className="mt-2 flex items-center gap-2">
+          <RoundButton tone="tonal" size="lg" aria-label="BPM 5 내리기">
+            -5
+          </RoundButton>
+          <RoundButton tone="tonal" size="md" aria-label="BPM 1 내리기">
+            -
+          </RoundButton>
+          <RoundLink href="/design" tone="ghost" size="md" aria-label="RoundLink">
+            <GuitarIcon />
+          </RoundLink>
+        </div>
+        <h3 className="mt-6 text-sm font-semibold text-text-muted">줄</h3>
+        <p className="mt-1 text-caption text-text-subtle">원은 줄지 않고 간격이 줄어요. 줄 폭이 320 이상이면 간격 12, 좁으면 4 예요.</p>
+        {(["w-72", "w-80"] as const).map((width) => (
+          <div key={width} className={`mt-3 ${width} max-w-full outline-1 outline-dashed outline-border`}>
+            <RoundRow>
+              <RoundButton tone="kakao" size="lg" aria-label={`${width} 카카오`}>
+                <GuitarIcon />
+              </RoundButton>
+              <RoundButton tone="tonal" size="lg" aria-label={`${width} 공지`}>
+                <GuitarIcon />
+              </RoundButton>
+              <RoundButton tone="inverse" size="hero" aria-label={`${width} 재생`}>
+                <PlayPauseIcon playing={false} />
+              </RoundButton>
+              <RoundButton tone="tonal" size="lg" aria-label={`${width} 보기`}>
+                <GuitarIcon />
+              </RoundButton>
+              <RoundButton tone="tonal" size="lg" aria-label={`${width} 메뉴`}>
+                <GuitarIcon />
+              </RoundButton>
+            </RoundRow>
+          </div>
+        ))}
       </Section>
 
       <Section title="Input" note="채움은 surface-hover, 테두리는 border-input(3:1 이상), 포커스는 focus-ring, 오류는 danger-fg 테두리와 aria-invalid. 글자는 16px(iOS 확대 방지).">

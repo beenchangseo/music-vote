@@ -99,3 +99,40 @@ describe("eslint ds/no-raw-control rule", () => {
     },
   );
 });
+
+describe("eslint RoundButton rules", () => {
+  const round = (attrs: string, children = "") => `<RoundButton size="md" tone="plain" aria-label="x"${attrs}>${children}</RoundButton>`;
+
+  it.each([
+    [round(' className="size-12"'), "size·variant prop"],
+    ['<RoundLink href="/" size="md" tone="ghost" aria-label="x" className="h-12" />', "size·variant prop"],
+    ['<RoundRow className="px-2" />', "size·variant prop"],
+    [round(' className="text-primary-fg"'), "tone"],
+    [round(' className="shadow-lg"'), "tone"],
+    [round(' className="-ml-2.5"'), "edge"],
+    [round(' className="ml-[3px]"'), "edge"],
+    [round(' className="font-normal"'), "tone"],
+    ['<RoundLink href="/" size="lg" tone="tonal" aria-label="x" className="hover:bg-surface-elevated" />', "tone"],
+    [round("", '<svg className="h-5 w-5" />'), "svg 의 크기와 자리"],
+    [round("", '<svg className="ml-1" />'), "PlayPauseIcon"],
+    [round("", '{on ? <svg className="size-5" /> : <span>-</span>}'), "svg 의 크기와 자리"],
+    [round("", '<svg width="20" height="20" />'), "width·height·style"],
+    [round("", '<svg className="scale-125" />'), "svg 의 크기와 자리"],
+    [round("", '<svg className="p-1" />'), "svg 의 크기와 자리"],
+    [round("", '<span><svg className="size-4" /></span>'), "svg 의 크기와 자리"],
+  ])("flags %s", async (code, says) => {
+    const errors = await controlSizeErrors(code);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors.join("\n")).toContain(says);
+  });
+
+  it.each([
+    round(' className="mt-3 shrink-0"'),
+    round("", '<svg className="text-primary-fg" viewBox="0 0 24 24" />'),
+    round("", '<svg viewBox="0 0 24 24" /><span className="absolute right-0.5 top-0.5 size-3 rounded-pill bg-primary" />'),
+    '<RoundRow className="mt-5" />',
+    '<svg className="h-5 w-5 ml-1" />',
+  ])("allows %s", async (code) => {
+    expect(await controlSizeErrors(code)).toEqual([]);
+  });
+});

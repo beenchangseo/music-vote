@@ -46,4 +46,13 @@ describe("/design", () => {
     expect(saves).toHaveLength(5 * 4);
     expect(saves.filter((b) => b.getAttribute("aria-busy") === "true")).toHaveLength(5);
   });
+
+  it("shows every RoundButton tone at every size it has, and a hero only on a disc", () => {
+    render(<DialogProvider>{DesignPage()}</DialogProvider>);
+    const sized = screen.getAllByRole("button", { name: /^(plain|ghost|tonal|inverse|primary|danger|kakao) (md|lg|hero)$/ });
+    expect(sized.map((b) => b.getAttribute("aria-label"))).toEqual([
+      ...["plain", "ghost"].flatMap((tone) => [`${tone} md`, `${tone} lg`]),
+      ...["tonal", "inverse", "primary", "danger", "kakao"].flatMap((tone) => [`${tone} md`, `${tone} lg`, `${tone} hero`]),
+    ]);
+  });
 });

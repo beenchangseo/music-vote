@@ -85,7 +85,7 @@ export const COLOR_GROUPS: readonly { title: string; note: string; tokens: reado
     title: "표면",
     note: "깊이는 그림자 대신 표면 단계로 만든다. 한 단계씩만 쌓는다.",
     tokens: [
-      { name: "bg", hex: "#030712", layer: "bg", use: "화면 바탕", pairs: [] },
+      { name: "bg", hex: "#030712", layer: "bg", use: "화면 바탕. inverse 원판(bg-text) 위 글리프", pairs: [{ against: "text", min: 4.5 }] },
       { name: "surface", hex: "#111827", layer: "bg", use: "카드·시트·다이얼로그", pairs: [] },
       { name: "surface-hover", hex: "#1f2937", layer: "bg", use: "tonal 버튼·칩·입력 채움·시트 안 묶음", pairs: [] },
       { name: "surface-elevated", hex: "#2a3441", layer: "bg", use: "토스트·팝오버·메뉴", pairs: [] },
@@ -95,7 +95,7 @@ export const COLOR_GROUPS: readonly { title: string; note: string; tokens: reado
     title: "글자와 테두리",
     note: "text-subtle 은 surface-elevated 위에 두지 않는다. 그 자리는 text-muted.",
     tokens: [
-      { name: "text", hex: "#f3f4f6", layer: "fg", use: "본문·제목", pairs: onSurfaces(4.5) },
+      { name: "text", hex: "#f3f4f6", layer: "fg", use: "본문·제목. 재생 같은 주 동작의 inverse 원판 채움", pairs: onSurfaces(4.5) },
       { name: "text-muted", hex: "#9ca3af", layer: "fg", use: "보조 글자", pairs: onSurfaces(4.5) },
       {
         name: "text-subtle",
@@ -152,6 +152,7 @@ export const HEIGHTS: readonly ScaleToken[] = [
   { name: "control-sm", cssVar: "--spacing-control-sm", value: "2.25rem", utility: "h-control-sm", use: "작은 버튼 36px (누르는 영역 44px)" },
   { name: "control-md", cssVar: "--spacing-control-md", value: "2.75rem", utility: "h-control-md", use: "버튼·입력·칩 44px" },
   { name: "control-lg", cssVar: "--spacing-control-lg", value: "3.25rem", utility: "h-control-lg", use: "화면 아래 주 버튼 52px" },
+  { name: "control-hero", cssVar: "--spacing-control-hero", value: "4rem", utility: "h-control-hero", use: "둥근 주 원판 64px (재생·전체 듣기·메트로놈 시작)" },
   { name: "row", cssVar: "--spacing-row", value: "3.5rem", utility: "min-h-row", use: "설정·멤버 행 56px" },
   { name: "row-song", cssVar: "--spacing-row-song", value: "4.5rem", utility: "min-h-row-song", use: "곡 행 72px" },
 ];
