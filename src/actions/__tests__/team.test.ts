@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ARCHIVED_PLAYLIST_MESSAGE } from "@/domain/playlist-archive";
+import type { MemberKey } from "@/domain/types";
 import { createFakeClient, type FakeOp, type FakeResult } from "./fake-supabase";
 
 const state = vi.hoisted(() => ({
@@ -73,6 +74,7 @@ const indexOf = (table: string, action: FakeOp["action"]) =>
 const writes = () => state.admin.ops.filter((op) => op.action !== "select");
 
 beforeEach(() => {
+  vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "sb_secret_test");
   state.admin = createFakeClient();
   state.session = createFakeClient();
   state.getCurrentUser.mockReset().mockResolvedValue(ME);
@@ -680,10 +682,10 @@ describe("getTeamHome", () => {
         createdAt: "2026-10-04T00:00:00+00:00",
       },
       members: [
-        // owner first, then join order; user ids only for the owner's view
-        { userId: null, displayName: "드럼", role: "owner", joinedAt: "2026-10-04T00:00:00+00:00", isMe: false },
-        { userId: null, displayName: "기타", role: "member", joinedAt: "2026-10-05T00:00:00+00:00", isMe: false },
-        { userId: null, displayName: "보컬", role: "member", joinedAt: "2026-10-06T00:00:00+00:00", isMe: true },
+        // owner first, then join order; only the owner may remove anyone
+        { memberKey: expect.any(String), displayName: "드럼", role: "owner", joinedAt: "2026-10-04T00:00:00+00:00", isMe: false, canRemove: false },
+        { memberKey: expect.any(String), displayName: "기타", role: "member", joinedAt: "2026-10-05T00:00:00+00:00", isMe: false, canRemove: false },
+        { memberKey: expect.any(String), displayName: "보컬", role: "member", joinedAt: "2026-10-06T00:00:00+00:00", isMe: true, canRemove: false },
       ],
       rooms: [
         {
@@ -784,7 +786,28 @@ describe("getTeamHome", () => {
     ]);
   });
 
-  it("gives the owner the member user ids for removing someone", async () => {
+  it.each([
+    ["the owner", "owner"],
+    ["a member", "member"],
+  ])("sends %s no member's account id (ADR 0011)", async (_viewer, myRole) => {
+    state.admin = createFakeClient(
+      home({
+        "team_members:select": ok(
+          members.map((m) =>
+            m.user_id === ME.id ? { ...m, role: myRole } : myRole === "owner" && m.role === "owner" ? { ...m, role: "member" } : m,
+          ),
+        ),
+      }),
+    );
+
+    const view = await getTeamHome(TEAM);
+
+    expect(view?.access).toBe("member");
+    const wire = JSON.stringify(view);
+    for (const id of [ME.id, OTHER, "u-owner"]) expect(wire).not.toContain(id);
+  });
+
+  it("lets the owner remove every member but nobody else, and removes the one whose key it was given", async () => {
     state.admin = createFakeClient(
       home({
         "team_members:select": ok(
@@ -796,7 +819,25 @@ describe("getTeamHome", () => {
     expect(view?.access).toBe("member");
     if (view?.access !== "member") return;
     expect(view.myRole).toBe("owner");
-    expect(view.members.map((m) => m.userId).sort()).toEqual([ME.id, OTHER, "u-owner"].sort());
+    expect(view.members.map(({ displayName, canRemove }) => [displayName, canRemove])).toEqual([
+      ["보컬", false],
+      ["드럼", true],
+      ["기타", true],
+    ]);
+
+    state.admin = createFakeClient(
+      router({
+        "team_members:select": ok([
+          { user_id: ME.id, role: "owner" },
+          { user_id: "u-owner", role: "member" },
+          { user_id: OTHER, role: "member" },
+        ]),
+        "team_members:delete": ok([{ user_id: OTHER }]),
+      }),
+    );
+    const guitar = view.members.find((m) => m.displayName === "기타")!;
+    await expect(removeTeamMember(TEAM, guitar.memberKey)).resolves.toEqual({ success: true, inviteCode: null });
+    expect(opsFor("team_members", "delete")[0].filters).toEqual({ team_id: TEAM, user_id: OTHER, role: "member" });
   });
 
   it("skips the history query when the band has no rooms", async () => {
@@ -1202,12 +1243,45 @@ describe("removeTeamMember", () => {
     });
   }
 
+  /** The member keys the owner's band home shows, by display name. */
+  async function keysOnBandHome(teamId = TEAM): Promise<Record<string, MemberKey>> {
+    const saved = state.admin;
+    state.admin = createFakeClient(
+      router({
+        "teams:select": ok({ id: teamId, name: "일코해제", invite_code: CODE, next_show_at: null, created_at: "2026-10-04T00:00:00+00:00" }),
+        "team_members:select": ok([
+          { user_id: ME.id, display_name: "보컬", role: "owner", joined_at: "2026-10-04T00:00:00+00:00" },
+          { user_id: OTHER, display_name: "기타", role: "member", joined_at: "2026-10-05T00:00:00+00:00" },
+        ]),
+        "playlists:select": ok([]),
+      }),
+    );
+    const view = await getTeamHome(teamId);
+    state.admin = saved;
+    if (view?.access !== "member") throw new Error("expected the member view");
+    return Object.fromEntries(view.members.map((member) => [member.displayName, member.memberKey]));
+  }
+
   it("refuses to remove yourself", async () => {
-    await expect(removeTeamMember(TEAM, ME.id)).resolves.toEqual({ success: false, reason: "cannot_remove_self" });
+    const keys = await keysOnBandHome();
+    await expect(removeTeamMember(TEAM, keys["보컬"])).resolves.toEqual({ success: false, reason: "cannot_remove_self" });
     expect(state.admin.ops).toEqual([]);
   });
 
+  it.each([
+    ["a forged key", async () => "forged-key"],
+    ["a key from another band", async () => (await keysOnBandHome("22222222-2222-4222-8222-222222222222"))["기타"]],
+    ["an account id from a tab opened before keys", async () => OTHER],
+  ])("refuses %s before rotating the link or removing anyone", async (_case, keyFor) => {
+    const key = await keyFor();
+    state.admin = createFakeClient(happyPath());
+
+    await expect(removeTeamMember(TEAM, key as never, true)).resolves.toEqual({ success: false, reason: "member_not_found" });
+    expect(writes()).toEqual([]);
+  });
+
   it("refuses a caller who is not the owner", async () => {
+    const keys = await keysOnBandHome();
     state.admin = createFakeClient(
       happyPath({
         "team_members:select": ok([
@@ -1216,20 +1290,22 @@ describe("removeTeamMember", () => {
         ]),
       }),
     );
-    await expect(removeTeamMember(TEAM, OTHER)).resolves.toEqual({ success: false, reason: "not_team_owner" });
+    await expect(removeTeamMember(TEAM, keys["기타"])).resolves.toEqual({ success: false, reason: "not_team_owner" });
     expect(writes()).toEqual([]);
   });
 
   it("does not rotate the link when the target is not in the band", async () => {
+    const keys = await keysOnBandHome();
     state.admin = createFakeClient(happyPath({ "team_members:select": ok([{ user_id: ME.id, role: "owner" }]) }));
-    await expect(removeTeamMember(TEAM, OTHER, true)).resolves.toEqual({ success: false, reason: "member_not_found" });
+    await expect(removeTeamMember(TEAM, keys["기타"], true)).resolves.toEqual({ success: false, reason: "member_not_found" });
     expect(writes()).toEqual([]);
   });
 
   it("removes the member from the band only, keeping the invite link", async () => {
+    const keys = await keysOnBandHome();
     state.admin = createFakeClient(happyPath());
 
-    await expect(removeTeamMember(TEAM, OTHER)).resolves.toEqual({ success: true, inviteCode: null });
+    await expect(removeTeamMember(TEAM, keys["기타"])).resolves.toEqual({ success: true, inviteCode: null });
     const [remove] = opsFor("team_members", "delete");
     expect(remove.filters).toEqual({ team_id: TEAM, user_id: OTHER, role: "member" });
     expect(remove.returning).toBe(true);
@@ -1239,18 +1315,20 @@ describe("removeTeamMember", () => {
   });
 
   it("rotates the invite link BEFORE removing when asked, and returns the new code", async () => {
+    const keys = await keysOnBandHome();
     state.admin = createFakeClient(happyPath());
 
-    await expect(removeTeamMember(TEAM, OTHER, true)).resolves.toEqual({ success: true, inviteCode: "invite-1" });
+    await expect(removeTeamMember(TEAM, keys["기타"], true)).resolves.toEqual({ success: true, inviteCode: "invite-1" });
     expect(opsFor("teams", "update")[0].row).toEqual({ invite_code: "invite-1" });
     expect(indexOf("teams", "update")).toBeLessThan(indexOf("team_members", "delete"));
   });
 
   it("returns the new code with a partial-success reason when the removal fails after rotating", async () => {
+    const keys = await keysOnBandHome();
     state.admin = createFakeClient(happyPath({ "team_members:delete": dbError() }));
     vi.spyOn(console, "error").mockImplementation(() => {});
 
-    await expect(removeTeamMember(TEAM, OTHER, true)).resolves.toEqual({
+    await expect(removeTeamMember(TEAM, keys["기타"], true)).resolves.toEqual({
       success: false,
       reason: "invite_rotated_remove_failed",
       inviteCode: "invite-1",
@@ -1258,16 +1336,18 @@ describe("removeTeamMember", () => {
   });
 
   it("removes nobody when rotating the link fails", async () => {
+    const keys = await keysOnBandHome();
     state.admin = createFakeClient(happyPath({ "teams:update": collision }));
     vi.spyOn(console, "error").mockImplementation(() => {});
 
-    await expect(removeTeamMember(TEAM, OTHER, true)).resolves.toEqual({ success: false, reason: "invite_code_conflict" });
+    await expect(removeTeamMember(TEAM, keys["기타"], true)).resolves.toEqual({ success: false, reason: "invite_code_conflict" });
     expect(opsFor("team_members", "delete")).toEqual([]);
   });
 
   it("treats a delete that matched 0 rows as a failure", async () => {
+    const keys = await keysOnBandHome();
     state.admin = createFakeClient(happyPath({ "team_members:delete": ok([]) }));
-    await expect(removeTeamMember(TEAM, OTHER)).resolves.toEqual({ success: false, reason: "member_not_found" });
+    await expect(removeTeamMember(TEAM, keys["기타"])).resolves.toEqual({ success: false, reason: "member_not_found" });
   });
 });
 

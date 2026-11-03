@@ -3,6 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { TeamHomeView, TeamRoom } from "@/actions/team";
+import type { MemberKey } from "@/domain/types";
 import BandHomeClient from "../BandHomeClient";
 
 const actions = vi.hoisted(() => ({
@@ -28,6 +29,7 @@ vi.mock("../AttachPlaylistsSheet", () => ({
 
 type MemberView = Extract<TeamHomeView, { access: "member" }>;
 const TEAM = "11111111-1111-4111-8111-111111111111";
+const key = (value: string) => value as MemberKey;
 
 function room(overrides: Partial<TeamRoom> = {}): TeamRoom {
   return {
@@ -50,8 +52,8 @@ function view(overrides: Partial<MemberView> = {}, team: Partial<MemberView["tea
     myRole: "member",
     team: { id: TEAM, name: "일코해제", inviteCode: "OLDcode_01", nextShowAt: null, createdAt: "2026-09-01T00:00:00Z", ...team },
     members: [
-      { userId: null, displayName: "보컬", role: "owner", joinedAt: "2026-09-01T00:00:00Z", isMe: false },
-      { userId: null, displayName: "기타", role: "member", joinedAt: "2026-09-02T00:00:00Z", isMe: true },
+      { memberKey: key("k-vocal"), displayName: "보컬", role: "owner", joinedAt: "2026-09-01T00:00:00Z", isMe: false, canRemove: false },
+      { memberKey: key("k-guitar"), displayName: "기타", role: "member", joinedAt: "2026-09-02T00:00:00Z", isMe: true, canRemove: false },
     ],
     rooms: [],
     attachableCount: null,
@@ -63,8 +65,8 @@ const ownerView = (overrides: Partial<MemberView> = {}) =>
   view({
     myRole: "owner",
     members: [
-      { userId: "u-owner", displayName: "보컬", role: "owner", joinedAt: "2026-09-01T00:00:00Z", isMe: true },
-      { userId: "u-guitar", displayName: "기타", role: "member", joinedAt: "2026-09-02T00:00:00Z", isMe: false },
+      { memberKey: key("k-vocal"), displayName: "보컬", role: "owner", joinedAt: "2026-09-01T00:00:00Z", isMe: true, canRemove: false },
+      { memberKey: key("k-guitar"), displayName: "기타", role: "member", joinedAt: "2026-09-02T00:00:00Z", isMe: false, canRemove: true },
     ],
     ...overrides,
   });
@@ -357,11 +359,12 @@ describe("BandHomeClient rooms shelf and played songs (26A, E1)", () => {
 describe("BandHomeClient members", () => {
   it("stacks four avatars in the action row and counts the rest", () => {
     const members = Array.from({ length: 6 }, (_, i) => ({
-      userId: null,
+      memberKey: key(`k-${i}`),
       displayName: `멤버${i}`,
       role: i === 0 ? ("owner" as const) : ("member" as const),
       joinedAt: `2026-09-0${i + 1}T00:00:00Z`,
       isMe: i === 1,
+      canRemove: false,
     }));
     renderHome(view({ members }));
     expect(screen.getByRole("link", { name: "멤버 6명" })).toHaveTextContent("+2");
@@ -411,9 +414,21 @@ describe("BandHomeClient member management (F1, 24B, R7)", () => {
     expect(within(dialog).getByRole("button", { name: "취소" })).toHaveFocus();
     fireEvent.click(within(dialog).getByRole("button", { name: "내보내기" }));
 
-    await waitFor(() => expect(actions.removeTeamMember).toHaveBeenCalledWith(TEAM, "u-guitar", false));
+    await waitFor(() => expect(actions.removeTeamMember).toHaveBeenCalledWith(TEAM, "k-guitar", false));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(screen.queryByText("기타")).not.toBeInTheDocument();
+  });
+
+  it("offers removal only on the members the server says can be removed", () => {
+    renderHome(
+      ownerView({
+        members: [
+          { memberKey: key("k-vocal"), displayName: "보컬", role: "owner", joinedAt: "2026-09-01T00:00:00Z", isMe: true, canRemove: false },
+          { memberKey: key("k-guitar"), displayName: "기타", role: "member", joinedAt: "2026-09-02T00:00:00Z", isMe: false, canRemove: false },
+        ],
+      }),
+    );
+    expect(screen.queryByRole("button", { name: "기타 메뉴" })).not.toBeInTheDocument();
   });
 
   it("shows the new invite link after removing with rotation, without moving the band address", async () => {
@@ -424,7 +439,7 @@ describe("BandHomeClient member management (F1, 24B, R7)", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: /초대 링크도 새로 만들기/ }));
     fireEvent.click(screen.getByRole("button", { name: "내보내기" }));
 
-    await waitFor(() => expect(actions.removeTeamMember).toHaveBeenCalledWith(TEAM, "u-guitar", true));
+    await waitFor(() => expect(actions.removeTeamMember).toHaveBeenCalledWith(TEAM, "k-guitar", true));
     const sheet = await screen.findByRole("dialog", { name: "멤버 초대" });
     expect(within(sheet).getByText(/\/join\/NEWcode_02$/)).toBeInTheDocument();
     expect(replace).not.toHaveBeenCalled();
