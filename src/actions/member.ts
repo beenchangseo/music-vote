@@ -3,8 +3,9 @@
 import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistAdmin } from "@/lib/playlist-admin";
 import { isArchivedPlaylistId } from "@/lib/playlist-access";
+import { memberKeyFor, membersByKey } from "@/lib/member-key";
 import { createAdminClient, createServerSupabaseClient } from "@/lib/supabase/server";
-import type { PlaylistMember, VoteAllowance, VotingMode } from "@/domain/types";
+import type { MemberKey, VoteAllowance, VotingMode } from "@/domain/types";
 import { isValidDefaultVoteLimit } from "@/domain/vote";
 import { revalidatePath } from "next/cache";
 
@@ -63,17 +64,25 @@ async function getMyVoteAllowance(
   };
 }
 
+export interface VotingSettingsMember {
+  memberKey: MemberKey;
+  display_name: string;
+  vote_limit: number;
+  used_votes: number;
+  /** The host's own row, so the screen finds it without holding the host's account id. */
+  isMe: boolean;
+}
+
 export interface VotingSettings {
   mode: VotingMode;
   votesAnonymous: boolean;
   defaultVoteLimit: number;
   totalVotes: number;
-  /** isMe marks the host's own row, so the screen finds it without holding the host's account id. */
-  members: (PlaylistMember & { isMe: boolean })[];
+  members: VotingSettingsMember[];
 }
 
 export interface MemberVoteLimitInput {
-  userId: string;
+  memberKey: MemberKey;
   voteLimit: number;
 }
 
@@ -89,7 +98,7 @@ export async function getVotingSettings(playlistId: string): Promise<VotingSetti
       .single(),
     admin
       .from("playlist_members")
-      .select("playlist_id, user_id, display_name, vote_limit, joined_at")
+      .select("user_id, display_name, vote_limit")
       .eq("playlist_id", playlistId)
       .order("joined_at", { ascending: true }),
     admin
@@ -112,7 +121,9 @@ export async function getVotingSettings(playlistId: string): Promise<VotingSetti
     defaultVoteLimit: playlist.default_vote_limit,
     totalVotes: (votes || []).length,
     members: (members || []).map((member) => ({
-      ...(member as Omit<PlaylistMember, "used_votes">),
+      memberKey: memberKeyFor({ playlistId }, member.user_id),
+      display_name: member.display_name,
+      vote_limit: member.vote_limit,
       used_votes: usedByUser.get(member.user_id) || 0,
       isMe: member.user_id === user?.id,
     })),
@@ -143,26 +154,32 @@ export async function saveVotingSettings(
   }
 
   const admin = createAdminClient();
-  const { data: playlist, error: playlistError } = await admin
-    .from("playlists")
-    .select("creator_user_id")
-    .eq("id", playlistId)
-    .single();
+  const [{ data: playlist, error: playlistError }, { data: members, error: membersError }] = await Promise.all([
+    admin.from("playlists").select("creator_user_id").eq("id", playlistId).single(),
+    admin.from("playlist_members").select("user_id").eq("playlist_id", playlistId),
+  ]);
 
   if (playlistError || !playlist) throw new Error("플레이리스트를 찾을 수 없습니다.");
+  if (membersError) actionError(membersError, "참여자를 불러오지 못했습니다.");
   if (!playlist.creator_user_id && mode === "allocated") {
     throw new Error("기존 플레이리스트에서는 자유 투표만 사용할 수 있습니다.");
   }
+
+  // The function looks each member up again under its playlists lock, so one who leaves after this read is
+  // still refused there with the same message.
+  const byKey = membersByKey({ playlistId }, members ?? []);
+  const limits = memberLimits.map(({ memberKey, voteLimit }) => {
+    const member = byKey.get(memberKey);
+    if (!member) throw new Error("참여자를 찾을 수 없습니다.");
+    return { user_id: member.user_id, vote_limit: voteLimit };
+  });
 
   const { error } = await admin.rpc("save_playlist_voting_settings", {
     p_playlist_id: playlistId,
     p_votes_anonymous: votesAnonymous,
     p_mode: mode,
     p_default_limit: defaultVoteLimit,
-    p_member_limits: memberLimits.map(({ userId, voteLimit }) => ({
-      user_id: userId,
-      vote_limit: voteLimit,
-    })),
+    p_member_limits: limits,
   });
 
   if (error) actionError(error, "투표 설정 변경에 실패했습니다.");

@@ -117,14 +117,11 @@ export interface SetlistItem {
   created_at: string;
 }
 
-export interface PlaylistMember {
-  playlist_id: string;
-  user_id: string;
-  display_name: string;
-  vote_limit: number;
-  used_votes: number;
-  joined_at: string;
-}
+/**
+ * 화면이 참여자·밴드 멤버를 가리키는 이름. 계정 id 대신 내려보낸다(docs/adr/0011).
+ * 플레이리스트·밴드마다 달라서 같은 사람을 이어 붙일 수 없다. src/lib/member-key.ts 만 만든다.
+ */
+export type MemberKey = string & { readonly __brand: "MemberKey" };
 
 export interface VoteAllowance {
   mode: VotingMode;

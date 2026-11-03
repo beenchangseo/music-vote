@@ -185,7 +185,12 @@ Voter(p) ==
 ----------------------------------------------------------------------------
 (* save_playlist_voting_settings, supabase/migrations/v11.sql (the settings
    sheet calls it through saveVotingSettings in src/actions/member.ts).
-   arg.member is the member's entry in p_member_limits, NONE when absent. *)
+   arg.member is the member's entry in p_member_limits, NONE when absent.
+   The sheet names members by member key (src/lib/member-key.ts), and
+   saveVotingSettings turns each key back into the user_id it was made for
+   before the call, from a plain read of the playlist's members, or refuses
+   the whole request without calling. So an entry still names exactly the
+   member the host meant, and that read is one of the left-out reads. *)
 
 HostStatic == <<votes, nextId, seenLimit, seenVote, ins, del, arg>>
 

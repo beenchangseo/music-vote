@@ -38,8 +38,8 @@ const SETTINGS = {
   votesAnonymous: true,
   defaultVoteLimit: 3,
   members: [
-    { user_id: "u1", display_name: "보컬", vote_limit: 3, used_votes: 0, isMe: false },
-    { user_id: "u2", display_name: "기타", vote_limit: 3, used_votes: 0, isMe: false },
+    { memberKey: "k-vocal", display_name: "보컬", vote_limit: 3, used_votes: 0, isMe: false },
+    { memberKey: "k-guitar", display_name: "기타", vote_limit: 3, used_votes: 0, isMe: false },
   ],
   totalVotes: 0,
 };
@@ -179,8 +179,8 @@ describe("RoomSettingsButton voting controls", () => {
   it("hands the host's own vote count back to the room after a save, picked by the server's isMe", async () => {
     serve({
       members: [
-        { user_id: "u1", display_name: "기타", vote_limit: 3, used_votes: 1, isMe: false },
-        { user_id: "u2", display_name: "보컬", vote_limit: 5, used_votes: 2, isMe: true },
+        { memberKey: "k-guitar", display_name: "기타", vote_limit: 3, used_votes: 1, isMe: false },
+        { memberKey: "k-vocal", display_name: "보컬", vote_limit: 5, used_votes: 2, isMe: true },
       ],
     });
     const onAllowanceChange = vi.fn();
@@ -227,8 +227,8 @@ describe("RoomSettingsButton voting controls", () => {
     serve({
       mode: "allocated",
       members: [
-        { user_id: "u1", display_name: "보컬", vote_limit: 3, used_votes: 3, isMe: false },
-        { user_id: "u2", display_name: "기타", vote_limit: 3, used_votes: 0, isMe: false },
+        { memberKey: "k-vocal", display_name: "보컬", vote_limit: 3, used_votes: 3, isMe: false },
+        { memberKey: "k-guitar", display_name: "기타", vote_limit: 3, used_votes: 0, isMe: false },
       ],
     });
     await openSettings();
@@ -246,8 +246,8 @@ describe("RoomSettingsButton voting controls", () => {
         "allocated",
         3,
         [
-          { userId: "u1", voteLimit: 4 },
-          { userId: "u2", voteLimit: 2 },
+          { memberKey: "k-vocal", voteLimit: 4 },
+          { memberKey: "k-guitar", voteLimit: 2 },
         ],
         "share",
       ),
