@@ -135,11 +135,13 @@ describe("SetlistView edit mode: (+) rows", () => {
     fireEvent.change(within(sheet).getByLabelText("이름"), { target: { value: "멘트" } });
     fireEvent.click(within(sheet).getByRole("button", { name: "넣기" }));
 
-    await waitFor(() => expect(onItemsChange).toHaveBeenCalledWith(after));
+    // The handle takes focus in a passive effect, after the sheet hands focus back to its opener, so wait for the end state.
+    const handle = await screen.findByRole("button", { name: "「멘트」 끌어서 순서 바꾸기" });
+    await waitFor(() => expect(handle).toHaveFocus());
+    expect(onItemsChange).toHaveBeenCalledWith(after);
     expect(insertSetlistBlock).toHaveBeenCalledWith("p", { before: "item-2" }, { kind: "interval", label: "멘트", description: "", durationSeconds: 60 }, "abc123");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(handles()).toEqual(["「예뻤어」 끌어서 순서 바꾸기", "「멘트」 끌어서 순서 바꾸기", "「기타 셋업 변경」 끌어서 순서 바꾸기", "「벚꽃 엔딩」 끌어서 순서 바꾸기"]);
-    expect(screen.getByRole("button", { name: "「멘트」 끌어서 순서 바꾸기" })).toHaveFocus();
     expect(screen.getByText("「멘트」 블록을 넣었어요")).toHaveAttribute("role", "status");
   });
 
