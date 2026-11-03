@@ -136,14 +136,16 @@ describe("getCommentsBySong", () => {
     });
   }
 
-  it("answers the song's comments oldest first without the commenter's account id (ADR 0011)", async () => {
-    const shown = { id: "c1", song_id: "song-1", nickname: "드럼", content: "브릿지 템포 좋아요", created_at: "t1", updated_at: "t2" };
-    state.admin = commentsTable([{ ...shown, user_id: "account-of-drum" }]);
+  it("answers the song's comments oldest first, marking mine, without any account id (ADR 0011)", async () => {
+    const drum = { id: "c1", song_id: "song-1", nickname: "드럼", content: "브릿지 템포 좋아요", created_at: "t1", updated_at: "t2" };
+    const bass = { id: "c2", song_id: "song-1", nickname: "베이스", content: "키 내려요", created_at: "t3", updated_at: "t3" };
+    state.admin = commentsTable([{ ...drum, user_id: "account-of-drum" }, { ...bass, user_id: "user-1" }]);
 
     const comments = await getCommentsBySong("song-1");
 
-    expect(comments).toEqual([shown]);
+    expect(comments).toEqual([{ ...drum, isMine: false }, { ...bass, isMine: true }]);
     expect(JSON.stringify(comments)).not.toContain("account-of-drum");
+    expect(JSON.stringify(comments)).not.toContain("user-1");
     expect(state.admin.ops[0]).toMatchObject({ table: "comments", filters: { song_id: "song-1" }, orders: [{ column: "created_at", ascending: true }] });
   });
 });

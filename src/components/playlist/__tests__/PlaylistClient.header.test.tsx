@@ -2,7 +2,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Playlist, RoomTeam } from "@/domain/types";
+import type { PlaylistView, RoomTeam } from "@/domain/types";
 import PlaylistClient from "../PlaylistClient";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }), usePathname: () => "/playlist/abc123" }));
@@ -45,9 +45,8 @@ vi.mock("../NavigationBar", () => ({
 }));
 
 const TEAM = "11111111-1111-4111-8111-111111111111";
-const OWNER = "user-owner";
 
-const playlist: Playlist = {
+const playlist: PlaylistView = {
   id: "22222222-2222-4222-8222-222222222222",
   title: "10월 합주",
   share_code: "abc123",
@@ -56,7 +55,7 @@ const playlist: Playlist = {
   announcement: null,
   setlist_confirmed: false,
   creator_nickname: "보컬",
-  creator_user_id: OWNER,
+  archived: false,
   votes_anonymous: true,
   voting_mode: "free",
   default_vote_limit: 3,
@@ -69,7 +68,7 @@ const band: RoomTeam = { id: TEAM, name: "일코해제", nextShowAt: null, isMem
 type Props = Parameters<typeof PlaylistClient>[0];
 
 function renderRoom(overrides: Partial<Props> = {}) {
-  render(<PlaylistClient playlist={playlist} songs={[]} shareCode="abc123" participantCount={2} userNickname="보컬" currentUserId={OWNER} team={band} {...overrides} />);
+  render(<PlaylistClient playlist={playlist} songs={[]} shareCode="abc123" participantCount={2} userNickname="보컬" loggedIn isHost team={band} {...overrides} />);
 }
 
 const roomActions = () => ["카카오톡 공유", "공지", "플레이리스트 메뉴"].map((name) => screen.queryByRole("button", { name }));
@@ -102,7 +101,7 @@ describe("PlaylistClient header per tab (#4)", () => {
   });
 
   it("points the one-line header home when the viewer is not in the band", () => {
-    renderRoom({ team: null, currentUserId: null, userNickname: undefined });
+    renderRoom({ team: null, loggedIn: false, isHost: false, userNickname: undefined });
     fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
 
     expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
@@ -111,7 +110,7 @@ describe("PlaylistClient header per tab (#4)", () => {
   });
 
   it.each(["셋리스트", "합주"])("gives a logged-out viewer the candidates tab's login button on the %s tab", (tab) => {
-    renderRoom({ team: null, currentUserId: null, userNickname: undefined });
+    renderRoom({ team: null, loggedIn: false, isHost: false, userNickname: undefined });
     fireEvent.click(screen.getByRole("button", { name: tab }));
 
     const login = within(screen.getByRole("banner")).getByRole("button", { name: "로그인" });

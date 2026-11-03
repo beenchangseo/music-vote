@@ -3,18 +3,17 @@
 import { createAdminClient, createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistWritableBySong } from "@/lib/playlist-access";
-import { COMMENT_COLUMNS } from "@/lib/playlist-reads";
+import { COMMENT_COLUMNS, commentsForViewer } from "@/lib/playlist-reads";
 import { revalidatePath } from "next/cache";
 import type { Comment } from "@/domain/types";
 
 export async function getCommentsBySong(songId: string): Promise<Comment[]> {
   const admin = createAdminClient();
-  const { data } = await admin
-    .from("comments")
-    .select(COMMENT_COLUMNS)
-    .eq("song_id", songId)
-    .order("created_at", { ascending: true });
-  return (data || []) as Comment[];
+  const [{ data }, viewer] = await Promise.all([
+    admin.from("comments").select(COMMENT_COLUMNS).eq("song_id", songId).order("created_at", { ascending: true }),
+    getCurrentUser(),
+  ]);
+  return commentsForViewer(data || [], viewer?.id ?? null);
 }
 
 export async function addOrUpdateComment(

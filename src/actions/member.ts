@@ -68,7 +68,8 @@ export interface VotingSettings {
   votesAnonymous: boolean;
   defaultVoteLimit: number;
   totalVotes: number;
-  members: PlaylistMember[];
+  /** isMe marks the host's own row, so the screen finds it without holding the host's account id. */
+  members: (PlaylistMember & { isMe: boolean })[];
 }
 
 export interface MemberVoteLimitInput {
@@ -80,7 +81,7 @@ export async function getVotingSettings(playlistId: string): Promise<VotingSetti
   await assertPlaylistAdmin(playlistId);
   const admin = createAdminClient();
 
-  const [{ data: playlist }, { data: members }, { data: votes }] = await Promise.all([
+  const [{ data: playlist }, { data: members }, { data: votes }, user] = await Promise.all([
     admin
       .from("playlists")
       .select("voting_mode, votes_anonymous, default_vote_limit")
@@ -95,6 +96,7 @@ export async function getVotingSettings(playlistId: string): Promise<VotingSetti
       .from("votes")
       .select("user_id, songs!inner(playlist_id)")
       .eq("songs.playlist_id", playlistId),
+    getCurrentUser(),
   ]);
 
   if (!playlist) throw new Error("플레이리스트를 찾을 수 없습니다.");
@@ -110,9 +112,10 @@ export async function getVotingSettings(playlistId: string): Promise<VotingSetti
     defaultVoteLimit: playlist.default_vote_limit,
     totalVotes: (votes || []).length,
     members: (members || []).map((member) => ({
-      ...member,
+      ...(member as Omit<PlaylistMember, "used_votes">),
       used_votes: usedByUser.get(member.user_id) || 0,
-    })) as PlaylistMember[],
+      isMe: member.user_id === user?.id,
+    })),
   };
 }
 

@@ -18,8 +18,6 @@ interface Props {
   songId: string;
   songTitle: string;
   shareCode: string;
-  currentUserId?: string | null;
-  isAdmin: boolean;
   loginGate?: boolean;
   onCountChange?: (count: number) => void;
   onClose: () => void;
@@ -83,10 +81,6 @@ export default function SongVersionModal(props: Props) {
     });
   }
 
-  function canManage(version: SongVersion) {
-    return props.isAdmin || (!!props.currentUserId && props.currentUserId === version.added_by_user_id);
-  }
-
   async function remove(version: SongVersion) {
     const ok = await showDanger("이 다른 버전 링크를 삭제하시겠습니까?");
     if (!ok) return;
@@ -118,7 +112,7 @@ export default function SongVersionModal(props: Props) {
             {version.description && <p className="mt-1 text-sm text-text-muted whitespace-pre-wrap">{version.description}</p>}
             <div className="mt-2 flex items-center justify-between gap-2 text-caption text-text-subtle">
               <span className="truncate">추가: {version.added_by_nickname}</span>
-              {canManage(version) && (
+              {version.canManage && (
                 <div className="flex shrink-0 gap-1">
                   <button type="button" className="min-h-11 px-3 hover:text-text" onClick={() => { setEditingId(version.id); setUrl(version.youtube_url); setDescription(version.description || ""); }}>수정</button>
                   <button type="button" className="min-h-11 px-3 hover:text-danger-fg" onClick={() => remove(version)}>삭제</button>

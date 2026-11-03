@@ -39,7 +39,6 @@ interface Props {
   shareCode: string;
   adminToken: string | null;
   supportsVoteAllocation: boolean;
-  currentUserId?: string | null;
   onAllowanceChange?: (mode: VotingMode, usedVotes: number, voteLimit: number) => void;
   onVotesAnonymousChange?: (votesAnonymous: boolean) => void;
   onVotesReset?: () => void;
@@ -59,7 +58,6 @@ export default function RoomSettingsButton({
   shareCode,
   adminToken,
   supportsVoteAllocation,
-  currentUserId,
   onAllowanceChange,
   onVotesAnonymousChange,
   onVotesReset,
@@ -107,7 +105,7 @@ export default function RoomSettingsButton({
       setVotesAnonymous(next.votesAnonymous);
       setDefaultLimit(next.defaultVoteLimit);
       setMemberLimits(Object.fromEntries(next.members.map((member) => [member.user_id, String(member.vote_limit)])));
-      const me = next.members.find((member) => member.user_id === currentUserId);
+      const me = next.members.find((member) => member.isMe);
       if (me) onAllowanceChange?.(next.mode, me.used_votes, me.vote_limit);
     });
   }

@@ -184,7 +184,7 @@ describe("RehearsalView steps", () => {
   });
 
   it("opens the current song's comments from its card", () => {
-    const comment = { id: "c1", song_id: "a", nickname: "기타", content: "브릿지 빠르게", created_at: "", updated_at: "" };
+    const comment = { id: "c1", song_id: "a", nickname: "기타", content: "브릿지 빠르게", created_at: "", updated_at: "", isMine: false };
     renderRehearsal({ comments: [comment] });
     expect(screen.queryByText("브릿지 빠르게")).not.toBeInTheDocument();
 

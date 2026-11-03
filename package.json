@@ -16,6 +16,7 @@
     "test:e2e": "playwright test",
     "e2e:auth": "node e2e/save-auth.mts",
     "audit:anon": "node scripts/audit-anon-access.mjs",
+    "audit:payload": "node scripts/audit-page-payload.mjs",
     "metrics:teams": "node scripts/team-metrics.mjs",
     "db:new": "node scripts/new-migration.mjs"
   },

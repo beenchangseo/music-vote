@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchSetlistItems } from "@/lib/playlist-refetch";
 import { removeSetlistItem } from "@/actions/setlist";
-import type { Playlist, SetlistItem, SongWithScore } from "@/domain/types";
+import type { PlaylistView, SetlistItem, SongWithScore } from "@/domain/types";
 import PlaylistClient from "../PlaylistClient";
 
 const realtime = vi.hoisted(() => ({ onRemoteChange: (): Promise<void> | void => {}, notifyChange: vi.fn(), requestRefresh: vi.fn() }));
@@ -77,14 +77,14 @@ const playlist = {
   announcement: null,
   setlist_confirmed: false,
   creator_nickname: "보컬",
-  creator_user_id: "owner",
+  archived: false,
   votes_anonymous: true,
   voting_mode: "free",
   default_vote_limit: 3,
   setlist_edit_mode: "everyone",
   created_at: "2026-10-01T00:00:00Z",
   team_id: null,
-} as Playlist;
+} as PlaylistView;
 
 const shown = () => screen.getByTestId("setlist").textContent;
 
@@ -102,7 +102,7 @@ afterEach(() => {
 describe("PlaylistClient function updater vs read numbering", () => {
   it("a read in flight when a null-items delete lands is discarded, even though the write came as a function", async () => {
     const inSetlist = { ...item("candidate"), item_type: "song", song_id: candidate.id } as SetlistItem;
-    render(<PlaylistClient playlist={playlist} songs={[candidate]} shareCode="abc123" participantCount={2} userNickname="보컬" currentUserId="owner" team={null} initialSetlistItems={[inSetlist, item("theirs")]} />);
+    render(<PlaylistClient playlist={playlist} songs={[candidate]} shareCode="abc123" participantCount={2} userNickname="보컬" loggedIn isHost team={null} initialSetlistItems={[inSetlist, item("theirs")]} />);
     let landStale: (items: SetlistItem[]) => void = () => {};
     vi.mocked(fetchSetlistItems).mockReturnValueOnce(new Promise((resolve) => (landStale = resolve))).mockReturnValue(new Promise(() => {}));
     vi.mocked(removeSetlistItem).mockResolvedValue({ success: true, items: null });
@@ -119,7 +119,7 @@ describe("PlaylistClient function updater vs read numbering", () => {
   });
 
   it("a function write from the setlist tab applies to the list a read drew after the click, and a read that then lands late is discarded", async () => {
-    render(<PlaylistClient playlist={playlist} songs={[]} shareCode="abc123" participantCount={2} userNickname="보컬" currentUserId="owner" team={null} initialSetlistItems={[item("first"), item("theirs")]} />);
+    render(<PlaylistClient playlist={playlist} songs={[]} shareCode="abc123" participantCount={2} userNickname="보컬" loggedIn isHost team={null} initialSetlistItems={[item("first"), item("theirs")]} />);
     fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
     let landLate: (items: SetlistItem[]) => void = () => {};
     vi.mocked(fetchSetlistItems)

@@ -15,7 +15,7 @@ interface CommentSectionProps {
 }
 
 export default function CommentSection({ songId, comments, nickname, shareCode, onCommentsChange, allComments }: CommentSectionProps) {
-  const myComment = nickname ? comments.find((c) => c.nickname.toLowerCase() === nickname.toLowerCase()) : null;
+  const myComment = nickname ? comments.find((c) => c.isMine) : undefined;
   const [content, setContent] = useState(myComment?.content || "");
   const [isEditing, setIsEditing] = useState(false);
   const [showAllComments, setShowAllComments] = useState(false);
@@ -43,6 +43,7 @@ export default function CommentSection({ songId, comments, nickname, shareCode, 
             content: content.trim(),
             created_at: now,
             updated_at: now,
+            isMine: true,
           }]);
         }
         setIsEditing(false);
@@ -56,7 +57,7 @@ export default function CommentSection({ songId, comments, nickname, shareCode, 
     <div className="px-3 py-2">
       {/* Other comments — show max 2, expandable */}
       {(() => {
-        const others = comments.filter((c) => c.nickname.toLowerCase() !== nickname.toLowerCase());
+        const others = comments.filter((c) => c !== myComment);
         const visible = showAllComments ? others : others.slice(0, 2);
         return (
           <>

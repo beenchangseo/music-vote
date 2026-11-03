@@ -24,7 +24,7 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
   const [isPending, startTransition] = useTransition();
   const { showAlert, showDanger } = useDialog();
 
-  const myComment = nickname ? comments.find((c) => c.nickname.toLowerCase() === nickname.toLowerCase()) : null;
+  const myComment = nickname ? comments.find((c) => c.isMine) : undefined;
 
   // Load comments on mount
   useEffect(() => {
@@ -32,7 +32,7 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
       try {
         const data = await getCommentsBySong(songId);
         setComments(data);
-        const mine = data.find((c) => c.nickname.toLowerCase() === nickname.toLowerCase());
+        const mine = data.find((c) => c.isMine);
         if (mine) setContent(mine.content);
       } catch { /* ignore */ }
       setLoading(false);
@@ -63,7 +63,7 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
     startTransition(async () => {
       try {
         await deleteComment(songId, shareCode);
-        setComments((prev) => prev.filter((c) => c.nickname.toLowerCase() !== nickname.toLowerCase()));
+        setComments((prev) => prev.filter((c) => !c.isMine));
         setContent("");
         setIsEditing(false);
       } catch {
@@ -72,7 +72,7 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
     });
   }
 
-  const otherComments = comments.filter((c) => c.nickname.toLowerCase() !== nickname.toLowerCase());
+  const otherComments = comments.filter((c) => c !== myComment);
 
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/50" onClick={onClose}>

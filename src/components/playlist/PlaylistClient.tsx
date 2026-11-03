@@ -37,22 +37,22 @@ import type { CreatedBand } from "../band/CreateBandSheet";
 import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import type { ViewMode } from "./NavigationBar";
-import { isArchivedPlaylist } from "@/domain/playlist-archive";
-import { hostDenial } from "@/domain/playlist-host";
 import { setlistEditAccess } from "@/domain/setlist";
 import type { MyTeam } from "@/actions/team";
-import type { Playlist, RoomTeam, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/domain/types";
+import type { PlaylistView, RoomTeam, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/domain/types";
 import { displayTitle } from "@/domain/song-meta";
 import { inviteSongs } from "@/domain/invite-card";
 import { assignRanks } from "@/domain/vote";
 
 interface PlaylistClientProps {
-  playlist: Playlist;
+  playlist: PlaylistView;
   songs: SongWithScore[];
   shareCode: string;
   participantCount: number;
   userNickname?: string;
-  currentUserId?: string | null;
+  loggedIn: boolean;
+  /** The page's hostDenial answer for this viewer. Account ids never reach the browser (docs/adr/0011). */
+  isHost: boolean;
   currentUserAvatarUrl?: string | null;
   /** The room's band, trimmed per viewer by the page (R10 payload table). null for rooms without a band. */
   team?: RoomTeam | null;
@@ -72,7 +72,8 @@ export default function PlaylistClient({
   shareCode,
   participantCount,
   userNickname,
-  currentUserId,
+  loggedIn,
+  isHost,
   currentUserAvatarUrl,
   team = null,
   myTeams = [],
@@ -81,8 +82,7 @@ export default function PlaylistClient({
   initialSetlistItems = null,
 }: PlaylistClientProps) {
   // 보관된 합주방: 로그인 도입 전 익명 합주방. 지난 기록만 읽는다.
-  const isArchived = isArchivedPlaylist(playlist);
-  const loggedIn = !!currentUserId;
+  const isArchived = playlist.archived;
   const loginGate = !isArchived && !loggedIn;
   // 닉네임은 카카오 프로필에서 그대로 쓴다.
   const nickname = !isArchived && loggedIn ? userNickname || "" : "";
@@ -121,7 +121,6 @@ export default function PlaylistClient({
   }, []);
 
   // 링크 토큰은 플레이리스트를 만든 기기에만 남아 로그인 플레이리스트의 방장 판정에 쓰지 않는다(#47).
-  const isHost = hostDenial(playlist, currentUserId) === null;
   const isAdmin = isArchived ? !!adminToken : isHost;
   const isExpired = playlist.deadline ? new Date(playlist.deadline) < new Date() : false;
   const setlistAccess = setlistEditAccess({ archived: isArchived, mode: playlist.setlist_edit_mode, loggedIn, isHost: isAdmin });
@@ -138,7 +137,6 @@ export default function PlaylistClient({
   }, [isArchived, loggedIn, playlist.id, showAlert]);
 
   // Lazy load setlist items on first mode switch
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- useState setters are stable; eslint-plugin-react-hooks 7.1 lists them as missing deps in this component.
   const handleModeChange = useCallback(async (mode: ViewMode) => {
     window.scrollTo({ top: 0 });
     setNavMode(mode);
@@ -169,7 +167,6 @@ export default function PlaylistClient({
   // in flight when a write of mine lands, may carry an older list. A write marks every read started so far as drawn,
   // and the read that applySetlistItems starts after it covers anything they carried.
   const setlistReadsRef = useRef({ started: 0, drawn: 0 });
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
   const refetchSetlist = useCallback(async () => {
     const reads = setlistReadsRef.current;
     const read = ++reads.started;
@@ -182,7 +179,6 @@ export default function PlaylistClient({
   // 다른 참여자의 변경 알림. 셋리스트·댓글은 서버 렌더가 아니라
   // 클라이언트가 따로 받아둔 값이라 이미 열어본 목록만 다시 받아온다.
   // A failed read rejects, so usePlaylistRealtime tries again instead of waiting for the next change.
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
   const handleRemoteChange = useCallback(async () => {
     router.refresh();
     await Promise.all([
@@ -197,7 +193,6 @@ export default function PlaylistClient({
    * 서버에 닿은 셋리스트를 그리고 다른 화면에 알린다. 쓰기는 닿았지만 목록을 못 읽었으면 지금 목록을 고치는 함수를 받는다.
    * 누를 때의 목록으로 그리면 쓰기를 기다리는 동안 그린 다른 멤버의 변경을 덮는다.
    */
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
   const applySetlistItems = useCallback((items: SetStateAction<SetlistItem[]>) => {
     setlistReadsRef.current.drawn = setlistReadsRef.current.started;
     setSetlistItems((current) => (typeof items === "function" ? current && items(current) : items));
@@ -206,7 +201,6 @@ export default function PlaylistClient({
     refetchSetlist().catch(requestRefresh);
   }, [notifyChange, refetchSetlist, requestRefresh]);
 
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- same setter false positive as handleModeChange.
   const handleAllowanceChange = useCallback((usedVotes: number, voteLimit: number) => {
     setAllowance((current) => (current ? { ...current, usedVotes, voteLimit } : current));
   }, []);
@@ -387,7 +381,6 @@ export default function PlaylistClient({
       shareCode={shareCode}
       adminToken={adminToken}
       supportsVoteAllocation
-      currentUserId={currentUserId}
       team={team}
       myTeams={myTeams}
       setlistEditMode={playlist.setlist_edit_mode}
@@ -656,7 +649,6 @@ export default function PlaylistClient({
                       nickname={nickname}
                       shareCode={shareCode}
                       playlistId={playlist.id}
-                      isAdmin={isAdmin}
                       viewMode={viewMode}
                       rank={rankById.get(song.id)}
                       expanded={expandedSongId === song.id}
@@ -672,7 +664,6 @@ export default function PlaylistClient({
                       onAddToSetlist={canEditSetlist ? handleAddToSetlist : undefined}
                       onRemoveFromSetlist={canEditSetlist ? handleRemoveFromSetlist : undefined}
                       loginGate={loginGate}
-                      currentUserId={currentUserId}
                     />
                   ))
                 )}

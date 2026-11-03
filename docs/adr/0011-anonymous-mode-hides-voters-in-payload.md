@@ -9,5 +9,8 @@
 ## Consequences
 
 - 로그인 합주방에서 내 표는 서버가 계정 기준으로 계산해 내려보낸다. 클라이언트는 더 이상 투표 행에서 내 표를 찾지 않는다.
+- 방장인지, 곡과 다른 버전을 지울 수 있는지, 어느 댓글이 내 것인지도 같다. 페이지와 GET route 가 계정으로 판정해
+  `isHost`·`canDelete`·`canManage`·`isMine` 만 싣는다. 이 판정을 화면에 맡기느라 `creator_user_id`·`added_by_user_id`·
+  `currentUserId` 가 로그아웃 페이지에까지 실려 있었다(#59).
 - 실시간 갱신도 같은 제약을 받는다. `votes` 변경을 그대로 흘리는 구독 대신 [ADR 0010](./0010-realtime-by-broadcast-notification.md)의 내용 없는 알림을 쓴다.
 - 앱 페이로드를 막는 것만으로는 부족하다. `votes` 테이블 자체의 SELECT 권한을 좁히는 작업은 `supabase/migrations/v15.sql`에서 한다.

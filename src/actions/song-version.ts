@@ -5,6 +5,7 @@ import { assertPlaylistWritableBySong } from "@/lib/playlist-access";
 import { createAdminClient } from "@/lib/supabase/server";
 import { extractVideoId, fetchVideoMetadata } from "@/lib/youtube";
 import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/domain/playlist-archive";
+import { isHostOrAdder } from "@/domain/playlist-host";
 import type { SongVersion } from "@/domain/types";
 import { revalidatePath } from "next/cache";
 
@@ -13,6 +14,12 @@ type DuplicateKind = "original" | "version";
 type SaveResult =
   | { success: true; version: SongVersion }
   | { success: false; needsConfirmation: true; duplicateKind: DuplicateKind };
+
+/** What the screen sees of a version. The adder's account id stays on the server (docs/adr/0011). */
+const VERSION_COLUMNS =
+  "id, song_id, youtube_url, youtube_video_id, title, thumbnail_url, description, added_by_nickname, created_at, updated_at";
+
+type VersionRow = Omit<SongVersion, "canManage">;
 
 function validateDescription(description: string): string | null {
   const trimmed = description.trim();
@@ -51,13 +58,24 @@ async function duplicateKind(
 
 export async function getSongVersions(songId: string): Promise<SongVersion[]> {
   const admin = createAdminClient();
-  const { data, error } = await admin
-    .from("song_versions")
-    .select("*")
-    .eq("song_id", songId)
-    .order("created_at", { ascending: true });
+  const [{ data, error }, { data: song }, viewer] = await Promise.all([
+    admin
+      .from("song_versions")
+      .select(`${VERSION_COLUMNS}, added_by_user_id`)
+      .eq("song_id", songId)
+      .order("created_at", { ascending: true }),
+    admin
+      .from("songs")
+      .select("playlists!inner(creator_user_id)")
+      .eq("id", songId)
+      .single<{ playlists: { creator_user_id: string | null } }>(),
+    getCurrentUser(),
+  ]);
   if (error) throw new Error("다른 버전을 불러오지 못했습니다.");
-  return (data || []) as SongVersion[];
+  return (data || []).map(({ added_by_user_id, ...version }) => ({
+    ...version,
+    canManage: !!song && isHostOrAdder(song.playlists, added_by_user_id, viewer?.id),
+  }));
 }
 
 export async function addSongVersion(
@@ -93,11 +111,11 @@ export async function addSongVersion(
       added_by_user_id: user.id,
       added_by_nickname: user.nickname,
     })
-    .select("*")
+    .select(VERSION_COLUMNS)
     .single();
   if (error || !data) throw new Error("다른 버전 추가에 실패했습니다.");
   revalidatePath(`/playlist/${shareCode}`);
-  return { success: true, version: data as SongVersion };
+  return { success: true, version: { ...(data as VersionRow), canManage: true } };
 }
 
 async function assertVersionManager(versionId: string) {
@@ -120,9 +138,7 @@ async function assertVersionManager(versionId: string) {
   if (isArchivedPlaylist(data.songs.playlists)) throw new Error(ARCHIVED_PLAYLIST_MESSAGE);
   const user = await getCurrentUser();
   if (!user) throw new Error("로그인이 필요합니다.");
-  if (user.id !== data.songs.playlists.creator_user_id && user.id !== data.added_by_user_id) {
-    throw new Error("이 링크를 수정할 권한이 없습니다.");
-  }
+  if (!isHostOrAdder(data.songs.playlists, data.added_by_user_id, user.id)) throw new Error("이 링크를 수정할 권한이 없습니다.");
 
   return data;
 }
@@ -162,11 +178,12 @@ export async function updateSongVersion(
       updated_at: new Date().toISOString(),
     })
     .eq("id", versionId)
-    .select("*")
+    .select(VERSION_COLUMNS)
     .single();
   if (error || !data) throw new Error("다른 버전 수정에 실패했습니다.");
   revalidatePath(`/playlist/${shareCode}`);
-  return { success: true, version: data as SongVersion };
+  // assertVersionManager let this viewer in, so they manage what they saved.
+  return { success: true, version: { ...(data as VersionRow), canManage: true } };
 }
 
 export async function deleteSongVersion(versionId: string, shareCode: string) {

@@ -19,7 +19,6 @@ interface SongCardProps {
   nickname: string;
   shareCode: string;
   playlistId: string;
-  isAdmin: boolean;
   viewMode: "card" | "compact";
   /** 점수 순위 (1부터, 동점은 같은 번호). 목록 보기에서 행 맨 앞 칸에 그린다. */
   rank?: number;
@@ -42,7 +41,6 @@ interface SongCardProps {
   votesAnonymous?: boolean;
   /** 로그인 모드 + 비로그인 → 투표/댓글 시도 시 카카오 OAuth 트리거. */
   loginGate?: boolean;
-  currentUserId?: string | null;
 }
 
 export default function SongCard({
@@ -51,7 +49,6 @@ export default function SongCard({
   nickname,
   shareCode,
   playlistId,
-  isAdmin,
   viewMode,
   rank,
   expanded = false,
@@ -68,7 +65,6 @@ export default function SongCard({
   onRemoveFromSetlist,
   votesAnonymous = true,
   loginGate = false,
-  currentUserId,
 }: SongCardProps) {
   const [isPending, startTransition] = useTransition();
   const [showMenu, setShowMenu] = useState(false);
@@ -103,7 +99,7 @@ export default function SongCard({
     });
   }
 
-  const canRemove = isAdmin || (!!currentUserId && currentUserId === song.added_by_user_id);
+  const canRemove = song.canDelete;
   // YouTube 채널명이 아티스트가 아닌 경우가 많다. 표시할 때만 정제한다.
   const artist = displayArtist(song.artist, song.title);
   // 유튜브 원제목에서 아티스트 앞부분과 [가사/Lyrics] 같은 태그를 뗀 제목. 원제목은 펼친 행에 남긴다.
@@ -311,7 +307,7 @@ export default function SongCard({
           />
         )}
         {showVersions && (
-          <SongVersionModal songId={song.id} songTitle={title} shareCode={shareCode} currentUserId={currentUserId} isAdmin={isAdmin} loginGate={loginGate} onCountChange={setVersionCount} onClose={() => setShowVersions(false)} />
+          <SongVersionModal songId={song.id} songTitle={title} shareCode={shareCode} loginGate={loginGate} onCountChange={setVersionCount} onClose={() => setShowVersions(false)} />
         )}
       </div>
     );
@@ -418,7 +414,7 @@ export default function SongCard({
         />
       )}
       {showVersions && (
-        <SongVersionModal songId={song.id} songTitle={song.title} shareCode={shareCode} currentUserId={currentUserId} isAdmin={isAdmin} loginGate={loginGate} onCountChange={setVersionCount} onClose={() => setShowVersions(false)} />
+        <SongVersionModal songId={song.id} songTitle={song.title} shareCode={shareCode} loginGate={loginGate} onCountChange={setVersionCount} onClose={() => setShowVersions(false)} />
       )}
     </div>
   );

@@ -2,7 +2,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Playlist, RoomTeam } from "@/domain/types";
+import type { PlaylistView, RoomTeam } from "@/domain/types";
 import PlaylistClient from "../PlaylistClient";
 
 // Everything around the band slot is stubbed: this file is about the prompt card (F7, 27A),
@@ -67,12 +67,11 @@ vi.mock("../../band/BandInviteSheet", () => ({
 }));
 
 const TEAM = "11111111-1111-4111-8111-111111111111";
-const OWNER = "user-owner";
 const PROMPT = /이 멤버 그대로 다음 공연도 해요/;
 
 const ROOM_ID = "22222222-2222-4222-8222-222222222222";
 
-const playlist: Playlist = {
+const playlist: PlaylistView = {
   id: ROOM_ID,
   title: "10월 합주",
   share_code: "abc123",
@@ -81,7 +80,7 @@ const playlist: Playlist = {
   announcement: null,
   setlist_confirmed: false,
   creator_nickname: "보컬",
-  creator_user_id: OWNER,
+  archived: false,
   votes_anonymous: true,
   voting_mode: "free",
   default_vote_limit: 3,
@@ -102,7 +101,8 @@ function ui(overrides: Partial<Props> = {}) {
       shareCode="abc123"
       participantCount={0}
       userNickname="보컬"
-      currentUserId={OWNER}
+      loggedIn
+      isHost
       team={null}
       myTeams={[]}
       memberCount={2}
@@ -131,8 +131,8 @@ describe("PlaylistClient band prompt (F7, 27A)", () => {
 
   it.each([
     ["a brand-new room with one member", { memberCount: 1 }],
-    ["someone who is not the owner", { currentUserId: "user-other" }],
-    ["a logged-out visitor", { currentUserId: null }],
+    ["someone who is not the owner", { isHost: false }],
+    ["a logged-out visitor", { loggedIn: false, isHost: false }],
     ["a room already in a band", { playlist: { ...playlist, team_id: TEAM }, team: bandTeam, memberCount: null }],
   ])("stays away from %s", (_label, overrides) => {
     render(ui(overrides as Partial<Props>));
@@ -235,7 +235,7 @@ describe("PlaylistClient list notices", () => {
   });
 
   it("tells a visitor that an archived room is read-only and links to a new playlist", () => {
-    render(ui({ playlist: { ...playlist, creator_user_id: null } }));
+    render(ui({ playlist: { ...playlist, archived: true }, isHost: false }));
     expect(screen.getByRole("status")).toHaveTextContent("보관된 플레이리스트예요.");
     expect(screen.getByRole("link", { name: /새 플레이리스트 만들기/ })).toHaveAttribute("href", "/");
   });
