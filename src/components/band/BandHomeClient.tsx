@@ -23,6 +23,7 @@ import { LEFT_BAND_STORAGE_KEY } from "./LeftBandNotice";
 import { leaveTeam, type TeamHomeMember, type TeamHomeView, type TeamRoom } from "@/actions/team";
 import { track } from "@/lib/analytics";
 import { aggregatePlayedSongs, formatShowDate, showDday, type PlayedSong, type ShowDday } from "@/domain/team";
+import type { MemberKey } from "@/domain/types";
 import { teamMessage } from "@/lib/team-messages";
 
 type MemberView = Extract<TeamHomeView, { access: "member" }>;
@@ -69,15 +70,15 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
   // Values the server will also send after revalidation; kept locally so the screen updates at once.
   const [rotatedCode, setRotatedCode] = useState<string | null>(null);
   const [savedShow, setSavedShow] = useState<{ value: string | null } | null>(null);
-  const [removedIds, setRemovedIds] = useState<string[]>([]);
+  const [removedKeys, setRemovedKeys] = useState<MemberKey[]>([]);
   const inviteCode = rotatedCode ?? team.inviteCode;
   const nextShowAt = savedShow ? savedShow.value : team.nextShowAt;
-  const members = view.members.filter((member) => !member.userId || !removedIds.includes(member.userId));
+  const members = view.members.filter((member) => !removedKeys.includes(member.memberKey));
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [attachOpen, setAttachOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
-  const [removing, setRemoving] = useState<{ userId: string; displayName: string } | null>(null);
+  const [removing, setRemoving] = useState<{ memberKey: MemberKey; displayName: string } | null>(null);
   const [leaveError, setLeaveError] = useState<string | null>(null);
   const [leaving, startLeaving] = useTransition();
   // Same rule as BandPromptCard: hidden in the server render so a closed card never flashes.
@@ -285,10 +286,9 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
           <ul className="mt-4 grid grid-cols-4 gap-x-2 gap-y-5">
             {members.map((member) => (
               <MemberTile
-                key={`${member.displayName}-${member.joinedAt}`}
+                key={member.memberKey}
                 member={member}
-                canRemove={isOwner && member.role === "member" && !!member.userId}
-                onRemove={() => setRemoving({ userId: member.userId!, displayName: member.displayName })}
+                onRemove={() => setRemoving({ memberKey: member.memberKey, displayName: member.displayName })}
               />
             ))}
             {!starting && (
@@ -362,8 +362,8 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
           teamId={team.id}
           member={removing}
           onClose={() => setRemoving(null)}
-          onRemoved={(userId, rotated) => {
-            setRemovedIds((ids) => [...ids, userId]);
+          onRemoved={(memberKey, rotated) => {
+            setRemovedKeys((keys) => [...keys, memberKey]);
             // R7: the moment the link changes is the moment to send the new one.
             if (rotated) setInviteOpen(true);
           }}
@@ -564,15 +564,7 @@ function PlayedSongs({ songs }: { songs: PlayedSong[] }) {
 }
 
 /** 멤버 한 칸 (YouTube Music "좋아하는 아티스트" 원). owner 에게는 내보내기 메뉴가 붙는다. */
-function MemberTile({
-  member,
-  canRemove,
-  onRemove,
-}: {
-  member: TeamHomeMember;
-  canRemove: boolean;
-  onRemove: () => void;
-}) {
+function MemberTile({ member, onRemove }: { member: TeamHomeMember; onRemove: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const sub = member.role === "owner" ? "리더" : member.isMe ? "나" : null;
   return (
@@ -592,7 +584,7 @@ function MemberTile({
           </span>
         )}
       </span>
-      {canRemove && (
+      {member.canRemove && (
         <>
           <IconButton
             bare

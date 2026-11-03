@@ -33,6 +33,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistWritable } from "@/lib/playlist-access";
 import { ARCHIVED_PLAYLIST_MESSAGE } from "@/domain/playlist-archive";
+import { memberKeyFor, membersByKey } from "@/lib/member-key";
 import { insertRoom } from "@/lib/room-insert";
 import { createAdminClient } from "@/lib/supabase/server";
 import { nestedRows } from "@/lib/supabase/nested";
@@ -50,7 +51,7 @@ import { effectiveSetlistTitle } from "@/domain/setlist";
 import { compareTimestamps } from "@/domain/timestamp";
 import { isValidDefaultVoteLimit } from "@/domain/vote";
 import type { TeamReason } from "@/lib/team-messages";
-import type { ActionResult, TeamRole, VotingMode } from "@/domain/types";
+import type { ActionResult, MemberKey, TeamRole, VotingMode } from "@/domain/types";
 
 // ============================================================
 // 반환 타입
@@ -151,12 +152,14 @@ export type TeamInviteView =
     };
 
 export interface TeamHomeMember {
-  /** owner 화면에서만 채운다 (내보내기 대상 지정용). 그 외에는 null. */
-  userId: string | null;
+  /** 내보내기 대상과 멤버 칸을 가리킨다. 이 밴드에서만 통한다(계정 id 대신, ADR 0011). */
+  memberKey: MemberKey;
   displayName: string;
   role: TeamRole;
   joinedAt: string;
   isMe: boolean;
+  /** 보는 사람이 owner 이고 이 사람은 member 일 때만 true. */
+  canRemove: boolean;
 }
 
 export interface TeamSetlistSong {
@@ -771,11 +774,12 @@ export async function getTeamHome(teamId: string): Promise<TeamHomeView | null> 
       createdAt: team.created_at,
     },
     members: members.map((member) => ({
-      userId: isOwner ? member.user_id : null,
+      memberKey: memberKeyFor({ teamId: team.id }, member.user_id),
       displayName: member.display_name,
       role: member.role,
       joinedAt: member.joined_at,
       isMe: member.user_id === me.user_id,
+      canRemove: isOwner && member.role === "member",
     })),
     rooms: rooms.map((room) => {
       const setlist = (setlistByRoom.get(room.id) ?? []).sort((a, b) => a.position - b.position);
@@ -1090,21 +1094,21 @@ export async function regenerateInviteCode(teamId: string): Promise<RegenerateIn
  */
 export async function removeTeamMember(
   teamId: string,
-  targetUserId: string,
+  targetKey: MemberKey,
   rotateInvite = false,
 ): Promise<RemoveTeamMemberResult> {
   const action = "removeTeamMember";
   const user = await getCurrentUser();
   if (!user) return fail("not_logged_in");
   if (!isTeamIdFormat(teamId)) return fail("team_not_found");
-  if (targetUserId === user.id) return fail("cannot_remove_self");
+  if (targetKey === memberKeyFor({ teamId }, user.id)) return fail("cannot_remove_self");
 
   const admin = createAdminClient();
+  // The whole band, because the target is known only by its key (bands are small).
   const { data: rows, error: lookupError } = await admin
     .from("team_members")
     .select("user_id, role")
-    .eq("team_id", teamId)
-    .in("user_id", [user.id, targetUserId]);
+    .eq("team_id", teamId);
   if (lookupError) {
     logTeamError(action, "membership lookup failed", { teamId, userId: user.id }, lookupError);
     return fail("write_failed");
@@ -1112,8 +1116,9 @@ export async function removeTeamMember(
   const found = (rows ?? []) as { user_id: string; role: TeamRole }[];
   const mine = found.find((row) => row.user_id === user.id);
   if (mine?.role !== "owner") return fail("not_team_owner");
-  const target = found.find((row) => row.user_id === targetUserId);
+  const target = membersByKey({ teamId }, found).get(targetKey);
   if (!target || target.role !== "member") return fail("member_not_found");
+  const targetUserId = target.user_id;
 
   // 1. Rotate first (only when asked).
   let inviteCode: string | null = null;

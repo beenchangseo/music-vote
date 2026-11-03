@@ -6,14 +6,15 @@ import Button from "../ui/Button";
 import ButtonGroup from "../ui/ButtonGroup";
 import { removeTeamMember } from "@/actions/team";
 import { teamMessage } from "@/lib/team-messages";
+import type { MemberKey } from "@/domain/types";
 
 interface RemoveMemberModalProps {
   teamId: string;
   /** 내보낼 멤버. null 이면 닫혀 있다. */
-  member: { userId: string; displayName: string } | null;
+  member: { memberKey: MemberKey; displayName: string } | null;
   onClose: () => void;
   /** `rotated`: the invite link was replaced in the same request. */
-  onRemoved: (userId: string, rotated: boolean) => void;
+  onRemoved: (memberKey: MemberKey, rotated: boolean) => void;
   /** 링크가 바뀌었으면 새 초대 코드. 내보내기가 실패해도 이미 바뀐 링크는 알려준다. */
   onInviteRotated: (inviteCode: string) => void;
 }
@@ -34,7 +35,7 @@ export default function RemoveMemberModal({ teamId, member, onClose, ...rest }: 
     >
       {member && (
         <RemoveMemberBody
-          key={member.userId}
+          key={member.memberKey}
           teamId={teamId}
           member={member}
           onClose={onClose}
@@ -54,7 +55,7 @@ function RemoveMemberBody({
   onInviteRotated,
   cancelRef,
 }: Omit<RemoveMemberModalProps, "member"> & {
-  member: { userId: string; displayName: string };
+  member: { memberKey: MemberKey; displayName: string };
   cancelRef: RefObject<HTMLButtonElement | null>;
 }) {
   const [rotate, setRotate] = useState(false);
@@ -65,10 +66,10 @@ function RemoveMemberBody({
     setPending(true);
     setError(null);
     try {
-      const result = await removeTeamMember(teamId, member.userId, rotate);
+      const result = await removeTeamMember(teamId, member.memberKey, rotate);
       if (result.inviteCode) onInviteRotated(result.inviteCode);
       if (result.success) {
-        onRemoved(member.userId, result.inviteCode !== null);
+        onRemoved(member.memberKey, result.inviteCode !== null);
         onClose();
         return;
       }

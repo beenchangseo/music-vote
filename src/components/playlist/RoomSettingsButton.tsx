@@ -91,7 +91,7 @@ export default function RoomSettingsButton({
       setMode(next.mode);
       setVotesAnonymous(next.votesAnonymous);
       setDefaultLimit(next.defaultVoteLimit);
-      setMemberLimits(Object.fromEntries(next.members.map((member) => [member.user_id, String(member.vote_limit)])));
+      setMemberLimits(Object.fromEntries(next.members.map((member) => [member.memberKey, String(member.vote_limit)])));
     } catch (error) {
       showAlert(error instanceof Error ? error.message : "투표 설정을 불러오지 못했습니다.");
       setOpen(false);
@@ -104,7 +104,7 @@ export default function RoomSettingsButton({
       setMode(next.mode);
       setVotesAnonymous(next.votesAnonymous);
       setDefaultLimit(next.defaultVoteLimit);
-      setMemberLimits(Object.fromEntries(next.members.map((member) => [member.user_id, String(member.vote_limit)])));
+      setMemberLimits(Object.fromEntries(next.members.map((member) => [member.memberKey, String(member.vote_limit)])));
       const me = next.members.find((member) => member.isMe);
       if (me) onAllowanceChange?.(next.mode, me.used_votes, me.vote_limit);
     });
@@ -113,7 +113,7 @@ export default function RoomSettingsButton({
   /** 서버가 들고 있는 참여자별 투표권. 입력 중인 값으로 덮어쓰지 않기 위해 쓴다. */
   function savedMemberLimits() {
     return (settings?.members ?? []).map((member) => ({
-      userId: member.user_id,
+      memberKey: member.memberKey,
       voteLimit: member.vote_limit,
     }));
   }
@@ -228,9 +228,9 @@ export default function RoomSettingsButton({
     }
 
     const nextMemberLimits = settings?.members.map((member) => ({
-      userId: member.user_id,
+      memberKey: member.memberKey,
       voteLimit: mode === "allocated"
-        ? Number(memberLimits[member.user_id])
+        ? Number(memberLimits[member.memberKey])
         : member.vote_limit,
       usedVotes: member.used_votes,
       displayName: member.display_name,
@@ -255,7 +255,7 @@ export default function RoomSettingsButton({
           votesAnonymous,
           mode,
           defaultLimit,
-          nextMemberLimits.map(({ userId, voteLimit }) => ({ userId, voteLimit })),
+          nextMemberLimits.map(({ memberKey, voteLimit }) => ({ memberKey, voteLimit })),
           shareCode,
         );
         onVotesAnonymousChange?.(votesAnonymous);
@@ -292,9 +292,9 @@ export default function RoomSettingsButton({
     }
   }
 
-  function changeMember(userId: string, nextLimit: number) {
+  function changeMember(memberKey: string, nextLimit: number) {
     if (!Number.isInteger(nextLimit) || nextLimit < 0 || nextLimit > 99) return;
-    setMemberLimits((current) => ({ ...current, [userId]: String(nextLimit) }));
+    setMemberLimits((current) => ({ ...current, [memberKey]: String(nextLimit) }));
   }
 
   async function applyAll() {
@@ -312,7 +312,7 @@ export default function RoomSettingsButton({
       showAlert(`${blocked.display_name}님이 이미 ${blocked.used_votes}표를 사용 중이라 ${defaultLimit}표를 적용할 수 없습니다.`);
       return;
     }
-    setMemberLimits(Object.fromEntries((settings?.members ?? []).map((member) => [member.user_id, String(defaultLimit)])));
+    setMemberLimits(Object.fromEntries((settings?.members ?? []).map((member) => [member.memberKey, String(defaultLimit)])));
   }
 
   return (
@@ -466,16 +466,16 @@ export default function RoomSettingsButton({
                       <p className="mb-2 text-caption font-semibold uppercase tracking-wider text-text-subtle">참여자별 투표권</p>
                       <ListGroup>
                         {settings.members.map((member) => {
-                          const stagedLimit = Number(memberLimits[member.user_id]);
+                          const stagedLimit = Number(memberLimits[member.memberKey]);
                           return (
                             <ListRow
-                              key={member.user_id}
+                              key={member.memberKey}
                               leading={<Avatar name={member.display_name} className="max-[359px]:hidden" />}
                               trailing={
                                 <>
                                   <IconButton
                                     bare
-                                    onClick={() => changeMember(member.user_id, stagedLimit - 1)}
+                                    onClick={() => changeMember(member.memberKey, stagedLimit - 1)}
                                     disabled={!Number.isInteger(stagedLimit) || stagedLimit <= member.used_votes}
                                     aria-label={`${member.display_name} 투표권 줄이기`}
                                   >
@@ -490,10 +490,10 @@ export default function RoomSettingsButton({
                                       max={99}
                                       step={1}
                                       inputMode="numeric"
-                                      value={memberLimits[member.user_id] ?? ""}
+                                      value={memberLimits[member.memberKey] ?? ""}
                                       onChange={(event) => setMemberLimits((current) => ({
                                         ...current,
-                                        [member.user_id]: event.target.value,
+                                        [member.memberKey]: event.target.value,
                                       }))}
                                       className="text-center font-bold tabular-nums"
                                       aria-label={`${member.display_name} 투표권 직접 입력`}
@@ -501,7 +501,7 @@ export default function RoomSettingsButton({
                                   </div>
                                   <IconButton
                                     bare
-                                    onClick={() => changeMember(member.user_id, stagedLimit + 1)}
+                                    onClick={() => changeMember(member.memberKey, stagedLimit + 1)}
                                     disabled={!Number.isInteger(stagedLimit) || stagedLimit >= 99}
                                     aria-label={`${member.display_name} 투표권 늘리기`}
                                   >

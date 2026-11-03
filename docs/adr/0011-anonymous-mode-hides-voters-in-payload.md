@@ -12,5 +12,9 @@
 - 방장인지, 곡과 다른 버전을 지울 수 있는지, 어느 댓글이 내 것인지도 같다. 페이지와 GET route 가 계정으로 판정해
   `isHost`·`canDelete`·`canManage`·`isMine` 만 싣는다. 이 판정을 화면에 맡기느라 `creator_user_id`·`added_by_user_id`·
   `currentUserId` 가 로그아웃 페이지에까지 실려 있었다(#59).
+- 화면이 특정 참여자·밴드 멤버를 가리켜야 하면(방장의 참여자별 투표권, 리더의 내보내기) 계정 id 대신 멤버 키
+  (`src/lib/member-key.ts`)를 싣는다. 서버 비밀로 만든 HMAC 이라 플레이리스트·밴드마다 다르고, 계정 id 를 알아도 계산할
+  수 없다. 쓰기 경로는 그 요청에서 읽은 멤버에 대해 키를 다시 만들어 되돌린다. 두 테이블에 행 id 가 없어 마이그레이션 대신
+  이 방법을 골랐다(#61).
 - 실시간 갱신도 같은 제약을 받는다. `votes` 변경을 그대로 흘리는 구독 대신 [ADR 0010](./0010-realtime-by-broadcast-notification.md)의 내용 없는 알림을 쓴다.
 - 앱 페이로드를 막는 것만으로는 부족하다. `votes` 테이블 자체의 SELECT 권한을 좁히는 작업은 `supabase/migrations/v15.sql`에서 한다.
