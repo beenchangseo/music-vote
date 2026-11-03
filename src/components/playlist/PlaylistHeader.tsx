@@ -8,6 +8,8 @@ import { RoomCover } from "../band/BandArt";
 import AnnouncementButton from "./AnnouncementButton";
 import AuthMenu from "../auth/AuthMenu";
 import GuitarIcon from "../ui/GuitarIcon";
+import PlayPauseIcon from "../ui/PlayPauseIcon";
+import RoundButton, { RoundLink, RoundRow } from "../ui/RoundButton";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
 import { roomSharePrefix, showDday, showDdayLabel } from "@/domain/team";
 import { playlistShareCard, type InviteSongs } from "@/domain/invite-card";
@@ -114,12 +116,6 @@ export default function PlaylistHeader({
     }
   }
 
-  const iconButton =
-    "inline-flex h-11 w-11 items-center justify-center rounded-pill text-text-muted transition-colors hover:bg-surface-hover hover:text-text active:scale-95";
-  // YouTube Music playlist header: one centered row of round buttons, the big play in the middle.
-  const roundButton =
-    "relative inline-flex h-12 w-12 items-center justify-center rounded-pill bg-surface-hover text-text transition-all hover:bg-surface-elevated active:scale-95";
-
   return (
     <header>
       {/* Top row: band path (members only, 5A) or back to home, account on the right. */}
@@ -140,11 +136,11 @@ export default function PlaylistHeader({
             )}
           </Link>
         ) : (
-          <Link href="/" aria-label="홈으로" className={`-ml-2.5 ${iconButton}`}>
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+          <RoundLink href="/" tone="ghost" size="md" edge="start" aria-label="홈으로">
+            <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
-          </Link>
+          </RoundLink>
         )}
         {currentUserNickname && (
           <AuthMenu nickname={currentUserNickname} avatarUrl={currentUserAvatarUrl ?? null} embedded />
@@ -158,44 +154,28 @@ export default function PlaylistHeader({
         {meta && <div className="mt-1.5 w-full">{meta}</div>}
       </div>
 
-      <div className="mt-5 flex items-center justify-center gap-3">
-        <button
-          onClick={handleKakaoShare}
-          className="inline-flex h-12 w-12 items-center justify-center rounded-pill bg-kakao transition-all hover:bg-kakao-hover active:scale-95"
-          aria-label="카카오톡 공유"
-        >
-          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="#3C1E1E" aria-hidden>
+      {/* YouTube Music playlist header: one centered row of round buttons, the big play in the middle. */}
+      <RoundRow className="mt-5">
+        <RoundButton tone="kakao" size="lg" onClick={handleKakaoShare} aria-label="카카오톡 공유">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
             <path d="M12 3C6.48 3 2 6.54 2 10.86c0 2.77 1.81 5.2 4.53 6.6-.2.73-.72 2.65-.83 3.06-.13.52.19.51.4.37.17-.11 2.63-1.78 3.7-2.51.7.1 1.42.16 2.2.16 5.52 0 10-3.54 10-7.86S17.52 3 12 3z" />
           </svg>
-        </button>
+        </RoundButton>
         <AnnouncementButton playlistId={playlistId} announcement={announcement ?? null} shareCode={shareCode} />
         {onPlayAll && (
-          <button
-            type="button"
-            onClick={onPlayAll}
-            aria-label={playing ? "일시정지" : "전체 듣기"}
-            className="inline-flex h-16 w-16 items-center justify-center rounded-pill bg-text text-bg shadow-lg shadow-black/40 transition-all hover:scale-105 active:scale-95"
-          >
-            {playing ? (
-              <svg className="h-7 w-7" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-              </svg>
-            ) : (
-              <svg className="ml-1 h-7 w-7" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path d="M8 5.14v13.72a1 1 0 001.5.86l11-6.86a1 1 0 000-1.72l-11-6.86A1 1 0 008 5.14z" />
-              </svg>
-            )}
-          </button>
+          <RoundButton tone="inverse" size="hero" onClick={onPlayAll} aria-label={playing ? "일시정지" : "전체 듣기"}>
+            <PlayPauseIcon playing={playing} />
+          </RoundButton>
         )}
         {viewToggle}
-        <button type="button" onClick={() => setMenuOpen(true)} className={roundButton} aria-label="플레이리스트 메뉴">
-          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <RoundButton tone="tonal" size="lg" onClick={() => setMenuOpen(true)} aria-label="플레이리스트 메뉴">
+          <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden>
             <circle cx="12" cy="5" r="1.8" />
             <circle cx="12" cy="12" r="1.8" />
             <circle cx="12" cy="19" r="1.8" />
           </svg>
-        </button>
-      </div>
+        </RoundButton>
+      </RoundRow>
 
       {/* ⋮ sheet (Spotify / YouTube Music "more" sheet): what used to crowd the header. */}
       <Modal open={menuOpen} onClose={() => setMenuOpen(false)} title={title}>
