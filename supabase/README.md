@@ -48,7 +48,7 @@
 `npm run db:new` 가 다음 번호 파일을 템플릿으로 만든다. 절차는 `.claude/skills/db-migration/SKILL.md` 에 있다.
 
 - **적용한 파일은 고치지 않는다.** main 에 들어간 `vNN.sql` 은 운영 DB 에 이미 돌았다. 바꿀 내용은 다음 번호 파일에
-  쓴다. `.claude/hooks/guard-migrations.mjs` 가 Claude 의 편집을 막는다
+  쓴다. `.claude/hooks/guard-edits.mjs` 가 Claude 의 편집을 막는다
 - **다시 실행해도 같은 결과.** `IF NOT EXISTS`, `CREATE OR REPLACE`, `DROP … IF EXISTS` 를 쓴다
 - **권한은 기본값에 기대지 말고 적는다 (v22 부터).** Supabase 는 2026-10-30 부터 public 에 새로 만드는 테이블·시퀀스에
   `anon`·`authenticated`·`service_role` 권한을 자동으로 주지 않는다. 그 전후 어느 쪽에서 돌려도 같은 결과가 나오게 쓴다

@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 //   node scripts/ds-inventory.mjs                   디자인 시스템을 비껴 간 곳을 파일·줄마다 보여 준다
 //   node scripts/ds-inventory.mjs --json            같은 내용을 JSON 으로
-//   node scripts/ds-inventory.mjs --check-baseline  ds/no-raw-control 이 eslint-suppressions.json 과 다르면 1 로 끝난다
+//   node scripts/ds-inventory.mjs --check-baseline  ds/no-raw-control 이 eslint-suppressions.json 과 다르거나
+//                                                   그 파일이 origin/main 의 것보다 늘었으면 1 로 끝난다
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -83,39 +85,91 @@ function summarize(findings) {
   return { byCategory, byFolder };
 }
 
+const allowedIn = (baseline, file) => baseline[file]?.[RATCHET_RULE]?.count ?? 0;
+
 /**
- * The ratchet: every file's ds/no-raw-control count must equal its entry in eslint-suppressions.json.
- * More means a new hand-drawn control; fewer means the baseline should shrink to lock the gain in.
+ * The ratchet's verdict. `now` is each file's ds/no-raw-control count in the code, `baseline` is
+ * eslint-suppressions.json here, and `main` is that file where this branch left main (null when it can't be read).
+ * The code must match the baseline exactly, and the baseline may never allow more than main did:
+ * an editor can raise a count in both places at once, and only main's copy shows it.
  */
-export async function checkBaseline() {
-  const path = join(root, BASELINE);
-  const baseline = existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {};
-  const findings = (await inventory()).filter((f) => f.category === "raw-button" || f.category === "raw-link");
-
-  const now = {};
-  for (const f of findings) now[f.file] = (now[f.file] ?? 0) + 1;
-
+export function ratchetProblems(now, baseline, main) {
   const problems = [];
   for (const [file, rules] of Object.entries(baseline)) {
     for (const rule of Object.keys(rules)) if (rule !== RATCHET_RULE) problems.push({ kind: "foreign", file, rule });
   }
   for (const file of new Set([...Object.keys(now), ...Object.keys(baseline)])) {
     const count = now[file] ?? 0;
-    const allowed = baseline[file]?.[RATCHET_RULE]?.count ?? 0;
-    if (count > allowed) problems.push({ kind: "grew", file, count, allowed, lines: findings.filter((f) => f.file === file).map((f) => f.line) });
+    const allowed = allowedIn(baseline, file);
+    if (count > allowed) problems.push({ kind: "grew", file, count, allowed });
     if (count < allowed) problems.push({ kind: "shrank", file, count, allowed });
+    if (main && allowed > allowedIn(main, file)) problems.push({ kind: "raised", file, allowed, onMain: allowedIn(main, file) });
   }
+  return problems;
+}
 
+const MAIN_REF = "origin/main";
+const git = (cwd, ...args) => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+
+/**
+ * The baseline at the merge base with origin/main, keyed by today's paths. The merge base, not main's tip, so a
+ * branch that predates someone else's fix is not told it grew. Renames are followed so moving a file keeps its count.
+ * @returns {{ baseline: object, at: string } | { baseline: null, note: string }}
+ */
+export function mainBaseline(ref = MAIN_REF, cwd = root) {
+  let base;
+  try {
+    base = git(cwd, "merge-base", "HEAD", ref).trim();
+  } catch {
+    return { baseline: null, note: `${ref} 를 찾지 못해 main 의 baseline 과는 비교하지 않았다.` };
+  }
+  const at = base.slice(0, 7);
+  let baseline;
+  try {
+    baseline = JSON.parse(git(cwd, "show", `${base}:${BASELINE}`));
+  } catch {
+    return { baseline: null, note: `${ref}(${at}) 에 ${BASELINE} 이 없어 main 의 baseline 과는 비교하지 않았다.` };
+  }
+  for (const line of git(cwd, "diff", "-M", "--name-status", "--diff-filter=R", base).split("\n")) {
+    const [, from, to] = line.split("\t");
+    if (to && baseline[from]) {
+      baseline[to] = baseline[from];
+      delete baseline[from];
+    }
+  }
+  return { baseline, at };
+}
+
+/** The ratchet over this checkout: ratchetProblems plus a line per problem saying how to fix it. */
+export async function checkBaseline() {
+  const path = join(root, BASELINE);
+  const baseline = existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {};
+  const findings = (await inventory()).filter((f) => f.category === "raw-button" || f.category === "raw-link");
+  const now = {};
+  for (const f of findings) now[f.file] = (now[f.file] ?? 0) + 1;
+  const main = mainBaseline();
+  const problems = ratchetProblems(now, baseline, main.baseline);
+
+  const fix = "src/components/ui 의 Button·IconButton·Chip·ListRowButton·ToolbarButton, 버튼 모양 링크는 buttonClassName() 으로 그린다.";
   const lines = problems.map((p) => {
     if (p.kind === "foreign") return `- ${p.file}: ${p.rule} 가 ${BASELINE} 에 있다. 이 파일은 DS 래칫(${RATCHET_RULE}) 전용이다. 규칙 위반은 고친다.`;
-    if (p.kind === "grew")
+    if (p.kind === "grew") {
+      const at = findings.filter((f) => f.file === p.file).map((f) => f.line);
+      return `- ${p.file}: 손으로 그린 컨트롤이 ${p.allowed}개에서 ${p.count}개로 늘었다(줄 ${at.join(", ")}). ${fix} ${BASELINE} 은 늘리지 않는다.`;
+    }
+    if (p.kind === "raised")
       return (
-        `- ${p.file}: 손으로 그린 컨트롤이 ${p.allowed}개에서 ${p.count}개로 늘었다(줄 ${p.lines.join(", ")}). ` +
-        `src/components/ui 의 Button·IconButton·Chip·ListRowButton·ToolbarButton, 링크는 buttonClassName() 으로 그린다. ${BASELINE} 은 늘리지 않는다.`
+        `- ${p.file}: ${BASELINE} 이 main(${main.at}) 의 ${p.onMain}개보다 많은 ${p.allowed}개를 허용한다. baseline 은 손으로 늘리지 않는다. ` +
+        `${fix} 그 뒤 npx eslint --prune-suppressions 로 줄인다.`
       );
     return `- ${p.file}: ${p.allowed}개에서 ${p.count}개로 줄었다. npx eslint --prune-suppressions 로 ${BASELINE} 을 줄여 같이 커밋한다.`;
   });
-  return { problems, text: lines.length ? `DS 래칫이 baseline 과 맞지 않는다.\n${lines.join("\n")}` : "DS 래칫이 baseline 과 같다." };
+  const verdict = lines.length
+    ? `DS 래칫이 baseline 과 맞지 않는다.\n${lines.join("\n")}`
+    : main.baseline
+      ? `DS 래칫이 baseline 과 같고, baseline 이 main(${main.at}) 보다 늘지 않았다.`
+      : "DS 래칫이 baseline 과 같다.";
+  return { problems, text: main.baseline ? verdict : `${verdict}\n${main.note}` };
 }
 
 function printTable(findings) {
