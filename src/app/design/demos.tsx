@@ -8,7 +8,7 @@ import NoticeCard from "@/components/ui/NoticeCard";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import Switch from "@/components/ui/Switch";
 import TabBar from "@/components/ui/TabBar";
-import ListRow, { ListGroup, ListRowButton } from "@/components/ui/ListRow";
+import ListRow, { ListGroup, ListRowButton, ListRowLink } from "@/components/ui/ListRow";
 import Avatar from "@/components/ui/Avatar";
 import GuitarIcon from "@/components/ui/GuitarIcon";
 import { useDialog } from "@/components/ui/DialogProvider";
@@ -236,6 +236,17 @@ export function ListGroupDemo() {
             <span className="block truncate text-sm font-medium text-text">{title}</span>
           </ListRowButton>
         ))}
+      </div>
+      <p className="mt-4 text-caption font-semibold text-text-muted">줄 전체가 링크인 행 (ListRowLink)</p>
+      <div className="mt-2">
+        <ListRowLink
+          href="/design"
+          className="px-1"
+          leading={<Avatar name="합" />}
+          trailing={<span className="text-caption tabular-nums text-text-muted">셋리스트 6곡</span>}
+        >
+          <span className="block truncate text-sm font-medium text-text">10월 정기 합주</span>
+        </ListRowLink>
       </div>
     </div>
   );

@@ -68,10 +68,12 @@ describe("eslint ds/no-raw-control rule", () => {
     '<Link href="/" className="inline-flex items-center h-11 px-6 rounded-xl bg-primary text-white" />',
     '<a href="/x" aria-label="홈" className="inline-flex h-11 w-11 items-center rounded-pill hover:bg-surface-hover" />',
     '<a href="/x" className="p-2 rounded-xl bg-surface border border-border" />',
-  ])("flags the link drawn as a button in %s", async (code) => {
+    '<Link href="/" className="block rounded-card bg-surface p-4" />',
+    '<Link href="/" className="flex min-h-row items-center gap-3 bg-surface hover:bg-surface-hover" />',
+  ])("flags the hand-drawn link in %s and names the ui shape for buttons, rows and cards", async (code) => {
     const errors = await rawControlErrors(code);
     expect(errors).toHaveLength(1);
-    expect(errors[0]).toContain("buttonClassName({ variant, size })");
+    for (const shape of ["buttonClassName({ variant, size })", "ListRowLink", "Card"]) expect(errors[0]).toContain(shape);
   });
 
   it.each([

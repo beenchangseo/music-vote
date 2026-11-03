@@ -15,7 +15,7 @@ const BASELINE = "eslint-suppressions.json";
 
 const CATEGORIES = {
   "raw-button": "ui 밖에서 크기·모서리·글자 크기를 직접 칠한 <button>",
-  "raw-link": "buttonClassName() 없이 버튼처럼 칠한 <a>·<Link>",
+  "raw-link": "ui 밖에서 바탕·테두리와 크기를 직접 칠한 <a>·<Link>",
   "non-token": "토큰이 아닌 모서리·글자 크기 (rounded-xl·text-lg 등)",
   arbitrary: "크기·여백·위치의 임의 값 [..]",
 };
@@ -150,7 +150,9 @@ export async function checkBaseline() {
   const main = mainBaseline();
   const problems = ratchetProblems(now, baseline, main.baseline);
 
-  const fix = "src/components/ui 의 Button·IconButton·Chip·ListRowButton·ToolbarButton, 버튼 모양 링크는 buttonClassName() 으로 그린다.";
+  const fix =
+    "src/components/ui 의 Button·IconButton·Chip·ListRowButton·ToolbarButton 으로 그린다. 링크는 버튼 모양이면 buttonClassName(), " +
+    "줄이면 ListRowLink, 카드면 Card 안에 바탕 없는 링크를 둔다.";
   const lines = problems.map((p) => {
     if (p.kind === "foreign") return `- ${p.file}: ${p.rule} 가 ${BASELINE} 에 있다. 이 파일은 DS 래칫(${RATCHET_RULE}) 전용이다. 규칙 위반은 고친다.`;
     if (p.kind === "grew") {

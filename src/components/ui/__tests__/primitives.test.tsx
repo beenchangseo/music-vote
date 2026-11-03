@@ -7,7 +7,7 @@ import Card from "../Card";
 import Chip from "../Chip";
 import IconButton from "../IconButton";
 import Input from "../Input";
-import { ListRowButton } from "../ListRow";
+import { ListRowButton, ListRowLink } from "../ListRow";
 
 afterEach(cleanup);
 
@@ -152,5 +152,21 @@ describe("ListRowButton", () => {
     expect(onSubmit).not.toHaveBeenCalled();
     // A <button> may hold only phrasing content. A <div> inside it is invalid HTML.
     expect(row.querySelector("div, p, h1, h2, h3, ul, li")).toBeNull();
+  });
+});
+
+describe("ListRowLink", () => {
+  it("is one link to its href, drawn as the same 56px row as ListRowButton", () => {
+    render(
+      <>
+        <ListRowLink href="/playlist/abc" leading={<span>2</span>} trailing={<span>4:56</span>}>
+          <span className="block">벚꽃 엔딩</span>
+        </ListRowLink>
+        <ListRowButton leading={<span>2</span>}>예뻤어</ListRowButton>
+      </>,
+    );
+    const link = screen.getByRole("link", { name: /벚꽃 엔딩/ });
+    expect(link).toHaveAttribute("href", "/playlist/abc");
+    expect(link.className).toBe(screen.getByRole("button", { name: /예뻤어/ }).className);
   });
 });

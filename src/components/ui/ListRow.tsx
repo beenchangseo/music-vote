@@ -1,4 +1,5 @@
-import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
+import Link from "next/link";
+import type { ButtonHTMLAttributes, ComponentProps, HTMLAttributes, ReactNode } from "react";
 
 interface RowSlots {
   leading?: ReactNode;
@@ -29,6 +30,8 @@ export default function ListRow({ leading, trailing, className = "", children, .
   );
 }
 
+const pressableRow = `${rowLayout} w-full rounded-control text-left transition-colors hover:bg-surface-hover`;
+
 /**
  * 줄 전체가 눌리는 ListRow. 버튼 안에는 글자·span 만 둘 수 있어서 칸도 span 으로 그린다.
  * 그래서 칸에는 div·p 대신 span 을 넣고, 버튼이나 링크는 넣지 않는다.
@@ -42,15 +45,28 @@ export function ListRowButton({
   ...rest
 }: RowSlots & ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <button
-      type={type}
-      className={`${rowLayout} w-full rounded-control text-left transition-colors hover:bg-surface-hover ${className}`}
-      {...rest}
-    >
+    <button type={type} className={`${pressableRow} ${className}`} {...rest}>
       <Slots as="span" leading={leading} trailing={trailing}>
         {children}
       </Slots>
     </button>
+  );
+}
+
+/** 줄 전체가 링크인 ListRow. 모양과 칸 규칙은 ListRowButton 과 같다. */
+export function ListRowLink({
+  leading,
+  trailing,
+  className = "",
+  children,
+  ...rest
+}: RowSlots & Omit<ComponentProps<typeof Link>, "children">) {
+  return (
+    <Link className={`${pressableRow} ${className}`} {...rest}>
+      <Slots as="span" leading={leading} trailing={trailing}>
+        {children}
+      </Slots>
+    </Link>
   );
 }
 
