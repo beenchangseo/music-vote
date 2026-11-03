@@ -44,3 +44,58 @@ describe("eslint control-size rule", () => {
     expect(await controlSizeErrors(code)).toEqual([]);
   });
 });
+
+async function rawControlErrors(code: string, file = "src/components/LintFixture.tsx") {
+  const [result] = await eslint.lintText(code, { filePath: `${cwd}/${file}` });
+  return result.messages.filter((m) => m.ruleId === "ds/no-raw-control").map((m) => m.message);
+}
+
+describe("eslint ds/no-raw-control rule", () => {
+  it.each([
+    ['<button className="h-11 px-3 rounded-control text-sm" />', "h-11 px-3 rounded-control text-sm"],
+    ['<button className="text-[10px] text-text-subtle hover:text-text-muted" />', "text-[10px]"],
+    ['<button className="max-sm:px-0 inline-flex" />', "max-sm:px-0"],
+    ['<button className={`inline-flex ${open ? "h-12" : "h-11"} rounded-pill`} />', "rounded-pill h-12 h-11"],
+    ['const round = "inline-flex h-11 w-11 rounded-pill";\nconst X = () => <button className={round} />;', "h-11 rounded-pill"],
+    ['<button className={`${buttonClassName({ variant: "tonal" })} h-9`} />', "h-9"],
+  ])("flags the hand-drawn <button> in %s", async (code, classes) => {
+    const errors = await rawControlErrors(code);
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain(`<button className="${classes}">`);
+  });
+
+  it.each([
+    '<Link href="/" className="inline-flex items-center h-11 px-6 rounded-xl bg-primary text-white" />',
+    '<a href="/x" aria-label="홈" className="inline-flex h-11 w-11 items-center rounded-pill hover:bg-surface-hover" />',
+    '<a href="/x" className="p-2 rounded-xl bg-surface border border-border" />',
+    '<Link href="/" className="block rounded-card bg-surface p-4" />',
+    '<Link href="/" className="flex min-h-row items-center gap-3 bg-surface hover:bg-surface-hover" />',
+  ])("flags the hand-drawn link in %s and names the ui shape for buttons, rows and cards", async (code) => {
+    const errors = await rawControlErrors(code);
+    expect(errors).toHaveLength(1);
+    for (const shape of ["buttonClassName({ variant, size })", "ListRowLink", "Card"]) expect(errors[0]).toContain(shape);
+  });
+
+  it.each([
+    '<button type="button" onClick={f} />',
+    '<button type="button" className="group absolute inset-0" />',
+    '<button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" />',
+    '<button type="button" className="group block w-full text-left" />',
+    '<button className={buttonClassName({ variant: "ghost", size: "sm" })} />',
+    "<button className={className} />",
+    '<Button size="sm" className="mt-3" />',
+    '<Link href="/" className={buttonClassName({ variant: "tonal", size: "md" })} />',
+    '<a href="/x" className={buttonClassName({ variant: "kakao", size: "lg", fullWidth: true })} />',
+    '<a href="/guide" className="inline-flex min-h-11 items-center text-sm text-text-subtle hover:text-text-muted" />',
+    '<Link href="/" className="block rounded-card p-4" />',
+  ])("allows %s", async (code) => {
+    expect(await rawControlErrors(code)).toEqual([]);
+  });
+
+  it.each(["src/components/ui/LintFixture.tsx", "src/components/playlist/__tests__/LintFixture.test.tsx"])(
+    "leaves raw controls in %s alone",
+    async (file) => {
+      expect(await rawControlErrors('<button className="h-11 px-3 rounded-control text-sm" />', file)).toEqual([]);
+    },
+  );
+});

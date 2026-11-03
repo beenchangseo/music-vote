@@ -131,7 +131,7 @@ Variable(한국어) + Geist(영문) 폴백.
 - 고르기: 필터·켜고 끄는 선택지는 `Chip`(36px, 누르는 영역 44px), 한 화면 안 보기·방식 하나는 `SegmentedControl`
   (radiogroup), 켜고 끄기는 `Switch`(label 을 주면 줄 전체가 눌린다), 화면 아래 탭은 `TabBar`.
 - 목록: 곡은 `SongRow`(카드 없이 72px, 48px 커버, 고정 폭 `RankNumber`), 설정·멤버는 `ListRow`(56px)를 시트 안에서
-  `ListGroup` 으로 묶는다. 줄 전체가 눌리면 `ListRowButton` 이다. 버튼 안에 div 를 둘 수 없어 칸이 span 이다. 사람은 `Avatar`·`AvatarStack`, 메타·상태는 `Badge`(neutral·primary·warning).
+  `ListGroup` 으로 묶는다. 줄 전체가 눌리면 `ListRowButton`, 줄 전체가 링크면 `ListRowLink` 다. 버튼 안에 div 를 둘 수 없어 칸이 span 이다. 사람은 `Avatar`·`AvatarStack`, 메타·상태는 `Badge`(neutral·primary·warning).
 - 안내: 닫을 수 있는 안내는 `NoticeCard`(늘 닫기가 있고, 닫힘 기억은 부르는 쪽), 상태가 이어지는 동안 남는 안내는
   `InlineNotice`, 빈 목록은 `EmptyState`(screen·inline). 성공 확인을 띄우는 토스트는 아직 없다.
 - 입력: `Field`(라벨 위, 도움말·오류 아래, aria 를 이어 준다) 안에 `Input`·`Textarea`.
@@ -143,6 +143,10 @@ Variable(한국어) + Geist(영문) 폴백.
   640px 아래에서 아이콘만)으로만 그린다.
 - 크기는 prop 이 정한다. `Button`·`IconButton`·`Chip` 의 className 에 높이·폭·여백·모서리·글자 크기를 덧칠하면 eslint 가
   막는다. className 에는 바깥 배치(margin·`flex-1`·`shrink-0`·표시 여부)만 둔다.
+- **DS 래칫.** `src/components/ui` 밖에서 높이·여백·모서리·글자 크기를 칠한 `<button>` 과 바탕·테두리에 크기까지 칠한 `<a>`·`<Link>` 는
+  eslint(`ds/no-raw-control`)가 막는다. 링크는 버튼 모양이면 `buttonClassName()`, 줄이면 `ListRowLink`, 카드면 `Card` 안에 바탕 없는
+  링크로 그린다. 이미 있던 곳은 `eslint-suppressions.json` 이 파일별 개수로 봐주고, 이 파일은 줄기만 한다(고친 뒤
+  `npx eslint --prune-suppressions`). `npm run check` 가 이 파일을 main 의 것과 비교해서, 손으로 늘린 개수도 실패한다. 남은 곳과 토큰 밖 모서리·글자 크기·임의 값은 `node scripts/ds-inventory.mjs` 가 파일·줄마다 보여 준다.
 
 ## 데이터 흐름
 
@@ -209,6 +213,7 @@ hook(`.claude/settings.json`, `.claude/hooks/`):
 - 편집한 ts·tsx·mjs 파일을 eslint 로 바로 검사한다.
 - 커밋하지 않은 코드 변경이 있으면 턴을 끝내기 전에 `npm run check` 를 돌리고, 실패하면 끝내지 못하게 막는다.
 - `echo` 로 값을 넘기는 `vercel env add` 를 거부한다. main push 와 `vercel --prod` 는 확인을 묻는다.
+- eslint `--suppress-all`·`--suppress-rule` 과 `eslint-suppressions.json` 편집을 거부한다. DS 래칫 baseline 은 줄기만 한다.
 - main 에 들어간 마이그레이션 파일 편집을 거부한다.
 
 스킬(`.claude/skills/`): `server-action`, `db-migration`, `prod-deploy`, `verify-vote-quota`.

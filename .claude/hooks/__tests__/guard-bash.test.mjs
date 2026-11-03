@@ -46,6 +46,9 @@ describe("guard-bash", () => {
     ["ask", "vercel deploy --target=production"],
     ["ask", "vercel deploy --target production"],
     ["allow", "vercel deploy"],
+    ["deny", "npx eslint --suppress-rule ds/no-raw-control ."],
+    ["deny", "npm run lint -- --suppress-all"],
+    ["allow", "npx eslint --prune-suppressions ."],
   ])("%s: %s", (want, command) => {
     expect(decision(command)).toBe(want);
   });
