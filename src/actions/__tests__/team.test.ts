@@ -1306,6 +1306,8 @@ describe("removeTeamMember", () => {
     state.admin = createFakeClient(happyPath());
 
     await expect(removeTeamMember(TEAM, keys["기타"])).resolves.toEqual({ success: true, inviteCode: null });
+    // Only this band's rows decide who is owner and whom the key names.
+    expect(opsFor("team_members", "select").map((op) => op.filters)).toEqual([{ team_id: TEAM }]);
     const [remove] = opsFor("team_members", "delete");
     expect(remove.filters).toEqual({ team_id: TEAM, user_id: OTHER, role: "member" });
     expect(remove.returning).toBe(true);

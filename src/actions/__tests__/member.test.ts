@@ -104,7 +104,7 @@ describe("saveVotingSettings", () => {
 
   it.each([
     ["a forged key", async () => ({ memberKey: "forged-key" })],
-    ["a key from another playlist", async () => ({ memberKey: await keyOf("p2", "드럼") })],
+    ["the key the same participant has in another playlist", async () => ({ memberKey: await keyOf("p2", "기타") })],
     ["an account id from a tab opened before keys", async () => ({ userId: GUITAR })],
     [
       "the key of a participant who has since left",
