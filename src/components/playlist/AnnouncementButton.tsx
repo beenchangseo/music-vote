@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useDialog } from "../ui/DialogProvider";
 import RoundButton from "../ui/RoundButton";
 import Textarea from "../ui/Textarea";
@@ -60,7 +61,8 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
         {announcement && <span className="absolute right-0.5 top-0.5 size-3 rounded-pill border-2 border-bg bg-primary" />}
       </RoundButton>
 
-      {showModal && (
+      {/* Portaled: RoundRow is a query container, and WebKit up to Safari 18.2 traps position: fixed inside one (WebKit bug 284945). */}
+      {showModal && createPortal(
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 px-4">
           <div className="bg-surface border border-border rounded-2xl p-5 w-full max-w-sm">
             <h3 className="text-lg font-bold text-text mb-3">📌 공지사항</h3>
@@ -90,7 +92,8 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
