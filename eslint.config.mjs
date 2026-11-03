@@ -1,6 +1,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import ds from "./scripts/eslint-plugin-ds.mjs";
 
 // Height, width, padding, radius and font-size utilities, after any variant prefix (`max-sm:px-0`) or `!`.
 // The setlist toolbar shipped 44·36·44px buttons side by side because each call site resized its own.
@@ -44,6 +45,8 @@ const eslintConfig = defineConfig([
   },
   {
     files: ["src/**/*.{ts,tsx}"],
+    // Registered for all of src so scripts/ds-inventory.mjs can turn on its inventory-only rules, ui included.
+    plugins: { ds },
     rules: {
       "no-restricted-syntax": [
         "error",
@@ -73,6 +76,13 @@ const eslintConfig = defineConfig([
         ]),
       ],
     },
+  },
+  {
+    // A <button> or button-looking link drawn outside the primitives picks its own height, radius and font size, which is
+    // how mismatched controls kept shipping. Files that already did are counted in eslint-suppressions.json, which only shrinks.
+    files: ["src/**/*.tsx"],
+    ignores: ["src/components/ui/**", "src/**/__tests__/**"],
+    rules: { "ds/no-raw-control": "error" },
   },
 ]);
 

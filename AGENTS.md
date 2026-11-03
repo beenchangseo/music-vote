@@ -143,6 +143,9 @@ Variable(한국어) + Geist(영문) 폴백.
   640px 아래에서 아이콘만)으로만 그린다.
 - 크기는 prop 이 정한다. `Button`·`IconButton`·`Chip` 의 className 에 높이·폭·여백·모서리·글자 크기를 덧칠하면 eslint 가
   막는다. className 에는 바깥 배치(margin·`flex-1`·`shrink-0`·표시 여부)만 둔다.
+- **DS 래칫.** `src/components/ui` 밖에서 높이·여백·모서리·글자 크기를 칠한 `<button>` 과 바탕·테두리로 버튼처럼 칠한 `<a>`·`<Link>` 는
+  eslint(`ds/no-raw-control`)가 막는다. 이미 있던 곳은 `eslint-suppressions.json` 이 파일별 개수로 봐주고, 이 파일은 줄기만 한다(고친 뒤
+  `npx eslint --prune-suppressions`). 남은 곳과 토큰 밖 모서리·글자 크기·임의 값은 `node scripts/ds-inventory.mjs` 가 파일·줄마다 보여 준다.
 
 ## 데이터 흐름
 
@@ -208,8 +211,7 @@ hook(`.claude/settings.json`, `.claude/hooks/`):
 
 - 편집한 ts·tsx·mjs 파일을 eslint 로 바로 검사한다.
 - 커밋하지 않은 코드 변경이 있으면 턴을 끝내기 전에 `npm run check` 를 돌리고, 실패하면 끝내지 못하게 막는다.
-- `echo` 로 값을 넘기는 `vercel env add` 를 거부한다. main push 와 `vercel --prod` 는 확인을 묻는다.
-- main 에 들어간 마이그레이션 파일 편집을 거부한다.
+- `echo` 로 값을 넘기는 `vercel env add` 를 거부한다. main push 와 `vercel --prod` 는 확인을 묻는다.- main 에 들어간 마이그레이션 파일 편집을 거부한다.
 
 스킬(`.claude/skills/`): `server-action`, `db-migration`, `prod-deploy`, `verify-vote-quota`.
 
