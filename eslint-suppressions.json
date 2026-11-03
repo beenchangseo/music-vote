@@ -61,7 +61,7 @@
   },
   "src/components/playlist/MiniPlayer.tsx": {
     "ds/no-raw-control": {
-      "count": 10
+      "count": 2
     }
   },
   "src/components/playlist/PlaylistClient.tsx": {
