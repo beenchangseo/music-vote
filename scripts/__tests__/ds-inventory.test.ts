@@ -44,6 +44,11 @@ describe("ds-inventory", () => {
     ]);
   });
 
+  it("still counts a raw control under an inline eslint-disable, so a disable comment cannot slip past the ratchet", async () => {
+    const code = '// eslint-disable-next-line ds/no-raw-control\nexport const X = () => <button className="h-11 px-3" />;';
+    expect((await inventoryOf(code, "src/components/playlist/Fixture.tsx")).map((f) => f.category)).toEqual(["raw-button"]);
+  });
+
   it.each([
     ["src/components/setlist/BlockCards.tsx", "components/setlist"],
     ["src/app/guide/page.tsx", "app"],

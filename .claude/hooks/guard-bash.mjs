@@ -32,7 +32,7 @@ if (/(?:^|\s)--suppress-(?:all|rule)\b/.test(code)) {
   decide(
     "deny",
     "eslint-suppressions.json 은 DS 래칫이라 줄기만 한다. 새로 막힌 컨트롤은 src/components/ui primitive 로 고치고, " +
-      "고친 뒤에는 npx eslint --prune-suppressions 로 줄인다. baseline 을 늘려야 한다면 운영자가 직접 실행한다.",
+      "고친 뒤에는 npx eslint --prune-suppressions 로 줄인다. baseline 은 main 보다 늘 수 없어서 늘린 브랜치는 check 가 실패한다.",
   );
 }
 

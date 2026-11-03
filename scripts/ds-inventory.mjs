@@ -40,6 +40,8 @@ const engine = () =>
       files: ["src/**/*.{ts,tsx}"],
       ignores: ["src/**/__tests__/**"],
       rules: { "ds/non-token": "warn", "ds/arbitrary": "warn" },
+      // An eslint-disable comment would otherwise hide a raw control from the ratchet as well as from lint.
+      linterOptions: { noInlineConfig: true },
     },
     ruleFilter: ({ ruleId }) => ruleId.startsWith("ds/"),
   });
