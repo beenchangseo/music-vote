@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import KakaoShareButton from "../KakaoShareButton";
 
@@ -89,5 +89,43 @@ describe("KakaoShareButton links", () => {
     render(<KakaoShareButton shareCode="abc123" variant="playlist" title="합주" songs={3} participants={2} />);
     click();
     expect(sentCard().content.description).toBe("3곡 등록 · 2명 참여 중");
+  });
+});
+
+describe("KakaoShareButton without Kakao or the share sheet", () => {
+  beforeEach(() => {
+    delete window.Kakao;
+    vi.useFakeTimers();
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: vi.fn().mockResolvedValue(undefined) },
+    });
+  });
+
+  afterEach(() => {
+    delete (navigator as { clipboard?: unknown }).clipboard;
+  });
+
+  async function copyLink() {
+    await act(async () => click());
+  }
+
+  it("says the link was copied for 2 seconds", async () => {
+    render(<KakaoShareButton shareCode="abc123" variant="playlist" title="합주" />);
+    await copyLink();
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expect.stringContaining("/playlist/abc123"));
+    expect(screen.getByRole("button")).toHaveTextContent("링크 복사됨!");
+
+    act(() => vi.advanceTimersByTime(1999));
+    expect(screen.getByRole("button")).toHaveTextContent("링크 복사됨!");
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.getByRole("button")).toHaveTextContent("카카오톡으로 공유");
+  });
+
+  it("leaves no timer behind when it unmounts while saying so", async () => {
+    const { unmount } = render(<KakaoShareButton shareCode="abc123" variant="playlist" title="합주" />);
+    await copyLink();
+    unmount();
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "../ui/Button";
 import { track } from "@/lib/analytics";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
@@ -156,6 +156,12 @@ export default function KakaoShareButton({
 }: KakaoShareButtonProps) {
   const [copied, setCopied] = useState(false);
 
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
   async function handleClick() {
     track("kakao_shared", { variant });
     const origin = window.location.origin;
@@ -211,7 +217,6 @@ export default function KakaoShareButton({
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     } catch {
       prompt("링크를 복사하세요:", url);
     }

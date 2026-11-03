@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useDialog } from "../ui/DialogProvider";
@@ -70,6 +70,12 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
   const [attachError, setAttachError] = useState<string | null>(null);
   const { showAlert } = useDialog();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
 
   const todayStr = useMemo(() => getTodayString(), []);
 
@@ -152,7 +158,6 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
     try {
       await navigator.clipboard.writeText(created.url);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     } catch {
       showAlert(`링크 복사에 실패했어요. 직접 복사해주세요:\n${created.url}`);
     }
