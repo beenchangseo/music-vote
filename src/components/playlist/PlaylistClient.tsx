@@ -10,6 +10,7 @@ import Badge from "../ui/Badge";
 import Card from "../ui/Card";
 import EmptyState from "../ui/EmptyState";
 import InlineNotice from "../ui/InlineNotice";
+import RoundButton from "../ui/RoundButton";
 import LoginButton from "../auth/LoginButton";
 import PlaylistHeader from "./PlaylistHeader";
 import PlaylistTitleBar from "./PlaylistTitleBar";
@@ -425,23 +426,23 @@ export default function PlaylistClient({
               onOpenSettings={canOpenSettings ? () => settingsRef.current?.open() : undefined}
               viewToggle={
                 songsWithVotes.length > 0 ? (
-                  <button
-                    type="button"
+                  <RoundButton
+                    tone="tonal"
+                    size="lg"
                     onClick={() => setViewMode(viewMode === "compact" ? "card" : "compact")}
                     aria-label={viewMode === "compact" ? "카드 보기" : "리스트 보기"}
-                    className="inline-flex h-12 w-12 items-center justify-center rounded-pill bg-surface-hover text-text transition-all hover:bg-surface-elevated active:scale-95"
                   >
                     {viewMode === "compact" ? (
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                      <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                         <rect x="3.5" y="4.5" width="17" height="10" rx="2" />
                         <path strokeLinecap="round" d="M3.5 19h17" />
                       </svg>
                     ) : (
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                      <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                       </svg>
                     )}
-                  </button>
+                  </RoundButton>
                 ) : undefined
               }
               meta={

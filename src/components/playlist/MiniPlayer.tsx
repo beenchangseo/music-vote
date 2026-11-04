@@ -6,6 +6,8 @@ import type { PlayerState, PlayerActions } from "@/hooks/usePlayerQueue";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
 import { trapTabKey } from "../ui/focus-trap";
 import { publishMiniPlayerHeight } from "../ui/chrome-inset";
+import PlayPauseIcon from "../ui/PlayPauseIcon";
+import RoundButton from "../ui/RoundButton";
 import { displayArtist } from "@/domain/song-meta";
 
 interface MiniPlayerProps {
@@ -96,12 +98,6 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
     actions.playPrev();
   }
 
-  const playIcon = isPlaying ? (
-    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-  ) : (
-    <path d="M8 5.14v13.72a1 1 0 001.5.86l11-6.86a1 1 0 000-1.72l-11-6.86A1 1 0 008 5.14z" />
-  );
-
   return (
     <div
       ref={containerRef}
@@ -117,19 +113,13 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
       {/* Expanded top bar (slot 0). Rendered with && so the video wrapper below never changes position. */}
       {expanded && (
         <div className="mx-auto flex w-full max-w-lg shrink-0 items-center justify-between px-2 pt-3">
-          <button
-            ref={collapseRef}
-            type="button"
-            onClick={() => setExpanded(false)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-pill text-text transition-colors hover:bg-surface-hover"
-            aria-label="플레이어 접기"
-          >
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+          <RoundButton ref={collapseRef} tone="plain" size="md" onClick={() => setExpanded(false)} aria-label="플레이어 접기">
+            <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
-          </button>
+          </RoundButton>
           <p className="text-caption font-semibold text-text-muted">{source === "setlist" ? "셋리스트" : "후보곡"} 재생 중</p>
-          <span className="h-11 w-11" aria-hidden />
+          <span className="size-control-md" aria-hidden />
         </div>
       )}
 
@@ -178,66 +168,42 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
 
           {/* Transport controls. */}
           <div className="mt-4 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={actions.toggleShuffle}
-              className={`inline-flex h-12 w-12 items-center justify-center rounded-pill transition-colors ${
-                shuffleMode ? "text-primary-fg" : "text-text-muted hover:text-text"
-              }`}
-              aria-label={shuffleMode ? "셔플 끄기" : "셔플 켜기"}
-              aria-pressed={shuffleMode}
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+            <RoundButton size="md" pressed={shuffleMode} onClick={actions.toggleShuffle} aria-label={shuffleMode ? "셔플 끄기" : "셔플 켜기"}>
+              <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
               </svg>
-            </button>
-            <button
-              type="button"
-              onClick={handlePrev}
-              className="inline-flex h-14 w-14 items-center justify-center rounded-pill text-text transition-colors hover:bg-surface-hover"
-              aria-label="이전 곡"
-            >
-              <svg className="h-7 w-7" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+            </RoundButton>
+            <RoundButton tone="plain" size="lg" onClick={handlePrev} aria-label="이전 곡">
+              <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path d="M6 5h2v14H6zM20 6.5v11a1 1 0 01-1.53.85l-8.5-5.5a1 1 0 010-1.7l8.5-5.5A1 1 0 0120 6.5z" />
               </svg>
-            </button>
-            <button
-              type="button"
-              onClick={handlePlayPause}
-              className="inline-flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-pill bg-text text-bg shadow-lg shadow-black/40 transition-transform active:scale-95"
-              aria-label={isPlaying ? "일시정지" : "재생"}
-            >
-              <svg className={`h-8 w-8 ${isPlaying ? "" : "ml-1"}`} fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                {playIcon}
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={() => actions.playNext(true)}
-              className="inline-flex h-14 w-14 items-center justify-center rounded-pill text-text transition-colors hover:bg-surface-hover"
-              aria-label="다음 곡"
-            >
-              <svg className="h-7 w-7" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+            </RoundButton>
+            <RoundButton tone="inverse" size="hero" onClick={handlePlayPause} aria-label={isPlaying ? "일시정지" : "재생"}>
+              <PlayPauseIcon playing={isPlaying} />
+            </RoundButton>
+            <RoundButton tone="plain" size="lg" onClick={() => actions.playNext(true)} aria-label="다음 곡">
+              <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path d="M16 5h2v14h-2zM4 6.5v11a1 1 0 001.53.85l8.5-5.5a1 1 0 000-1.7l-8.5-5.5A1 1 0 004 6.5z" />
               </svg>
-            </button>
-            <button
-              type="button"
+            </RoundButton>
+            <RoundButton
+              size="md"
+              pressed={repeatMode === "one"}
               onClick={actions.toggleRepeat}
-              className={`relative inline-flex h-12 w-12 items-center justify-center rounded-pill transition-colors ${
-                repeatMode === "one" ? "text-primary-fg" : "text-text-muted hover:text-text"
-              }`}
               aria-label={repeatMode === "one" ? "반복 끄기" : "한곡 반복"}
-              aria-pressed={repeatMode === "one"}
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+              <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 1l4 4-4 4" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 11V9a4 4 0 014-4h14" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M7 23l-4-4 4-4" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 13v2a4 4 0 01-4 4H3" />
+                {repeatMode === "one" && (
+                  <text x="12" y="12" dominantBaseline="central" textAnchor="middle" fontSize="9" fill="currentColor" stroke="none">
+                    1
+                  </text>
+                )}
               </svg>
-              {repeatMode === "one" && <span className="absolute text-[9px] font-bold">1</span>}
-            </button>
+            </RoundButton>
           </div>
 
           {/* Up next (YouTube Music "다음 트랙"). */}
@@ -298,26 +264,14 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
                 {artist && <span className="block truncate text-caption text-text-muted">{artist}</span>}
               </span>
             </button>
-            <button
-              type="button"
-              onClick={handlePlayPause}
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-pill text-text transition-colors hover:bg-surface-hover"
-              aria-label={isPlaying ? "일시정지" : "재생"}
-            >
-              <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                {playIcon}
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={() => actions.playNext(true)}
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-pill text-text transition-colors hover:bg-surface-hover"
-              aria-label="다음 곡"
-            >
-              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <RoundButton tone="plain" size="md" onClick={handlePlayPause} aria-label={isPlaying ? "일시정지" : "재생"}>
+              <PlayPauseIcon playing={isPlaying} />
+            </RoundButton>
+            <RoundButton tone="plain" size="md" onClick={() => actions.playNext(true)} aria-label="다음 곡">
+              <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path d="M16 5h2v14h-2zM4 6.5v11a1 1 0 001.53.85l8.5-5.5a1 1 0 000-1.7l-8.5-5.5A1 1 0 004 6.5z" />
               </svg>
-            </button>
+            </RoundButton>
           </div>
         </div>
       )}

@@ -153,8 +153,8 @@ export async function checkBaseline() {
   const problems = ratchetProblems(now, baseline, main.baseline);
 
   const fix =
-    "src/components/ui 의 Button·IconButton·Chip·ListRowButton·ToolbarButton 으로 그린다. 링크는 버튼 모양이면 buttonClassName(), " +
-    "줄이면 ListRowLink, 카드면 Card 안에 바탕 없는 링크를 둔다.";
+    "src/components/ui 의 Button·IconButton·Chip·ListRowButton·ToolbarButton·RoundButton 으로 그린다. 링크는 버튼 모양이면 buttonClassName(), " +
+    "둥근 아이콘이면 RoundLink, 줄이면 ListRowLink, 카드면 Card 안에 바탕 없는 링크를 둔다.";
   const lines = problems.map((p) => {
     if (p.kind === "foreign") return `- ${p.file}: ${p.rule} 가 ${BASELINE} 에 있다. 이 파일은 DS 래칫(${RATCHET_RULE}) 전용이다. 규칙 위반은 고친다.`;
     if (p.kind === "grew") {

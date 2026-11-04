@@ -8,6 +8,10 @@ import ds from "./scripts/eslint-plugin-ds.mjs";
 const CONTROL_SIZE_UTILITY =
   "/(^|[\\s:])!?((min-|max-)?[hw]-|size-|p[xytrblse]?-|rounded(?![a-z])|text-(xs|sm|base|lg|[2-9]?xl|caption|body|display|h[1-6])(?![\\w-]))/";
 
+const ROUND_SKIN_UTILITY = "/(^|[\\s:])!?(bg-|text-|font-|border|shadow|ring-|opacity-|scale-|-m[trblxyse]?-|[\\w-]*\\[)/";
+const GLYPH_PLACEMENT_UTILITY =
+  "/(^|[\\s:])!?((min-|max-)?[hw]-|size-|-?m[trblxyse]?-|p[xytrblse]?-|scale-|translate-|absolute|relative|[\\w-]*\\[)/";
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -51,6 +55,10 @@ const eslintConfig = defineConfig([
       "no-restricted-syntax": [
         "error",
         {
+          selector: "JSXElement[openingElement.name.name=/^Round(Button|Link)$/] JSXOpeningElement[name.name='svg'] > JSXAttribute[name.name=/^(width|height|style)$/]",
+          message: "RoundButton 안 svg 의 크기는 버튼의 size 가 정한다. width·height·style 을 두지 않는다.",
+        },
+        {
           selector: "Literal[value='postgres_changes']",
           message: "실시간은 내용 없는 broadcast 알림 + 재조회로 한다(docs/adr/0010). postgres_changes 로 votes 를 구독하면 익명 모드가 뚫린다.",
         },
@@ -68,10 +76,19 @@ const eslintConfig = defineConfig([
             message: "primary-soft 는 지웠다. 선택·tonal 바탕은 primary-tint 를 쓴다.",
           },
           {
-            selector: `:matches(JSXOpeningElement[name.name=/^(Button|IconButton|Chip)$/] > JSXAttribute[name.name='className'], CallExpression[callee.name='buttonClassName'] Property[key.name='className']) ${node}${CONTROL_SIZE_UTILITY}]`,
+            selector: `:matches(JSXOpeningElement[name.name=/^(Button|IconButton|Chip|RoundButton|RoundLink|RoundRow)$/] > JSXAttribute[name.name='className'], CallExpression[callee.name='buttonClassName'] Property[key.name='className']) ${node}${CONTROL_SIZE_UTILITY}]`,
             message:
-              "Button·IconButton·Chip·buttonClassName 의 높이·폭·안쪽 여백·모서리·글자 크기는 size·variant prop 이 정한다. className 에는 바깥 배치만 둔다" +
+              "Button·IconButton·Chip·RoundButton·buttonClassName 의 높이·폭·안쪽 여백·모서리·글자 크기는 size·variant prop 이 정한다. className 에는 바깥 배치만 둔다" +
               "(m*·flex-1·shrink-0·self-*·order-*·hidden 같은 표시 여부). 꽉 찬 폭은 Button 의 fullWidth, 툴바 동작은 ToolbarButton 을 쓴다.",
+          },
+          {
+            selector: `JSXOpeningElement[name.name=/^Round(Button|Link)$/] > JSXAttribute[name.name='className'] ${node}${ROUND_SKIN_UTILITY}]`,
+            message:
+              "RoundButton·RoundLink 의 색·테두리·그림자·눌림은 tone 이, 글리프를 내용 끝에 맞추는 자리는 edge 가 정한다. className 에는 바깥 배치만 둔다.",
+          },
+          {
+            selector: `JSXElement[openingElement.name.name=/^Round(Button|Link)$/] JSXOpeningElement[name.name='svg'] > JSXAttribute[name.name='className'] ${node}${GLYPH_PLACEMENT_UTILITY}]`,
+            message: "RoundButton 안 svg 의 크기와 자리는 버튼의 size 가 정한다. svg 에는 색만 둔다. 재생 삼각형은 PlayPauseIcon 을 쓴다.",
           },
         ]),
       ],

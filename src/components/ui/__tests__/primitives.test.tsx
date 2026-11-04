@@ -8,6 +8,7 @@ import Chip from "../Chip";
 import IconButton from "../IconButton";
 import Input from "../Input";
 import { ListRowButton, ListRowLink } from "../ListRow";
+import RoundButton, { RoundLink } from "../RoundButton";
 
 afterEach(cleanup);
 
@@ -94,6 +95,79 @@ describe("IconButton", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "닫기" }));
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+});
+
+describe("RoundButton", () => {
+  it("is named by aria-label, runs onClick and does not submit the form it sits in", () => {
+    const onClick = vi.fn();
+    const onSubmit = vi.fn((e: React.FormEvent) => e.preventDefault());
+    render(
+      <form onSubmit={onSubmit}>
+        <RoundButton tone="tonal" size="lg" aria-label="BPM 5 내리기" onClick={onClick}>
+          -5
+        </RoundButton>
+      </form>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "BPM 5 내리기" }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("says whether a toggle is on, and only a toggle says so", () => {
+    const { rerender } = render(
+      <>
+        <RoundButton size="md" pressed={false} aria-label="셔플">
+          <svg />
+        </RoundButton>
+        <RoundButton tone="plain" size="lg" aria-label="다음 곡">
+          <svg />
+        </RoundButton>
+      </>,
+    );
+    expect(screen.getByRole("button", { name: "셔플" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "다음 곡" })).not.toHaveAttribute("aria-pressed");
+    rerender(
+      <RoundButton size="md" pressed aria-label="셔플">
+        <svg />
+      </RoundButton>,
+    );
+    expect(screen.getByRole("button", { name: "셔플" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("ignores clicks when disabled", () => {
+    const onClick = vi.fn();
+    render(
+      <RoundButton tone="primary" size="hero" aria-label="메트로놈 시작" disabled onClick={onClick}>
+        <svg />
+      </RoundButton>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "메트로놈 시작" }));
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("draws a link as a named link to its href", () => {
+    render(
+      <RoundLink href="/" tone="ghost" size="md" edge="start" aria-label="홈으로">
+        <svg />
+      </RoundLink>,
+    );
+    expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
+  });
+
+  it("only compiles the looks on the ladder", () => {
+    // @ts-expect-error A hero is always a disc.
+    void (<RoundButton tone="plain" size="hero" aria-label="재생"><svg /></RoundButton>);
+    // @ts-expect-error A toggle shows its state by glyph colour, so it has no disc tone.
+    void (<RoundButton tone="tonal" size="md" pressed aria-label="셔플"><svg /></RoundButton>);
+    // @ts-expect-error Only a bare glyph lines up with the content edge.
+    void (<RoundButton tone="tonal" size="lg" edge="start" aria-label="메뉴"><svg /></RoundButton>);
+    // @ts-expect-error An icon-only control needs a name.
+    void (<RoundButton tone="plain" size="md"><svg /></RoundButton>);
+    // @ts-expect-error A link is not a toggle.
+    void (<RoundLink href="/" size="md" pressed aria-label="홈으로"><svg /></RoundLink>);
+    // @ts-expect-error The look decides the size, so there is no inline style to override it.
+    void (<RoundButton tone="plain" size="md" aria-label="다음 곡" style={{ width: 60 }}><svg /></RoundButton>);
   });
 });
 

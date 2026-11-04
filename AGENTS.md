@@ -107,7 +107,7 @@ verification/     TLA+ 형식 검증 (verify-vote-quota 스킬)
 - `border`·`border-strong` 은 구분선이다. 입력 경계로 쓰지 않는다.
 
 **크기.** 모서리 `rounded-badge` 6 · `rounded-control` 12(버튼·입력·칩) · `rounded-card` 16 · `rounded-t-sheet` 24 ·
-`rounded-pill`. 높이 `h-control-sm` 36(누르는 영역은 44) · `h-control-md` 44 · `h-control-lg` 52, 행 `min-h-row` 56(설정·멤버)
+`rounded-pill`. 높이 `h-control-sm` 36(누르는 영역은 44) · `h-control-md` 44 · `h-control-lg` 52 · `control-hero` 64(둥근 주 원판), 행 `min-h-row` 56(설정·멤버)
 · `min-h-row-song` 72(곡). 그림자는 `shadow-float` 하나이고 시트·토스트·FAB 에만 쓴다. 다른 층은 표면 색으로 만든다.
 화면에 붙는 막대(`ScreenToolbar`·`TabBar`·`MiniPlayer` 막대)는 `ui/chrome-inset.ts` 로 자기 높이를 알리고, `html` 의
 scroll-padding 이 그만큼 비운다. 막대 밑으로 스크롤되는 여백을 `scroll-mt-*` 같은 숫자로 따로 적지 않는다.
@@ -141,10 +141,15 @@ Variable(한국어) + Geist(영문) 폴백.
   닿는 아래 칸(펼친 코멘트)은 `footer` 다. 음수 margin 으로 padding 을 지우지 않는다. `IconButton`: tone `default`·`danger`·`brand`, `bare`, 44px,
   `aria-label` 필수. `ScreenToolbar`: 후보곡·셋리스트·합주 상단의 숫자와 동작. 동작은 `ToolbarButton`(44px, `compact` 면
   640px 아래에서 아이콘만)으로만 그린다.
-- 크기는 prop 이 정한다. `Button`·`IconButton`·`Chip` 의 className 에 높이·폭·여백·모서리·글자 크기를 덧칠하면 eslint 가
+- `RoundButton`: 플레이어·플레이리스트 머리·메트로놈 줄의 둥근 아이콘 버튼. size `md` 44·`lg` 52·`hero` 64, tone `plain`(재생
+  컨트롤처럼 또렷한 글리프)·`ghost`(Button ghost 처럼 흐린 글리프)·`tonal`·`inverse`(흰 원판)·`primary`·`danger`·`kakao`, hero 는 원판
+  tone 만 된다. 켜고 끄기는 tone 대신 `pressed`(꺼지면 ghost, 켜지면 primary-fg 글리프). 글리프 크기는 버튼이 정하니 svg 에 크기·margin 을
+  두지 않는다(eslint). 재생 삼각형은 `PlayPauseIcon`. 링크는 `RoundLink`, `edge="start"` 면 글리프가 내용 왼쪽 끝에 맞는다. 둥근 버튼을
+  모은 줄은 `RoundRow` 다. 원은 줄지 않고 간격이 준다.
+- 크기는 prop 이 정한다. `Button`·`IconButton`·`Chip`·`RoundButton` 의 className 에 높이·폭·여백·모서리·글자 크기를 덧칠하면 eslint 가
   막는다. className 에는 바깥 배치(margin·`flex-1`·`shrink-0`·표시 여부)만 둔다.
 - **DS 래칫.** `src/components/ui` 밖에서 높이·여백·모서리·글자 크기를 칠한 `<button>` 과 바탕·테두리에 크기까지 칠한 `<a>`·`<Link>` 는
-  eslint(`ds/no-raw-control`)가 막는다. 링크는 버튼 모양이면 `buttonClassName()`, 줄이면 `ListRowLink`, 카드면 `Card` 안에 바탕 없는
+  eslint(`ds/no-raw-control`)가 막는다. 링크는 버튼 모양이면 `buttonClassName()`, 둥근 아이콘이면 `RoundLink`, 줄이면 `ListRowLink`, 카드면 `Card` 안에 바탕 없는
   링크로 그린다. 이미 있던 곳은 `eslint-suppressions.json` 이 파일별 개수로 봐주고, 이 파일은 줄기만 한다(고친 뒤
   `npx eslint --prune-suppressions`). `npm run check` 가 이 파일을 main 의 것과 비교해서, 손으로 늘린 개수도 실패한다. 남은 곳과 토큰 밖 모서리·글자 크기·임의 값은 `node scripts/ds-inventory.mjs` 가 파일·줄마다 보여 준다.
 

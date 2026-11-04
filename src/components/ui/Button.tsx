@@ -22,7 +22,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
       }
   );
 
-const variantClasses: Record<Variant, string> = {
+export const variantClasses: Record<Variant, string> = {
   primary:
     "bg-primary hover:bg-primary-hover active:bg-primary-pressed text-on-primary",
   tonal:

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useMetronome } from "@/hooks/useMetronome";
 import Link from "next/link";
 import { displayTitle } from "@/domain/song-meta";
+import PlayPauseIcon from "../ui/PlayPauseIcon";
+import RoundButton, { RoundRow } from "../ui/RoundButton";
 import type { Song } from "@/domain/types";
 
 interface MetronomeClientProps {
@@ -75,54 +77,28 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
           <p className="text-sm text-text-subtle mt-1">BPM</p>
         </div>
 
-        {/* BPM controls */}
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => setBpm((b) => Math.max(40, b - 5))}
-            className="w-12 h-12 rounded-full bg-surface-hover border border-border text-text-muted text-xl font-bold hover:bg-surface-hover transition-colors"
-          >
+        <RoundRow className="mb-6">
+          <RoundButton tone="tonal" size="lg" onClick={() => setBpm((b) => Math.max(40, b - 5))} aria-label="BPM 5 내리기">
             -5
-          </button>
-          <button
-            onClick={() => setBpm((b) => Math.max(40, b - 1))}
-            className="w-10 h-10 rounded-full bg-surface-hover border border-border text-text-muted text-lg hover:bg-surface-hover transition-colors"
-          >
+          </RoundButton>
+          <RoundButton tone="tonal" size="md" onClick={() => setBpm((b) => Math.max(40, b - 1))} aria-label="BPM 1 내리기">
             -
-          </button>
-
-          {/* Play/Stop */}
-          <button
+          </RoundButton>
+          <RoundButton
+            tone={isPlaying ? "danger" : "primary"}
+            size="hero"
             onClick={isPlaying ? stop : start}
-            className={`w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold transition-all active:scale-95 ${
-              isPlaying
-                ? "bg-danger hover:bg-danger-hover text-on-danger"
-                : "bg-primary hover:bg-primary-hover text-on-primary"
-            }`}
+            aria-label={isPlaying ? "메트로놈 정지" : "메트로놈 시작"}
           >
-            {isPlaying ? (
-              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-              </svg>
-            ) : (
-              <svg className="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            )}
-          </button>
-
-          <button
-            onClick={() => setBpm((b) => Math.min(300, b + 1))}
-            className="w-10 h-10 rounded-full bg-surface-hover border border-border text-text-muted text-lg hover:bg-surface-hover transition-colors"
-          >
+            <PlayPauseIcon playing={isPlaying} />
+          </RoundButton>
+          <RoundButton tone="tonal" size="md" onClick={() => setBpm((b) => Math.min(300, b + 1))} aria-label="BPM 1 올리기">
             +
-          </button>
-          <button
-            onClick={() => setBpm((b) => Math.min(300, b + 5))}
-            className="w-12 h-12 rounded-full bg-surface-hover border border-border text-text-muted text-xl font-bold hover:bg-surface-hover transition-colors"
-          >
+          </RoundButton>
+          <RoundButton tone="tonal" size="lg" onClick={() => setBpm((b) => Math.min(300, b + 5))} aria-label="BPM 5 올리기">
             +5
-          </button>
-        </div>
+          </RoundButton>
+        </RoundRow>
 
         {/* Song selector */}
         {songs.length > 0 && (

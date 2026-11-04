@@ -51,7 +51,7 @@
   },
   "src/components/playlist/AnnouncementButton.tsx": {
     "ds/no-raw-control": {
-      "count": 3
+      "count": 2
     }
   },
   "src/components/playlist/CommentModal.tsx": {
@@ -61,17 +61,17 @@
   },
   "src/components/playlist/MiniPlayer.tsx": {
     "ds/no-raw-control": {
-      "count": 10
+      "count": 2
     }
   },
   "src/components/playlist/PlaylistClient.tsx": {
     "ds/no-raw-control": {
-      "count": 4
+      "count": 3
     }
   },
   "src/components/playlist/PlaylistHeader.tsx": {
     "ds/no-raw-control": {
-      "count": 6
+      "count": 2
     }
   },
   "src/components/playlist/RoomSettingsButton.tsx": {
@@ -101,7 +101,7 @@
   },
   "src/components/rehearsal/MetronomeClient.tsx": {
     "ds/no-raw-control": {
-      "count": 6
+      "count": 1
     }
   },
   "src/components/rehearsal/SheetMusicLinks.tsx": {
