@@ -59,7 +59,6 @@ export default function VoteButtons({
     }
     if (disabled || pending) return;
     setPopped(pressed);
-    setTimeout(() => setPopped(null), 180);
     onPress(pressed);
   }
 
@@ -68,6 +67,7 @@ export default function VoteButtons({
     <div className="inline-flex items-center rounded-pill bg-surface-hover/80">
       <button
         onClick={() => handleClick(1)}
+        onAnimationEnd={() => setPopped(null)}
         disabled={!loginGate && (disabled || pending)}
         className={`relative inline-flex h-11 w-11 items-center justify-center rounded-pill transition-all active:scale-90 disabled:opacity-60 ${popped === 1 ? "animate-vote-pop" : ""} ${
           loginGate
@@ -117,6 +117,7 @@ export default function VoteButtons({
 
       <button
         onClick={() => handleClick(-1)}
+        onAnimationEnd={() => setPopped(null)}
         disabled={!loginGate && (disabled || pending)}
         className={`relative inline-flex h-11 w-11 items-center justify-center rounded-pill transition-all active:scale-90 disabled:opacity-60 ${popped === -1 ? "animate-vote-pop" : ""} ${
           loginGate

@@ -23,6 +23,7 @@ export function useMetronome(bpm: number | null) {
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pendingBeatTimersRef = useRef(new Set<ReturnType<typeof setTimeout>>());
   const nextNoteTimeRef = useRef(0);
   const beatRef = useRef(0);
 
@@ -52,7 +53,11 @@ export function useMetronome(bpm: number | null) {
 
       const currentBeat = beatRef.current;
       const delay = (nextNoteTimeRef.current - ctx.currentTime) * 1000;
-      setTimeout(() => setBeat(currentBeat), Math.max(0, delay));
+      const beatTimer = setTimeout(() => {
+        pendingBeatTimersRef.current.delete(beatTimer);
+        setBeat(currentBeat);
+      }, Math.max(0, delay));
+      pendingBeatTimersRef.current.add(beatTimer);
 
       nextNoteTimeRef.current += 60.0 / bpm;
       beatRef.current = (beatRef.current + 1) % BEATS_PER_BAR;
@@ -93,6 +98,15 @@ export function useMetronome(bpm: number | null) {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [scheduler, isPlaying]);
+
+  useEffect(() => {
+    if (!isPlaying) return;
+    const pendingBeatTimers = pendingBeatTimersRef.current;
+    return () => {
+      pendingBeatTimers.forEach(clearTimeout);
+      pendingBeatTimers.clear();
+    };
+  }, [isPlaying]);
 
   useEffect(() => {
     return () => {
