@@ -43,10 +43,5 @@
     "ds/no-raw-control": {
       "count": 1
     }
-  },
-  "src/components/playlist/PlaylistClient.tsx": {
-    "ds/no-raw-control": {
-      "count": 3
-    }
   }
 }

@@ -7,9 +7,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useDialog } from "../ui/DialogProvider";
 import Badge from "../ui/Badge";
+import Button from "../ui/Button";
+import ButtonGroup from "../ui/ButtonGroup";
 import Card from "../ui/Card";
 import EmptyState from "../ui/EmptyState";
 import InlineNotice from "../ui/InlineNotice";
+import { SongRow } from "../ui/ListRow";
+import Modal from "../ui/Modal";
 import RoundButton from "../ui/RoundButton";
 import LoginButton from "../auth/LoginButton";
 import PlaylistHeader from "./PlaylistHeader";
@@ -519,8 +523,8 @@ export default function PlaylistClient({
 
               {/* Result share banner — voting closed + has top song */}
               {isExpired && songsWithVotes.length > 0 && (
-                <div className="mt-5 p-5 rounded-2xl bg-success/10 border border-success/30 text-center animate-fade-in">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/20 text-success text-caption font-bold mb-3">
+                <div className="mt-5 p-5 rounded-card bg-success/10 border border-success/30 text-center animate-fade-in">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-success/20 text-success text-caption font-bold mb-3">
                     🎉 곡 결정
                   </div>
                   <p className="text-h3 font-bold text-text leading-snug truncate px-2">
@@ -557,12 +561,12 @@ export default function PlaylistClient({
 
               {/* Setlist confirmation banner */}
               {isExpired && setlistCount && !playlist.setlist_confirmed && (
-                <div className="mt-5 p-4 bg-primary/10 border border-primary/30 rounded-xl text-center">
+                <div className="mt-5 p-4 bg-primary/10 border border-primary/30 rounded-control text-center">
                   <p className="text-sm text-text mb-2">
                     투표가 마감되었습니다. 상위 {setlistCount}곡이 하이라이트됩니다.
                   </p>
                   {isHost ? (
-                    <button
+                    <Button
                       onClick={async () => {
                         const topSongIds = songsWithVotes.slice(0, setlistCount).map((s) => s.id);
                         const ok = await showConfirm(
@@ -580,10 +584,9 @@ export default function PlaylistClient({
                         });
                         applySetlistItems(result.items);
                       }}
-                      className="px-5 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white text-sm font-semibold transition-all active:scale-95"
                     >
                       셋리스트 확정하기
-                    </button>
+                    </Button>
                   ) : (
                     <p className="text-caption text-text-muted">생성자가 셋리스트를 확정하면 셋리스트/합주 모드를 사용할 수 있습니다.</p>
                   )}
@@ -726,46 +729,25 @@ export default function PlaylistClient({
 
       {settingsButton}
 
-      {/* Setlist add confirm dialog */}
       {setlistConfirmSong && (
-        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/50 px-4 pb-28">
-          <div className="w-full max-w-sm bg-surface border border-border rounded-2xl p-5 animate-slide-up">
-            <div className="flex items-center gap-3 mb-4">
-              {setlistConfirmSong.thumbnail_url && (
-                <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
-                  <Image
-                    src={setlistConfirmSong.thumbnail_url}
-                    alt={displayTitle(setlistConfirmSong.title)}
-                    fill
-                    sizes="48px"
-                    className="object-cover"
-                  />
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-text truncate">{displayTitle(setlistConfirmSong.title)}</p>
-                {setlistConfirmSong.artist && (
-                  <p className="text-caption text-text-muted truncate">{setlistConfirmSong.artist}</p>
-                )}
-              </div>
-            </div>
-            <p className="text-sm text-text-muted text-center mb-4">셋리스트에 추가할까요?</p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSetlistConfirmSongId(null)}
-                className="flex-1 py-2.5 rounded-xl bg-surface-hover hover:bg-border-strong text-sm text-text-muted font-medium transition-colors"
-              >
-                취소
-              </button>
-              <button
-                onClick={handleConfirmAddToSetlist}
-                className="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-sm text-white font-semibold transition-all active:scale-95"
-              >
-                추가하기
-              </button>
-            </div>
-          </div>
-        </div>
+        <Modal open onClose={() => setSetlistConfirmSongId(null)} title="셋리스트에 추가할까요?">
+          <SongRow
+            cover={
+              setlistConfirmSong.thumbnail_url && (
+                <Image src={setlistConfirmSong.thumbnail_url} alt={displayTitle(setlistConfirmSong.title)} fill sizes="48px" className="object-cover" />
+              )
+            }
+          >
+            <p className="truncate text-sm font-medium text-text">{displayTitle(setlistConfirmSong.title)}</p>
+            {setlistConfirmSong.artist && <p className="truncate text-caption text-text-muted">{setlistConfirmSong.artist}</p>}
+          </SongRow>
+          <ButtonGroup className="mt-4">
+            <Button variant="tonal" onClick={() => setSetlistConfirmSongId(null)}>
+              취소
+            </Button>
+            <Button onClick={handleConfirmAddToSetlist}>추가하기</Button>
+          </ButtonGroup>
+        </Modal>
       )}
 
       {justCreatedTeam && (
