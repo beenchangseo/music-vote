@@ -44,11 +44,6 @@
       "count": 1
     }
   },
-  "src/components/playlist/MiniPlayer.tsx": {
-    "ds/no-raw-control": {
-      "count": 2
-    }
-  },
   "src/components/playlist/PlaylistClient.tsx": {
     "ds/no-raw-control": {
       "count": 3

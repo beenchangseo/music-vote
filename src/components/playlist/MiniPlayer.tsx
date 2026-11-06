@@ -7,6 +7,7 @@ import type { YouTubePlayerHandle } from "./YouTubePlayer";
 import { trapTabKey } from "../ui/focus-trap";
 import { publishMiniPlayerHeight } from "../ui/chrome-inset";
 import PlayPauseIcon from "../ui/PlayPauseIcon";
+import { ListRowButton } from "../ui/ListRow";
 import RoundButton from "../ui/RoundButton";
 import { displayArtist } from "@/domain/song-meta";
 
@@ -219,21 +220,12 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
               <ul className="mt-2">
                 {upNext.map((song) => (
                   <li key={song.id}>
-                    <button
-                      type="button"
-                      onClick={() => actions.playSong(song.id)}
-                      className="-mx-2 flex min-h-14 w-[calc(100%+1rem)] items-center gap-3 rounded-control px-2 text-left transition-colors hover:bg-surface-hover"
-                    >
-                      <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-control bg-surface-elevated">
-                        {song.thumbnail_url && <Image src={song.thumbnail_url} alt="" fill sizes="44px" className="object-cover" />}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium text-text">{song.shownTitle}</span>
-                        {displayArtist(song.artist, song.title) && (
-                          <span className="block truncate text-caption text-text-muted">{displayArtist(song.artist, song.title)}</span>
-                        )}
-                      </span>
-                    </button>
+                    <ListRowButton onClick={() => actions.playSong(song.id)} leading={<Cover url={song.thumbnail_url} />}>
+                      <span className="block truncate text-sm font-medium text-text">{song.shownTitle}</span>
+                      {displayArtist(song.artist, song.title) && (
+                        <span className="block truncate text-caption text-text-muted">{displayArtist(song.artist, song.title)}</span>
+                      )}
+                    </ListRowButton>
                   </li>
                 ))}
               </ul>
@@ -246,24 +238,17 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
           <div className="h-0.5 w-full bg-surface-hover" aria-hidden>
             <div className="h-0.5 bg-text transition-[width] duration-500 ease-linear" style={{ width: `${ratio * 100}%` }} />
           </div>
-          <div className="mx-auto flex max-w-lg items-center gap-1 px-2 py-2">
-            <button
+          <div className="mx-auto flex max-w-lg items-center gap-1 px-4">
+            <ListRowButton
               ref={barRef}
-              type="button"
               onClick={() => setExpanded(true)}
-              className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-control px-2 text-left"
+              className="min-w-0 flex-1"
               aria-label={`${currentSong.shownTitle} 플레이어 열기`}
+              leading={<Cover url={currentSong.thumbnail_url} />}
             >
-              <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-control bg-surface-elevated">
-                {currentSong.thumbnail_url && (
-                  <Image src={currentSong.thumbnail_url} alt="" fill sizes="40px" className="object-cover" />
-                )}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold text-text">{currentSong.shownTitle}</span>
-                {artist && <span className="block truncate text-caption text-text-muted">{artist}</span>}
-              </span>
-            </button>
+              <span className="block truncate text-sm font-semibold text-text">{currentSong.shownTitle}</span>
+              {artist && <span className="block truncate text-caption text-text-muted">{artist}</span>}
+            </ListRowButton>
             <RoundButton tone="plain" size="md" onClick={handlePlayPause} aria-label={isPlaying ? "일시정지" : "재생"}>
               <PlayPauseIcon playing={isPlaying} />
             </RoundButton>
@@ -276,5 +261,14 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
         </div>
       )}
     </div>
+  );
+}
+
+/** 40px 커버. 56px 행 안에 위아래 8px 을 남긴다. */
+function Cover({ url }: { url: string | null }) {
+  return (
+    <span className="relative size-10 shrink-0 overflow-hidden rounded-control bg-surface-elevated">
+      {url && <Image src={url} alt="" fill sizes="40px" className="object-cover" />}
+    </span>
   );
 }
