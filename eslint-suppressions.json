@@ -48,15 +48,5 @@
     "ds/no-raw-control": {
       "count": 3
     }
-  },
-  "src/components/playlist/PlaylistHeader.tsx": {
-    "ds/no-raw-control": {
-      "count": 2
-    }
-  },
-  "src/components/playlist/RoomSettingsButton.tsx": {
-    "ds/no-raw-control": {
-      "count": 1
-    }
   }
 }
