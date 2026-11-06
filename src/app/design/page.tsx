@@ -284,7 +284,9 @@ export default function DesignPage() {
           tone 대신 pressed 를 줘요. 꺼지면 ghost, 켜지면 primary-fg 글리프예요(셔플·한곡 반복). accent 가 켜진 색을 바꿔요. upvote·downvote 는
           투표 화살표이고, 켜지면 같은 색의 옅은 원판이 깔려요.
         </p>
-        <StateHeader labels={["꺼짐", "켜짐"]} />
+        <div className="mt-3">
+          <StateHeader labels={["꺼짐", "켜짐"]} />
+        </div>
         {ROUND_TOGGLE_ACCENTS.map((accent) => (
           <StateRow key={accent} label={accent}>
             <RoundButton size="md" pressed={false} accent={accent} aria-label={`${accent} 꺼짐`}>
