@@ -149,7 +149,6 @@ export default function SongCard({
 
   const sheets = (
     <>
-      {/* ⋯ sheet, like the playlist header's ⋮ sheet. */}
       <Modal open={showMenu} onClose={() => setShowMenu(false)} title={title}>
         {song.added_by && (
           <p className="text-sm text-text-muted">
