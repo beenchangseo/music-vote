@@ -145,7 +145,7 @@ Variable(한국어) + Geist(영문) 폴백.
   640px 아래에서 아이콘만)으로만 그린다.
 - `RoundButton`: 플레이어·플레이리스트 머리·메트로놈 줄의 둥근 아이콘 버튼. size `md` 44·`lg` 52·`hero` 64, tone `plain`(재생
   컨트롤처럼 또렷한 글리프)·`ghost`(Button ghost 처럼 흐린 글리프)·`tonal`·`inverse`(흰 원판)·`primary`·`danger`·`kakao`, hero 는 원판
-  tone 만 된다. 켜고 끄기는 tone 대신 `pressed`(꺼지면 ghost, 켜지면 primary-fg 글리프). 켜진 색은 `accent` 가 바꾼다(투표 화살표는 `upvote`·`downvote`). 글리프 크기는 버튼이 정하니 svg 에 크기·margin 을
+  tone 만 된다. 켜고 끄기는 tone 대신 `pressed`(꺼지면 ghost, 켜지면 primary-fg 글리프). 투표 화살표는 tone `upvote`·`downvote` 에 `chosen` 이다(고른 쪽에 옅은 원판, aria-pressed 없음). 글리프 크기는 버튼이 정하니 svg 에 크기·margin 을
   두지 않는다(eslint). 재생 삼각형은 `PlayPauseIcon`. 링크는 `RoundLink`, `edge="start"` 면 글리프가 내용 왼쪽 끝에 맞는다. 둥근 버튼을
   모은 줄은 `RoundRow` 다. 원은 줄지 않고 간격이 준다.
 - 크기는 prop 이 정한다. `Button`·`IconButton`·`Chip`·`RoundButton` 의 className 에 높이·폭·여백·모서리·글자 크기를 덧칠하면 eslint 가

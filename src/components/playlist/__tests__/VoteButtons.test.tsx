@@ -61,6 +61,14 @@ describe("VoteButtons pop", () => {
     expect(up).not.toHaveClass("animate-vote-pop");
   });
 
+  it("names the next action on a chosen arrow instead of announcing a toggle", () => {
+    render(<VoteButtons score={3} userVote={1} userVoteCount={2} votingMode="allocated" onPress={() => undefined} />);
+
+    const up = screen.getByRole("button", { name: "찬성표 추가" });
+    expect(up).not.toHaveAttribute("aria-pressed");
+    expect(screen.getByRole("button", { name: "찬성표 한 개 취소" })).not.toHaveAttribute("aria-pressed");
+  });
+
   it("leaves no timer behind when it unmounts right after a press", () => {
     vi.useFakeTimers();
     const { unmount } = renderButtons();

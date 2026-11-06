@@ -9,7 +9,7 @@ import GuitarIcon from "@/components/ui/GuitarIcon";
 import IconButton from "@/components/ui/IconButton";
 import Input from "@/components/ui/Input";
 import PlayPauseIcon from "@/components/ui/PlayPauseIcon";
-import RoundButton, { ROUND_BARE_TONES, ROUND_DISC_TONES, ROUND_TOGGLE_ACCENTS, RoundLink, RoundRow } from "@/components/ui/RoundButton";
+import RoundButton, { ROUND_BARE_TONES, ROUND_DISC_TONES, ROUND_VOTE_TONES, RoundLink, RoundRow } from "@/components/ui/RoundButton";
 import ScreenToolbar, { ToolbarButton } from "@/components/ui/ScreenToolbar";
 import { COLOR_GROUPS, COLORS, HEIGHTS, MOTION, RADII, SHADOWS, TYPE, contrastRatio, type ColorToken, type Pairing } from "@/components/ui/tokens";
 import Avatar, { AvatarStack } from "@/components/ui/Avatar";
@@ -280,19 +280,29 @@ export default function DesignPage() {
           </StateRow>
         ))}
         <h3 className="mt-6 text-sm font-semibold text-text-muted">켜고 끄기</h3>
+        <p className="mt-1 text-caption text-text-subtle">tone 대신 pressed 를 줘요. 꺼지면 ghost, 켜지면 primary-fg 글리프예요. 셔플·한곡 반복.</p>
+        <div className="mt-2 flex items-center gap-2">
+          <RoundButton size="md" pressed={false} aria-label="꺼짐">
+            <GuitarIcon />
+          </RoundButton>
+          <RoundButton size="md" pressed aria-label="켜짐">
+            <GuitarIcon />
+          </RoundButton>
+        </div>
+        <h3 className="mt-6 text-sm font-semibold text-text-muted">투표 화살표</h3>
         <p className="mt-1 text-caption text-text-subtle">
-          tone 대신 pressed 를 줘요. 꺼지면 ghost, 켜지면 primary-fg 글리프예요(셔플·한곡 반복). accent 가 켜진 색을 바꿔요. upvote·downvote 는
-          투표 화살표이고, 켜지면 같은 색의 옅은 원판이 깔려요.
+          tone upvote·downvote 에 chosen 을 줘요. 고른 쪽이면 같은 색의 옅은 원판이 깔려요. 누르면 한 표가 더 쌓이기도 해서 켜고 끄기가 아니에요.
+          aria-pressed 대신 라벨이 할 일을 말해요.
         </p>
         <div className="mt-3">
-          <StateHeader labels={["꺼짐", "켜짐"]} />
+          <StateHeader labels={["안 고름", "고름"]} />
         </div>
-        {ROUND_TOGGLE_ACCENTS.map((accent) => (
-          <StateRow key={accent} label={accent}>
-            <RoundButton size="md" pressed={false} accent={accent} aria-label={`${accent} 꺼짐`}>
+        {ROUND_VOTE_TONES.map((tone) => (
+          <StateRow key={tone} label={tone}>
+            <RoundButton tone={tone} size="md" chosen={false} aria-label={`${tone} 안 고름`}>
               <GuitarIcon />
             </RoundButton>
-            <RoundButton size="md" pressed accent={accent} aria-label={`${accent} 켜짐`}>
+            <RoundButton tone={tone} size="md" chosen aria-label={`${tone} 고름`}>
               <GuitarIcon />
             </RoundButton>
           </StateRow>

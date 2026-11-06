@@ -2,7 +2,7 @@
 
 import { useState, type AnimationEvent } from "react";
 import Badge from "../ui/Badge";
-import RoundButton, { type RoundLook, type RoundToggleAccent } from "../ui/RoundButton";
+import RoundButton, { type RoundLook, type RoundVoteTone } from "../ui/RoundButton";
 import { triggerKakaoLogin } from "@/lib/kakao-login";
 import type { VoteDirection } from "@/domain/vote";
 import type { VotingMode } from "@/domain/types";
@@ -49,8 +49,8 @@ export default function VoteButtons({
       ? "찬성표 한 개 취소"
       : "반대표 추가";
   // Logged out: plain grey arrows that open the login (the lock sits by the score), not a vote that could be on.
-  const look = (accent: RoundToggleAccent, on: boolean): RoundLook =>
-    loginGate ? { tone: "ghost", size: "md" } : { size: "md", pressed: on, accent };
+  const look = (tone: RoundVoteTone, chosen: boolean): RoundLook =>
+    loginGate ? { tone: "ghost", size: "md" } : { tone, size: "md", chosen };
 
   const [popped, setPopped] = useState<VoteDirection | null>(null);
 
