@@ -88,10 +88,5 @@
     "ds/no-raw-control": {
       "count": 4
     }
-  },
-  "src/components/playlist/VoteButtons.tsx": {
-    "ds/no-raw-control": {
-      "count": 2
-    }
   }
 }
