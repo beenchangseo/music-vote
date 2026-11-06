@@ -345,6 +345,13 @@ export default function DesignPage() {
           </div>
           <Input aria-label="비활성" disabled placeholder="비활성" />
           <Input aria-label="검색" pill placeholder="pill (검색)" />
+          <p className="text-caption text-text-subtle">pill 칸 옆 버튼은 Button 의 pill 로 모서리를 맞춰요 (곡 찾기).</p>
+          <div className="flex gap-2">
+            <Input aria-label="곡 찾기" pill placeholder="곡 이름이나 YouTube 링크" />
+            <Button pill className="shrink-0">
+              찾기
+            </Button>
+          </div>
         </div>
       </Section>
 
