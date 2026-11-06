@@ -46,6 +46,7 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
   const containerRef = useRef<HTMLDivElement>(null);
   const collapseRef = useRef<HTMLButtonElement>(null);
   const barRef = useRef<HTMLButtonElement>(null);
+  const returnFocus = useRef(false);
 
   // The YouTube iframe API has no time events: poll while something is loaded.
   useEffect(() => {
@@ -64,7 +65,6 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     collapseRef.current?.focus();
-    const bar = barRef.current;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setExpanded(false);
       else if (e.key === "Tab" && containerRef.current) trapTabKey(e, containerRef.current);
@@ -73,8 +73,15 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", onKey);
-      bar?.focus();
+      returnFocus.current = true;
     };
+  }, [expanded]);
+
+  // The bar is not rendered while expanded, so focus goes back only after the collapsed bar has mounted again.
+  useEffect(() => {
+    if (expanded || !returnFocus.current) return;
+    returnFocus.current = false;
+    barRef.current?.focus();
   }, [expanded]);
 
   if (!currentSong) return null;

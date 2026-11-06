@@ -98,3 +98,16 @@ describe("MiniPlayer controls", () => {
     expect(screen.getByRole("button", { name: "반복 끄기" })).toHaveAttribute("aria-pressed", "true");
   });
 });
+
+describe("MiniPlayer focus", () => {
+  it("hands focus back to the bar when the expanded player closes", () => {
+    render(<Player source="candidates" />);
+    fireEvent.click(screen.getByRole("button", { name: "첫 곡 틀기" }));
+    fireEvent.click(screen.getByRole("button", { name: "예뻤어 플레이어 열기" }));
+    expect(screen.getByRole("button", { name: "플레이어 접기" })).toHaveFocus();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(screen.getByRole("button", { name: "예뻤어 플레이어 열기" })).toHaveFocus();
+  });
+});
