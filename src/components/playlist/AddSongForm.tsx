@@ -177,7 +177,7 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
             return (
               <div key={item.videoId} className="rounded-control border border-border bg-surface p-2">
                 <div className="flex items-start gap-2">
-                  <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-control bg-surface-hover">
+                  <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-control bg-surface-hover has-focus-visible:ring-2 has-focus-visible:ring-focus-ring has-focus-visible:ring-offset-2 has-focus-visible:ring-offset-surface">
                     <button
                       type="button"
                       onClick={() => setPreviewId(isPreviewing ? null : item.videoId)}
