@@ -259,7 +259,6 @@ export default function RehearsalView({
             song={tappedBpm !== null ? { ...currentSong, tempo_bpm: tappedBpm } : currentSong}
             playlistId={playlistId}
             shareCode={shareCode}
-            defaultOpen
             onClose={() => setShowMeta(false)}
           />
         </div>
