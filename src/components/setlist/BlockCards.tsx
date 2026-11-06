@@ -47,21 +47,31 @@ function EditMark() {
 const graphemes = new Intl.Segmenter("ko", { granularity: "grapheme" });
 
 /**
- * 편집 모드에서는 제목을 줄이지 않고 ✎ 를 글줄 끝에 붙인다. 줄이면 ✎ 도 같이 잘린다.
- * 마지막 글자와 ✎ 를 nowrap 으로 묶는다. 그림 앞은 브라우저가 늘 줄을 바꿀 수 있는 자리이고,
- * 띄어 쓰지 않은 긴 제목을 칸 끝에서 자를 때도 마찬가지라서, 묶지 않으면 ✎ 만 다음 줄로 내려간다.
+ * 줄이지 않은 제목의 마지막 글자와 뒤에 붙는 것(시간·✎)을 nowrap 으로 묶는다. 그림 앞은 브라우저가 늘 줄을 바꿀 수 있는
+ * 자리이고, 띄어 쓰지 않은 긴 제목을 칸 끝에서 자를 때도 마찬가지라서, 묶지 않으면 ✎ 나 시간만 다음 줄로 내려간다.
  */
-function BlockTitle({ text, editing, className }: { text: string; editing: boolean; className: string }) {
-  const style = `break-keep-wrap text-body font-semibold leading-6 ${className}`;
-  if (!editing) return <span className={`line-clamp-2 ${style}`}>{text}</span>;
+function GluedEnd({ text, children }: { text: string; children: ReactNode }) {
   const last = Array.from(graphemes.segment(text)).at(-1)?.segment ?? "";
   return (
-    <span className={`block ${style}`}>
+    <>
       {text.slice(0, text.length - last.length)}
       <span className="whitespace-nowrap">
         {last}
-        <EditMark />
+        {children}
       </span>
+    </>
+  );
+}
+
+/** 편집 모드에서는 제목을 줄이지 않고 끝에 ✎ 를 붙인다. 줄이면 ✎ 도 같이 잘린다. */
+function BlockTitle({ text, editing, className }: { text: string; editing: boolean; className: string }) {
+  const style = `break-keep-wrap text-body font-semibold leading-6 ${className}`;
+  if (!editing) return <span className={`line-clamp-2 ${style}`}>{text}</span>;
+  return (
+    <span className={`block ${style}`}>
+      <GluedEnd text={text}>
+        <EditMark />
+      </GluedEnd>
     </span>
   );
 }
@@ -190,18 +200,25 @@ export function IntervalBlock({ item, editing, onEdit, onRemove }: BlockProps) {
   const label = item.label || "인터벌";
   const canExpand = !!item.description || (item.label?.length || 0) > 30;
   const open = expanded && !editing;
+  const time = item.duration_seconds > 0 && ` · ${formatRuntime(item.duration_seconds)}`;
   const line = (
     <>
       <svg className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      <span className={`flex min-w-0 text-sm ${open ? "flex-wrap" : ""}`}>
-        <span className={`font-medium ${open ? "" : "truncate"}`}>{label}</span>
-        <span className="shrink-0 tabular-nums">
-          {item.duration_seconds > 0 && ` · ${formatRuntime(item.duration_seconds)}`}
-          {editing && <EditMark />}
+      {open || editing ? (
+        <span className="min-w-0 break-keep-wrap py-1.5 text-sm font-medium">
+          <GluedEnd text={label}>
+            <span className="font-normal tabular-nums">{time}</span>
+            {editing && <EditMark />}
+          </GluedEnd>
         </span>
-      </span>
+      ) : (
+        <span className="flex min-w-0 text-sm">
+          <span className="truncate font-medium">{label}</span>
+          <span className="shrink-0 tabular-nums">{time}</span>
+        </span>
+      )}
       {item.description && !open && <span className="min-w-0 grow basis-0 truncate text-caption text-text-subtle">{item.description}</span>}
       {canExpand && !editing && (
         <svg className={`ml-auto size-3 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
