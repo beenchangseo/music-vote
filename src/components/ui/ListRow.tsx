@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ButtonHTMLAttributes, ComponentProps, HTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, ComponentProps, ComponentPropsWithRef, HTMLAttributes, ReactNode } from "react";
 
 interface RowSlots {
   leading?: ReactNode;
@@ -43,7 +43,7 @@ export function ListRowButton({
   children,
   type = "button",
   ...rest
-}: RowSlots & ButtonHTMLAttributes<HTMLButtonElement>) {
+}: RowSlots & ComponentPropsWithRef<"button">) {
   return (
     <button type={type} className={`${pressableRow} ${className}`} {...rest}>
       <Slots as="span" leading={leading} trailing={trailing}>
