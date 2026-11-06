@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Button from "../ui/Button";
 import { useDialog } from "../ui/DialogProvider";
 import EmptyState from "../ui/EmptyState";
@@ -26,6 +26,7 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { showAlert, showDanger } = useDialog();
+  const listRef = useRef<HTMLDivElement>(null);
 
   const myComment = nickname ? comments.find((c) => c.isMine) : undefined;
 
@@ -78,8 +79,9 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
   const otherComments = comments.filter((c) => c !== myComment);
 
   return (
-    <Modal open onClose={onClose} title={`댓글 · ${songTitle}`}>
-      <div className="space-y-3">
+    // Focus the list, not the textarea: opening the sheet to read should not raise the keyboard.
+    <Modal open onClose={onClose} title={`댓글 · ${songTitle}`} initialFocus={listRef}>
+      <div ref={listRef} tabIndex={-1} className="space-y-3 outline-none">
         {loading ? (
           <div className="py-8 text-center">
             <span className="inline-block size-6 animate-spin rounded-pill border-2 border-border-strong border-t-primary-fg" />
