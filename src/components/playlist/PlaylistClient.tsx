@@ -8,7 +8,6 @@ import Link from "next/link";
 import { useDialog } from "../ui/DialogProvider";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
-import ButtonGroup from "../ui/ButtonGroup";
 import Card from "../ui/Card";
 import EmptyState from "../ui/EmptyState";
 import InlineNotice from "../ui/InlineNotice";
@@ -307,6 +306,7 @@ export default function PlaylistClient({
 
   // Setlist add confirm dialog
   const [setlistConfirmSongId, setSetlistConfirmSongId] = useState<string | null>(null);
+  const [addingToSetlist, setAddingToSetlist] = useState(false);
   const setlistConfirmSong = setlistConfirmSongId ? songsWithVotes.find((s) => s.id === setlistConfirmSongId) : null;
 
   const handleAddToSetlist = useCallback((songId: string) => {
@@ -331,8 +331,10 @@ export default function PlaylistClient({
   }
 
   async function handleConfirmAddToSetlist() {
-    if (!setlistConfirmSongId) return;
+    if (!setlistConfirmSongId || addingToSetlist) return;
+    setAddingToSetlist(true);
     const result = await insertSetlistBlock(playlist.id, { before: null }, { kind: "song", songId: setlistConfirmSongId }, shareCode).catch(() => null);
+    setAddingToSetlist(false);
     if (!result?.success) {
       showAlert(setlistMessage(result?.reason ?? "write_failed"));
       return;
@@ -741,12 +743,9 @@ export default function PlaylistClient({
             <p className="truncate text-sm font-medium text-text">{displayTitle(setlistConfirmSong.title)}</p>
             {setlistConfirmSong.artist && <p className="truncate text-caption text-text-muted">{setlistConfirmSong.artist}</p>}
           </SongRow>
-          <ButtonGroup className="mt-4">
-            <Button variant="tonal" onClick={() => setSetlistConfirmSongId(null)}>
-              취소
-            </Button>
-            <Button onClick={handleConfirmAddToSetlist}>추가하기</Button>
-          </ButtonGroup>
+          <Button size="lg" fullWidth className="mt-4" loading={addingToSetlist} onClick={handleConfirmAddToSetlist}>
+            추가하기
+          </Button>
         </Modal>
       )}
 
