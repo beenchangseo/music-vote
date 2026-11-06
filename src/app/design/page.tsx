@@ -172,7 +172,7 @@ export default function DesignPage() {
         </StateRow>
       </Section>
 
-      <Section title="IconButton" note="44px 고정. 아이콘만 있으니 aria-label 이 꼭 있어요.">
+      <Section title="IconButton" note="md 44, sm 은 보이는 크기 36 에 누르는 영역 44×44 예요(36px 인터벌 카드의 ⊖). 아이콘만 있으니 aria-label 이 꼭 있어요.">
         <StateHeader labels={["기본", "hover", "비활성"]} />
         {(["default", "danger", "brand"] as const).map((tone) => (
           <StateRow key={tone} label={tone}>
@@ -201,6 +201,35 @@ export default function DesignPage() {
           <IconButton bare aria-label="bare 비활성" disabled>
             <GuitarIcon className="size-5" />
           </IconButton>
+        </StateRow>
+        <StateRow label="bare danger (빨강 글리프)">
+          <IconButton bare tone="danger" aria-label="bare danger 기본">
+            <MinusCircleIcon />
+          </IconButton>
+          <HoverSample>
+            <IconButton bare tone="danger" aria-label="bare danger hover" tabIndex={-1}>
+              <MinusCircleIcon />
+            </IconButton>
+          </HoverSample>
+          <IconButton bare tone="danger" aria-label="bare danger 비활성" disabled>
+            <MinusCircleIcon />
+          </IconButton>
+        </StateRow>
+        <h3 className="mt-6 text-sm font-semibold text-text-muted">크기</h3>
+        <StateHeader labels={["md 44", "sm 36", "인터벌 카드 안 sm"]} />
+        <StateRow label="bare danger">
+          <IconButton bare tone="danger" aria-label="md 삭제">
+            <MinusCircleIcon />
+          </IconButton>
+          <IconButton bare tone="danger" size="sm" aria-label="sm 삭제">
+            <MinusCircleIcon />
+          </IconButton>
+          <span className="col-span-2 flex min-h-control-sm items-center gap-3 whitespace-nowrap rounded-control bg-surface-hover px-3 text-sm text-text-muted">
+            <IconButton bare tone="danger" size="sm" aria-label="카드 안 sm 삭제">
+              <MinusCircleIcon />
+            </IconButton>
+            인터벌
+          </span>
         </StateRow>
       </Section>
 
@@ -457,6 +486,15 @@ export default function DesignPage() {
         </div>
       </Section>
     </main>
+  );
+}
+
+function MinusCircleIcon() {
+  return (
+    <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+      <circle cx="12" cy="12" r="9" />
+      <path strokeLinecap="round" d="M8 12h8" />
+    </svg>
   );
 }
 

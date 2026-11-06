@@ -7,7 +7,7 @@ import Card from "../Card";
 import Chip from "../Chip";
 import IconButton from "../IconButton";
 import Input from "../Input";
-import { ListRowButton, ListRowLink } from "../ListRow";
+import { ListRowButton, ListRowIcon, ListRowLink } from "../ListRow";
 import RoundButton, { RoundLink } from "../RoundButton";
 
 afterEach(cleanup);
@@ -94,6 +94,21 @@ describe("IconButton", () => {
       </form>,
     );
     fireEvent.click(screen.getByRole("button", { name: "닫기" }));
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("keeps the small bare danger button named, clickable and out of form submit", () => {
+    const onClick = vi.fn();
+    const onSubmit = vi.fn((e: React.FormEvent) => e.preventDefault());
+    render(
+      <form onSubmit={onSubmit}>
+        <IconButton bare tone="danger" size="sm" aria-label="삭제" onClick={onClick}>
+          ⊖
+        </IconButton>
+      </form>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "삭제" }));
+    expect(onClick).toHaveBeenCalledTimes(1);
     expect(onSubmit).not.toHaveBeenCalled();
   });
 });
@@ -226,6 +241,20 @@ describe("ListRowButton", () => {
     expect(onSubmit).not.toHaveBeenCalled();
     // A <button> may hold only phrasing content. A <div> inside it is invalid HTML.
     expect(row.querySelector("div, p, h1, h2, h3, ul, li")).toBeNull();
+  });
+
+  it("reads a sheet choice by its words, not its icon tile, and does nothing while disabled", () => {
+    const onClick = vi.fn();
+    render(
+      <ListRowButton disabled onClick={onClick} leading={<ListRowIcon>♪</ListRowIcon>}>
+        <span className="block">자작곡</span>
+        <span className="block">우리 곡 한 블록</span>
+      </ListRowButton>,
+    );
+    const row = screen.getByRole("button", { name: "자작곡우리 곡 한 블록" });
+    expect(row.querySelector("div, p")).toBeNull();
+    fireEvent.click(row);
+    expect(onClick).not.toHaveBeenCalled();
   });
 });
 

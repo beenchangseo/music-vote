@@ -30,7 +30,7 @@ export default function ListRow({ leading, trailing, className = "", children, .
   );
 }
 
-const pressableRow = `${rowLayout} w-full rounded-control text-left transition-colors hover:bg-surface-hover`;
+const pressableRow = `group/row ${rowLayout} w-full rounded-control text-left transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent`;
 
 /**
  * 줄 전체가 눌리는 ListRow. 버튼 안에는 글자·span 만 둘 수 있어서 칸도 span 으로 그린다.
@@ -67,6 +67,21 @@ export function ListRowLink({
         {children}
       </Slots>
     </Link>
+  );
+}
+
+/**
+ * 줄 앞 40px 아이콘 칸. 시트(surface) 위 한 단계(surface-hover)이고, 눌리는 줄이 hover 로 같은 색이 되면 한 단계 더
+ * 올라가서 줄에 녹지 않는다. 아이콘 색은 className 의 text-* 로 준다.
+ */
+export function ListRowIcon({ className = "", children }: { className?: string; children: ReactNode }) {
+  return (
+    <span
+      aria-hidden
+      className={`flex size-10 items-center justify-center rounded-control bg-surface-hover transition-colors group-hover/row:bg-surface-elevated group-disabled/row:bg-surface-hover ${className}`}
+    >
+      {children}
+    </span>
   );
 }
 

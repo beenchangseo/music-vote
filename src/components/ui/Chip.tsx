@@ -7,8 +7,8 @@ interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 /**
  * 필터·선택지 칩. 켜고 끄는 버튼이라 aria-pressed 로 상태를 말한다.
- * 보이는 높이는 36px, 누르는 영역은 44px 이다. 가로로 스크롤되는 줄에 넣을 때는 줄에 세로 여백(py-1)을 줘서
- * 누르는 영역이 잘리지 않게 한다.
+ * 보이는 높이는 36px, 누르는 영역은 44px 이다. 폭도 44px 아래로 줄지 않아서 한 글자 칩(키 C·D)도 누르는 폭이 44px 이다.
+ * 가로로 스크롤되는 줄에 넣을 때는 줄에 세로 여백(py-1)을 줘서 누르는 영역이 잘리지 않게 한다.
  * 선택 상태는 색만이 아니라 테두리로도 말한다.
  */
 const Chip = forwardRef<HTMLButtonElement, ChipProps>(function Chip(
@@ -24,7 +24,7 @@ const Chip = forwardRef<HTMLButtonElement, ChipProps>(function Chip(
       ref={ref}
       type={type}
       aria-pressed={selected}
-      className={`inline-flex h-control-sm shrink-0 items-center gap-1 whitespace-nowrap rounded-pill border px-3.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${touchTarget44} ${skin} ${className}`}
+      className={`inline-flex h-control-sm min-w-control-md shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-pill border px-3.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${touchTarget44} ${skin} ${className}`}
       {...rest}
     >
       {children}
