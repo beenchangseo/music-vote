@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import Image from "next/image";
 import Badge from "../ui/Badge";
 import { touchTarget44 } from "../ui/Button";
+import IconButton from "../ui/IconButton";
 import { effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, type SetlistBlock } from "@/domain/setlist";
 import { displayArtist, formatKey } from "@/domain/song-meta";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
@@ -22,12 +23,12 @@ function CardShell({ kind, editing, onRemove, current = false, className = "", c
   return (
     <div className={`flex items-center gap-3 ${BLOCK_TONES[kind].radius} ${current ? PLAYING_CARD : BLOCK_TONES[kind].card} ${className}`}>
       {editing && (
-        <button type="button" onClick={onRemove} className={`-mx-1 flex h-control-sm w-11 shrink-0 items-center justify-center text-danger-fg print:hidden ${touchTarget44}`} aria-label="삭제">
+        <IconButton bare tone="danger" size="sm" onClick={onRemove} className="print:hidden" aria-label="삭제">
           <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
             <circle cx="12" cy="12" r="9" />
             <path strokeLinecap="round" d="M8 12h8" />
           </svg>
-        </button>
+        </IconButton>
       )}
       {children}
     </div>
@@ -131,7 +132,7 @@ export function SongBlock({ item, song, editing, onEdit, onRemove, nowPlaying, o
             {nowPlaying ? (
               <span className="flex h-4 items-end gap-0.5" aria-hidden>
                 {["0ms", "150ms", "300ms"].map((delay) => (
-                  <span key={delay} className="h-full w-0.5 origin-bottom animate-eq-bar rounded-full bg-accent-play" style={{ animationDelay: delay }} />
+                  <span key={delay} className="h-full w-0.5 origin-bottom animate-eq-bar rounded-pill bg-accent-play" style={{ animationDelay: delay }} />
                 ))}
               </span>
             ) : (
@@ -209,10 +210,10 @@ export function IntervalBlock({ item, editing, onEdit, onRemove }: BlockProps) {
       )}
     </>
   );
-  const lineClass = "flex min-h-control-sm w-full min-w-0 flex-1 items-center gap-2 text-left";
+  const lineClass = "flex w-full min-w-0 flex-1 items-center gap-2 text-left";
 
   return (
-    <CardShell kind="interval" editing={editing} onRemove={onRemove} className={editing ? "pr-3 pl-2" : "px-3"}>
+    <CardShell kind="interval" editing={editing} onRemove={onRemove} className="min-h-control-sm px-3">
       <span className="min-w-0 flex-1">
         {editing ? (
           <button type="button" onClick={onEdit} className={`${lineClass} ${touchTarget44}`} aria-label={`「${label}」 인터벌 고치기`}>

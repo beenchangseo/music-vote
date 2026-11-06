@@ -113,30 +113,5 @@
     "ds/no-raw-control": {
       "count": 5
     }
-  },
-  "src/components/setlist/BlockCards.tsx": {
-    "ds/no-raw-control": {
-      "count": 3
-    }
-  },
-  "src/components/setlist/InsertSheet.tsx": {
-    "ds/no-raw-control": {
-      "count": 1
-    }
-  },
-  "src/components/setlist/SetlistItemEditModal.tsx": {
-    "ds/no-raw-control": {
-      "count": 3
-    }
-  },
-  "src/components/setlist/SetlistShareButton.tsx": {
-    "ds/no-raw-control": {
-      "count": 1
-    }
-  },
-  "src/components/setlist/SetlistView.tsx": {
-    "ds/no-raw-control": {
-      "count": 4
-    }
   }
 }

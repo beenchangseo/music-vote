@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ListRowButton, ListRowIcon } from "../ui/ListRow";
 import Modal from "../ui/Modal";
 import { ToolbarButton } from "../ui/ScreenToolbar";
 import { useDialog } from "../ui/DialogProvider";
@@ -71,7 +72,7 @@ export default function SetlistShareButton({ shareCode, title }: Props) {
       />
 
       <Modal open={open} onClose={() => setOpen(false)} title="셋리스트 내보내기">
-        <div className="space-y-2">
+        <div className="flex flex-col">
           <ShareOption
             title="링크 공유"
             description="단톡방이나 메시지로 셋리스트 링크를 보내요."
@@ -98,21 +99,21 @@ export default function SetlistShareButton({ shareCode, title }: Props) {
 
 function ShareOption({ title, description, icon, onClick }: { title: string; description: string; icon: React.ReactNode; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="flex min-h-16 w-full items-center gap-3 rounded-xl bg-surface-hover p-3 text-left transition-colors hover:bg-surface-elevated">
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-fg">{icon}</span>
-      <span className="min-w-0"><strong className="block text-sm text-text">{title}</strong><span className="mt-0.5 block text-caption leading-relaxed text-text-muted">{description}</span></span>
-    </button>
+    <ListRowButton onClick={onClick} className="px-2" leading={<ListRowIcon className="text-primary-fg">{icon}</ListRowIcon>}>
+      <span className="block text-body font-semibold text-text">{title}</span>
+      <span className="block break-keep-wrap text-caption text-text-muted">{description}</span>
+    </ListRowButton>
   );
 }
 
 function LinkIcon() {
-  return <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-3 3a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m4.242 4.5a4.5 4.5 0 0 1-1.242-7.244l3-3a4.5 4.5 0 0 1 6.364 6.364l-1.757 1.757" /></svg>;
+  return <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-3 3a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m4.242 4.5a4.5 4.5 0 0 1-1.242-7.244l3-3a4.5 4.5 0 0 1 6.364 6.364l-1.757 1.757" /></svg>;
 }
 
 function ImageIcon() {
-  return <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm12.75-12h.008v.008H16.5V7.5Z" /></svg>;
+  return <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm12.75-12h.008v.008H16.5V7.5Z" /></svg>;
 }
 
 function PdfIcon() {
-  return <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5A3.375 3.375 0 0 0 10.125 2.25H8.25m0 12.75h7.5m-7.5 3h4.5M10.5 2.25H5.625A1.875 1.875 0 0 0 3.75 4.125v15.75a1.875 1.875 0 0 0 1.875 1.875h12.75a1.875 1.875 0 0 0 1.875-1.875V12a9.75 9.75 0 0 0-9.75-9.75Z" /></svg>;
+  return <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5A3.375 3.375 0 0 0 10.125 2.25H8.25m0 12.75h7.5m-7.5 3h4.5M10.5 2.25H5.625A1.875 1.875 0 0 0 3.75 4.125v15.75a1.875 1.875 0 0 0 1.875 1.875h12.75a1.875 1.875 0 0 0 1.875-1.875V12a9.75 9.75 0 0 0-9.75-9.75Z" /></svg>;
 }

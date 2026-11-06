@@ -9,6 +9,9 @@ import type { InsertTarget } from "./SetlistEditList";
 import SetlistItemEditModal from "./SetlistItemEditModal";
 import SetlistShareButton from "./SetlistShareButton";
 import { RailEnd, RailRow } from "./TimelineRail";
+import Button from "../ui/Button";
+import EmptyState from "../ui/EmptyState";
+import IconButton from "../ui/IconButton";
 import ScreenToolbar, { ToolbarButton } from "../ui/ScreenToolbar";
 import { useDialog } from "../ui/DialogProvider";
 import { insertSetlistBlock, removeSetlistItem, updateSetlistOrder } from "@/actions/setlist";
@@ -171,7 +174,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
 
   return (
     <div>
-      <h2 className="hidden print:block print:text-2xl print:font-bold">{title}</h2>
+      <h2 className="hidden print:block print:text-h2 print:font-bold">{title}</h2>
 
       <ScreenToolbar
         stat={formatRuntime(summary.totalRuntime)}
@@ -224,10 +227,10 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
       </ScreenToolbar>
 
       {blocks.length === 0 ? (
-        <div className="py-10 text-center text-text-subtle">
-          <p className="text-lg font-medium">셋리스트가 비어있어요</p>
-          <p className="mt-1 text-sm">{canEdit ? "아래 후보곡에서 공연할 곡을 넣어 보세요." : "투표 리스트에서 곡을 추가해보세요."}</p>
-        </div>
+        <EmptyState
+          title="셋리스트가 비어있어요"
+          description={canEdit ? "아래 후보곡에서 공연할 곡을 넣어 보세요." : "투표 리스트에서 곡을 추가해보세요."}
+        />
       ) : showEditControls ? (
         <SetlistEditList
           blocks={blocks}
@@ -268,24 +271,18 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
       {/* Once the setlist has blocks, adding goes through the (+) rows in edit mode (grill decision 5). */}
       {canEdit && blocks.length === 0 && (
         <div className="mt-3 flex flex-wrap gap-2 print:hidden">
-          <button
-            onClick={() => openAtEnd("original")}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-pill border border-dashed border-border-strong px-4 text-sm font-medium text-text-muted transition-colors hover:bg-surface-hover"
-          >
-            <svg className="h-4 w-4 text-primary-fg" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
+          <Button variant="tonal" onClick={() => openAtEnd("original")}>
+            <svg className="size-4 text-primary-fg" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
               <path d="M12 5v14M5 12h14" />
             </svg>
             자작곡 블록 추가
-          </button>
-          <button
-            onClick={() => openAtEnd("interval")}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-pill border border-dashed border-border-strong px-4 text-sm font-medium text-text-muted transition-colors hover:bg-surface-hover"
-          >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
+          </Button>
+          <Button variant="tonal" onClick={() => openAtEnd("interval")}>
+            <svg className="size-4 text-text-muted" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
               <path d="M12 5v14M5 12h14" />
             </svg>
             인터벌 블록 추가
-          </button>
+          </Button>
         </div>
       )}
 
@@ -308,33 +305,23 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
                     <span className="tabular-nums">{song.score > 0 ? `+${song.score}` : song.score}점</span>
                   </span>
                 </span>
-                <button
-                  type="button"
-                  onClick={() => addFromCandidates(song.id)}
-                  disabled={!!addingSongId}
-                  aria-label={`${displayTitle(song.title)} 셋리스트에 넣기`}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-pill text-text-muted transition-colors hover:bg-surface-hover hover:text-primary-fg disabled:opacity-40"
-                >
+                <IconButton bare onClick={() => addFromCandidates(song.id)} disabled={!!addingSongId} aria-label={`${displayTitle(song.title)} 셋리스트에 넣기`}>
                   {addingSongId === song.id ? (
-                    <span className="h-4 w-4 animate-spin rounded-pill border-2 border-border-strong border-t-primary-fg" />
+                    <span aria-hidden className="size-4 animate-spin rounded-pill border-2 border-border-strong border-t-primary-fg" />
                   ) : (
-                    <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden>
+                    <svg className="size-6" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden>
                       <circle cx="12" cy="12" r="9" />
                       <path strokeLinecap="round" d="M12 8v8M8 12h8" />
                     </svg>
                   )}
-                </button>
+                </IconButton>
               </li>
             ))}
           </ul>
           {!showAllSuggestions && suggestions.length > COLLAPSED_SUGGESTIONS && (
-            <button
-              type="button"
-              onClick={() => setShowAllSuggestions(true)}
-              className="mt-2 inline-flex min-h-11 items-center rounded-pill border border-border px-4 text-sm font-semibold text-text transition-colors hover:bg-surface-hover"
-            >
+            <Button variant="tonal" size="sm" className="mt-2" onClick={() => setShowAllSuggestions(true)}>
               더 보기 ({suggestions.length - COLLAPSED_SUGGESTIONS}곡)
-            </button>
+            </Button>
           )}
         </section>
       )}
