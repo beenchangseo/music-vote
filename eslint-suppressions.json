@@ -44,11 +44,6 @@
       "count": 1
     }
   },
-  "src/components/playlist/AddSongForm.tsx": {
-    "ds/no-raw-control": {
-      "count": 3
-    }
-  },
   "src/components/playlist/AnnouncementButton.tsx": {
     "ds/no-raw-control": {
       "count": 2
