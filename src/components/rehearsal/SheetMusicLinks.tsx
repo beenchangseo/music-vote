@@ -1,6 +1,7 @@
 // 곡 카드에 외부 악보·코드 검색 사이트 4개 단축 링크.
 // 한국 가요/팝/락 커버 시나리오에 맞춰 우선순위.
 
+import { buttonClassName } from "../ui/Button";
 import { displayArtist, displayTitle } from "@/domain/song-meta";
 
 interface SheetMusicLinksProps {
@@ -60,7 +61,7 @@ export default function SheetMusicLinks({ title, artist }: SheetMusicLinksProps)
       <div className="text-caption font-semibold text-text-muted mb-1.5">
         악보·코드 검색
       </div>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-x-1.5 gap-y-2">
         {SITES.map((s) => (
           <a
             key={s.key}
@@ -68,7 +69,7 @@ export default function SheetMusicLinks({ title, artist }: SheetMusicLinksProps)
             target="_blank"
             rel="noopener noreferrer"
             title={s.note}
-            className="inline-flex items-center gap-1 min-h-11 px-2.5 rounded-control bg-surface-hover text-caption font-semibold text-text-muted hover:text-text hover:bg-surface-hover transition-colors"
+            className={buttonClassName({ variant: "tonal", size: "sm" })}
           >
             <ExternalIcon />
             {s.label}
@@ -82,7 +83,7 @@ export default function SheetMusicLinks({ title, artist }: SheetMusicLinksProps)
 function ExternalIcon() {
   return (
     <svg
-      className="w-3 h-3"
+      className="size-3"
       fill="none"
       stroke="currentColor"
       strokeWidth={2.5}

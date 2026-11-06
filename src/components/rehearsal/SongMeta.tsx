@@ -2,6 +2,8 @@
 
 import { useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
+import Button, { buttonClassName } from "../ui/Button";
+import Chip from "../ui/Chip";
 import { useDialog } from "../ui/DialogProvider";
 import SheetMusicLinks from "./SheetMusicLinks";
 import { updateSongMeta } from "@/actions/song";
@@ -90,23 +92,19 @@ export default function SongMeta({ song, playlistId, shareCode, onClose }: SongM
         </span>
         <div className="flex items-center gap-2">
           {isPending && (
-            <span className="inline-block w-3.5 h-3.5 border-2 border-text-subtle border-t-primary-fg rounded-full animate-spin" />
+            <span className="inline-block size-3.5 border-2 border-text-subtle border-t-primary-fg rounded-pill animate-spin" />
           )}
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex min-h-11 items-center gap-1 text-caption text-text-muted hover:text-text"
-          >
+          <Button variant="ghost" size="sm" onClick={onClose}>
             <ChevronUpIcon /> 접기
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Key picker */}
       <Field label="키">
-        <div className="flex flex-wrap gap-1">
-          <KeyChip
-            active={keyRoot === null}
+        <div className="flex flex-wrap gap-x-1.5 gap-y-2">
+          <Chip
+            selected={keyRoot === null}
             onClick={() => {
               setKeyRoot(null);
               setKeyMode(null);
@@ -114,26 +112,26 @@ export default function SongMeta({ song, playlistId, shareCode, onClose }: SongM
             }}
           >
             없음
-          </KeyChip>
+          </Chip>
           {KEY_ROOTS.map((k) => (
-            <KeyChip
+            <Chip
               key={k}
-              active={keyRoot === k}
+              selected={keyRoot === k}
               onClick={() => {
                 setKeyRoot(k);
                 persist({ keyRoot: k });
               }}
             >
               {k}
-            </KeyChip>
+            </Chip>
           ))}
         </div>
         {keyRoot && (
-          <div className="mt-1.5 flex gap-1">
+          <div className="mt-2 flex gap-1.5">
             {KEY_MODES.map((m) => (
-              <KeyChip
+              <Chip
                 key={m.value}
-                active={keyMode === m.value}
+                selected={keyMode === m.value}
                 onClick={() => {
                   const next = keyMode === m.value ? null : m.value;
                   setKeyMode(next);
@@ -141,7 +139,7 @@ export default function SongMeta({ song, playlistId, shareCode, onClose }: SongM
                 }}
               >
                 {m.label}
-              </KeyChip>
+              </Chip>
             ))}
           </div>
         )}
@@ -157,7 +155,7 @@ export default function SongMeta({ song, playlistId, shareCode, onClose }: SongM
 
       {/* BPM + Duration */}
       <Field label="BPM · 길이">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <input
             type="number"
             value={tempoBpm}
@@ -194,7 +192,7 @@ export default function SongMeta({ song, playlistId, shareCode, onClose }: SongM
           {hasBpm && (
             <Link
               href={`/playlist/${shareCode}/metronome?bpm=${tempoBpm}&songId=${song.id}`}
-              className="ml-auto inline-flex items-center gap-1 px-2.5 min-h-11 rounded-control bg-primary/10 border border-primary/30 text-caption font-semibold text-primary-fg hover:bg-primary/20"
+              className={buttonClassName({ variant: "tonal", size: "sm", className: "ml-auto" })}
             >
               <MetronomeIcon /> 메트로놈
             </Link>
@@ -204,11 +202,11 @@ export default function SongMeta({ song, playlistId, shareCode, onClose }: SongM
 
       {/* Difficulty */}
       <Field label="난이도">
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-x-1.5 gap-y-2">
           {[1, 2, 3, 4, 5].map((d) => (
-            <KeyChip
+            <Chip
               key={d}
-              active={difficulty === d}
+              selected={difficulty === d}
               onClick={() => {
                 const next = difficulty === d ? null : d;
                 setDifficulty(next);
@@ -216,18 +214,18 @@ export default function SongMeta({ song, playlistId, shareCode, onClose }: SongM
               }}
             >
               {"★".repeat(d)}
-            </KeyChip>
+            </Chip>
           ))}
         </div>
       </Field>
 
       {/* Genre */}
       <Field label="장르">
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-x-1.5 gap-y-2">
           {GENRES.map((g) => (
-            <KeyChip
+            <Chip
               key={g.value}
-              active={genre === g.value}
+              selected={genre === g.value}
               onClick={() => {
                 const next = genre === g.value ? null : g.value;
                 setGenre(next);
@@ -235,7 +233,7 @@ export default function SongMeta({ song, playlistId, shareCode, onClose }: SongM
               }}
             >
               {g.label}
-            </KeyChip>
+            </Chip>
           ))}
         </div>
       </Field>
@@ -259,34 +257,10 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function KeyChip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`h-11 min-w-[44px] px-2.5 rounded-control text-caption font-semibold transition-colors ${
-        active
-          ? "bg-primary text-on-primary"
-          : "bg-surface-hover text-text-muted hover:text-text"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
 function ChevronUpIcon() {
   return (
     <svg
-      className="w-3.5 h-3.5"
+      className="size-3.5"
       fill="none"
       stroke="currentColor"
       strokeWidth={2.5}
@@ -301,7 +275,7 @@ function ChevronUpIcon() {
 function MetronomeIcon() {
   return (
     <svg
-      className="w-3.5 h-3.5"
+      className="size-3.5"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

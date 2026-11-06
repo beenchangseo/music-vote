@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { useMetronome } from "@/hooks/useMetronome";
-import Link from "next/link";
 import { displayTitle } from "@/domain/song-meta";
+import { controlSkin } from "../ui/Input";
 import PlayPauseIcon from "../ui/PlayPauseIcon";
-import RoundButton, { RoundRow } from "../ui/RoundButton";
+import RoundButton, { RoundLink, RoundRow } from "../ui/RoundButton";
 import type { Song } from "@/domain/types";
 
 interface MetronomeClientProps {
@@ -37,16 +37,13 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
       {/* Header */}
       <div className="max-w-lg mx-auto w-full px-4 py-4">
         <div className="flex items-center gap-3">
-          <Link
-            href={`/playlist/${shareCode}`}
-            className="p-2 rounded-xl bg-surface border border-border hover:bg-surface-hover transition-colors"
-          >
-            <svg className="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          <RoundLink href={`/playlist/${shareCode}`} tone="ghost" size="md" edge="start" aria-label="플레이리스트로 돌아가기">
+            <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
-          </Link>
+          </RoundLink>
           <div>
-            <h1 className="text-lg font-bold text-text">메트로놈</h1>
+            <h1 className="text-h4 font-bold text-text">메트로놈</h1>
             <p className="text-caption text-text-subtle">{playlistTitle}</p>
           </div>
         </div>
@@ -60,7 +57,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
           {[0, 1, 2, 3].map((i) => (
             <div
               key={i}
-              className={`w-6 h-6 rounded-full transition-all duration-75 ${
+              className={`size-6 rounded-pill transition-all duration-75 ${
                 isPlaying && beat === i
                   ? i === 0
                     ? "bg-primary scale-125 shadow-lg shadow-primary/50"
@@ -106,7 +103,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
             <select
               value={selectedSongId}
               onChange={(e) => handleSongChange(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-surface-hover border border-border text-text text-sm focus:outline-none focus:ring-2 focus:ring-focus-ring"
+              className={`h-control-md rounded-control px-4 ${controlSkin(false)}`}
             >
               <option value="">곡 선택...</option>
               {songs.map((s) => (

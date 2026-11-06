@@ -28,6 +28,12 @@ describe("MetronomeClient", () => {
     expect(screen.getByText(/^현재:/)).toHaveTextContent("현재: 예뻤어 · 107 BPM");
   });
 
+  it("names the way back to the playlist", () => {
+    render(<MetronomeClient shareCode="abc123" playlistTitle="10월 합주" songs={[]} initialBpm={120} />);
+
+    expect(screen.getByRole("link", { name: "플레이리스트로 돌아가기" })).toHaveAttribute("href", "/playlist/abc123");
+  });
+
   it("names each tempo step by what it does and moves the BPM by it", () => {
     render(<MetronomeClient shareCode="abc123" playlistTitle="10월 합주" songs={[]} initialBpm={120} />);
 

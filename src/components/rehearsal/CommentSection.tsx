@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Button from "../ui/Button";
 import { useDialog } from "../ui/DialogProvider";
+import Textarea from "../ui/Textarea";
 import { addOrUpdateComment } from "@/actions/comment";
 import type { Comment } from "@/domain/types";
 
@@ -64,16 +66,16 @@ export default function CommentSection({ songId, comments, nickname, shareCode, 
             {visible.map((c) => (
               <div key={c.id} className="mb-2">
                 <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className="text-caption font-medium text-primary-fg truncate max-w-[120px]">{c.nickname}</span>
-                  <span className="text-[10px] text-text-subtle">{new Date(c.updated_at).toLocaleDateString("ko-KR")}</span>
+                  <span className="text-caption font-medium text-primary-fg truncate max-w-30">{c.nickname}</span>
+                  <span className="text-caption text-text-subtle">{new Date(c.updated_at).toLocaleDateString("ko-KR")}</span>
                 </div>
                 <p className="text-caption text-text-muted whitespace-pre-wrap">{c.content}</p>
               </div>
             ))}
             {others.length > 2 && !showAllComments && (
-              <button onClick={() => setShowAllComments(true)} className="text-caption text-primary-fg hover:text-on-primary-tint mb-1">
+              <Button variant="ghost" size="sm" onClick={() => setShowAllComments(true)}>
                 댓글 {others.length - 2}개 더보기
-              </button>
+              </Button>
             )}
           </>
         );
@@ -83,36 +85,35 @@ export default function CommentSection({ songId, comments, nickname, shareCode, 
       {nickname && (
         <div className="mt-2">
           {myComment && !isEditing ? (
-            <div className="bg-surface-hover/50 rounded-lg p-2">
+            <div className="bg-surface-hover/50 rounded-control p-2">
               <div className="flex items-center justify-between mb-0.5">
                 <span className="text-caption font-medium text-primary-fg">{nickname} (나)</span>
-                <button onClick={() => setIsEditing(true)} className="text-[10px] text-text-subtle hover:text-text-muted">수정</button>
+                <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
+                  수정
+                </Button>
               </div>
               <p className="text-caption text-text-muted whitespace-pre-wrap">{myComment.content}</p>
             </div>
           ) : (
             <div className="space-y-1.5">
-              <textarea
+              <Textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder={`${nickname}의 메모를 남겨보세요 (1000자)`}
                 maxLength={1000}
                 rows={2}
-                className="w-full px-2 py-1.5 rounded-lg bg-surface-hover border border-border text-caption text-text placeholder-text-subtle resize-none focus:outline-none focus:ring-1 focus:ring-focus-ring"
               />
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-text-subtle">{content.length}/1000</span>
+                <span className="text-caption text-text-subtle">{content.length}/1000</span>
                 <div className="flex gap-2">
                   {isEditing && (
-                    <button onClick={() => { setIsEditing(false); setContent(myComment?.content || ""); }} className="inline-flex min-h-11 items-center px-2 text-caption text-text-subtle">취소</button>
+                    <Button variant="ghost" size="sm" onClick={() => { setIsEditing(false); setContent(myComment?.content || ""); }}>
+                      취소
+                    </Button>
                   )}
-                  <button
-                    onClick={handleSubmit}
-                    disabled={!content.trim() || isPending}
-                    className="inline-flex min-h-11 items-center px-3 rounded-control bg-primary hover:bg-primary-hover text-on-primary text-caption font-medium disabled:opacity-50 transition-colors"
-                  >
+                  <Button variant="tonal" size="sm" onClick={handleSubmit} disabled={!content.trim() || isPending}>
                     {isPending ? "저장 중..." : myComment ? "수정" : "작성"}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
