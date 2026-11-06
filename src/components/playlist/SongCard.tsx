@@ -136,7 +136,7 @@ export default function SongCard({
         </ActionTab>
       ) : null}
       {hasMenu && (
-        <IconButton bare onClick={() => setShowMenu(true)} aria-label="더보기">
+        <IconButton bare onClick={() => setShowMenu(true)} aria-label={`${title} 더보기`}>
           <svg className="size-4.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
             <circle cx="5" cy="12" r="1.6" />
             <circle cx="12" cy="12" r="1.6" />
@@ -164,8 +164,8 @@ export default function SongCard({
             disabled={isPending}
             className={song.added_by ? "mt-2" : ""}
             leading={
-              <svg className="size-5 text-danger-fg" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              <svg className="size-5 text-danger-fg" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+                <path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V4h6v3" />
               </svg>
             }
           >

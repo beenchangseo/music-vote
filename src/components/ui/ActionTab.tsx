@@ -1,8 +1,8 @@
-import { Children, Fragment, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { Children, Fragment, isValidElement, type ButtonHTMLAttributes, type ReactNode } from "react";
 
 const tabLook =
   "inline-flex h-control-md min-w-0 flex-auto items-center justify-center gap-1.5 whitespace-nowrap px-1 text-sm font-semibold " +
-  "transition-colors max-[359px]:text-caption [&_svg]:size-4.5 [&_svg]:shrink-0";
+  "transition-colors disabled:cursor-not-allowed disabled:opacity-50 max-[359px]:text-caption [&_svg]:size-4.5 [&_svg]:shrink-0";
 
 type ActionTabProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className" | "children"> & {
   icon: ReactNode;
@@ -39,7 +39,8 @@ export function ActionTabBar({ id, children }: { id?: string; children: ReactNod
   return (
     <div id={id} className="flex items-center border-t border-surface-hover">
       {Children.toArray(children).map((child, index) => (
-        <Fragment key={index}>
+        // toArray's own key, so a tab that comes or goes does not remount the ones after it (the ⋯ keeps its focus).
+        <Fragment key={isValidElement(child) ? (child.key ?? index) : index}>
           {index > 0 && <span aria-hidden className="h-5 w-px shrink-0 bg-surface-hover" />}
           {child}
         </Fragment>

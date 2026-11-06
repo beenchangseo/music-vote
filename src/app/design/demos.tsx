@@ -277,7 +277,7 @@ export function SongRowActionsDemo() {
   const [open, setOpen] = useState(true);
   const [inSetlist, setInSetlist] = useState(false);
   return (
-    <div className="-mx-2 mt-3 rounded-card bg-surface">
+    <div className="mt-3 rounded-card bg-surface">
       <div className="px-2">
         <SongRow rank={1} topRank cover={<span className="absolute inset-0 bg-surface-hover" />} trailing={<span className="text-sm font-bold tabular-nums text-text">6</span>}>
           <SongRowTitleButton onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-controls="design-song-actions">
@@ -297,7 +297,7 @@ export function SongRowActionsDemo() {
           <ActionTab icon={<GuitarIcon />} selected={inSetlist} onClick={() => setInSetlist((v) => !v)}>
             {inSetlist ? "셋리스트에 있음" : "셋리스트에 추가"}
           </ActionTab>
-          <IconButton bare aria-label="더보기 예시">
+          <IconButton bare aria-label="예뻤어 더보기">
             <svg className="size-4.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
               <circle cx="5" cy="12" r="1.6" />
               <circle cx="12" cy="12" r="1.6" />
