@@ -77,10 +77,11 @@ test.describe("account-a: comment add / edit / delete", () => {
     await expectNoAlert(page);
     await expect.poll(() => storedComments(userId), { timeout: 15_000 }).toEqual([edited]);
 
-    // Delete: the card's "삭제" first, then the confirm dialog's "삭제" (rendered last in the DOM)
+    // Delete: the card's "삭제" first, then the confirm dialog's "삭제". The comment sheet is portaled to the end of
+    // body, so DOM order no longer tells the two apart: scope the second click to the alertdialog.
     await page.getByRole("button", { name: "삭제", exact: true }).click();
     await expect(page.getByRole("heading", { name: "삭제 확인", level: 3 })).toBeVisible();
-    await page.getByRole("button", { name: "삭제", exact: true }).last().click();
+    await page.getByRole("alertdialog").getByRole("button", { name: "삭제", exact: true }).click();
     await expect(page.getByText(edited, { exact: true })).toHaveCount(0);
     await expectNoAlert(page);
 
