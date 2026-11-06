@@ -8,7 +8,16 @@ import NoticeCard from "@/components/ui/NoticeCard";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import Switch from "@/components/ui/Switch";
 import TabBar from "@/components/ui/TabBar";
-import ListRow, { ListGroup, ListRowButton, ListRowIcon, ListRowLink } from "@/components/ui/ListRow";
+import ListRow, {
+  ListGroup,
+  ListRowButton,
+  ListRowIcon,
+  ListRowLink,
+  SongRow,
+  SongRowTitleButton,
+} from "@/components/ui/ListRow";
+import { ActionTab, ActionTabBar } from "@/components/ui/ActionTab";
+import IconButton from "@/components/ui/IconButton";
 import Avatar from "@/components/ui/Avatar";
 import GuitarIcon from "@/components/ui/GuitarIcon";
 import { useDialog } from "@/components/ui/DialogProvider";
@@ -260,6 +269,43 @@ export function ListGroupDemo() {
           <span className="block truncate text-sm font-medium text-text">10월 정기 합주</span>
         </ListRowLink>
       </div>
+    </div>
+  );
+}
+
+export function SongRowActionsDemo() {
+  const [open, setOpen] = useState(true);
+  const [inSetlist, setInSetlist] = useState(false);
+  return (
+    <div className="-mx-2 mt-3 rounded-card bg-surface">
+      <div className="px-2">
+        <SongRow rank={1} topRank cover={<span className="absolute inset-0 bg-surface-hover" />} trailing={<span className="text-sm font-bold tabular-nums text-text">6</span>}>
+          <SongRowTitleButton onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-controls="design-song-actions">
+            <span className="line-clamp-2 text-body font-semibold leading-snug text-text">예뻤어</span>
+            <span className="text-caption text-text-muted">DAY6 · 눌러서 접고 펴기</span>
+          </SongRowTitleButton>
+        </SongRow>
+      </div>
+      {open && (
+        <ActionTabBar id="design-song-actions">
+          <ActionTab icon={<GuitarIcon />} onClick={() => undefined}>
+            댓글 2
+          </ActionTab>
+          <ActionTab icon={<GuitarIcon />} onClick={() => undefined}>
+            버전
+          </ActionTab>
+          <ActionTab icon={<GuitarIcon />} selected={inSetlist} onClick={() => setInSetlist((v) => !v)}>
+            {inSetlist ? "셋리스트에 있음" : "셋리스트에 추가"}
+          </ActionTab>
+          <IconButton bare aria-label="더보기 예시">
+            <svg className="size-4.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <circle cx="5" cy="12" r="1.6" />
+              <circle cx="12" cy="12" r="1.6" />
+              <circle cx="19" cy="12" r="1.6" />
+            </svg>
+          </IconButton>
+        </ActionTabBar>
+      )}
     </div>
   );
 }

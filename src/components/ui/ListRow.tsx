@@ -110,6 +110,18 @@ interface SongRowProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 /**
+ * SongRow 가운데 칸을 누르는 제목 줄. 행을 펼치는 버튼이라 aria-expanded 를 단다.
+ * 56px 이상이라 한 줄 제목도 누르기 쉽다. 버튼 안이라 칸에는 span 만 둔다.
+ */
+export function SongRowTitleButton({ type = "button", children, ...rest }: Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className">) {
+  return (
+    <button type={type} className="flex min-h-row w-full min-w-0 flex-col justify-center text-left" {...rest}>
+      {children}
+    </button>
+  );
+}
+
+/**
  * 곡 한 줄 (Spotify 행, 72px). 카드 배경 없이 바탕 위에 놓는다. [순위][48px 커버][제목·메타][점수·투표].
  * 가운데 칸(children)은 부르는 쪽이 그린다. 펼치는 행이면 제목 줄이 버튼이 된다.
  */

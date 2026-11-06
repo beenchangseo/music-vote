@@ -20,7 +20,7 @@ import Field from "@/components/ui/Field";
 import InlineNotice from "@/components/ui/InlineNotice";
 import { RankNumber, SongRow } from "@/components/ui/ListRow";
 import Textarea from "@/components/ui/Textarea";
-import { DialogDemo, HoverSample, ListGroupDemo, ModalDemo, MotionDemo, NoticeDemo, SegmentedDemo, SwitchDemo, TabBarDemo } from "./demos";
+import { DialogDemo, HoverSample, ListGroupDemo, ModalDemo, MotionDemo, NoticeDemo, SegmentedDemo, SongRowActionsDemo, SwitchDemo, TabBarDemo } from "./demos";
 
 export const metadata: Metadata = {
   title: "디자인 시스템 · Plypick",
@@ -466,6 +466,12 @@ export default function DesignPage() {
             </SongRow>
           ))}
         </div>
+        <p className="mt-4 text-caption font-semibold text-text-muted">펼치는 행 (SongRowTitleButton · ActionTabBar)</p>
+        <p className="mt-1 text-caption text-text-subtle">
+          제목 줄은 SongRowTitleButton(56px 이상)이에요. 펼친 아래 칸은 ActionTab 줄로, 바탕 없는 44px 탭이 폭을 나눠 가지고 끝에 ⋯ IconButton 이 와요.
+          카드 보기도 같은 줄을 써요.
+        </p>
+        <SongRowActionsDemo />
       </Section>
 
       <Section title="ListRow · ListGroup · Avatar" note="설정·멤버는 56px 행을 묶음 카드로 감싸요 (Toss). 아바타는 겹쳐도 비치지 않아요.">
