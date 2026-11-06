@@ -122,6 +122,7 @@ Variable(한국어) + Geist(영문) 폴백.
 
 - `Button`: variant `primary`·`tonal`·`ghost`·`danger`·`kakao`, size `sm`·`md`·`lg`·`icon`, `loading`(aria-busy).
   버튼처럼 보이는 `<Link>` 는 `buttonClassName()`. 카카오 노랑은 `kakao` 변형으로만 칠한다(말풍선 표시를 그린다).
+  `Input pill`(검색 칸) 옆 버튼은 `pill` 로 모서리를 맞춘다.
 - 켜고 끄는 버튼은 `pressed` 다(켜지면 primary, `aria-pressed`). `ToolbarButton` 의 `pressed` 도 같은 것이다. 켜고 꺼도
   폭이 그대로여야 한다. 폭이 바뀌면 좁은 화면에서 줄이 꺾여 카드가 길어진다. 글자는 두 상태에서 같게 두거나(메트로놈)
   같은 글자 수의 한글로만 바꾸고(편집 ↔ 완료. Pretendard 한글은 글자 폭이 같다), 켜졌을 때만 움직이는 표시(박자 점)도
@@ -131,7 +132,8 @@ Variable(한국어) + Geist(영문) 폴백.
 - 고르기: 필터·켜고 끄는 선택지는 `Chip`(36px, 누르는 영역 44px), 한 화면 안 보기·방식 하나는 `SegmentedControl`
   (radiogroup), 켜고 끄기는 `Switch`(label 을 주면 줄 전체가 눌린다), 화면 아래 탭은 `TabBar`.
 - 목록: 곡은 `SongRow`(카드 없이 72px, 48px 커버, 고정 폭 `RankNumber`), 설정·멤버는 `ListRow`(56px)를 시트 안에서
-  `ListGroup` 으로 묶는다. 줄 전체가 눌리면 `ListRowButton`, 줄 전체가 링크면 `ListRowLink` 다. 버튼 안에 div 를 둘 수 없어 칸이 span 이다. 사람은 `Avatar`·`AvatarStack`, 메타·상태는 `Badge`(neutral·primary·warning).
+  `ListGroup` 으로 묶는다. 줄 전체가 눌리면 `ListRowButton`, 줄 전체가 링크면 `ListRowLink` 다. 버튼 안에 div 를 둘 수 없어 칸이 span 이다.
+  펼치는 곡 행의 제목 줄은 `SongRowTitleButton`, 펼친 아래 동작은 `ActionTab` 을 `ActionTabBar` 에 담는다(바탕 없는 44px 탭, 끝에 ⋯ `IconButton`). 사람은 `Avatar`·`AvatarStack`, 메타·상태는 `Badge`(neutral·primary·warning).
 - 안내: 닫을 수 있는 안내는 `NoticeCard`(늘 닫기가 있고, 닫힘 기억은 부르는 쪽), 상태가 이어지는 동안 남는 안내는
   `InlineNotice`, 빈 목록은 `EmptyState`(screen·inline). 성공 확인을 띄우는 토스트는 아직 없다.
 - 입력: `Field`(라벨 위, 도움말·오류 아래, aria 를 이어 준다) 안에 `Input`·`Textarea`.
@@ -143,7 +145,7 @@ Variable(한국어) + Geist(영문) 폴백.
   640px 아래에서 아이콘만)으로만 그린다.
 - `RoundButton`: 플레이어·플레이리스트 머리·메트로놈 줄의 둥근 아이콘 버튼. size `md` 44·`lg` 52·`hero` 64, tone `plain`(재생
   컨트롤처럼 또렷한 글리프)·`ghost`(Button ghost 처럼 흐린 글리프)·`tonal`·`inverse`(흰 원판)·`primary`·`danger`·`kakao`, hero 는 원판
-  tone 만 된다. 켜고 끄기는 tone 대신 `pressed`(꺼지면 ghost, 켜지면 primary-fg 글리프). 글리프 크기는 버튼이 정하니 svg 에 크기·margin 을
+  tone 만 된다. 켜고 끄기는 tone 대신 `pressed`(꺼지면 ghost, 켜지면 primary-fg 글리프). 켜진 색은 `accent` 가 바꾼다(투표 화살표는 `upvote`·`downvote`). 글리프 크기는 버튼이 정하니 svg 에 크기·margin 을
   두지 않는다(eslint). 재생 삼각형은 `PlayPauseIcon`. 링크는 `RoundLink`, `edge="start"` 면 글리프가 내용 왼쪽 끝에 맞는다. 둥근 버튼을
   모은 줄은 `RoundRow` 다. 원은 줄지 않고 간격이 준다.
 - 크기는 prop 이 정한다. `Button`·`IconButton`·`Chip`·`RoundButton` 의 className 에 높이·폭·여백·모서리·글자 크기를 덧칠하면 eslint 가
