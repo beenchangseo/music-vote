@@ -16,7 +16,7 @@ export default function PlaylistTitleBar({ title, band, currentUserNickname, cur
       <Link
         href={band ? `/band/${band.id}` : "/"}
         aria-label={band ? undefined : "홈으로"}
-        className="-ml-2.5 inline-flex min-h-11 min-w-11 max-w-[45%] shrink-0 items-center gap-1 text-text-muted transition-colors hover:text-text"
+        className="-ml-2.5 inline-flex min-h-11 min-w-11 max-w-1/2 shrink-0 items-center gap-1 text-text-muted transition-colors hover:text-text"
       >
         <svg className="size-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
