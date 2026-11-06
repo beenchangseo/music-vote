@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type AnimationEvent } from "react";
 import Badge from "../ui/Badge";
 import { triggerKakaoLogin } from "@/lib/kakao-login";
 import type { VoteDirection } from "@/domain/vote";
@@ -62,12 +62,17 @@ export default function VoteButtons({
     onPress(pressed);
   }
 
+  // animationend bubbles, so an animation inside the arrow would otherwise end the pop early.
+  function endPop(e: AnimationEvent<HTMLButtonElement>) {
+    if (e.animationName === "vote-pop") setPopped(null);
+  }
+
   // YouTube Music style: up, score and down in one pill so the three read as one control.
   return (
     <div className="inline-flex items-center rounded-pill bg-surface-hover/80">
       <button
         onClick={() => handleClick(1)}
-        onAnimationEnd={() => setPopped(null)}
+        onAnimationEnd={endPop}
         disabled={!loginGate && (disabled || pending)}
         className={`relative inline-flex h-11 w-11 items-center justify-center rounded-pill transition-all active:scale-90 disabled:opacity-60 ${popped === 1 ? "animate-vote-pop" : ""} ${
           loginGate
@@ -117,7 +122,7 @@ export default function VoteButtons({
 
       <button
         onClick={() => handleClick(-1)}
-        onAnimationEnd={() => setPopped(null)}
+        onAnimationEnd={endPop}
         disabled={!loginGate && (disabled || pending)}
         className={`relative inline-flex h-11 w-11 items-center justify-center rounded-pill transition-all active:scale-90 disabled:opacity-60 ${popped === -1 ? "animate-vote-pop" : ""} ${
           loginGate
