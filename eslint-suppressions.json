@@ -63,10 +63,5 @@
     "ds/no-raw-control": {
       "count": 1
     }
-  },
-  "src/components/playlist/SongCard.tsx": {
-    "ds/no-raw-control": {
-      "count": 9
-    }
   }
 }

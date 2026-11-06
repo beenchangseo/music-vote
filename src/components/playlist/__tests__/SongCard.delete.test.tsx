@@ -52,12 +52,15 @@ describe("SongCard deletion permission", () => {
   // The page decides who may delete (the host or the adder, isHostOrAdder) and sends only the answer (ADR 0011).
   it("lets the viewer the page allowed request deletion", async () => {
     renderCard(true);
+    fireEvent.click(screen.getByRole("button", { name: "더보기" }));
     fireEvent.click(screen.getByRole("button", { name: "곡 삭제" }));
     await waitFor(() => expect(removeSong).toHaveBeenCalledWith("song", "playlist", "share"));
   });
 
   it("does not expose deletion to a viewer the page did not allow", () => {
     renderCard(false);
+    fireEvent.click(screen.getByRole("button", { name: "더보기" }));
+    expect(screen.getByText("멤버")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "곡 삭제" })).not.toBeInTheDocument();
   });
 });

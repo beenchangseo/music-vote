@@ -236,15 +236,15 @@ describe("an open member screen follows the host's vote visibility", () => {
   it("shows who voted when a refetch switches the room to named votes", () => {
     const { rerender } = render(ui({ playlist: { ...playlist, votes_anonymous: true } }));
     fireEvent.click(screen.getByRole("button", { name: /Plastic Love/, expanded: false }));
-    expect(screen.queryByRole("button", { name: "투표한 사람 보기" })).not.toBeInTheDocument();
+    expect(screen.queryByText("드럼")).not.toBeInTheDocument();
 
     rerender(
       ui({
         playlist: { ...playlist, votes_anonymous: false },
-        songs: [{ ...song, votes: [{ song_id: song.id, vote_type: 1, nickname: "보컬" }] }],
+        songs: [{ ...song, votes: [{ song_id: song.id, vote_type: 1, nickname: "드럼" }] }],
       }),
     );
 
-    expect(screen.getByRole("button", { name: "투표한 사람 보기" })).toBeInTheDocument();
+    expect(screen.getByText("드럼")).toBeInTheDocument();
   });
 });
