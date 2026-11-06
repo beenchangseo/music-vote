@@ -16,20 +16,19 @@ interface AnnouncementButtonProps {
 
 export default function AnnouncementButton({ playlistId, announcement, shareCode }: AnnouncementButtonProps) {
   const [showModal, setShowModal] = useState(false);
-  const [text, setText] = useState(announcement || "");
+  // A sheet closes on a tap outside it, so an unsaved edit stays as a draft until it is saved.
+  // Without one the field shows the latest announcement.
+  const [draft, setDraft] = useState<string | null>(null);
+  const text = draft ?? announcement ?? "";
   const [isPending, startTransition] = useTransition();
   const { showAlert } = useDialog();
-
-  function handleClick() {
-    setText(announcement || "");
-    setShowModal(true);
-  }
 
   function handleSave() {
     if (isPending) return;
     startTransition(async () => {
       try {
         await updateAnnouncementPublic(playlistId, text.trim(), shareCode);
+        setDraft(null);
         setShowModal(false);
       } catch {
         showAlert("공지사항 저장에 실패했습니다.");
@@ -42,7 +41,7 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
       <RoundButton
         tone="tonal"
         size="lg"
-        onClick={handleClick}
+        onClick={() => setShowModal(true)}
         aria-label="공지사항"
         title={announcement ? "공지사항 보기/수정" : "공지사항 작성"}
       >
@@ -69,7 +68,7 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
         )}
         <Textarea
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => setDraft(e.target.value)}
           placeholder="멤버들에게 전달할 공지사항을 작성하세요"
           rows={4}
           maxLength={500}
