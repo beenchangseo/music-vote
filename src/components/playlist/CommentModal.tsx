@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import Button from "../ui/Button";
 import { useDialog } from "../ui/DialogProvider";
+import EmptyState from "../ui/EmptyState";
+import Modal from "../ui/Modal";
 import Textarea from "../ui/Textarea";
 import { addOrUpdateComment, deleteComment, getCommentsBySong } from "@/actions/comment";
 import type { Comment } from "@/domain/types";
@@ -75,103 +78,82 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
   const otherComments = comments.filter((c) => c !== myComment);
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/50" onClick={onClose}>
-      <div
-        className="w-full max-w-lg mx-2 sm:mx-0 bg-surface border-t border-border rounded-t-2xl animate-slide-up max-h-[70vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
-          <h3 className="text-sm font-semibold text-text truncate flex-1">{songTitle}</h3>
-          <span className="text-caption text-text-subtle mx-2">{comments.length}개 댓글</span>
-          <button onClick={onClose} className="p-2.5 text-text-subtle hover:text-text transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Comments list */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-          {loading ? (
-            <div className="text-center py-8">
-              <span className="inline-block w-6 h-6 border-2 border-border-strong border-t-primary-fg rounded-full animate-spin" />
-            </div>
-          ) : comments.length === 0 && !nickname ? (
-            <p className="text-center text-sm text-text-subtle py-8">아직 댓글이 없습니다</p>
-          ) : (
-            <>
-              {otherComments.map((c) => (
-                <div key={c.id} className="bg-surface-hover/50 rounded-xl p-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-caption font-medium text-primary-fg">{c.nickname}</span>
-                    <span className="text-[10px] text-text-subtle">
-                      {new Date(c.updated_at).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })}
-                    </span>
-                  </div>
-                  <p className="text-sm text-text-muted whitespace-pre-wrap leading-relaxed">{c.content}</p>
+    <Modal open onClose={onClose} title={`댓글 · ${songTitle}`}>
+      <div className="space-y-3">
+        {loading ? (
+          <div className="py-8 text-center">
+            <span className="inline-block size-6 animate-spin rounded-pill border-2 border-border-strong border-t-primary-fg" />
+          </div>
+        ) : comments.length === 0 && !nickname ? (
+          <EmptyState size="inline" description="아직 댓글이 없어요" />
+        ) : (
+          <>
+            {otherComments.map((c) => (
+              <div key={c.id} className="rounded-control bg-surface-hover/50 p-3">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-caption font-medium text-primary-fg">{c.nickname}</span>
+                  <span className="text-caption text-text-subtle">
+                    {new Date(c.updated_at).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })}
+                  </span>
                 </div>
-              ))}
-
-              {/* My comment */}
-              {myComment && !isEditing && (
-                <div className="bg-primary/5 border border-primary/20 rounded-xl p-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-caption font-medium text-primary-fg">{nickname} (나)</span>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => { setIsEditing(true); setContent(myComment.content); }} className="text-[10px] text-text-subtle hover:text-text-muted">수정</button>
-                      <button onClick={handleDelete} className="text-[10px] text-text-subtle hover:text-danger-fg">삭제</button>
-                    </div>
-                  </div>
-                  <p className="text-sm text-text-muted whitespace-pre-wrap leading-relaxed">{myComment.content}</p>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Write/Edit form */}
-        {nickname && (!myComment || isEditing) && (
-          <div className="px-4 py-3 border-t border-border shrink-0">
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder={`${nickname}의 메모를 남겨보세요`}
-              maxLength={1000}
-            />
-            <div className="flex items-center justify-between mt-2">
-              <span className="text-[10px] text-text-subtle">{content.length}/1000</span>
-              <div className="flex gap-2">
-                {isEditing && (
-                  <button onClick={() => { setIsEditing(false); setContent(myComment?.content || ""); }} className="px-3 py-1.5 text-caption text-text-subtle hover:text-text-muted">
-                    취소
-                  </button>
-                )}
-                <button
-                  onClick={handleSubmit}
-                  disabled={!content.trim() || isPending}
-                  className="px-4 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-white text-caption font-semibold disabled:opacity-50 transition-all active:scale-95"
-                >
-                  {isPending ? "저장 중..." : myComment ? "수정" : "작성"}
-                </button>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-text-muted">{c.content}</p>
               </div>
-            </div>
-          </div>
-        )}
+            ))}
 
-        {!nickname && !loginGate && (
-          <div className="px-4 py-3 border-t border-border text-center shrink-0">
-            <p className="text-caption text-text-subtle">보관된 플레이리스트라 댓글을 새로 남길 수 없어요</p>
-          </div>
-        )}
-
-        {loginGate && (
-          <div className="px-4 py-3 border-t border-border text-center shrink-0">
-            <p className="text-caption text-text-subtle mb-2">댓글을 남기려면 로그인이 필요해요</p>
-            <LoginButton size="sm" />
-          </div>
+            {myComment && !isEditing && (
+              <div className="rounded-control border border-primary/20 bg-primary/5 p-3">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-caption font-medium text-primary-fg">{nickname} (나)</span>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => { setIsEditing(true); setContent(myComment.content); }}>
+                      수정
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleDelete}>
+                      삭제
+                    </Button>
+                  </div>
+                </div>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-text-muted">{myComment.content}</p>
+              </div>
+            )}
+          </>
         )}
       </div>
-    </div>
+
+      {nickname && (!myComment || isEditing) && (
+        <div className="mt-4 border-t border-border pt-4">
+          <Textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder={`${nickname}의 메모를 남겨보세요`}
+            maxLength={1000}
+          />
+          <div className="mt-3 flex items-center justify-between">
+            <span className="text-caption text-text-subtle">{content.length}/1000</span>
+            <div className="flex gap-2">
+              {isEditing && (
+                <Button variant="ghost" onClick={() => { setIsEditing(false); setContent(myComment?.content || ""); }}>
+                  취소
+                </Button>
+              )}
+              <Button onClick={handleSubmit} disabled={!content.trim()} loading={isPending}>
+                {myComment ? "수정" : "작성"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!nickname && !loginGate && (
+        <p className="mt-4 border-t border-border pt-4 text-center text-caption text-text-subtle">보관된 플레이리스트라 댓글을 새로 남길 수 없어요</p>
+      )}
+
+      {loginGate && (
+        <div className="mt-4 border-t border-border pt-4 text-center">
+          <p className="mb-2 text-caption text-text-subtle">댓글을 남기려면 로그인이 필요해요</p>
+          <LoginButton size="sm" />
+        </div>
+      )}
+    </Modal>
   );
 }
