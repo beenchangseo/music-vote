@@ -9,7 +9,7 @@ import GuitarIcon from "@/components/ui/GuitarIcon";
 import IconButton from "@/components/ui/IconButton";
 import Input from "@/components/ui/Input";
 import PlayPauseIcon from "@/components/ui/PlayPauseIcon";
-import RoundButton, { ROUND_BARE_TONES, ROUND_DISC_TONES, RoundLink, RoundRow } from "@/components/ui/RoundButton";
+import RoundButton, { ROUND_BARE_TONES, ROUND_DISC_TONES, ROUND_TOGGLE_ACCENTS, RoundLink, RoundRow } from "@/components/ui/RoundButton";
 import ScreenToolbar, { ToolbarButton } from "@/components/ui/ScreenToolbar";
 import { COLOR_GROUPS, COLORS, HEIGHTS, MOTION, RADII, SHADOWS, TYPE, contrastRatio, type ColorToken, type Pairing } from "@/components/ui/tokens";
 import Avatar, { AvatarStack } from "@/components/ui/Avatar";
@@ -280,15 +280,21 @@ export default function DesignPage() {
           </StateRow>
         ))}
         <h3 className="mt-6 text-sm font-semibold text-text-muted">켜고 끄기</h3>
-        <p className="mt-1 text-caption text-text-subtle">tone 대신 pressed 를 줘요. 꺼지면 ghost, 켜지면 primary-fg 글리프예요. 셔플·한곡 반복.</p>
-        <div className="mt-2 flex items-center gap-2">
-          <RoundButton size="md" pressed={false} aria-label="꺼짐">
-            <GuitarIcon />
-          </RoundButton>
-          <RoundButton size="md" pressed aria-label="켜짐">
-            <GuitarIcon />
-          </RoundButton>
-        </div>
+        <p className="mt-1 text-caption text-text-subtle">
+          tone 대신 pressed 를 줘요. 꺼지면 ghost, 켜지면 primary-fg 글리프예요(셔플·한곡 반복). accent 가 켜진 색을 바꿔요. upvote·downvote 는
+          투표 화살표이고, 켜지면 같은 색의 옅은 원판이 깔려요.
+        </p>
+        <StateHeader labels={["꺼짐", "켜짐"]} />
+        {ROUND_TOGGLE_ACCENTS.map((accent) => (
+          <StateRow key={accent} label={accent}>
+            <RoundButton size="md" pressed={false} accent={accent} aria-label={`${accent} 꺼짐`}>
+              <GuitarIcon />
+            </RoundButton>
+            <RoundButton size="md" pressed accent={accent} aria-label={`${accent} 켜짐`}>
+              <GuitarIcon />
+            </RoundButton>
+          </StateRow>
+        ))}
         <h3 className="mt-6 text-sm font-semibold text-text-muted">글자 글리프 · 링크</h3>
         <p className="mt-1 text-caption text-text-subtle">글자도 버튼이 크기를 정해요(md 18, lg 20). 링크는 RoundLink, edge=&quot;start&quot; 면 글리프가 내용 왼쪽 끝에 맞아요.</p>
         <div className="mt-2 flex items-center gap-2">
