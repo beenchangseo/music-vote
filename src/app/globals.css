@@ -239,16 +239,20 @@ body {
 
 /* Focus-visible ring 글로벌 — 키보드 사용자 가시성 보장.
  * 마우스 클릭에는 ring 없음, Tab 으로 이동 시에만 노출.
- * border-radius 는 요소가 자기 라운드를 유지하도록 건들지 않음. */
-:where(button, a, input, textarea, select, [tabindex]):focus-visible {
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 2px;
-}
+ * border-radius 는 요소가 자기 라운드를 유지하도록 건들지 않음.
+ * base layer 라서 utility 가 이긴다. outline-none 을 쓰는 부품은 자기 ring-* 이 포커스를 그린다(eslint ds/focus-ring).
+ * layer 밖에 두면 그 부품에서 ring 과 이 outline 이 겹쳐 4px 띠가 된다. */
+@layer base {
+  :where(button, a, input, textarea, select, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
 
-/* tabindex="-1" 은 Tab 으로 닿지 않고 스크립트만 포커스를 두는 자리(시트를 열 때의 댓글 목록)라 ring 을 그리지
- * 않는다. 브라우저 기본 ring 도 여기서 지운다. 두 규칙 모두 layer 밖이라 utility 의 outline-none 으로는 못 지운다. */
-:where([tabindex="-1"]):focus-visible {
-  outline: none;
+  /* tabindex="-1" 은 Tab 으로 닿지 않고 스크립트만 포커스를 두는 자리(시트를 열 때의 댓글 목록)라 ring 을 그리지
+   * 않는다. 브라우저 기본 ring 도 여기서 지운다. 위 규칙과 우선순위가 같아서 뒤에 둔다. */
+  :where([tabindex="-1"]):focus-visible {
+    outline: none;
+  }
 }
 
 /* Print styles for setlist */
