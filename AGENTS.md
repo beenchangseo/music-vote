@@ -138,7 +138,7 @@ Variable(한국어) + Geist(영문) 폴백.
   `InlineNotice`, 빈 목록은 `EmptyState`(screen·inline). 성공 확인을 띄우는 토스트는 아직 없다.
 - 입력: `Field`(라벨 위, 도움말·오류 아래, aria 를 이어 준다) 안에 `Input`·`Textarea`.
 - `Modal` 은 모바일 시트다(surface 바탕, 그래버, 위 모서리 24, `shadow-float`). 시트 안 묶음·칸은 `surface-hover` 로
-  한 단계 올린다. `useDialog()`(`DialogProvider`): alert·confirm·danger 확인창.
+  한 단계 올린다. 머리는 제자리에 있고 본문만 스크롤된다. 본문이 길어도 보여야 하는 아래 칸(댓글 입력)은 `footer` 다. `useDialog()`(`DialogProvider`): alert·confirm·danger 확인창.
 - `Card`: variant `default`·`elevated`·`outline`·`selected`(목록에서 지금 고른 한 장, `border-primary-fg`), 그림자 없음. 카드 끝까지
   닿는 아래 칸(펼친 코멘트)은 `footer` 다. 음수 margin 으로 padding 을 지우지 않는다. `IconButton`: tone `default`·`danger`·`brand`, `bare`, 44px,
   `aria-label` 필수. `ScreenToolbar`: 후보곡·셋리스트·합주 상단의 숫자와 동작. 동작은 `ToolbarButton`(44px, `compact` 면

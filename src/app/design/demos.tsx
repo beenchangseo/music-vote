@@ -8,6 +8,7 @@ import NoticeCard from "@/components/ui/NoticeCard";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import Switch from "@/components/ui/Switch";
 import TabBar from "@/components/ui/TabBar";
+import Textarea from "@/components/ui/Textarea";
 import ListRow, {
   ListGroup,
   ListRowButton,
@@ -93,12 +94,37 @@ export function DialogDemo() {
 
 export function ModalDemo() {
   const [open, setOpen] = useState(false);
+  const [footerOpen, setFooterOpen] = useState(false);
   const [mode, setMode] = useState<"free" | "quota">("free");
   return (
     <>
-      <Button variant="tonal" size="sm" onClick={() => setOpen(true)}>
-        시트 열기
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="tonal" size="sm" onClick={() => setOpen(true)}>
+          시트 열기
+        </Button>
+        <Button variant="tonal" size="sm" onClick={() => setFooterOpen(true)}>
+          아래 칸이 붙은 시트
+        </Button>
+      </div>
+      <Modal
+        open={footerOpen}
+        onClose={() => setFooterOpen(false)}
+        title="댓글 · 예뻤어"
+        footer={
+          <div className="flex items-end gap-2">
+            <Textarea aria-label="댓글" className="flex-1" rows={2} placeholder="본문이 길어도 이 칸은 제자리에 있어요" />
+            <Button onClick={() => setFooterOpen(false)}>작성</Button>
+          </div>
+        }
+      >
+        <div className="space-y-3">
+          {Array.from({ length: 12 }, (_, i) => (
+            <p key={i} className="rounded-control bg-surface-hover p-3 text-sm text-text-muted">
+              {i + 1}번째 댓글. 목록만 스크롤돼요.
+            </p>
+          ))}
+        </div>
+      </Modal>
       <Modal open={open} onClose={() => setOpen(false)} title="플레이리스트 설정">
         <div className="flex gap-2">
           <Chip selected={mode === "free"} onClick={() => setMode("free")}>

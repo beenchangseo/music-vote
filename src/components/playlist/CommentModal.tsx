@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import Button from "../ui/Button";
 import { useDialog } from "../ui/DialogProvider";
 import EmptyState from "../ui/EmptyState";
@@ -78,9 +78,45 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
 
   const otherComments = comments.filter((c) => c !== myComment);
 
+  let footer: ReactNode = null;
+  if (loginGate) {
+    footer = (
+      <div className="text-center">
+        <p className="mb-2 text-caption text-text-subtle">댓글을 남기려면 로그인이 필요해요</p>
+        <LoginButton size="sm" />
+      </div>
+    );
+  } else if (!nickname) {
+    footer = <p className="text-center text-caption text-text-subtle">보관된 플레이리스트라 댓글을 새로 남길 수 없어요</p>;
+  } else if (!myComment || isEditing) {
+    footer = (
+      <>
+        <Textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder={`${nickname}의 메모를 남겨보세요`}
+          maxLength={1000}
+        />
+        <div className="mt-3 flex items-center justify-between">
+          <span className="text-caption text-text-subtle">{content.length}/1000</span>
+          <div className="flex gap-2">
+            {isEditing && (
+              <Button variant="ghost" onClick={() => { setIsEditing(false); setContent(myComment?.content || ""); }}>
+                취소
+              </Button>
+            )}
+            <Button onClick={handleSubmit} disabled={!content.trim()} loading={isPending}>
+              {myComment ? "수정" : "작성"}
+            </Button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     // Focus the list, not the textarea: opening the sheet to read should not raise the keyboard.
-    <Modal open onClose={onClose} title={`댓글 · ${songTitle}`} initialFocus={listRef}>
+    <Modal open onClose={onClose} title={`댓글 · ${songTitle}`} initialFocus={listRef} footer={footer}>
       <div ref={listRef} tabIndex={-1} className="space-y-3 outline-none">
         {loading ? (
           <div className="py-8 text-center">
@@ -121,41 +157,6 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
           </>
         )}
       </div>
-
-      {nickname && (!myComment || isEditing) && (
-        <div className="mt-4 border-t border-border pt-4">
-          <Textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder={`${nickname}의 메모를 남겨보세요`}
-            maxLength={1000}
-          />
-          <div className="mt-3 flex items-center justify-between">
-            <span className="text-caption text-text-subtle">{content.length}/1000</span>
-            <div className="flex gap-2">
-              {isEditing && (
-                <Button variant="ghost" onClick={() => { setIsEditing(false); setContent(myComment?.content || ""); }}>
-                  취소
-                </Button>
-              )}
-              <Button onClick={handleSubmit} disabled={!content.trim()} loading={isPending}>
-                {myComment ? "수정" : "작성"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {!nickname && !loginGate && (
-        <p className="mt-4 border-t border-border pt-4 text-center text-caption text-text-subtle">보관된 플레이리스트라 댓글을 새로 남길 수 없어요</p>
-      )}
-
-      {loginGate && (
-        <div className="mt-4 border-t border-border pt-4 text-center">
-          <p className="mb-2 text-caption text-text-subtle">댓글을 남기려면 로그인이 필요해요</p>
-          <LoginButton size="sm" />
-        </div>
-      )}
     </Modal>
   );
 }
