@@ -165,6 +165,30 @@ describe("Modal — focus management", () => {
   });
 });
 
+describe("Modal — header description", () => {
+  afterEach(cleanup);
+
+  it("reads the line under the title as the dialog's description", () => {
+    render(
+      <Modal open onClose={vi.fn()} title="여기에 넣기" description="맨 앞 · 0:00 에 시작">
+        <button type="button">인터벌</button>
+      </Modal>,
+    );
+    const dialog = screen.getByRole("dialog", { name: "여기에 넣기" });
+    expect(dialog).toHaveAccessibleDescription("맨 앞 · 0:00 에 시작");
+    expect(dialog).toHaveTextContent("맨 앞 · 0:00 에 시작");
+  });
+
+  it("has no description when none is given", () => {
+    render(
+      <Modal open onClose={vi.fn()} title="여기에 넣기">
+        <button type="button">인터벌</button>
+      </Modal>,
+    );
+    expect(screen.getByRole("dialog", { name: "여기에 넣기" })).not.toHaveAccessibleDescription();
+  });
+});
+
 /** SetlistItemEditModal's "초기화": a useDialog confirm opened from inside a sheet. */
 function SheetWithConfirm({ onClose, onResult }: { onClose: () => void; onResult: (ok: boolean) => void }) {
   const { showConfirm } = useDialog();

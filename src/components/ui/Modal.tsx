@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, RefObject, useEffect, useRef } from "react";
+import { ReactNode, RefObject, useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { dialogLayerOpen, getFocusable, trapTabKey } from "./focus-trap";
 import IconButton from "./IconButton";
@@ -10,6 +10,11 @@ interface ModalProps {
   onClose: () => void;
   children: ReactNode;
   title?: string;
+  /**
+   * One line under the title, read out as the dialog's description. It sits in
+   * the fixed header, so the body's scroll box never clips it.
+   */
+  description?: string;
   /**
    * Element that receives focus when the sheet opens. Without it the first
    * focusable element in `children` gets focus (the header close button is
@@ -25,7 +30,8 @@ interface ModalProps {
 
 const safeBottom = "pb-[calc(1.25rem+env(safe-area-inset-bottom))]";
 
-export default function Modal({ open, onClose, children, title, initialFocus, footer }: ModalProps) {
+export default function Modal({ open, onClose, children, title, description, initialFocus, footer }: ModalProps) {
+  const descriptionId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -70,6 +76,7 @@ export default function Modal({ open, onClose, children, title, initialFocus, fo
       role="dialog"
       aria-modal="true"
       aria-label={title}
+      aria-describedby={description ? descriptionId : undefined}
       className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
@@ -78,9 +85,9 @@ export default function Modal({ open, onClose, children, title, initialFocus, fo
         className="flex max-h-[90dvh] w-full flex-col bg-surface rounded-t-sheet sm:max-w-md sm:rounded-sheet animate-slide-up shadow-float"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="shrink-0 px-5 pt-2 sm:pt-5">
+        <div className="shrink-0 px-5 pb-3 pt-2 sm:pt-5">
           <div aria-hidden className="mx-auto mb-2 h-1 w-9 rounded-pill bg-border-strong sm:hidden" />
-          <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center justify-between">
             {title ? <h2 className="text-h3 font-bold text-text">{title}</h2> : <span />}
             <IconButton ref={closeRef} bare onClick={onClose} aria-label="닫기" className="-mr-2">
               <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
@@ -88,6 +95,11 @@ export default function Modal({ open, onClose, children, title, initialFocus, fo
               </svg>
             </IconButton>
           </div>
+          {description && (
+            <p id={descriptionId} className="mt-1 text-sm text-text-muted">
+              {description}
+            </p>
+          )}
         </div>
         {/* pt-1: room for the first child's focus ring, which the scroll box would clip. */}
         <div className={`min-h-0 flex-1 overflow-y-auto px-5 pt-1 ${footer ? "pb-4" : safeBottom}`}>{children}</div>

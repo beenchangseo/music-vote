@@ -510,7 +510,7 @@ export default function DesignPage() {
         </div>
       </Section>
 
-      <Section title="Dialog · Sheet" note="확인창은 짧은 확인만. 위험 확인은 취소에 먼저 포커스가 가요. Modal 은 모바일에서 그래버가 달린 시트(위 모서리 24, shadow-float)예요. 목록이 길어도 제자리에 남는 아래 칸(댓글 입력)은 footer 예요.">
+      <Section title="Dialog · Sheet" note="확인창은 짧은 확인만. 위험 확인은 취소에 먼저 포커스가 가요. Modal 은 모바일에서 그래버가 달린 시트(위 모서리 24, shadow-float)예요. 제목 아래 한 줄 설명은 description 이고 머리에 붙어 스크롤되지 않아요. 본문 첫 줄에 음수 margin 으로 올려 붙이지 않아요. 목록이 길어도 제자리에 남는 아래 칸(댓글 입력)은 footer 예요.">
         <DialogDemo />
         <div className="mt-3">
           <ModalDemo />

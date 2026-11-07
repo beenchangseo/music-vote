@@ -125,7 +125,7 @@ export function ModalDemo() {
           ))}
         </div>
       </Modal>
-      <Modal open={open} onClose={() => setOpen(false)} title="플레이리스트 설정">
+      <Modal open={open} onClose={() => setOpen(false)} title="플레이리스트 설정" description="투표 방식은 플레이리스트마다 정해요">
         <div className="flex gap-2">
           <Chip selected={mode === "free"} onClick={() => setMode("free")}>
             자유 투표
