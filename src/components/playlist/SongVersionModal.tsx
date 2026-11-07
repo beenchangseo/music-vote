@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import Button from "../ui/Button";
 import Modal from "../ui/Modal";
 import EmptyState from "../ui/EmptyState";
 import Input from "../ui/Input";
@@ -114,8 +115,12 @@ export default function SongVersionModal(props: Props) {
               <span className="truncate">추가: {version.added_by_nickname}</span>
               {version.canManage && (
                 <div className="flex shrink-0 gap-1">
-                  <button type="button" className="min-h-11 px-3 hover:text-text" onClick={() => { setEditingId(version.id); setUrl(version.youtube_url); setDescription(version.description || ""); }}>수정</button>
-                  <button type="button" className="min-h-11 px-3 hover:text-danger-fg" onClick={() => remove(version)}>삭제</button>
+                  <Button variant="ghost" size="sm" onClick={() => { setEditingId(version.id); setUrl(version.youtube_url); setDescription(version.description || ""); }}>
+                    수정
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => remove(version)}>
+                    삭제
+                  </Button>
                 </div>
               )}
             </div>
@@ -131,8 +136,14 @@ export default function SongVersionModal(props: Props) {
           <div className="flex items-center justify-between">
             <span className="text-caption text-text-subtle">{description.length}/100</span>
             <div className="flex gap-2">
-              {editingId && <button type="button" onClick={clearForm} className="min-h-11 px-4 text-sm text-text-muted">취소</button>}
-              <button type="button" onClick={save} disabled={!url.trim() || isPending} className="min-h-11 rounded-xl bg-primary px-4 text-sm font-semibold text-white disabled:opacity-50">{isPending ? "저장 중..." : "저장"}</button>
+              {editingId && (
+                <Button variant="ghost" onClick={clearForm}>
+                  취소
+                </Button>
+              )}
+              <Button onClick={save} disabled={!url.trim()} loading={isPending}>
+                저장
+              </Button>
             </div>
           </div>
         </div>

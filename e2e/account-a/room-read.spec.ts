@@ -40,7 +40,7 @@ test.describe("account-a: fixed test room screens", () => {
 
     // Logged in => vote buttons are live, not the "로그인하고 찬성하기" gate.
     await expect(page.getByRole("button", { name: /^로그인하고 (찬성|반대)하기$/ })).toHaveCount(0);
-    const voteButtons = page.getByRole("button", { name: /^(찬성표 추가|반대표 추가|찬성표 한 개 취소|반대표 한 개 취소)$/ });
+    const voteButtons = page.getByRole("button", { name: /^(찬성표 추가|반대표 추가|찬성표 취소|반대표 취소|찬성표 한 개 취소|반대표 한 개 취소)$/ });
     await expect(voteButtons).toHaveCount(songCount * 2);
 
     // "My vote" is only drawn with a CSS class (no aria state), so this reads the class.

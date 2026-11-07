@@ -143,6 +143,42 @@ const noRawControl = {
   },
 };
 
+/** Utilities that take away the keyboard focus outline globals.css draws in @layer base. */
+const OUTLINE_REMOVED = /^outline-(none|hidden|0)$/;
+/** A nonzero ring width under a focus variant (`focus-visible:ring-2`, `has-focus-visible:ring-2`): the focus style that replaces the outline. */
+const isFocusRing = (token) =>
+  /^ring(-[1-9]\d*|-\[(?!0(?:px|rem|em)?\])[^\]]+\])?$/.test(utilityOf(token)) && /focus[\w-]*:/.test(token);
+
+const focusRing = {
+  meta: {
+    type: "problem",
+    docs: { description: "A class list that removes the focus outline draws a focus ring, or keyboard focus disappears." },
+    messages: {
+      missing:
+        "{{token}} 은 globals.css 의 키보드 포커스 outline 을 지운다. 같은 문자열에 focus-visible:ring-2 focus-visible:ring-focus-ring 처럼 포커스 ring 을 같이 둔다. " +
+        "없으면 Tab 으로 옮겨도 포커스가 보이지 않는다.",
+    },
+    schema: [],
+  },
+  create(context) {
+    const check = (node, text) => {
+      const tokens = tokensOf([text]);
+      if (tokens.some(isFocusRing)) return;
+      for (const token of tokens) {
+        if (OUTLINE_REMOVED.test(utilityOf(token))) context.report({ node, messageId: "missing", data: { token } });
+      }
+    };
+    return {
+      Literal(node) {
+        if (typeof node.value === "string") check(node, node.value);
+      },
+      TemplateElement(node) {
+        check(node, node.value.cooked ?? node.value.raw);
+      },
+    };
+  },
+};
+
 /** Reports every class token in any string literal that `match` accepts. Inventory only: not enabled in eslint.config.mjs. */
 function classTokenRule(description, match) {
   return {
@@ -170,6 +206,7 @@ const plugin = {
   meta: { name: "ds" },
   rules: {
     "no-raw-control": noRawControl,
+    "focus-ring": focusRing,
     "non-token": classTokenRule(
       "Radius and font size outside the tokens (rounded-badge·control·card·sheet·pill, text-display·h1–h4·body·sm·caption).",
       (u) => NON_TOKEN_RADIUS.test(u) || NON_TOKEN_FONT_SIZE.test(u),

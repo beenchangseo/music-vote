@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ButtonHTMLAttributes, ComponentProps, HTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, ComponentProps, ComponentPropsWithRef, HTMLAttributes, ReactNode } from "react";
 
 interface RowSlots {
   leading?: ReactNode;
@@ -43,7 +43,7 @@ export function ListRowButton({
   children,
   type = "button",
   ...rest
-}: RowSlots & ButtonHTMLAttributes<HTMLButtonElement>) {
+}: RowSlots & ComponentPropsWithRef<"button">) {
   return (
     <button type={type} className={`${pressableRow} ${className}`} {...rest}>
       <Slots as="span" leading={leading} trailing={trailing}>
@@ -107,6 +107,18 @@ interface SongRowProps extends HTMLAttributes<HTMLDivElement> {
   rank?: number;
   topRank?: boolean;
   trailing?: ReactNode;
+}
+
+/**
+ * SongRow 가운데 칸을 누르는 제목 줄. 행을 펼치는 버튼이라 aria-expanded 를 단다.
+ * 56px 이상이라 한 줄 제목도 누르기 쉽다. 버튼 안이라 칸에는 span 만 둔다.
+ */
+export function SongRowTitleButton({ type = "button", children, ...rest }: Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className">) {
+  return (
+    <button type={type} className="flex min-h-row w-full min-w-0 flex-col justify-center text-left" {...rest}>
+      {children}
+    </button>
+  );
 }
 
 /**

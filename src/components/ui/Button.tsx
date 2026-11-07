@@ -7,6 +7,8 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   size?: Size;
   loading?: boolean;
   fullWidth?: boolean;
+  /** 알약 모양. `Input pill`(검색 칸) 옆에 붙는 버튼이 모서리를 맞출 때 쓴다. */
+  pill?: boolean;
   /** 카카오 말풍선을 글자 앞에 붙인다. kakao 변형은 기본으로 붙는다. */
   kakaoMark?: boolean;
 } & (
@@ -60,9 +62,10 @@ export function buttonClassName({
   variant = "primary",
   size = "md",
   fullWidth = false,
+  pill = false,
   className = "",
-}: { variant?: Variant; size?: Size; fullWidth?: boolean; className?: string } = {}) {
-  return `inline-flex items-center justify-center gap-2 rounded-control font-semibold transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`;
+}: { variant?: Variant; size?: Size; fullWidth?: boolean; pill?: boolean; className?: string } = {}) {
+  return `inline-flex items-center justify-center gap-2 ${pill ? "rounded-pill" : "rounded-control"} font-semibold transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`;
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
@@ -71,6 +74,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
     size = "md",
     loading = false,
     fullWidth = false,
+    pill = false,
     kakaoMark = variant === "kakao",
     pressed,
     disabled,
@@ -86,15 +90,19 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       aria-pressed={pressed}
-      className={buttonClassName({ variant: pressed ? "primary" : variant, size, fullWidth, className })}
+      className={buttonClassName({ variant: pressed ? "primary" : variant, size, fullWidth, pill, className })}
       {...rest}
     >
-      {loading ? (
-        <span aria-hidden className="inline-block size-4 rounded-pill border-2 border-current border-t-transparent animate-spin" />
-      ) : kakaoMark ? (
-        <KakaoMark />
-      ) : null}
-      {children}
+      {/* One grid cell holds both, so the spinner sits on the hidden label and the button keeps its width. */}
+      <span className="inline-grid place-items-center">
+        <span className={`col-start-1 row-start-1 inline-flex items-center gap-2 ${loading ? "opacity-0" : ""}`}>
+          {kakaoMark && <KakaoMark />}
+          {children}
+        </span>
+        {loading && (
+          <span aria-hidden className="col-start-1 row-start-1 size-4 rounded-pill border-2 border-current border-t-transparent animate-spin" />
+        )}
+      </span>
     </button>
   );
 });

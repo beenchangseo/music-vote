@@ -127,7 +127,7 @@ describe("SetlistView edit mode: (+) rows", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "「예뻤어」 다음에 넣기" }));
     const sheet = screen.getByRole("dialog", { name: "여기에 넣기" });
-    expect(sheet).toHaveTextContent("「예뻤어」 다음 · 4:44 에 시작");
+    expect(sheet).toHaveAccessibleDescription("「예뻤어」 다음 · 4:44 에 시작");
 
     fireEvent.click(within(sheet).getByRole("button", { name: /인터벌/ }));
     expect(within(sheet).getByLabelText("분")).toHaveValue("1");
@@ -151,7 +151,7 @@ describe("SetlistView edit mode: (+) rows", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "맨 앞에 넣기" }));
     const sheet = screen.getByRole("dialog", { name: "여기에 넣기" });
-    expect(sheet).toHaveTextContent("맨 앞 · 0:00 에 시작");
+    expect(sheet).toHaveAccessibleDescription("맨 앞 · 0:00 에 시작");
     fireEvent.click(within(sheet).getByRole("button", { name: /후보곡에서 고르기/ }));
 
     expect(within(sheet).queryByText("예뻤어")).not.toBeInTheDocument();
@@ -322,7 +322,7 @@ describe("SetlistView add areas", () => {
     fireEvent.click(screen.getByRole("button", { name: "인터벌 블록 추가" }));
 
     const sheet = screen.getByRole("dialog", { name: "여기에 넣기" });
-    expect(sheet).toHaveTextContent("맨 앞 · 0:00 에 시작");
+    expect(sheet).toHaveAccessibleDescription("맨 앞 · 0:00 에 시작");
     expect(within(sheet).getByLabelText("이름")).toBeInTheDocument();
   });
 

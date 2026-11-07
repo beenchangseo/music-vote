@@ -118,10 +118,28 @@ describe("usePlaylistVotes", () => {
     await waitFor(() => expect(castVote).toHaveBeenCalledTimes(1));
     expect(screen.getByRole("status")).toHaveTextContent("1");
 
-    await waitFor(() => expect(up).toBeEnabled());
-    fireEvent.click(up);
+    const chosen = screen.getByRole("button", { name: "찬성표 취소" });
+    await waitFor(() => expect(chosen).toBeEnabled());
+    fireEvent.click(chosen);
     await waitFor(() => expect(castVote).toHaveBeenCalledTimes(2));
     expect(screen.getByRole("status")).toHaveTextContent("0");
+    expect(screen.getByRole("button", { name: "찬성표 추가" })).toBeInTheDocument();
+  });
+
+  it("names a chosen free-mode down arrow as a cancel, and pressing it takes the vote back", async () => {
+    render(<Harness song={makeSong()} votingMode="free" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "반대표 추가" }));
+    await waitFor(() => expect(castVote).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole("status")).toHaveTextContent("-1");
+    expect(screen.getByRole("button", { name: "찬성표 추가" })).toBeInTheDocument();
+
+    const chosen = screen.getByRole("button", { name: "반대표 취소" });
+    await waitFor(() => expect(chosen).toBeEnabled());
+    fireEvent.click(chosen);
+    await waitFor(() => expect(castVote).toHaveBeenCalledTimes(2));
+    expect(screen.getByRole("status")).toHaveTextContent("0");
+    expect(screen.getByRole("button", { name: "반대표 추가" })).toBeInTheDocument();
   });
 
   it("blocks only a new vote when the allowance is exhausted", async () => {

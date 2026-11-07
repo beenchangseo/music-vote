@@ -9,7 +9,7 @@ import GuitarIcon from "@/components/ui/GuitarIcon";
 import IconButton from "@/components/ui/IconButton";
 import Input from "@/components/ui/Input";
 import PlayPauseIcon from "@/components/ui/PlayPauseIcon";
-import RoundButton, { ROUND_BARE_TONES, ROUND_DISC_TONES, RoundLink, RoundRow } from "@/components/ui/RoundButton";
+import RoundButton, { ROUND_BARE_TONES, ROUND_DISC_TONES, ROUND_VOTE_TONES, RoundLink, RoundRow } from "@/components/ui/RoundButton";
 import ScreenToolbar, { ToolbarButton } from "@/components/ui/ScreenToolbar";
 import { COLOR_GROUPS, COLORS, HEIGHTS, MOTION, RADII, SHADOWS, TYPE, contrastRatio, type ColorToken, type Pairing } from "@/components/ui/tokens";
 import Avatar, { AvatarStack } from "@/components/ui/Avatar";
@@ -20,7 +20,7 @@ import Field from "@/components/ui/Field";
 import InlineNotice from "@/components/ui/InlineNotice";
 import { RankNumber, SongRow } from "@/components/ui/ListRow";
 import Textarea from "@/components/ui/Textarea";
-import { DialogDemo, HoverSample, ListGroupDemo, ModalDemo, MotionDemo, NoticeDemo, SegmentedDemo, SwitchDemo, TabBarDemo } from "./demos";
+import { DialogDemo, HoverSample, ListGroupDemo, ModalDemo, MotionDemo, NoticeDemo, SegmentedDemo, SongRowActionsDemo, SwitchDemo, TabBarDemo } from "./demos";
 
 export const metadata: Metadata = {
   title: "디자인 시스템 · Plypick",
@@ -289,6 +289,24 @@ export default function DesignPage() {
             <GuitarIcon />
           </RoundButton>
         </div>
+        <h3 className="mt-6 text-sm font-semibold text-text-muted">투표 화살표</h3>
+        <p className="mt-1 text-caption text-text-subtle">
+          tone upvote·downvote 에 chosen 을 줘요. 고른 쪽이면 같은 색의 옅은 원판이 깔려요. 누르면 한 표가 더 쌓이기도 해서 켜고 끄기가 아니에요.
+          aria-pressed 대신 라벨이 할 일을 말해요.
+        </p>
+        <div className="mt-3">
+          <StateHeader labels={["안 고름", "고름"]} />
+        </div>
+        {ROUND_VOTE_TONES.map((tone) => (
+          <StateRow key={tone} label={tone}>
+            <RoundButton tone={tone} size="md" chosen={false} aria-label={`${tone} 안 고름`}>
+              <GuitarIcon />
+            </RoundButton>
+            <RoundButton tone={tone} size="md" chosen aria-label={`${tone} 고름`}>
+              <GuitarIcon />
+            </RoundButton>
+          </StateRow>
+        ))}
         <h3 className="mt-6 text-sm font-semibold text-text-muted">글자 글리프 · 링크</h3>
         <p className="mt-1 text-caption text-text-subtle">글자도 버튼이 크기를 정해요(md 18, lg 20). 링크는 RoundLink, edge=&quot;start&quot; 면 글리프가 내용 왼쪽 끝에 맞아요.</p>
         <div className="mt-2 flex items-center gap-2">
@@ -339,6 +357,13 @@ export default function DesignPage() {
           </div>
           <Input aria-label="비활성" disabled placeholder="비활성" />
           <Input aria-label="검색" pill placeholder="pill (검색)" />
+          <p className="text-caption text-text-subtle">pill 칸 옆 버튼은 Button 의 pill 로 모서리를 맞춰요 (곡 찾기).</p>
+          <div className="flex gap-2">
+            <Input aria-label="곡 찾기" pill placeholder="곡 이름이나 YouTube 링크" />
+            <Button pill className="shrink-0">
+              찾기
+            </Button>
+          </div>
         </div>
       </Section>
 
@@ -453,6 +478,12 @@ export default function DesignPage() {
             </SongRow>
           ))}
         </div>
+        <p className="mt-4 text-caption font-semibold text-text-muted">펼치는 행 (SongRowTitleButton · ActionTabBar)</p>
+        <p className="mt-1 text-caption text-text-subtle">
+          제목 줄은 SongRowTitleButton(56px 이상)이에요. 펼친 아래 칸은 ActionTab 줄로, 바탕 없는 44px 탭이 폭을 나눠 가지고 끝에 ⋯ IconButton 이 와요.
+          카드 보기도 같은 줄을 써요.
+        </p>
+        <SongRowActionsDemo />
       </Section>
 
       <Section title="ListRow · ListGroup · Avatar" note="설정·멤버는 56px 행을 묶음 카드로 감싸요 (Toss). 아바타는 겹쳐도 비치지 않아요.">
@@ -479,7 +510,7 @@ export default function DesignPage() {
         </div>
       </Section>
 
-      <Section title="Dialog · Sheet" note="확인창은 짧은 확인만. 위험 확인은 취소에 먼저 포커스가 가요. Modal 은 모바일에서 그래버가 달린 시트(위 모서리 24, shadow-float)예요.">
+      <Section title="Dialog · Sheet" note="확인창은 짧은 확인만. 위험 확인은 취소에 먼저 포커스가 가요. Modal 은 모바일에서 그래버가 달린 시트(위 모서리 24, shadow-float)예요. 제목 아래 한 줄 설명은 description 이고 머리에 붙어 스크롤되지 않아요. 본문 첫 줄에 음수 margin 으로 올려 붙이지 않아요. 목록이 길어도 제자리에 남는 아래 칸(댓글 입력)은 footer 예요.">
         <DialogDemo />
         <div className="mt-3">
           <ModalDemo />

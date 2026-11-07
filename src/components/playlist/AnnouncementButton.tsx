@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createPortal } from "react-dom";
+import Button from "../ui/Button";
 import { useDialog } from "../ui/DialogProvider";
+import Modal from "../ui/Modal";
 import RoundButton from "../ui/RoundButton";
 import Textarea from "../ui/Textarea";
 import { updateAnnouncementPublic } from "@/actions/playlist";
@@ -15,12 +16,16 @@ interface AnnouncementButtonProps {
 
 export default function AnnouncementButton({ playlistId, announcement, shareCode }: AnnouncementButtonProps) {
   const [showModal, setShowModal] = useState(false);
-  const [text, setText] = useState(announcement || "");
+  // A sheet closes on a tap outside it, so an unsaved edit stays as a draft until it is saved.
+  // Without one the field shows the latest announcement. `base` is the announcement the edit started from.
+  const [draft, setDraft] = useState<{ base: string | null; text: string } | null>(null);
+  const text = draft?.text ?? announcement ?? "";
   const [isPending, startTransition] = useTransition();
   const { showAlert } = useDialog();
 
-  function handleClick() {
-    setText(announcement || "");
+  function openSheet() {
+    // Another member saved since this draft began: show theirs instead of hiding it under a stale draft.
+    if (draft && draft.base !== announcement) setDraft(null);
     setShowModal(true);
   }
 
@@ -29,6 +34,7 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
     startTransition(async () => {
       try {
         await updateAnnouncementPublic(playlistId, text.trim(), shareCode);
+        setDraft(null);
         setShowModal(false);
       } catch {
         showAlert("공지사항 저장에 실패했습니다.");
@@ -41,7 +47,7 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
       <RoundButton
         tone="tonal"
         size="lg"
-        onClick={handleClick}
+        onClick={openSheet}
         aria-label="공지사항"
         title={announcement ? "공지사항 보기/수정" : "공지사항 작성"}
       >
@@ -61,40 +67,25 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
         {announcement && <span className="absolute right-0.5 top-0.5 size-3 rounded-pill border-2 border-bg bg-primary" />}
       </RoundButton>
 
-      {/* Portaled: RoundRow is a query container, and WebKit up to Safari 18.2 traps position: fixed inside one (WebKit bug 284945). */}
-      {showModal && createPortal(
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 px-4">
-          <div className="bg-surface border border-border rounded-2xl p-5 w-full max-w-sm">
-            <h3 className="text-lg font-bold text-text mb-3">📌 공지사항</h3>
-            {announcement && !text && (
-              <div className="mb-3 p-3 bg-surface-hover/50 rounded-xl">
-                <p className="text-sm text-text-muted whitespace-pre-wrap">{announcement}</p>
-              </div>
-            )}
-            <Textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="멤버들에게 전달할 공지사항을 작성하세요"
-              rows={4}
-              maxLength={500}
-            />
-            <div className="flex justify-between items-center mt-3">
-              <span className="text-caption text-text-subtle">{text.length}/500</span>
-              <div className="flex gap-2">
-                <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-text-muted hover:text-text">닫기</button>
-                <button
-                  onClick={handleSave}
-                  disabled={isPending}
-                  className="px-4 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white text-sm font-semibold disabled:opacity-50 transition-all"
-                >
-                  {isPending ? "저장 중..." : "저장"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>,
-        document.body,
-      )}
+      {/* Modal portals to body: RoundRow is a query container, and WebKit up to Safari 18.2 traps position: fixed inside one (WebKit bug 284945). */}
+      <Modal open={showModal} onClose={() => setShowModal(false)} title="공지사항">
+        {announcement && !text && (
+          <p className="mb-3 whitespace-pre-wrap rounded-control bg-surface-hover/50 p-3 text-sm text-text-muted">{announcement}</p>
+        )}
+        <Textarea
+          value={text}
+          onChange={(e) => setDraft({ base: draft ? draft.base : announcement, text: e.target.value })}
+          placeholder="멤버들에게 전달할 공지사항을 작성하세요"
+          rows={4}
+          maxLength={500}
+        />
+        <div className="mt-3 flex items-center justify-between">
+          <span className="text-caption text-text-subtle">{text.length}/500</span>
+          <Button onClick={handleSave} loading={isPending}>
+            저장
+          </Button>
+        </div>
+      </Modal>
     </>
   );
 }

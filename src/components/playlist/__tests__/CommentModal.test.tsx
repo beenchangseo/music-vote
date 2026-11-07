@@ -42,6 +42,16 @@ describe("CommentModal with a namesake", () => {
     expect(screen.getByRole("textbox")).toHaveValue("내 메모");
   });
 
+  it("opens with focus in the sheet but not in the textarea, so reading does not raise the keyboard", async () => {
+    getCommentsBySong.mockResolvedValue([theirs]);
+    renderModal();
+
+    const sheet = screen.getByRole("dialog", { name: "댓글 · 곡" });
+    expect(sheet).toContainElement(document.activeElement as HTMLElement);
+    expect(screen.getByRole("textbox")).not.toHaveFocus();
+    expect(await screen.findByText("다른 기타의 메모")).toBeInTheDocument();
+  });
+
   it("removes only my comment when I delete", async () => {
     renderModal();
     await screen.findByText("내 메모");
