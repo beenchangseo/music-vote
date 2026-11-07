@@ -17,11 +17,17 @@ interface AnnouncementButtonProps {
 export default function AnnouncementButton({ playlistId, announcement, shareCode }: AnnouncementButtonProps) {
   const [showModal, setShowModal] = useState(false);
   // A sheet closes on a tap outside it, so an unsaved edit stays as a draft until it is saved.
-  // Without one the field shows the latest announcement.
-  const [draft, setDraft] = useState<string | null>(null);
-  const text = draft ?? announcement ?? "";
+  // Without one the field shows the latest announcement. `base` is the announcement the edit started from.
+  const [draft, setDraft] = useState<{ base: string | null; text: string } | null>(null);
+  const text = draft?.text ?? announcement ?? "";
   const [isPending, startTransition] = useTransition();
   const { showAlert } = useDialog();
+
+  function openSheet() {
+    // Another member saved since this draft began: show theirs instead of hiding it under a stale draft.
+    if (draft && draft.base !== announcement) setDraft(null);
+    setShowModal(true);
+  }
 
   function handleSave() {
     if (isPending) return;
@@ -41,7 +47,7 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
       <RoundButton
         tone="tonal"
         size="lg"
-        onClick={() => setShowModal(true)}
+        onClick={openSheet}
         aria-label="공지사항"
         title={announcement ? "공지사항 보기/수정" : "공지사항 작성"}
       >
@@ -68,7 +74,7 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
         )}
         <Textarea
           value={text}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={(e) => setDraft({ base: draft ? draft.base : announcement, text: e.target.value })}
           placeholder="멤버들에게 전달할 공지사항을 작성하세요"
           rows={4}
           maxLength={500}
