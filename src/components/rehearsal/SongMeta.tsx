@@ -2,45 +2,24 @@
 
 import { useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
+import Button, { buttonClassName } from "../ui/Button";
+import Chip from "../ui/Chip";
 import { useDialog } from "../ui/DialogProvider";
 import SheetMusicLinks from "./SheetMusicLinks";
 import { updateSongMeta } from "@/actions/song";
 import { track } from "@/lib/analytics";
-import {
-  KEY_ROOTS,
-  KEY_MODES,
-  GENRES,
-  GENRE_LABEL,
-  formatKey,
-  formatDifficulty,
-  formatDuration,
-} from "@/domain/song-meta";
+import { KEY_ROOTS, KEY_MODES, GENRES } from "@/domain/song-meta";
 import type { SongWithScore, KeyRoot, KeyMode, Genre } from "@/domain/types";
 
 interface SongMetaProps {
   song: SongWithScore;
   playlistId: string;
   shareCode: string;
-  /** 메타 편집 토글 가능 여부. false면 read-only chips만. */
-  editable?: boolean;
-  /** 처음부터 펼쳐진 상태로 시작. RehearsalView처럼 항상 보이는 컨텍스트용. */
-  defaultOpen?: boolean;
-  /** chip이 wrap 되도록 하는지. compact 행 안에 들어갈 때 false 권장. */
-  wrap?: boolean;
-  /** 접기를 바깥에서 처리할 때. 합주 모드처럼 요약을 바깥이 그리는 경우에 쓴다. */
-  onClose?: () => void;
+  /** 접기. 요약은 바깥(합주 카드)이 그린다. */
+  onClose: () => void;
 }
 
-export default function SongMeta({
-  song,
-  playlistId,
-  shareCode,
-  editable = true,
-  defaultOpen = false,
-  wrap = true,
-  onClose,
-}: SongMetaProps) {
-  const [open, setOpen] = useState(defaultOpen);
+export default function SongMeta({ song, playlistId, shareCode, onClose }: SongMetaProps) {
   const [keyRoot, setKeyRoot] = useState<KeyRoot | null>(song.key_root);
   const [keyMode, setKeyMode] = useState<KeyMode | null>(song.key_mode);
   const [keyMemo, setKeyMemo] = useState(song.key_memo || "");
@@ -103,92 +82,7 @@ export default function SongMeta({
   }
 
   const hasBpm = !!(tempoBpm && parseInt(tempoBpm, 10) >= 40);
-  const hasAny =
-    !!keyRoot ||
-    !!keyMemo ||
-    !!tempoBpm ||
-    !!durationMin ||
-    !!durationSec ||
-    !!difficulty ||
-    !!genre;
 
-  // ─── COLLAPSED (chips) ──────────────────────────────────────────
-  if (!open) {
-    return (
-      <div className="px-3 py-2 border-b border-border">
-        {hasAny ? (
-          <div
-            className={`flex items-center gap-1.5 ${
-              wrap ? "flex-wrap" : "overflow-x-auto scrollbar-thin"
-            }`}
-          >
-            <ChipGroup>
-              {formatKey(keyRoot, keyMode) && (
-                <Chip>{formatKey(keyRoot, keyMode)}</Chip>
-              )}
-              {!keyRoot && keyMemo && <Chip>{keyMemo}</Chip>}
-              {hasBpm && <Chip>{tempoBpm} BPM</Chip>}
-              {formatDuration(
-                parseInt(durationMin || "0", 10) * 60 +
-                  parseInt(durationSec || "0", 10),
-              ) && (
-                <Chip>
-                  {formatDuration(
-                    parseInt(durationMin || "0", 10) * 60 +
-                      parseInt(durationSec || "0", 10),
-                  )}
-                </Chip>
-              )}
-              {difficulty && (
-                <Chip aria-label={`난이도 ${difficulty}`}>
-                  <span className="text-warning">
-                    {formatDifficulty(difficulty)}
-                  </span>
-                </Chip>
-              )}
-              {genre && <Chip>{GENRE_LABEL[genre]}</Chip>}
-            </ChipGroup>
-
-            {editable && (
-              <button
-                type="button"
-                onClick={() => setOpen(true)}
-                className="ml-auto shrink-0 inline-flex h-11 w-11 items-center justify-center -mr-1 rounded-control text-text-subtle hover:text-text hover:bg-surface-hover transition-colors"
-                aria-label="메타 편집"
-              >
-                <PencilIcon />
-              </button>
-            )}
-          </div>
-        ) : editable ? (
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="inline-flex min-h-11 w-full items-center gap-1 text-left text-caption text-text-subtle transition-colors hover:text-text-muted"
-          >
-            <PlusIcon />
-            메타 추가 (키·BPM·난이도…)
-          </button>
-        ) : (
-          <p className="text-caption text-text-subtle py-1">메타 정보 없음</p>
-        )}
-
-        {/* 메트로놈 단축 (BPM 있고 닫힌 상태에서도 노출) */}
-        {hasBpm && (
-          <div className="mt-2">
-            <Link
-              href={`/playlist/${shareCode}/metronome?bpm=${tempoBpm}&songId=${song.id}`}
-              className="inline-flex min-h-11 items-center gap-1 text-caption font-semibold text-primary-fg hover:underline underline-offset-2"
-            >
-              <MetronomeIcon /> 메트로놈 {tempoBpm}
-            </Link>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // ─── EXPANDED (editor) ─────────────────────────────────────────
   return (
     <div className="px-3 py-3 border-b border-border space-y-3 animate-fade-in">
       {/* 헤더: 닫기 + 저장 상태 */}
@@ -198,23 +92,19 @@ export default function SongMeta({
         </span>
         <div className="flex items-center gap-2">
           {isPending && (
-            <span className="inline-block w-3.5 h-3.5 border-2 border-text-subtle border-t-primary-fg rounded-full animate-spin" />
+            <span className="inline-block size-3.5 border-2 border-text-subtle border-t-primary-fg rounded-pill animate-spin" />
           )}
-          <button
-            type="button"
-            onClick={() => (onClose ? onClose() : setOpen(false))}
-            className="inline-flex min-h-11 items-center gap-1 text-caption text-text-muted hover:text-text"
-          >
+          <Button variant="ghost" size="sm" onClick={onClose}>
             <ChevronUpIcon /> 접기
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Key picker */}
       <Field label="키">
-        <div className="flex flex-wrap gap-1">
-          <KeyChip
-            active={keyRoot === null}
+        <div className="flex flex-wrap gap-x-1.5 gap-y-2">
+          <Chip
+            selected={keyRoot === null}
             onClick={() => {
               setKeyRoot(null);
               setKeyMode(null);
@@ -222,26 +112,26 @@ export default function SongMeta({
             }}
           >
             없음
-          </KeyChip>
+          </Chip>
           {KEY_ROOTS.map((k) => (
-            <KeyChip
+            <Chip
               key={k}
-              active={keyRoot === k}
+              selected={keyRoot === k}
               onClick={() => {
                 setKeyRoot(k);
                 persist({ keyRoot: k });
               }}
             >
               {k}
-            </KeyChip>
+            </Chip>
           ))}
         </div>
         {keyRoot && (
-          <div className="mt-1.5 flex gap-1">
+          <div className="mt-2 flex gap-1.5">
             {KEY_MODES.map((m) => (
-              <KeyChip
+              <Chip
                 key={m.value}
-                active={keyMode === m.value}
+                selected={keyMode === m.value}
                 onClick={() => {
                   const next = keyMode === m.value ? null : m.value;
                   setKeyMode(next);
@@ -249,7 +139,7 @@ export default function SongMeta({
                 }}
               >
                 {m.label}
-              </KeyChip>
+              </Chip>
             ))}
           </div>
         )}
@@ -265,7 +155,7 @@ export default function SongMeta({
 
       {/* BPM + Duration */}
       <Field label="BPM · 길이">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <input
             type="number"
             value={tempoBpm}
@@ -302,7 +192,7 @@ export default function SongMeta({
           {hasBpm && (
             <Link
               href={`/playlist/${shareCode}/metronome?bpm=${tempoBpm}&songId=${song.id}`}
-              className="ml-auto inline-flex items-center gap-1 px-2.5 min-h-11 rounded-control bg-primary/10 border border-primary/30 text-caption font-semibold text-primary-fg hover:bg-primary/20"
+              className={buttonClassName({ variant: "tonal", size: "sm", className: "ml-auto" })}
             >
               <MetronomeIcon /> 메트로놈
             </Link>
@@ -312,11 +202,11 @@ export default function SongMeta({
 
       {/* Difficulty */}
       <Field label="난이도">
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-x-1.5 gap-y-2">
           {[1, 2, 3, 4, 5].map((d) => (
-            <KeyChip
+            <Chip
               key={d}
-              active={difficulty === d}
+              selected={difficulty === d}
               onClick={() => {
                 const next = difficulty === d ? null : d;
                 setDifficulty(next);
@@ -324,18 +214,18 @@ export default function SongMeta({
               }}
             >
               {"★".repeat(d)}
-            </KeyChip>
+            </Chip>
           ))}
         </div>
       </Field>
 
       {/* Genre */}
       <Field label="장르">
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-x-1.5 gap-y-2">
           {GENRES.map((g) => (
-            <KeyChip
+            <Chip
               key={g.value}
-              active={genre === g.value}
+              selected={genre === g.value}
               onClick={() => {
                 const next = genre === g.value ? null : g.value;
                 setGenre(next);
@@ -343,7 +233,7 @@ export default function SongMeta({
               }}
             >
               {g.label}
-            </KeyChip>
+            </Chip>
           ))}
         </div>
       </Field>
@@ -356,27 +246,6 @@ export default function SongMeta({
 
 // ─── Subcomponents ───────────────────────────────────────────────
 
-function ChipGroup({ children }: { children: ReactNode }) {
-  return <div className="flex items-center gap-1.5 flex-wrap">{children}</div>;
-}
-
-function Chip({
-  children,
-  ...rest
-}: {
-  children: ReactNode;
-  "aria-label"?: string;
-}) {
-  return (
-    <span
-      className="inline-flex items-center h-6 px-2 rounded-md bg-surface-hover text-caption font-medium text-text whitespace-nowrap"
-      {...rest}
-    >
-      {children}
-    </span>
-  );
-}
-
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
@@ -388,68 +257,10 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function KeyChip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`h-11 min-w-[44px] px-2.5 rounded-control text-caption font-semibold transition-colors ${
-        active
-          ? "bg-primary text-on-primary"
-          : "bg-surface-hover text-text-muted hover:text-text"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function PencilIcon() {
-  return (
-    <svg
-      className="w-4 h-4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
-      aria-hidden
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"
-      />
-    </svg>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg
-      className="w-3.5 h-3.5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
-      aria-hidden
-    >
-      <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-    </svg>
-  );
-}
-
 function ChevronUpIcon() {
   return (
     <svg
-      className="w-3.5 h-3.5"
+      className="size-3.5"
       fill="none"
       stroke="currentColor"
       strokeWidth={2.5}
@@ -464,7 +275,7 @@ function ChevronUpIcon() {
 function MetronomeIcon() {
   return (
     <svg
-      className="w-3.5 h-3.5"
+      className="size-3.5"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

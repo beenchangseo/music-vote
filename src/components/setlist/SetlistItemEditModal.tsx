@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Button from "../ui/Button";
+import ButtonGroup from "../ui/ButtonGroup";
+import Field from "../ui/Field";
+import Input from "../ui/Input";
 import Modal from "../ui/Modal";
+import Textarea from "../ui/Textarea";
 import { useDialog } from "../ui/DialogProvider";
 import { resetSongSetlistItem, updateIntervalItem, updateOriginalItem, updateSongSetlistItem } from "@/actions/setlist";
 import { effectiveSetlistDuration, effectiveSetlistTitle } from "@/domain/setlist";
@@ -66,27 +71,37 @@ export default function SetlistItemEditModal(props: Props) {
 
   return (
     <Modal open onClose={props.onClose} title={isInterval ? "인터벌 블록 수정" : isOriginal ? "자작곡 수정" : "곡 블록 수정"}>
-      <div className={isPending ? "pointer-events-none opacity-70" : ""}>
-        <label className="text-sm font-medium text-text">{isInterval ? "블록 이름" : isOriginal ? "자작곡 이름" : "곡 제목"}</label>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={isInterval ? 50 : isOriginal ? 100 : 200} className="mt-2 h-11 w-full rounded-xl border border-border-input bg-surface-hover px-3 text-sm text-text" />
+      <div className={`flex flex-col gap-4 ${isPending ? "pointer-events-none opacity-70" : ""}`}>
+        <Field label={isInterval ? "블록 이름" : isOriginal ? "자작곡 이름" : "곡 제목"}>
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={isInterval ? 50 : isOriginal ? 100 : 200} />
+        </Field>
         {isBlock && (
-          <>
-            <label className="mt-4 block text-sm font-medium text-text">설명</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={200} rows={3} className="mt-2 w-full resize-none rounded-xl border border-border-input bg-surface-hover px-3 py-2 text-sm text-text" />
-            <p className="mt-1 text-right text-caption text-text-subtle">{description.length}/200</p>
-          </>
+          <Field label="설명" help={`${description.length}/200`}>
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={200} rows={3} />
+          </Field>
         )}
-        <label className="mt-4 block text-sm font-medium text-text">시간</label>
-        <div className="mt-2 flex items-center gap-2">
-          <input type="number" min={0} step={1} value={minutes} onChange={(e) => setMinutes(e.target.value)} className="h-11 min-w-0 flex-1 rounded-xl border border-border-input bg-surface-hover px-3 text-center text-text" aria-label="분" />
-          <span className="text-text-muted">분</span>
-          <input type="number" min={0} max={59} step={1} value={seconds} onChange={(e) => setSeconds(e.target.value)} className="h-11 min-w-0 flex-1 rounded-xl border border-border-input bg-surface-hover px-3 text-center text-text" aria-label="초" />
-          <span className="text-text-muted">초</span>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="분">
+            <Input type="number" min={0} step={1} value={minutes} onChange={(e) => setMinutes(e.target.value)} className="tabular-nums" />
+          </Field>
+          <Field label="초">
+            <Input type="number" min={0} max={59} step={1} value={seconds} onChange={(e) => setSeconds(e.target.value)} className="tabular-nums" />
+          </Field>
         </div>
-        <div className="mt-6 flex gap-2">
-          {!isBlock && <button type="button" onClick={reset} className="min-h-11 rounded-xl border border-border px-4 text-sm font-semibold text-text-muted">초기화</button>}
-          <button type="button" onClick={props.onClose} className="ml-auto min-h-11 px-4 text-sm text-text-muted">취소</button>
-          <button type="button" onClick={save} disabled={!valid} className="min-h-11 rounded-xl bg-primary px-4 text-sm font-semibold text-on-primary disabled:opacity-50">저장</button>
+        <div className="mt-2 flex gap-2">
+          {!isBlock && (
+            <Button variant="ghost" onClick={reset}>
+              초기화
+            </Button>
+          )}
+          <ButtonGroup className="flex-1">
+            <Button variant="tonal" onClick={props.onClose}>
+              취소
+            </Button>
+            <Button onClick={save} disabled={!valid}>
+              저장
+            </Button>
+          </ButtonGroup>
         </div>
       </div>
     </Modal>

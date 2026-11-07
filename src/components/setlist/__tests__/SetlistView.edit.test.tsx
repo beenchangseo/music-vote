@@ -339,7 +339,8 @@ describe("SetlistView add areas", () => {
     fireEvent.click(within(sheet).getByRole("button", { name: "넣기" }));
 
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(screen.getByRole("button", { name: "편집" })).toHaveFocus();
+    // 편집 takes focus in a passive effect. On a busy CPU React runs it a task after the sheet leaves the DOM.
+    await waitFor(() => expect(screen.getByRole("button", { name: "편집" })).toHaveFocus());
     expect(screen.getByText("「멘트」 블록을 넣었어요")).toHaveAttribute("role", "status");
   });
 

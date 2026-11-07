@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import Image from "next/image";
 import Button from "../ui/Button";
 import IconButton from "../ui/IconButton";
-import ListRow, { SongRow } from "../ui/ListRow";
+import { ListRowButton, ListRowIcon, SongRow } from "../ui/ListRow";
 import Modal from "../ui/Modal";
 import BlockForm from "./BlockForm";
 import { formatRuntime, setlistBlockTitle, type NewSetlistBlock } from "@/domain/setlist";
@@ -50,10 +50,10 @@ export default function InsertSheet({ target, initialStep = "choose", candidates
 
       {step === "choose" && (
         <div className="flex flex-col">
-          <Choice tone="bg-surface-hover text-text-muted" icon={<ClockIcon />} title="인터벌" description="셋업 변경·멘트 시간 · 기본 1:00" onClick={() => goTo("interval")} />
-          <Choice tone="bg-surface-hover text-primary-fg" icon={<NoteIcon />} title="자작곡" description="우리 곡 한 블록 · 기본 3:00" onClick={() => goTo("original")} />
+          <Choice tone="text-text-muted" icon={<ClockIcon />} title="인터벌" description="셋업 변경·멘트 시간 · 기본 1:00" onClick={() => goTo("interval")} />
+          <Choice tone="text-primary-fg" icon={<NoteIcon />} title="자작곡" description="우리 곡 한 블록 · 기본 3:00" onClick={() => goTo("original")} />
           <Choice
-            tone="bg-surface-hover text-text"
+            tone="text-text"
             icon={<ListIcon />}
             title="후보곡에서 고르기"
             description={candidates.length > 0 ? `셋리에 아직 없는 후보곡 ${candidates.length}곡` : "후보곡이 모두 셋리에 있어요"}
@@ -109,20 +109,20 @@ export default function InsertSheet({ target, initialStep = "choose", candidates
 
 function Choice({ tone, icon, title, description, disabled = false, onClick }: { tone: string; icon: ReactNode; title: string; description: string; disabled?: boolean; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} disabled={disabled} className="rounded-control text-left transition-colors hover:bg-surface-hover disabled:opacity-50 disabled:hover:bg-transparent">
-      <ListRow
-        className="px-2"
-        leading={<span className={`flex size-10 items-center justify-center rounded-control ${tone}`}>{icon}</span>}
-        trailing={
-          <svg className="size-4 text-text-subtle" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
-        }
-      >
-        <span className="block text-body font-semibold text-text">{title}</span>
-        <span className="block text-caption text-text-muted">{description}</span>
-      </ListRow>
-    </button>
+    <ListRowButton
+      onClick={onClick}
+      disabled={disabled}
+      className="px-2"
+      leading={<ListRowIcon className={tone}>{icon}</ListRowIcon>}
+      trailing={
+        <svg className="size-4 text-text-subtle" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      }
+    >
+      <span className="block text-body font-semibold text-text">{title}</span>
+      <span className="block text-caption text-text-muted">{description}</span>
+    </ListRowButton>
   );
 }
 
