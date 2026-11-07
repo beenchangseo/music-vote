@@ -16,6 +16,8 @@ describe("eslint ds/focus-ring rule", () => {
     ['<button className="focus-visible:outline-none ring-2 ring-focus-ring" />', "focus-visible:outline-none"],
     ['<div tabIndex={0} className="outline-hidden" />', "outline-hidden"],
     ["const skin = `w-full focus:outline-0 ${tone}`;", "focus:outline-0"],
+    ['<button className="focus:outline-none focus:ring-0" />', "focus:outline-none"],
+    ['<button className="focus:outline-none focus:ring-[0px]" />', "focus:outline-none"],
   ])("flags %s", async (code, token) => {
     const errors = await focusRingErrors(code);
     expect(errors).toHaveLength(1);

@@ -145,8 +145,9 @@ const noRawControl = {
 
 /** Utilities that take away the keyboard focus outline globals.css draws in @layer base. */
 const OUTLINE_REMOVED = /^outline-(none|hidden|0)$/;
-/** A ring width under a focus variant (`focus-visible:ring-2`, `has-focus-visible:ring-2`): the focus style that replaces the outline. */
-const isFocusRing = (token) => /^ring(-\d+|-\[[^\]]+\])?$/.test(utilityOf(token)) && /focus[\w-]*:/.test(token);
+/** A nonzero ring width under a focus variant (`focus-visible:ring-2`, `has-focus-visible:ring-2`): the focus style that replaces the outline. */
+const isFocusRing = (token) =>
+  /^ring(-[1-9]\d*|-\[(?!0(?:px|rem|em)?\])[^\]]+\])?$/.test(utilityOf(token)) && /focus[\w-]*:/.test(token);
 
 const focusRing = {
   meta: {
