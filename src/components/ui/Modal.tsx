@@ -82,7 +82,7 @@ export default function Modal({ open, onClose, children, title, description, ini
     >
       <div
         ref={panelRef}
-        className="flex max-h-[90dvh] w-full flex-col bg-surface rounded-t-sheet sm:max-w-md sm:rounded-sheet animate-slide-up shadow-float"
+        className="flex max-h-[90dvh] w-full flex-col overflow-hidden bg-surface rounded-t-sheet sm:max-w-md sm:rounded-sheet animate-slide-up shadow-float"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="shrink-0 px-5 pb-3 pt-2 sm:pt-5">
