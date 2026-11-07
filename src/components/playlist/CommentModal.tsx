@@ -117,7 +117,7 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
   return (
     // Focus the list, not the textarea: opening the sheet to read should not raise the keyboard.
     <Modal open onClose={onClose} title={`댓글 · ${songTitle}`} initialFocus={listRef} footer={footer}>
-      <div ref={listRef} tabIndex={-1} className="space-y-3 outline-none">
+      <div ref={listRef} tabIndex={-1} className="space-y-3">
         {loading ? (
           <div className="py-8 text-center">
             <span className="inline-block size-6 animate-spin rounded-pill border-2 border-border-strong border-t-primary-fg" />

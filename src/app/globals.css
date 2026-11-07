@@ -245,6 +245,12 @@ body {
   outline-offset: 2px;
 }
 
+/* tabindex="-1" 은 Tab 으로 닿지 않고 스크립트만 포커스를 두는 자리(시트를 열 때의 댓글 목록)라 ring 을 그리지
+ * 않는다. 브라우저 기본 ring 도 여기서 지운다. 두 규칙 모두 layer 밖이라 utility 의 outline-none 으로는 못 지운다. */
+:where([tabindex="-1"]):focus-visible {
+  outline: none;
+}
+
 /* Print styles for setlist */
 @media print {
   body { background: white !important; color: black !important; }
