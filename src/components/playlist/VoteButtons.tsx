@@ -4,7 +4,7 @@ import { useState, type AnimationEvent } from "react";
 import Badge from "../ui/Badge";
 import RoundButton, { type RoundLook, type RoundVoteTone } from "../ui/RoundButton";
 import { triggerKakaoLogin } from "@/lib/kakao-login";
-import type { VoteDirection } from "@/domain/vote";
+import { applyVotePress, type VoteDirection } from "@/domain/vote";
 import type { VotingMode } from "@/domain/types";
 
 interface VoteButtonsProps {
@@ -38,16 +38,8 @@ export default function VoteButtons({
   const direction = userVote === 1 || userVote === -1 ? userVote : null;
   // 비로그인 방문자에게 활성 버튼처럼 보이면 눌러보고서야 로그인 벽을 만난다.
   // 누를 수는 있게 두되(누르면 로그인) 잠긴 상태임을 먼저 보여준다.
-  const upLabel = loginGate
-    ? "로그인하고 찬성하기"
-    : votingMode === "allocated" && direction === -1
-      ? "반대표 한 개 취소"
-      : "찬성표 추가";
-  const downLabel = loginGate
-    ? "로그인하고 반대하기"
-    : votingMode === "allocated" && direction === 1
-      ? "찬성표 한 개 취소"
-      : "반대표 추가";
+  const upLabel = loginGate ? "로그인하고 찬성하기" : arrowLabel(1, direction, userVoteCount, votingMode);
+  const downLabel = loginGate ? "로그인하고 반대하기" : arrowLabel(-1, direction, userVoteCount, votingMode);
   // Logged out: plain grey arrows that open the login (the lock sits by the score), not a vote that could be on.
   const look = (tone: RoundVoteTone, chosen: boolean): RoundLook =>
     loginGate ? { tone: "ghost", size: "md" } : { tone, size: "md", chosen };
@@ -134,6 +126,17 @@ export default function VoteButtons({
       </RoundButton>
     </div>
   );
+}
+
+const VOTE_NAME: Record<VoteDirection, string> = { 1: "찬성표", [-1]: "반대표" };
+
+/** Names what a press does, from the same rule the vote write follows, so the label cannot drift from it. */
+function arrowLabel(arrow: VoteDirection, direction: VoteDirection | null, count: number, mode: VotingMode): string {
+  const { action } = applyVotePress({ direction, count }, arrow, mode);
+  if (action === "removed" && direction !== null) {
+    return mode === "allocated" ? `${VOTE_NAME[direction]} 한 개 취소` : `${VOTE_NAME[direction]} 취소`;
+  }
+  return `${VOTE_NAME[arrow]} 추가`;
 }
 
 function VoteCountBadge({ count }: { count: number }) {
