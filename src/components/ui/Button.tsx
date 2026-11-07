@@ -93,12 +93,16 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
       className={buttonClassName({ variant: pressed ? "primary" : variant, size, fullWidth, pill, className })}
       {...rest}
     >
-      {loading ? (
-        <span aria-hidden className="inline-block size-4 rounded-pill border-2 border-current border-t-transparent animate-spin" />
-      ) : kakaoMark ? (
-        <KakaoMark />
-      ) : null}
-      {children}
+      {/* One grid cell holds both, so the spinner sits on the hidden label and the button keeps its width. */}
+      <span className="inline-grid place-items-center">
+        <span className={`col-start-1 row-start-1 inline-flex items-center gap-2 ${loading ? "opacity-0" : ""}`}>
+          {kakaoMark && <KakaoMark />}
+          {children}
+        </span>
+        {loading && (
+          <span aria-hidden className="col-start-1 row-start-1 size-4 rounded-pill border-2 border-current border-t-transparent animate-spin" />
+        )}
+      </span>
     </button>
   );
 });
