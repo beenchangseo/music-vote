@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # The design-system ratchet compares eslint-suppressions.json with its merge base on origin/main.
+          # The guard-edits hook test needs origin/main to tell shipped migrations from new ones.
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:

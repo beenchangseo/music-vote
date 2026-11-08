@@ -28,7 +28,7 @@ interface ModalProps {
   footer?: ReactNode;
 }
 
-const safeBottom = "pb-[calc(1.25rem+env(safe-area-inset-bottom))]";
+const safeBottom = "pb-[calc(1.25rem+var(--spacing-safe-bottom))]";
 
 export default function Modal({ open, onClose, children, title, description, initialFocus, footer }: ModalProps) {
   const descriptionId = useId();

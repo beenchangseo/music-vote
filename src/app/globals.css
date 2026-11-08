@@ -40,9 +40,6 @@
   --color-kakao-text: #191919;
   --color-kakao-border: #E5CC00;
 
-  /* Legacy alias of success, still used by the /new success card. Votes use success and danger-fg. */
-  --color-upvote: #22c55e;
-
   /* Surface scale (gray-950 ↔ gray-700) */
   --color-bg: #030712;
   --color-surface: #111827;

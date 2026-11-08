@@ -11,6 +11,8 @@ import NoticeCard from "../ui/NoticeCard";
 import Avatar, { AvatarStack } from "../ui/Avatar";
 import EmptyState from "../ui/EmptyState";
 import { ListRowButton, SongRowLink } from "../ui/ListRow";
+import { MenuItemButton, MenuPanel, useMenu } from "../ui/Menu";
+import Shelf from "../ui/Shelf";
 import { useDialog } from "../ui/DialogProvider";
 import GuitarIcon from "../ui/GuitarIcon";
 import { showDateSpokenLabel } from "./ShowDateTile";
@@ -468,8 +470,8 @@ function RoomsShelf({
   return (
     <section aria-labelledby="band-rooms" className="mt-10">
       <SectionTitle id="band-rooms" title="플레이리스트" count={rooms.length} />
-      <ul className="-mx-4 mt-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <li className="w-36 shrink-0 snap-start">
+      <Shelf className="mt-4">
+        <li className="w-36">
           <Link href={newRoomHref} className="group block">
             <span className="flex aspect-square w-full items-center justify-center rounded-control border-2 border-dashed border-border-strong text-text-muted transition-colors group-hover:border-text-muted group-hover:text-text">
               <svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
@@ -480,7 +482,7 @@ function RoomsShelf({
           </Link>
         </li>
         {onAttach && (
-          <li className="w-36 shrink-0 snap-start">
+          <li className="w-36">
             <button type="button" onClick={onAttach} className="group block w-full text-left">
               <span className="flex aspect-square w-full items-center justify-center rounded-control border-2 border-dashed border-border-strong text-text-muted transition-colors group-hover:border-text-muted group-hover:text-text">
                 <svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
@@ -492,7 +494,7 @@ function RoomsShelf({
           </li>
         )}
         {rooms.map((room) => (
-          <li key={room.id} className="w-36 shrink-0 snap-start">
+          <li key={room.id} className="w-36">
             <Link href={`/playlist/${room.shareCode}`} className="block">
               <RoomCover thumbs={room.coverThumbs} sizes="144px" className="aspect-square w-full" />
               <span className="mt-2 block truncate text-sm font-semibold text-text">{room.title}</span>
@@ -504,7 +506,7 @@ function RoomsShelf({
             </Link>
           </li>
         ))}
-      </ul>
+      </Shelf>
       {rooms.length === 0 && <p className="mt-1 text-caption text-text-muted">새 플레이리스트를 만들면 여기에 모여요</p>}
     </section>
   );
@@ -548,15 +550,10 @@ function PlayedSongs({ songs }: { songs: PlayedSong[] }) {
 
 /** 멤버 한 칸 (YouTube Music "좋아하는 아티스트" 원). owner 에게는 내보내기 메뉴가 붙는다. */
 function MemberTile({ member, onRemove }: { member: TeamHomeMember; onRemove: () => void }) {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const { open: menuOpen, setOpen: setMenuOpen, ref: menuRef } = useMenu();
   const sub = member.role === "owner" ? "리더" : member.isMe ? "나" : null;
   return (
-    <li
-      className="relative flex flex-col items-center gap-2 text-center"
-      onKeyDown={(e) => {
-        if (e.key === "Escape") setMenuOpen(false);
-      }}
-    >
+    <li className="relative flex flex-col items-center gap-2 text-center">
       <Avatar name={member.displayName} size="lg" />
       <span className="w-full min-w-0">
         <span className="block truncate text-sm text-text">{member.displayName}</span>
@@ -568,14 +565,13 @@ function MemberTile({ member, onRemove }: { member: TeamHomeMember; onRemove: ()
         )}
       </span>
       {member.canRemove && (
-        <>
+        <div ref={menuRef} className="absolute -right-1 -top-2 flex">
           <IconButton
             bare
             aria-label={`${member.displayName} 메뉴`}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
-            className="absolute -right-1 -top-2"
           >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
               <circle cx="5" cy="12" r="1.75" />
@@ -584,24 +580,20 @@ function MemberTile({ member, onRemove }: { member: TeamHomeMember; onRemove: ()
             </svg>
           </IconButton>
           {menuOpen && (
-            <div
-              role="menu"
-              className="absolute right-0 top-9 z-10 w-36 overflow-hidden rounded-control border border-border bg-surface text-left shadow-float"
-            >
-              <button
-                type="button"
+            <MenuPanel role="menu" className="w-36">
+              <MenuItemButton
                 role="menuitem"
+                tone="danger"
                 onClick={() => {
                   setMenuOpen(false);
                   onRemove();
                 }}
-                className="flex min-h-11 w-full items-center px-4 text-sm text-danger-fg transition-colors hover:bg-surface-hover"
               >
                 내보내기
-              </button>
-            </div>
+              </MenuItemButton>
+            </MenuPanel>
           )}
-        </>
+        </div>
       )}
     </li>
   );
