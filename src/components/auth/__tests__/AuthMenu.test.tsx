@@ -58,6 +58,18 @@ describe("AuthMenu 문의하기", () => {
   });
 });
 
+describe("AuthMenu keyboard", () => {
+  it("hands focus back to the account button when Escape closes the menu", () => {
+    openMenu();
+    const link = screen.getByRole("link", { name: "문의하기" });
+    link.focus();
+    fireEvent.keyDown(link, { key: "Escape" });
+
+    expect(screen.queryByRole("link", { name: "문의하기" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "보컬 계정 메뉴" })).toHaveFocus();
+  });
+});
+
 describe("AuthMenu 탈퇴하기", () => {
   it("asks first with a danger confirm that says what stays, and does nothing on cancel", async () => {
     const dialog = await openDeleteConfirm();

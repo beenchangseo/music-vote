@@ -573,7 +573,7 @@ function PlayedSongs({ songs }: { songs: PlayedSong[] }) {
 
 /** 멤버 한 칸 (YouTube Music "좋아하는 아티스트" 원). owner 에게는 내보내기 메뉴가 붙는다. */
 function MemberTile({ member, onRemove }: { member: TeamHomeMember; onRemove: () => void }) {
-  const { open: menuOpen, setOpen: setMenuOpen, ref: menuRef } = useMenu();
+  const { open: menuOpen, setOpen: setMenuOpen, ref: menuRef, triggerRef: menuTriggerRef } = useMenu();
   const sub = member.role === "owner" ? "리더" : member.isMe ? "나" : null;
   return (
     <li className="relative flex flex-col items-center gap-2 text-center">
@@ -590,6 +590,7 @@ function MemberTile({ member, onRemove }: { member: TeamHomeMember; onRemove: ()
       {member.canRemove && (
         <div ref={menuRef} className="absolute -right-1 -top-2 flex">
           <IconButton
+            ref={menuTriggerRef}
             bare
             aria-label={`${member.displayName} 메뉴`}
             aria-haspopup="menu"
@@ -608,6 +609,8 @@ function MemberTile({ member, onRemove }: { member: TeamHomeMember; onRemove: ()
                 role="menuitem"
                 tone="danger"
                 onClick={() => {
+                  // The remove sheet hands focus back to whatever had it when it opened; the item is gone by then.
+                  menuTriggerRef.current?.focus();
                   setMenuOpen(false);
                   onRemove();
                 }}

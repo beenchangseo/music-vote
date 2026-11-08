@@ -54,7 +54,7 @@ interface AuthMenuProps {
 export default function AuthMenu({ nickname, avatarUrl, embedded = false }: AuthMenuProps) {
   const pathname = usePathname();
   // The menu stays open behind the delete confirm, so it shows "탈퇴하는 중…" afterwards.
-  const { open, setOpen, ref } = useMenu();
+  const { open, setOpen, ref, triggerRef } = useMenu();
   const { showDanger, showAlert } = useDialog();
   const [deletePhase, setDeletePhase] = useState<DeletePhase>("idle");
 
@@ -110,6 +110,7 @@ export default function AuthMenu({ nickname, avatarUrl, embedded = false }: Auth
   return (
     <div ref={ref} className="relative flex">
       <RoundButton
+        ref={triggerRef}
         tone="plain"
         size="md"
         onClick={() => setOpen((v) => !v)}
