@@ -9,7 +9,7 @@ import Button, { buttonClassName } from "../ui/Button";
 import NoticeCard from "../ui/NoticeCard";
 import Avatar, { AvatarStack } from "../ui/Avatar";
 import EmptyState from "../ui/EmptyState";
-import { SongRow } from "../ui/ListRow";
+import { SongRowLink } from "../ui/ListRow";
 import { useDialog } from "../ui/DialogProvider";
 import GuitarIcon from "../ui/GuitarIcon";
 import { showDateSpokenLabel } from "./ShowDateTile";
@@ -535,20 +535,14 @@ function PlayedSongs({ songs }: { songs: PlayedSong[] }) {
           <ol className="mt-3">
             {visible.map((song) => (
               <li key={song.key}>
-                <Link
+                <SongRowLink
                   href={`/playlist/${song.latestShareCode}`}
-                  className="-mx-2 block rounded-control px-2 transition-colors hover:bg-surface-hover"
+                  cover={<SongThumb src={song.thumbnailUrl} />}
+                  trailing={song.times > 1 && <span className="text-sm font-bold text-primary-fg tabular-nums">{song.times}번</span>}
                 >
-                  <SongRow
-                    cover={<SongThumb src={song.thumbnailUrl} />}
-                    trailing={
-                      song.times > 1 && <span className="text-sm font-bold text-primary-fg tabular-nums">{song.times}번</span>
-                    }
-                  >
-                    <span className="block truncate text-body text-text">{song.title}</span>
-                    {song.artist && <span className="block truncate text-sm text-text-muted">{song.artist}</span>}
-                  </SongRow>
-                </Link>
+                  <span className="block truncate text-body text-text">{song.title}</span>
+                  {song.artist && <span className="block truncate text-sm text-text-muted">{song.artist}</span>}
+                </SongRowLink>
               </li>
             ))}
           </ol>

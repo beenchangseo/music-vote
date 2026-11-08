@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import Button, { touchTarget44 } from "../Button";
 import Card from "../Card";
 import Chip from "../Chip";
 import IconButton from "../IconButton";
 import Input from "../Input";
-import { ListRowButton, ListRowIcon, ListRowLink } from "../ListRow";
+import { ListRowButton, ListRowIcon, ListRowLink, SongRow, SongRowLink } from "../ListRow";
 import RoundButton, { RoundLink } from "../RoundButton";
 import Switch from "../Switch";
 
@@ -307,5 +307,29 @@ describe("controls drawn smaller than 44px", () => {
     draw();
     const control = screen.getByRole(name === "익명 투표" ? "switch" : "button", { name });
     expect(control.className.split(/\s+/)).toEqual(expect.arrayContaining(touchTarget44.split(" ")));
+  });
+});
+
+describe("SongRow surface", () => {
+  it("keeps the opened row's footer inside the same row, under the title", () => {
+    render(
+      <SongRow role="group" aria-label="예뻤어 행" surface="open" cover={null} footer={<button type="button">댓글</button>}>
+        <span>예뻤어</span>
+      </SongRow>,
+    );
+    const row = screen.getByRole("group", { name: "예뻤어 행" });
+    expect(within(row).getByText("예뻤어")).toBeInTheDocument();
+    expect(within(row).getByRole("button", { name: "댓글" })).toBeInTheDocument();
+  });
+
+  it("SongRowLink is one link to its href around the whole row", () => {
+    render(
+      <SongRowLink href="/playlist/abc" cover={null} trailing={<span>3번</span>}>
+        <span>예뻤어</span>
+      </SongRowLink>,
+    );
+    const link = screen.getByRole("link", { name: /예뻤어/ });
+    expect(link).toHaveAttribute("href", "/playlist/abc");
+    expect(link).toHaveTextContent("3번");
   });
 });
