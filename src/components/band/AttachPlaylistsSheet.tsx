@@ -122,8 +122,8 @@ function SheetBody({ teamId, onAttached, onClose }: { teamId: string; onAttached
             <li key={i} className="flex items-center gap-3 motion-safe:animate-pulse-soft">
               <span className="h-14 w-14 shrink-0 rounded-control bg-surface-hover" />
               <span className="flex-1 space-y-2">
-                <span className="block h-4 w-2/3 rounded bg-surface-hover" />
-                <span className="block h-3 w-1/3 rounded bg-surface-hover" />
+                <span className="block h-4 w-2/3 rounded-badge bg-surface-hover" />
+                <span className="block h-3 w-1/3 rounded-badge bg-surface-hover" />
               </span>
             </li>
           ))}

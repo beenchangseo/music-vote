@@ -1,14 +1,15 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import Button from "../Button";
+import Button, { touchTarget44 } from "../Button";
 import Card from "../Card";
 import Chip from "../Chip";
 import IconButton from "../IconButton";
 import Input from "../Input";
-import { ListRowButton, ListRowIcon, ListRowLink } from "../ListRow";
+import { ListRowButton, ListRowIcon, ListRowLink, SongRow, SongRowLink } from "../ListRow";
 import RoundButton, { RoundLink } from "../RoundButton";
+import Switch from "../Switch";
 
 afterEach(cleanup);
 
@@ -34,6 +35,20 @@ describe("Button", () => {
   it("is not busy when idle", () => {
     render(<Button>저장</Button>);
     expect(screen.getByRole("button", { name: "저장" })).not.toHaveAttribute("aria-busy");
+  });
+
+  it("submits the form it sits in only when asked to with type=submit", () => {
+    const onSubmit = vi.fn((e: React.FormEvent) => e.preventDefault());
+    render(
+      <form onSubmit={onSubmit}>
+        <Button variant="ghost">다시 고르기</Button>
+        <Button type="submit">밴드 만들기</Button>
+      </form>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "다시 고르기" }));
+    expect(onSubmit).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "밴드 만들기" }));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 
   it("ignores clicks when disabled", () => {
@@ -271,5 +286,50 @@ describe("ListRowLink", () => {
     const link = screen.getByRole("link", { name: /벚꽃 엔딩/ });
     expect(link).toHaveAttribute("href", "/playlist/abc");
     expect(link.className).toBe(screen.getByRole("button", { name: /예뻤어/ }).className);
+  });
+});
+
+// jsdom has no layout, so these read the classes. Every small control draws the one shared tap area, and that area is
+// never under control-md (44px, pinned to globals.css by tokens.test) on either side.
+describe("controls drawn smaller than 44px", () => {
+  it("share one tap area that is at least 44×44 around the control", () => {
+    expect(touchTarget44.split(" ")).toEqual(
+      expect.arrayContaining(["relative", "after:absolute", "after:size-full", "after:min-h-control-md", "after:min-w-control-md"]),
+    );
+  });
+
+  it.each([
+    ["IconButton sm", () => render(<IconButton size="sm" bare aria-label="삭제">⊖</IconButton>), "삭제"],
+    ["Button sm", () => render(<Button size="sm">더 보기</Button>), "더 보기"],
+    ["Chip", () => render(<Chip>C</Chip>), "C"],
+    ["Switch", () => render(<Switch checked={false} onCheckedChange={() => {}} aria-label="익명 투표" />), "익명 투표"],
+  ])("%s keeps that tap area", (_name, draw, name) => {
+    draw();
+    const control = screen.getByRole(name === "익명 투표" ? "switch" : "button", { name });
+    expect(control.className.split(/\s+/)).toEqual(expect.arrayContaining(touchTarget44.split(" ")));
+  });
+});
+
+describe("SongRow surface", () => {
+  it("keeps the opened row's footer inside the same row, under the title", () => {
+    render(
+      <SongRow role="group" aria-label="예뻤어 행" surface="open" cover={null} footer={<button type="button">댓글</button>}>
+        <span>예뻤어</span>
+      </SongRow>,
+    );
+    const row = screen.getByRole("group", { name: "예뻤어 행" });
+    expect(within(row).getByText("예뻤어")).toBeInTheDocument();
+    expect(within(row).getByRole("button", { name: "댓글" })).toBeInTheDocument();
+  });
+
+  it("SongRowLink is one link to its href around the whole row", () => {
+    render(
+      <SongRowLink href="/playlist/abc" cover={null} trailing={<span>3번</span>}>
+        <span>예뻤어</span>
+      </SongRowLink>,
+    );
+    const link = screen.getByRole("link", { name: /예뻤어/ });
+    expect(link).toHaveAttribute("href", "/playlist/abc");
+    expect(link).toHaveTextContent("3번");
   });
 });

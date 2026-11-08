@@ -63,7 +63,7 @@ export default function VoteButtons({
 
   // YouTube Music style: up, score and down in one pill so the three read as one control.
   return (
-    <div className="inline-flex items-center rounded-pill bg-surface-hover/80">
+    <div className="inline-flex items-center rounded-pill bg-surface-hover">
       <RoundButton
         {...look("upvote", direction === 1)}
         onClick={() => handleClick(1)}
@@ -85,9 +85,9 @@ export default function VoteButtons({
         aria-label={loginGate ? `점수 ${score}점, 투표하려면 로그인이 필요해요` : `점수 ${score}점`}
         className={`min-w-7 text-center text-body font-bold tabular-nums ${
           score > 0
-            ? "text-upvote"
+            ? "text-success"
             : score < 0
-            ? "text-downvote"
+            ? "text-danger-fg"
             : "text-text-muted"
         }`}
       >

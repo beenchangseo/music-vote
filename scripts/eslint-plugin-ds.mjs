@@ -9,6 +9,8 @@ const NON_TOKEN_RADIUS = new RegExp(`^rounded(-${SIDES})?(-(xs|sm|md|lg|xl|[2-4]
 const NON_TOKEN_FONT_SIZE = /^text-(xs|base|lg|[2-9]?xl|\[[\d.]+[a-z%]*\])(\/\S+)?$/;
 const ARBITRARY_LENGTH =
   /^-?((min-|max-)?[hw]|size|p[xytrblse]?|m[xytrblse]?|top|right|bottom|left|start|end|inset(-[xy])?|gap(-[xy])?|space-[xy]|translate-[xy]|basis|leading|tracking)-\[[^\]]+\]$/;
+/** `-mt-3`, `-mx-2`. A bracket value (`-mt-[3px]`) is already an arbitrary length, so it is listed there once. */
+const NEGATIVE_MARGIN = /^-m[xytrblse]?-[^[]/;
 
 /** `hover:sm:!h-4` → `h-4`. Colons inside brackets (`[&:hover]:`, `text-[color:red]`) are not variant separators. */
 function utilityOf(token) {
@@ -212,6 +214,7 @@ const plugin = {
       (u) => NON_TOKEN_RADIUS.test(u) || NON_TOKEN_FONT_SIZE.test(u),
     ),
     arbitrary: classTokenRule("Arbitrary [..] lengths on size, spacing and position utilities.", (u) => ARBITRARY_LENGTH.test(u)),
+    "negative-margin": classTokenRule("Negative margins: a hand offset that pulls a box out of the layout it sits in.", (u) => NEGATIVE_MARGIN.test(u)),
   },
 };
 

@@ -1,4 +1,5 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
+import { touchTarget44 } from "./Button";
 
 type Tone = "default" | "danger" | "brand";
 type Size = "md" | "sm";
@@ -30,7 +31,7 @@ const bareToneClasses: Record<Exclude<Tone, "brand">, string> = {
 
 const sizeClasses: Record<Size, string> = {
   md: "size-control-md",
-  sm: "relative size-control-sm after:absolute after:left-1/2 after:top-1/2 after:size-control-md after:-translate-x-1/2 after:-translate-y-1/2",
+  sm: `size-control-sm ${touchTarget44}`,
 };
 
 /**

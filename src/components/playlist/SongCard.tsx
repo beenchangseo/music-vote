@@ -194,100 +194,97 @@ export default function SongCard({
   if (viewMode === "compact") {
     const topRank = rank != null && rank <= 3 && song.score > 0;
     return (
-      <div
-        className={`-mx-2 rounded-card transition-colors ${
-          expanded ? "bg-surface" : "hover:bg-surface/60"
-        } ${isHighlighted ? "ring-1 ring-inset ring-warning/40" : ""} ${isPending ? "opacity-50" : ""}`}
-      >
-        <div className="px-2">
-          <SongRow
-            rank={rank}
-            topRank={topRank}
-            trailing={voteButtons}
-            cover={
-              // Spotify: tap the art to play.
-              <button
-                onClick={onTogglePlay}
-                className="group absolute inset-0"
-                aria-label={`${title} ${isPlaying ? "일시정지" : "재생"}`}
-              >
-                {song.thumbnail_url && (
-                  <Image src={song.thumbnail_url} alt="" fill sizes="48px" className="object-cover" />
-                )}
-                <span
-                  className={`absolute inset-0 flex items-center justify-center transition-colors ${
-                    isCurrent ? "bg-black/45" : "bg-black/0 group-hover:bg-black/45"
-                  }`}
-                >
-                  {isPlaying ? (
-                    <span className="flex items-end gap-0.5" aria-hidden>
-                      <span className="h-2.5 w-0.5 animate-bounce rounded-pill bg-accent-play" style={{ animationDelay: "0ms" }} />
-                      <span className="h-4 w-0.5 animate-bounce rounded-pill bg-accent-play" style={{ animationDelay: "150ms" }} />
-                      <span className="h-3 w-0.5 animate-bounce rounded-pill bg-accent-play" style={{ animationDelay: "300ms" }} />
-                    </span>
-                  ) : (
-                    <svg
-                      className={`ml-0.5 h-5 w-5 text-white ${isCurrent ? "" : "opacity-0 transition-opacity group-hover:opacity-100"}`}
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden
-                    >
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  )}
-                </span>
-              </button>
-            }
+      <SongRow
+        surface={expanded ? "open" : "hover"}
+        className={`${isHighlighted ? "ring-1 ring-inset ring-warning/40" : ""} ${isPending ? "opacity-50" : ""}`}
+        rank={rank}
+        topRank={topRank}
+        trailing={voteButtons}
+        footer={
+          <>
+            {expanded && actions}
+            {sheets}
+          </>
+        }
+        cover={
+          // Spotify: tap the art to play.
+          <button
+            onClick={onTogglePlay}
+            className="group absolute inset-0"
+            aria-label={`${title} ${isPlaying ? "일시정지" : "재생"}`}
           >
-            <div className={expanded ? "py-2" : ""}>
-              <SongRowTitleButton onClick={onToggleExpand} aria-expanded={expanded} aria-controls={actionsId}>
-                <span className={`line-clamp-2 text-body font-semibold leading-snug ${isCurrent ? "text-accent-play" : "text-text"}`}>
-                  {title}
+            {song.thumbnail_url && (
+              <Image src={song.thumbnail_url} alt="" fill sizes="48px" className="object-cover" />
+            )}
+            <span
+              className={`absolute inset-0 flex items-center justify-center transition-colors ${
+                isCurrent ? "bg-black/45" : "bg-black/0 group-hover:bg-black/45"
+              }`}
+            >
+              {isPlaying ? (
+                <span className="flex items-end gap-0.5" aria-hidden>
+                  <span className="h-2.5 w-0.5 animate-bounce rounded-pill bg-accent-play" style={{ animationDelay: "0ms" }} />
+                  <span className="h-4 w-0.5 animate-bounce rounded-pill bg-accent-play" style={{ animationDelay: "150ms" }} />
+                  <span className="h-3 w-0.5 animate-bounce rounded-pill bg-accent-play" style={{ animationDelay: "300ms" }} />
                 </span>
-                {/* The second line is ~140px wide: the artist gets the room, comments and setlist are small marks. */}
-                <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-caption text-text-muted">
-                  {artist && <span className="truncate">{artist}</span>}
-                  {song.commentCount > 0 && (
-                    <span className="inline-flex shrink-0 items-center gap-0.5 tabular-nums">
-                      <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a8 8 0 01-11.6 7.1L3 21l1.9-6.4A8 8 0 1121 12z" />
-                      </svg>
-                      <span className="sr-only">댓글</span>
-                      {song.commentCount}
-                    </span>
-                  )}
-                  {inSetlist && (
-                    <span className="inline-flex shrink-0 items-center text-primary-fg">
-                      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h12M4 12h12M4 18h6M14 18l2.5 2.5L21 16" />
-                      </svg>
-                      <span className="sr-only">셋리스트에 있음</span>
-                    </span>
-                  )}
-                  <svg
-                    className={`h-3.5 w-3.5 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2.5}
-                    viewBox="0 0 24 24"
-                    aria-hidden
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
-                  </svg>
-                </span>
-              </SongRowTitleButton>
-              {/* Opened: the YouTube title before cleanup and the named voters sit under the title, in its column. */}
-              {expanded && title !== song.title.trim() && (
-                <p className="line-clamp-2 break-all text-caption text-text-subtle">원래 제목 · {song.title}</p>
+              ) : (
+                <svg
+                  className={`ml-0.5 h-5 w-5 text-white ${isCurrent ? "" : "opacity-0 transition-opacity group-hover:opacity-100"}`}
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden
+                >
+                  <path d="M8 5v14l11-7z" />
+                </svg>
               )}
-              {expanded && <VoterStrip votes={song.votes} hide={votesAnonymous} />}
-            </div>
-          </SongRow>
+            </span>
+          </button>
+        }
+      >
+        <div className={expanded ? "py-2" : ""}>
+          <SongRowTitleButton onClick={onToggleExpand} aria-expanded={expanded} aria-controls={actionsId}>
+            <span className={`line-clamp-2 text-body font-semibold leading-snug ${isCurrent ? "text-accent-play" : "text-text"}`}>
+              {title}
+            </span>
+            {/* The second line is ~140px wide: the artist gets the room, comments and setlist are small marks. */}
+            <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-caption text-text-muted">
+              {artist && <span className="truncate">{artist}</span>}
+              {song.commentCount > 0 && (
+                <span className="inline-flex shrink-0 items-center gap-0.5 tabular-nums">
+                  <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a8 8 0 01-11.6 7.1L3 21l1.9-6.4A8 8 0 1121 12z" />
+                  </svg>
+                  <span className="sr-only">댓글</span>
+                  {song.commentCount}
+                </span>
+              )}
+              {inSetlist && (
+                <span className="inline-flex shrink-0 items-center text-primary-fg">
+                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h12M4 12h12M4 18h6M14 18l2.5 2.5L21 16" />
+                  </svg>
+                  <span className="sr-only">셋리스트에 있음</span>
+                </span>
+              )}
+              <svg
+                className={`h-3.5 w-3.5 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2.5}
+                viewBox="0 0 24 24"
+                aria-hidden
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+              </svg>
+            </span>
+          </SongRowTitleButton>
+          {/* Opened: the YouTube title before cleanup and the named voters sit under the title, in its column. */}
+          {expanded && title !== song.title.trim() && (
+            <p className="line-clamp-2 break-all text-caption text-text-subtle">원래 제목 · {song.title}</p>
+          )}
+          {expanded && <VoterStrip votes={song.votes} hide={votesAnonymous} />}
         </div>
-
-        {expanded && actions}
-        {sheets}
-      </div>
+      </SongRow>
     );
   }
 

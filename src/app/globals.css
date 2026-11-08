@@ -20,6 +20,7 @@
   /* Semantic colors */
   --color-success: #22c55e;
   --color-success-soft: #14532d;
+  --color-success-tint: #1f403d;
   --color-warning: #f59e0b;
   --color-warning-soft: #78350f;
   --color-warning-tint: #352d23;
@@ -28,6 +29,7 @@
   --color-on-danger: #ffffff;
   --color-danger-fg: #f87171;
   --color-danger-soft: #7f1d1d;
+  --color-danger-tint: #3b2934;
 
   /* 재생 중 전용. primary 와 역할을 나눈다 */
   --color-accent-play: #22d3ee;
@@ -38,9 +40,8 @@
   --color-kakao-text: #191919;
   --color-kakao-border: #E5CC00;
 
-  /* Vote colors (legacy aliases for compatibility) */
+  /* Legacy alias of success, still used by the /new success card. Votes use success and danger-fg. */
   --color-upvote: #22c55e;
-  --color-downvote: #ef4444;
 
   /* Surface scale (gray-950 ↔ gray-700) */
   --color-bg: #030712;

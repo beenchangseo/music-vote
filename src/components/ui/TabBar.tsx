@@ -20,6 +20,7 @@ interface TabBarProps<T extends string> {
 /**
  * 화면 아래에 붙는 탭 (dock). 높이는 --spacing-dock 이고 MiniPlayer 가 bottom-dock 으로 이 위에 붙는다.
  * 모양은 SegmentedControl 과 같고, 뜻은 화면 전환이라 aria-current 로 말한다.
+ * 글자는 줄을 바꾸지 않는다. 칸이 320px 화면의 1/3(91px)이라 칸 여백을 4px 로 줄여서, 칸 셋이면 "셋리스트" 같은 네 글자까지 아이콘 옆 한 줄에 선다.
  */
 export default function TabBar<T extends string>({ items, value, onChange, "aria-label": label }: TabBarProps<T>) {
   return (
@@ -34,10 +35,10 @@ export default function TabBar<T extends string>({ items, value, onChange, "aria
                 type="button"
                 onClick={() => onChange(item.id)}
                 aria-current={active ? "page" : undefined}
-                className={segmentItemClass(active)}
+                className={`${segmentItemClass(active, "px-1")} [&_svg]:shrink-0`}
               >
                 {item.icon}
-                <span>{item.label}</span>
+                <span className="whitespace-nowrap">{item.label}</span>
               </button>
             );
           })}

@@ -118,7 +118,7 @@ export default function BandInviteScreen({
     <main className="min-h-full flex flex-col px-4 pt-6 pb-10">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
         <p className="flex items-center gap-1.5 text-caption text-text-muted">
-          <span className="text-base font-bold text-text">Plypick</span>
+          <span className="text-body font-bold text-text">Plypick</span>
           <span className="text-text-subtle" aria-hidden>·</span>
           <GuitarIcon className="h-4 w-4" />
           밴드 초대

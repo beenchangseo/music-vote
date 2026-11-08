@@ -1,16 +1,6 @@
 {
   "src/components/band/BandHomeClient.tsx": {
     "ds/no-raw-control": {
-      "count": 7
-    }
-  },
-  "src/components/band/CreateBandSheet.tsx": {
-    "ds/no-raw-control": {
-      "count": 1
-    }
-  },
-  "src/components/band/ShowDateTile.tsx": {
-    "ds/no-raw-control": {
       "count": 1
     }
   }
