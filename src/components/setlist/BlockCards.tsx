@@ -9,6 +9,7 @@ import { effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, type Se
 import { displayArtist, formatKey } from "@/domain/song-meta";
 import { graphemes, lastWord } from "@/domain/text-segments";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
+import { useTruncated } from "@/hooks/useTruncated";
 import { BLOCK_TONES, PLAYING_CARD, type BlockKind } from "./block-tones";
 
 interface CardShellProps {
@@ -219,7 +220,9 @@ export function OriginalBlock({ item, editing, onEdit, onRemove }: BlockProps) {
 export function IntervalBlock({ item, editing, onEdit, onRemove }: BlockProps) {
   const [expanded, setExpanded] = useState(false);
   const label = item.label || "인터벌";
-  const canExpand = !!item.description || (item.label?.length || 0) > 30;
+  // While open the cut label is not drawn, so labelCut keeps its last value and the row stays foldable.
+  const [labelRef, labelCut] = useTruncated<HTMLSpanElement>();
+  const canExpand = !!item.description || labelCut;
   const open = expanded && !editing;
   const runtime = item.duration_seconds > 0 && formatRuntime(item.duration_seconds);
   const line = (
@@ -233,7 +236,9 @@ export function IntervalBlock({ item, editing, onEdit, onRemove }: BlockProps) {
         </span>
       ) : (
         <span className="flex min-w-0 text-sm">
-          <span className="truncate font-medium">{label}</span>
+          <span ref={labelRef} className="truncate font-medium">
+            {label}
+          </span>
           <span className="shrink-0 tabular-nums">{runtime && ` · ${runtime}`}</span>
         </span>
       )}
