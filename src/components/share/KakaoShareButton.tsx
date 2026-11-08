@@ -5,6 +5,7 @@ import Button from "../ui/Button";
 import { track } from "@/lib/analytics";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
 import { bandShareDescription, roomSharePrefix, shareableShowDate } from "@/domain/team";
+import { kakaoShareQuery, type ShareVariant } from "@/domain/kakao-share";
 
 declare global {
   interface Window {
@@ -16,8 +17,6 @@ declare global {
     };
   }
 }
-
-export type ShareVariant = "playlist" | "decided" | "setlist" | "band";
 
 /**
  * Where the card links. Rooms pass `shareCode` (→ /playlist/{code}); the band card
@@ -165,9 +164,7 @@ export default function KakaoShareButton({
   async function handleClick() {
     track("kakao_shared", { variant });
     const origin = window.location.origin;
-    const url = linkPath
-      ? `${origin}${linkPath}?utm_source=kakao&utm_medium=share&variant=${variant}`
-      : `${origin}/playlist/${shareCode}?utm_source=kakao&utm_medium=share&utm_campaign=${shareCode}&variant=${variant}`;
+    const url = `${origin}${linkPath ?? `/playlist/${shareCode}`}?${kakaoShareQuery(variant)}`;
     const ogUrl = buildOgUrl(origin, variant, {
       title,
       songs,
