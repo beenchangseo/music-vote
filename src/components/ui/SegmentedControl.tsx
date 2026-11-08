@@ -23,10 +23,11 @@ const segmentTrackClass = "flex gap-1 rounded-card bg-surface-hover p-1";
  * Segment look, shared with the bottom TabBar so both read as the same control.
  * The tint alone is 1.13:1 on the dock track and 1.07:1 on this one, so the primary-fg border (5.4:1 and up) carries the selected state.
  * Every cell keeps a 1px border so selecting one does not move the others.
- * Cells share the width equally and centre their content, so the side padding only decides when a label runs out of room.
+ * Cells share the width equally and centre their content. A label never wraps (#79), so a cell whose label is longer than
+ * its share grows to the label instead.
  */
 export function segmentItemClass(selected: boolean, inset: "px-3" | "px-1" = "px-3") {
-  return `flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-control border ${inset} text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-40 ${
+  return `flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-control border ${inset} text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-40 ${
     selected ? "border-primary-fg bg-primary-tint text-on-primary-tint" : "border-transparent text-text-muted hover:text-text"
   }`;
 }

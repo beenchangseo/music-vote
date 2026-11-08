@@ -382,7 +382,7 @@ export default function RoomSettingsButton({
                             disabled={attachingId !== null}
                             onClick={() => attachToBand(band)}
                           >
-                            {band.name}에 넣기
+                            <span className="flex min-w-0"><span className="truncate">{band.name}</span>에 넣기</span>
                           </Button>
                         ))}
                       </div>

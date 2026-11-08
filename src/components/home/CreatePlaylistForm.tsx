@@ -281,7 +281,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
                         disabled={attachingId !== null}
                         onClick={() => attachToBand(team.id)}
                       >
-                        {team.name}에 넣기
+                        <span className="flex min-w-0"><span className="truncate">{team.name}</span>에 넣기</span>
                       </Button>
                     ))}
                   </div>
@@ -336,7 +336,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
           <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
-          옵션 추가 (투표 방식 · 마감일 · 셋리스트 곡 수)
+          옵션 추가 (투표 방식 · 마감일 · 곡 수)
         </Button>
       ) : (
       /* Options card. Outline for the same reason as the success card. */

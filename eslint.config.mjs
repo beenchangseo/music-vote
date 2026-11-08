@@ -8,6 +8,11 @@ import ds from "./scripts/eslint-plugin-ds.mjs";
 const CONTROL_SIZE_UTILITY =
   "/(^|[\\s:])!?((min-|max-)?[hw]-|size-|p[xytrblse]?-|rounded(?![a-z])|text-(xs|sm|base|lg|[2-9]?xl|caption|body|display|h[1-6])(?![\\w-]))/";
 
+// white-space and text-wrap utilities that let a label wrap. Wrapped, "＋ 새 플레이리스트" spilled out of its 52px button (#79).
+const LABEL_WRAP_UTILITY = "/(^|[\\s:])!?(whitespace-(?!nowrap(?![\\w-]))[\\w-]+|text-(wrap|balance|pretty)(?![\\w-]))/";
+// A child variant that lets the buttons of a row shrink under their one-line labels: ButtonGroup's old `*:min-w-0`.
+const CHILD_SHRINK_UTILITY = "/(^|\\s)!?(\\*{1,2}|\\[&[>_]\\*\\]):!?(min-w-0|max-w-)/";
+
 const ROUND_SKIN_UTILITY = "/(^|[\\s:])!?(bg-|text-|font-|border|shadow|ring-|opacity-|scale-|-m[trblxyse]?-|[\\w-]*\\[)/";
 const GLYPH_PLACEMENT_UTILITY =
   "/(^|[\\s:])!?((min-|max-)?[hw]-|size-|-?m[trblxyse]?-|p[xytrblse]?-|scale-|translate-|absolute|relative|[\\w-]*\\[)/";
@@ -76,11 +81,23 @@ const eslintConfig = defineConfig([
             message: "primary-soft 는 지웠다. 선택·tonal 바탕은 primary-tint 를 쓴다.",
           },
           {
-            selector: `:matches(JSXOpeningElement[name.name=/^(Button|IconButton|Chip|RoundButton|RoundLink|RoundRow|ListRowButton|ListRowLink)$/] > JSXAttribute[name.name='className'], CallExpression[callee.name='buttonClassName'] Property[key.name='className']) ${node}${CONTROL_SIZE_UTILITY}]`,
+            selector: `:matches(JSXOpeningElement[name.name=/^(Button|ButtonGroup|IconButton|Chip|RoundButton|RoundLink|RoundRow|ListRowButton|ListRowLink)$/] > JSXAttribute[name.name='className'], CallExpression[callee.name='buttonClassName'] Property[key.name='className']) ${node}${CONTROL_SIZE_UTILITY}]`,
             message:
-              "Button·IconButton·Chip·RoundButton·ListRowButton·ListRowLink·buttonClassName 의 높이·폭·안쪽 여백·모서리·글자 크기는 size·variant prop 이나 " +
+              "Button·ButtonGroup·IconButton·Chip·RoundButton·ListRowButton·ListRowLink·buttonClassName 의 높이·폭·안쪽 여백·모서리·글자 크기는 size·variant prop 이나 " +
               "부품이 정한다. className 에는 바깥 배치만 둔다" +
               "(m*·flex-1·shrink-0·self-*·order-*·hidden 같은 표시 여부). 꽉 찬 폭은 Button 의 fullWidth, 툴바 동작은 ToolbarButton 을 쓴다.",
+          },
+          {
+            selector: `:matches(JSXOpeningElement[name.name=/^(Button|Chip|Badge)$/] > JSXAttribute[name.name='className'], CallExpression[callee.name='buttonClassName'] Property[key.name='className']) ${node}${LABEL_WRAP_UTILITY}]`,
+            message:
+              "Button·Chip·Badge·buttonClassName 의 글자는 한 줄이다. whitespace-normal·text-wrap·text-balance 처럼 줄을 바꾸게 하는 클래스를 두지 않는다. " +
+              "나란한 두 버튼이 한 줄에 안 들어가면 ButtonGroup 이 한 줄에 하나씩 쌓는다.",
+          },
+          {
+            selector: `JSXElement:has(JSXOpeningElement[name.name=/^(Button|ToolbarButton)$/], CallExpression[callee.name='buttonClassName']) > JSXOpeningElement > JSXAttribute[name.name='className'] ${node}${CHILD_SHRINK_UTILITY}]`,
+            message:
+              "버튼을 담은 줄의 칸에 min-w-0·max-w 를 주면 버튼이 한 줄 글자보다 좁아져 글자가 넘친다. 나란한 버튼은 ButtonGroup 을 쓴다" +
+              "(긴 글자가 반 폭에 들어가면 같은 폭 두 칸, 아니면 한 줄에 하나씩).",
           },
           {
             selector: `JSXOpeningElement[name.name=/^Round(Button|Link)$/] > JSXAttribute[name.name='className'] ${node}${ROUND_SKIN_UTILITY}]`,
