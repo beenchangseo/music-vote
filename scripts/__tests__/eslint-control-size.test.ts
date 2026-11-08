@@ -25,6 +25,9 @@ describe("eslint control-size rule", () => {
     "<Button className={`${extra} !px-2`} />",
     '<Button className={wide ? "max-w-40" : undefined} />',
     '<Link href="/" className={buttonClassName({ variant: "tonal", className: "h-9" })} />',
+    '<ListRowButton onClick={f} className="px-2" />',
+    '<ListRowButton className="min-w-0 flex-1" />',
+    '<ListRowLink href="/" className="px-1" />',
   ])("flags %s", async (code) => {
     const errors = await controlSizeErrors(code);
     expect(errors).toHaveLength(1);
@@ -40,6 +43,7 @@ describe("eslint control-size rule", () => {
     '<button className="h-11 px-3 rounded-control text-sm" />',
     '<Badge className="max-w-18 truncate" />',
     '<Link href="/" className={buttonClassName({ variant: "tonal", className: "mt-4" })} />',
+    '<ListRowButton className="mt-2 flex-1" />',
   ])("allows %s", async (code) => {
     expect(await controlSizeErrors(code)).toEqual([]);
   });

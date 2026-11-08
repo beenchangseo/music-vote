@@ -99,7 +99,7 @@ export default function SetlistShareButton({ shareCode, title }: Props) {
 
 function ShareOption({ title, description, icon, onClick }: { title: string; description: string; icon: React.ReactNode; onClick: () => void }) {
   return (
-    <ListRowButton onClick={onClick} className="px-2" leading={<ListRowIcon className="text-primary-fg">{icon}</ListRowIcon>}>
+    <ListRowButton onClick={onClick} leading={<ListRowIcon className="text-primary-fg">{icon}</ListRowIcon>}>
       <span className="block text-body font-semibold text-text">{title}</span>
       <span className="block break-keep-wrap text-caption text-text-muted">{description}</span>
     </ListRowButton>

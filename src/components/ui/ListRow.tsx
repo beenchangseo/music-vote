@@ -30,7 +30,13 @@ export default function ListRow({ leading, trailing, className = "", children, .
   );
 }
 
-const pressableRow = `group/row ${rowLayout} w-full rounded-control text-left transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent`;
+/**
+ * 눌리는 줄의 좌우 여백. hover 바탕이 칠해져도 글자가 바탕 끝에 붙지 않는다. 줄과 같은 세로선에 서야 하는
+ * 옆 줄(합주 인터벌)도 이 값을 쓴다.
+ */
+export const pressableRowInset = "px-2";
+
+const pressableRow = `group/row ${rowLayout} ${pressableRowInset} w-full min-w-0 rounded-control text-left transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent`;
 
 /**
  * 줄 전체가 눌리는 ListRow. 버튼 안에는 글자·span 만 둘 수 있어서 칸도 span 으로 그린다.

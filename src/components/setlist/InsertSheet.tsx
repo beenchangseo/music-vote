@@ -110,7 +110,6 @@ function Choice({ tone, icon, title, description, disabled = false, onClick }: {
     <ListRowButton
       onClick={onClick}
       disabled={disabled}
-      className="px-2"
       leading={<ListRowIcon className={tone}>{icon}</ListRowIcon>}
       trailing={
         <svg className="size-4 text-text-subtle" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>

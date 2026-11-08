@@ -249,7 +249,7 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
             <ListRowButton
               ref={barRef}
               onClick={() => setExpanded(true)}
-              className="min-w-0 flex-1"
+              className="flex-1"
               aria-label={`${currentSong.shownTitle} 플레이어 열기`}
               leading={<Cover url={currentSong.thumbnail_url} />}
             >

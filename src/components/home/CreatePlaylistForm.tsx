@@ -198,8 +198,8 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
         {/* Outline, not filled: the form sits on a surface sheet at home and on bg at /new, and the tonal and
             QR fills inside have to stay one step above either. */}
         <Card variant="outline" padding="lg" className="text-center">
-          <div className="size-12 mx-auto mb-4 rounded-pill bg-upvote/20 flex items-center justify-center">
-            <svg className="w-6 h-6 text-upvote" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <div className="size-12 mx-auto mb-4 rounded-pill bg-success-tint flex items-center justify-center">
+            <svg className="w-6 h-6 text-success" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
             </svg>
           </div>

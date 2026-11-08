@@ -83,7 +83,7 @@ export const COLOR_GROUPS: readonly { title: string; note: string; tokens: reado
         name: "success-tint",
         hex: "#1f403d",
         layer: "bg",
-        use: "고른 찬성 화살표 원판 (success 15% on surface-hover). 위에는 success",
+        use: "고른 찬성 화살표·만들기 성공 체크의 원판 (success 15% on surface-hover). 위에는 success",
         pairs: [{ against: "success", min: 4.5 }],
       },
       { name: "warning", hex: "#f59e0b", layer: "fg", use: "주의 글자와 아이콘", pairs: onSurfaces(4.5) },

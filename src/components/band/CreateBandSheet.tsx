@@ -187,7 +187,6 @@ function HomeBody({ source, candidates, participantOnlyTitle, target, inputRef }
               <ListRowButton
                 ref={returnTo === candidate.id ? returnRef : undefined}
                 onClick={() => setStep(candidate)}
-                className="px-2"
                 leading={
                   <ListRowIcon className="text-primary-fg">
                     <GuitarIcon className="size-5" />

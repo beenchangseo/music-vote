@@ -263,7 +263,6 @@ export function ListGroupDemo() {
         ].map(([number, title, length]) => (
           <ListRowButton
             key={title}
-            className="px-1"
             leading={
               <span className="grid size-7 place-items-center rounded-pill border-2 border-border-strong text-caption font-semibold tabular-nums text-text-muted">
                 {number}
@@ -278,11 +277,11 @@ export function ListGroupDemo() {
       <p className="mt-4 text-caption font-semibold text-text-muted">시트의 고르기 줄 (ListRowButton + ListRowIcon, 셋리 넣기·내보내기)</p>
       <p className="mt-1 text-caption text-text-subtle">아이콘 칸은 줄보다 한 단계 위예요. 줄이 hover 로 surface-hover 가 되면 칸은 surface-elevated 로 올라가서 녹지 않아요.</p>
       <div className="mt-2 flex flex-col">
-        <ListRowButton className="px-2" leading={<ListRowIcon className="text-primary-fg"><GuitarIcon className="size-5" /></ListRowIcon>}>
+        <ListRowButton leading={<ListRowIcon className="text-primary-fg"><GuitarIcon className="size-5" /></ListRowIcon>}>
           <span className="block text-body font-semibold text-text">자작곡</span>
           <span className="block text-caption text-text-muted">우리 곡 한 블록 · 기본 3:00</span>
         </ListRowButton>
-        <ListRowButton disabled className="px-2" leading={<ListRowIcon className="text-text"><GuitarIcon className="size-5" /></ListRowIcon>}>
+        <ListRowButton disabled leading={<ListRowIcon className="text-text"><GuitarIcon className="size-5" /></ListRowIcon>}>
           <span className="block text-body font-semibold text-text">비활성</span>
           <span className="block text-caption text-text-muted">고를 것이 없으면 흐리게 두고 hover 하지 않아요</span>
         </ListRowButton>
@@ -291,7 +290,6 @@ export function ListGroupDemo() {
       <div className="mt-2">
         <ListRowLink
           href="/design"
-          className="px-1"
           leading={<Avatar name="합" />}
           trailing={<span className="text-caption tabular-nums text-text-muted">셋리스트 6곡</span>}
         >
