@@ -12,7 +12,7 @@ const RAW_INPUT_RULE = "ds/no-raw-input";
 const CATEGORIES = {
   "raw-button": "ui 밖에서 크기·모서리·글자 크기를 직접 칠한 <button>",
   "raw-link": "ui 밖에서 바탕·테두리와 크기를 직접 칠한 <a>·<Link>",
-  "raw-input": "ui 밖에서 직접 그린 텍스트 <input>·<textarea>",
+  "raw-input": "ui 밖에서 직접 그린 <input>·<textarea> (checkbox·radio·range·hidden·file 은 빼고)",
   "non-token": "토큰이 아닌 모서리·글자 크기 (rounded-xl·text-lg 등)",
   arbitrary: "크기·여백·위치의 임의 값 [..]",
   "negative-margin": "ui 밖의 음수 margin (-mt-3·-mx-2 등). 칸을 레이아웃 밖으로 당기는 손 보정",

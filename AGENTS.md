@@ -157,10 +157,10 @@ Variable(한국어) + Geist(영문) 폴백.
 - 크기는 prop 이 정한다. `Button`·`IconButton`·`Chip`·`RoundButton`·`ListRowButton`·`ListRowLink` 의 className 에 높이·폭·여백·모서리·글자 크기를 덧칠하면 eslint 가
   막는다. className 에는 바깥 배치(margin·`flex-1`·`shrink-0`·표시 여부)만 둔다.
 - **손으로 그린 컨트롤.** `src/components/ui` 밖에서 높이·여백·모서리·글자 크기를 칠한 `<button>` 과 바탕·테두리에 크기까지 칠한 `<a>`·`<Link>` 는
-  eslint(`ds/no-raw-control`)가, 글자를 받는 `<input>`·`<textarea>` 는 `ds/no-raw-input` 이, 포커스 ring 없이 outline 을 지운 클래스는
+  eslint(`ds/no-raw-control`)가, `<input>`·`<textarea>` 는 `ds/no-raw-input` 이, 포커스 ring 없이 outline 을 지운 클래스는
   `ds/focus-ring` 이 막는다. 셋 다 봐주는 baseline 이 없는 그냥 에러다. 링크는 버튼 모양이면 `buttonClassName()`, 둥근 아이콘이면 `RoundLink`,
-  줄이면 `ListRowLink`, 카드면 `Card` 안에 바탕 없는 링크로 그린다. 글자 칸은 `Input`·`Textarea` 이고, `<input>` 을 그대로 두는 것은
-  checkbox·radio·range·hidden·file 뿐이다. `eslint-disable` 주석으로 넘겨도 `npm test` 의 `ds-inventory` 테스트가 잡는다. lint 가 막지 않는 토큰 밖 모서리·글자 크기·임의 값,
+  줄이면 `ListRowLink`, 카드면 `Card` 안에 바탕 없는 링크로 그린다. 글자 칸은 `Input`·`Textarea`, submit 같은 버튼 type 은 `Button` 이고,
+  `<input>` 을 그대로 두는 것은 checkbox·radio·range·hidden·file 뿐이다. `eslint-disable` 주석으로 넘겨도 `npm test` 의 `ds-inventory` 테스트가 잡는다. lint 가 막지 않는 토큰 밖 모서리·글자 크기·임의 값,
   ui 밖 음수 margin 은 `node scripts/ds-inventory.mjs` 가 파일·줄마다 보여 준다. 글리프를 내용 끝에 맞추는 자리(`RoundLink edge="start"`)처럼 어긋남을 보정하는 margin 은 부품이 한 번만 갖는다.
 
 ## 데이터 흐름

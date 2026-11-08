@@ -145,17 +145,34 @@ const noRawControl = {
   },
 };
 
-/** Input types that take no typed text. Every other type, and a missing one, is a text box that ui Input draws. */
-const NON_TEXT_INPUT = new Set(["checkbox", "radio", "range", "hidden", "file"]);
+/**
+ * What draws each <input> type outside ui. "native" stays a plain <input>. A type missing here, and a missing or
+ * unresolved type, may take typed text, which ui Input draws.
+ */
+const INPUT_KIND = {
+  checkbox: "native",
+  radio: "native",
+  range: "native",
+  hidden: "native",
+  file: "native",
+  submit: "button",
+  reset: "button",
+  button: "button",
+  image: "button",
+  color: "noPrimitive",
+};
+const KEEP_NATIVE = "<input> 을 그대로 두는 것은 type 이 checkbox·radio·range·hidden·file 일 때뿐이다.";
 
 const noRawInput = {
   meta: {
     type: "problem",
-    docs: { description: "Text fields outside src/components/ui are drawn by Input and Textarea." },
+    docs: { description: "Inputs and textareas outside src/components/ui are drawn by the ui primitives." },
     messages: {
-      rawInput:
+      text:
         "<{{tag}}{{type}}> 를 직접 그리지 않는다. 글자를 받는 칸은 src/components/ui 의 Input·Textarea 로 그리고, 라벨·도움말·오류는 Field 로 잇는다. " +
-        "<input> 을 그대로 두는 것은 type 이 checkbox·radio·range·hidden·file 일 때뿐이다.",
+        KEEP_NATIVE,
+      button: `<{{tag}}{{type}}> 를 직접 그리지 않는다. 누르는 버튼은 src/components/ui 의 Button 으로 그린다(폼 제출은 type="submit"). ${KEEP_NATIVE}`,
+      noPrimitive: `<{{tag}}{{type}}> 를 직접 그리지 않는다. 이 칸을 그리는 부품은 src/components/ui 에 아직 없으니 부품을 먼저 만들고 /design 에 더한다. ${KEEP_NATIVE}`,
     },
     schema: [],
   },
@@ -165,15 +182,19 @@ const noRawInput = {
         if (node.name.type !== "JSXIdentifier") return;
         const tag = node.name.name;
         if (tag === "textarea") {
-          context.report({ node, messageId: "rawInput", data: { tag, type: "" } });
+          context.report({ node, messageId: "text", data: { tag, type: "" } });
           return;
         }
         if (tag !== "input") return;
         const attr = node.attributes.find((a) => a.type === "JSXAttribute" && a.name.name === "type");
         // A type this file cannot pin down (a prop) may be text, so it is reported too.
         const types = attr?.value ? classStrings(attr.value, context.sourceCode).strings.map((t) => t.trim().toLowerCase()) : [];
-        if (types.length && types.every((t) => NON_TEXT_INPUT.has(t))) return;
-        context.report({ node, messageId: "rawInput", data: { tag, type: attr ? ` type="${types.join("|") || "…"}"` : "" } });
+        const kinds = new Set(types.map((t) => INPUT_KIND[t] ?? "text"));
+        kinds.delete("native");
+        if (types.length && kinds.size === 0) return;
+        // One kind names its own fix; a mix of kinds, or no known type, may still take text.
+        const messageId = kinds.size === 1 ? [...kinds][0] : "text";
+        context.report({ node, messageId, data: { tag, type: attr ? ` type="${types.join("|") || "…"}"` : "" } });
       },
     };
   },
