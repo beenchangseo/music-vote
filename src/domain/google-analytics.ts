@@ -5,6 +5,8 @@ import { isShareVariant, KAKAO_SHARE_MEDIUM, KAKAO_SHARE_SOURCE, type ShareVaria
 
 export type GaPage = { path: string; title: string };
 
+export const UNKNOWN_GA_PAGE: GaPage = { path: "/(unknown)", title: "찾을 수 없는 페이지" };
+
 // One entry per page under src/app. A `[...]` segment matches any single path segment.
 export const GA_PAGES: readonly GaPage[] = [
   { path: "/", title: "홈" },
@@ -19,9 +21,8 @@ export const GA_PAGES: readonly GaPage[] = [
   { path: "/playlist/[code]/metronome", title: "메트로놈" },
   { path: "/band/[id]", title: "밴드 홈" },
   { path: "/join/[code]", title: "밴드 초대" },
+  { path: "/lab/recording", title: UNKNOWN_GA_PAGE.title },
 ];
-
-export const UNKNOWN_GA_PAGE: GaPage = { path: "/(unknown)", title: "찾을 수 없는 페이지" };
 
 function segments(path: string): string[] {
   return path.split(/[?#]/, 1)[0].split("/").filter(Boolean);
