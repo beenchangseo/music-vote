@@ -18,7 +18,10 @@ function renderHeader(props: Partial<Parameters<typeof PlaylistHeader>[0]> = {})
   );
 }
 
-type SentCard = { content: { description: string; imageUrl: string; imageWidth: number; imageHeight: number } };
+type SentCard = {
+  content: { description: string; imageUrl: string; imageWidth: number; imageHeight: number; link: { webUrl: string } };
+  buttons: { link: { webUrl: string } }[];
+};
 
 function sharedCard(): SentCard["content"] {
   fireEvent.click(screen.getByRole("button", { name: "카카오톡 공유" }));
@@ -65,6 +68,17 @@ describe("PlaylistHeader vote invite card", () => {
     const image = new URL(card.imageUrl);
     expect(image.pathname).toBe("/api/og");
     expect(image.search).toBe(`?title=${encodeURIComponent("10월 합주")}&songs=3&participants=2`);
+  });
+
+  it("links the playlist with kakao / share and the playlist card, never the share code in the query", () => {
+    renderHeader();
+    sharedCard();
+    const sent = sendDefault.mock.calls[0][0] as SentCard;
+    for (const href of [sent.content.link.webUrl, sent.buttons[0].link.webUrl]) {
+      const url = new URL(href);
+      expect(url.pathname).toBe("/playlist/abc123");
+      expect(url.search).toBe("?utm_source=kakao&utm_medium=share&variant=playlist");
+    }
   });
 
   it("keeps the count line for a playlist without songs", () => {

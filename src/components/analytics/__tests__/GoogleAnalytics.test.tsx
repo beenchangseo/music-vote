@@ -54,6 +54,7 @@ beforeEach(() => {
   delete window.dataLayer;
   document.querySelectorAll("script").forEach((script) => script.remove());
   setReferrer("");
+  window.history.replaceState(null, "", "/");
   navigation.pathname = "/";
 });
 
@@ -102,7 +103,7 @@ describe("GoogleAnalytics page views", () => {
   beforeEach(() => vi.stubEnv("NEXT_PUBLIC_GA_ID", "G-TEST123456"));
 
   it("first load and each client navigation send one masked page view, never the share code or query", () => {
-    window.history.replaceState(null, "", "/playlist/qDPJnh1d?utm_campaign=qDPJnh1d&variant=playlist");
+    window.history.replaceState(null, "", "/playlist/qDPJnh1d?utm_campaign=qDPJnh1d&join=1");
     setReferrer(`${ORIGIN}/join/Xy7Kp2Qa?join=1`);
     navigation.pathname = "/playlist/qDPJnh1d";
     const { rerender } = render(<GoogleAnalytics />);
@@ -121,6 +122,46 @@ describe("GoogleAnalytics page views", () => {
     ]);
     const sent = JSON.stringify(commands());
     for (const secret of ["qDPJnh1d", "Xy7Kp2Qa", "utm_", "?", "songId"]) expect(sent).not.toContain(secret);
+  });
+
+  it("a Kakao share landing names kakao / share and the card, from fixed values only", () => {
+    window.history.replaceState(null, "", "/playlist/qDPJnh1d?utm_source=kakao&utm_medium=share&utm_campaign=qDPJnh1d&variant=decided");
+    navigation.pathname = "/playlist/qDPJnh1d";
+
+    render(<GoogleAnalytics />);
+
+    expect(pageViews()).toEqual([
+      {
+        page_location: `${ORIGIN}/playlist/[code]`,
+        page_title: "플레이리스트",
+        campaign_source: "kakao",
+        campaign_medium: "share",
+        campaign_content: "decided",
+      },
+    ]);
+    expect(JSON.stringify(commands())).not.toContain("qDPJnh1d");
+  });
+
+  it("an edited share link sends no campaign and none of its values", () => {
+    window.history.replaceState(null, "", "/playlist/qDPJnh1d?utm_source=evil9src&utm_medium=evil9med&utm_campaign=qDPJnh1d&variant=evil9var");
+    navigation.pathname = "/playlist/qDPJnh1d";
+
+    render(<GoogleAnalytics />);
+
+    expect(pageViews()).toEqual([{ page_location: `${ORIGIN}/playlist/[code]`, page_title: "플레이리스트" }]);
+    const sent = JSON.stringify(commands());
+    for (const value of ["evil9", "qDPJnh1d", "campaign"]) expect(sent).not.toContain(value);
+  });
+
+  it("only the landing page reads the campaign", () => {
+    navigation.pathname = "/";
+    const { rerender } = render(<GoogleAnalytics />);
+    window.history.pushState(null, "", "/playlist/qDPJnh1d?utm_source=kakao&utm_medium=share&variant=playlist");
+    navigation.pathname = "/playlist/qDPJnh1d";
+    rerender(<GoogleAnalytics />);
+
+    expect(pageViews()).toHaveLength(2);
+    expect(JSON.stringify(commands())).not.toContain("campaign");
   });
 
   it("a direct visit sends no referrer", () => {

@@ -2,6 +2,7 @@
 // 타입 명시 + property 키 통일 + 실패 시 silent.
 
 import { track as vercelTrack } from "@vercel/analytics";
+import type { ShareVariant } from "@/domain/kakao-share";
 
 declare global {
   interface Window {
@@ -35,7 +36,7 @@ type EventMap = GaSafe<{
     to: 1 | -1;
   };
   kakao_shared: {
-    variant: "playlist" | "decided" | "setlist" | "band";
+    variant: ShareVariant;
   };
   // 밴드(팀). 사람·날짜 단위 성공 지표는 DB 로 센다(scripts/team-metrics.mjs). 이벤트는 경로 비교용.
   team_created: {

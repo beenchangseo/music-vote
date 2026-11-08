@@ -124,11 +124,15 @@ docs/             ADR, 계획, 결과 기록
 
 ## 분석 이벤트
 
-이벤트 목록과 속성의 원본은 `src/lib/analytics.ts` 의 `EventMap` 이다. 카톡 공유 URL 에는 UTM 이 붙는다.
+이벤트 목록과 속성의 원본은 `src/lib/analytics.ts` 의 `EventMap` 이다. 카톡 공유 URL 에는 UTM 이 붙는다
+(`src/domain/kakao-share.ts`).
 
 ```
-?utm_source=kakao&utm_medium=share&utm_campaign={shareCode}&variant={variant}
+?utm_source=kakao&utm_medium=share&variant={variant}
 ```
+
+GA 는 쿼리를 지운 주소만 받아서, 첫 페이지가 이 세 값만 정해진 글자 그대로 `campaign_source`·`campaign_medium`·
+`campaign_content` 로 넘긴다. 다른 값과 `utm_campaign` 은 넘기지 않는다. 예전 링크의 `utm_campaign` 에는 공유 코드가 있다.
 
 ## License
 

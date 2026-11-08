@@ -48,6 +48,20 @@ describe("KakaoShareButton links", () => {
     },
   );
 
+  it.each([
+    { variant: "playlist", props: { shareCode: "abc123" } },
+    { variant: "decided", props: { shareCode: "abc123" } },
+    { variant: "setlist", props: { shareCode: "abc123" } },
+    { variant: "band", props: { linkPath: "/join/aB3_x-9Zq0" } },
+  ] as const)("tags the $variant link with kakao / share and the card, never the code", ({ variant, props }) => {
+    render(<KakaoShareButton {...props} variant={variant} title="합주" />);
+    click();
+    const card = sentCard();
+    for (const url of [card.content.link.webUrl, card.buttons[0].link.webUrl]) {
+      expect(new URL(url).search).toBe(`?utm_source=kakao&utm_medium=share&variant=${variant}`);
+    }
+  });
+
   it("sends the band card to the invite link with the exact show date", () => {
     render(
       <KakaoShareButton linkPath="/join/aB3_x-9Zq0" variant="band" title="일코해제" showDate="2026-10-16" members={4} />,

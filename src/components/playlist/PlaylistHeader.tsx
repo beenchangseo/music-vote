@@ -14,6 +14,7 @@ import RoundButton, { RoundLink, RoundRow } from "../ui/RoundButton";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
 import { roomSharePrefix, showDday, showDdayLabel } from "@/domain/team";
 import { playlistShareCard, type InviteSongs } from "@/domain/invite-card";
+import { kakaoShareQuery } from "@/domain/kakao-share";
 
 declare global {
   interface Window {
@@ -83,7 +84,7 @@ export default function PlaylistHeader({
   const bandDday = band ? showDdayLabel(showDday(band.nextShowAt, new Date())) : null;
 
   async function handleKakaoShare() {
-    const url = `${window.location.origin}/playlist/${shareCode}?utm_source=kakao&utm_medium=share&utm_campaign=${shareCode}`;
+    const url = `${window.location.origin}/playlist/${shareCode}?${kakaoShareQuery("playlist")}`;
     const card = playlistShareCard({ title, archived }, participantCount, inviteSongs);
     // "10월 16일 공연 · " only while the show is ahead; never a D-day number on a card (25A).
     const description = roomSharePrefix(showDate, new Date()) + card.description;

@@ -1,6 +1,8 @@
 // What Google Analytics is allowed to see of a page. Share codes, invite codes and team ids sit in the
 // path, and document.title carries playlist titles, so GA gets a fixed template and title per route.
 
+import { isShareVariant, KAKAO_SHARE_MEDIUM, KAKAO_SHARE_SOURCE, type ShareVariant } from "./kakao-share";
+
 export type GaPage = { path: string; title: string };
 
 // One entry per page under src/app. A `[...]` segment matches any single path segment.
@@ -52,6 +54,27 @@ export function gaReferrer(referrer: string, origin: string): string | undefined
   if (url.origin === origin) return origin + gaPage(url.pathname).path;
   // android-app://com.kakao.talk/ has an opaque origin ("null"), so build the host form by hand.
   return `${url.protocol}//${url.host}/`;
+}
+
+/** Campaign fields for the landing page. They override the utm_ parameters GA can no longer read from page_location. */
+export type GaCampaign = {
+  campaign_source?: typeof KAKAO_SHARE_SOURCE;
+  campaign_medium?: typeof KAKAO_SHARE_MEDIUM;
+  campaign_content?: ShareVariant;
+};
+
+/**
+ * Only the fixed values of a Kakao share link get through. Anyone can edit the query, so any other value is
+ * dropped rather than forwarded, and utm_campaign never is: old share links put the share code there.
+ */
+export function gaCampaign(search: string): GaCampaign {
+  const query = new URLSearchParams(search);
+  const variant = query.get("variant");
+  return {
+    ...(query.get("utm_source") === KAKAO_SHARE_SOURCE && { campaign_source: KAKAO_SHARE_SOURCE }),
+    ...(query.get("utm_medium") === KAKAO_SHARE_MEDIUM && { campaign_medium: KAKAO_SHARE_MEDIUM }),
+    ...(isShareVariant(variant) && { campaign_content: variant }),
+  };
 }
 
 /** NEXT_PUBLIC_GA_ID as a measurement ID, or null when it is unset or not `G-` and alphanumerics. */

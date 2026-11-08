@@ -3,7 +3,7 @@
 import Script from "next/script";
 import { usePathname } from "next/navigation";
 import { useLayoutEffect, useRef } from "react";
-import { gaPage, gaReferrer, parseGaMeasurementId } from "@/domain/google-analytics";
+import { gaCampaign, gaPage, gaReferrer, parseGaMeasurementId } from "@/domain/google-analytics";
 
 type Gtag = NonNullable<Window["gtag"]>;
 
@@ -39,10 +39,17 @@ export default function GoogleAnalytics() {
     const page = gaPage(pathname);
     const location = origin + page.path;
     const referrer = last.current?.location ?? gaReferrer(document.referrer, origin);
+    // Read on the landing page only, like utm_ parameters in page_location would have been.
+    const campaign = last.current ? {} : gaCampaign(window.location.search);
     last.current = { pathname, location };
     // `set` rather than page_view params: user_engagement and track() events read these too and would
     // otherwise default to document.location and document.title.
-    gtag("set", { page_location: location, page_title: page.title, ...(referrer && { page_referrer: referrer }) });
+    gtag("set", {
+      page_location: location,
+      page_title: page.title,
+      ...(referrer && { page_referrer: referrer }),
+      ...campaign,
+    });
     gtag("event", "page_view");
   }, [id, pathname]);
 

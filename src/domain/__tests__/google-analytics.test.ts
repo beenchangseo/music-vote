@@ -1,7 +1,8 @@
 import { readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { describe, expect, it } from "vitest";
-import { GA_PAGES, gaPage, gaReferrer, parseGaMeasurementId, UNKNOWN_GA_PAGE } from "../google-analytics";
+import { GA_PAGES, gaCampaign, gaPage, gaReferrer, parseGaMeasurementId, UNKNOWN_GA_PAGE } from "../google-analytics";
+import { kakaoShareQuery, SHARE_VARIANTS } from "../kakao-share";
 
 const ORIGIN = "https://plypick.kr";
 const APP_DIR = join(__dirname, "..", "..", "app");
@@ -81,6 +82,35 @@ describe("gaReferrer", () => {
     { case: "not a URL", referrer: "garbage", expected: undefined },
   ])("$case", ({ referrer, expected }) => {
     expect(gaReferrer(referrer, ORIGIN)).toBe(expected);
+  });
+});
+
+describe("gaCampaign", () => {
+  const KAKAO = { campaign_source: "kakao", campaign_medium: "share" };
+
+  it.each(SHARE_VARIANTS)("reads back the %s share link a Kakao card carries", (variant) => {
+    expect(gaCampaign(`?${kakaoShareQuery(variant)}`)).toEqual({ ...KAKAO, campaign_content: variant });
+  });
+
+  it.each([
+    { case: "no query", search: "", expected: {} },
+    {
+      case: "an old share link drops its utm_campaign share code",
+      search: "?utm_source=kakao&utm_medium=share&utm_campaign=qDPJnh1d&variant=playlist",
+      expected: { ...KAKAO, campaign_content: "playlist" },
+    },
+    { case: "an old header share link had no variant", search: "?utm_source=kakao&utm_medium=share&utm_campaign=qDPJnh1d", expected: KAKAO },
+    {
+      case: "edited values go nowhere",
+      search: "?utm_source=qDPJnh1d&utm_medium=%EB%B0%B4%EB%93%9C&variant=qDPJnh1d&utm_content=x&utm_term=y&utm_id=z",
+      expected: {},
+    },
+    { case: "the check is exact", search: "?utm_source=Kakao&utm_medium=share%20&variant=PLAYLIST", expected: {} },
+    { case: "the first of a repeated key decides", search: "?utm_source=qDPJnh1d&utm_source=kakao", expected: {} },
+    { case: "each field stands alone", search: "?utm_medium=share&variant=band", expected: { campaign_medium: "share", campaign_content: "band" } },
+    { case: "home is an OG image variant, not a share card", search: "?utm_source=kakao&variant=home", expected: { campaign_source: "kakao" } },
+  ])("$case", ({ search, expected }) => {
+    expect(gaCampaign(search)).toEqual(expected);
   });
 });
 
