@@ -42,6 +42,7 @@ import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import type { ViewMode } from "./NavigationBar";
 import { setlistEditAccess } from "@/domain/setlist";
+import type { PlaylistLinkTab } from "@/domain/playlist-tab";
 import type { MyTeam } from "@/actions/team";
 import type { PlaylistView, RoomTeam, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/domain/types";
 import { displayTitle } from "@/domain/song-meta";
@@ -68,6 +69,8 @@ interface PlaylistClientProps {
   bandPromptDismissed?: boolean;
   /** Setlist read with the page, so candidate rows can show "셋리스트에 있음" (디자인 C9). */
   initialSetlistItems?: SetlistItem[] | null;
+  /** The tab the link asked for, already checked by the page (initialPlaylistTab). */
+  initialTab?: PlaylistLinkTab;
 }
 
 export default function PlaylistClient({
@@ -84,6 +87,7 @@ export default function PlaylistClient({
   memberCount = null,
   bandPromptDismissed = false,
   initialSetlistItems = null,
+  initialTab = "playlist",
 }: PlaylistClientProps) {
   // 보관된 합주방: 로그인 도입 전 익명 합주방. 지난 기록만 읽는다.
   const isArchived = playlist.archived;
@@ -91,7 +95,7 @@ export default function PlaylistClient({
   // 닉네임은 카카오 프로필에서 그대로 쓴다.
   const nickname = !isArchived && loggedIn ? userNickname || "" : "";
   const [viewMode, setViewMode] = useState<"card" | "compact">("compact");
-  const [navMode, setNavMode] = useState<ViewMode>("playlist");
+  const [navMode, setNavMode] = useState<ViewMode>(initialTab);
   const [adminToken, setAdminToken] = useState<string | null>(null);
   const [allowance, setAllowance] = useState<VoteAllowance | null>(null);
   // Band made from the prompt card (R6). Lives here, not in the card: the action's revalidatePath

@@ -9,6 +9,7 @@ import { BASE_OPEN_GRAPH } from "@/lib/seo";
 import { inviteSongs, playlistShareCard } from "@/domain/invite-card";
 import { isArchivedPlaylist } from "@/domain/playlist-archive";
 import { hostDenial, isHostOrAdder } from "@/domain/playlist-host";
+import { initialPlaylistTab, PLAYLIST_TAB_PARAM } from "@/domain/playlist-tab";
 import { getMyTeams, type MyTeam } from "@/actions/team";
 import { readSetlistItems } from "@/lib/playlist-reads";
 import PlaylistClient from "@/components/playlist/PlaylistClient";
@@ -146,8 +147,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function PlaylistPage({ params }: PageProps) {
+export default async function PlaylistPage({
+  params,
+  searchParams,
+}: PageProps & { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const { shareCode } = await params;
+  const { [PLAYLIST_TAB_PARAM]: requestedTab } = await searchParams;
   // Views that compute "my vote" from auth.uid() stay on the session client;
   // the songs table itself is closed to the public key (v18).
   const supabase = await createServerSupabaseClient();
@@ -274,6 +279,7 @@ export default async function PlaylistPage({ params }: PageProps) {
       memberCount={memberCount}
       bandPromptDismissed={bandPromptDismissed}
       initialSetlistItems={setlistItems}
+      initialTab={initialPlaylistTab(requestedTab, setlistItems)}
     />
   );
 }

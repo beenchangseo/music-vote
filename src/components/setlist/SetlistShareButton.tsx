@@ -6,6 +6,7 @@ import Modal from "../ui/Modal";
 import { ToolbarButton } from "../ui/ScreenToolbar";
 import { useDialog } from "../ui/DialogProvider";
 import { track } from "@/lib/analytics";
+import { PLAYLIST_TAB_PARAM } from "@/domain/playlist-tab";
 
 interface Props {
   shareCode: string;
@@ -17,7 +18,7 @@ export default function SetlistShareButton({ shareCode, title }: Props) {
   const { showAlert } = useDialog();
 
   async function shareLink() {
-    const url = `${window.location.origin}/playlist/${shareCode}`;
+    const url = `${window.location.origin}/playlist/${shareCode}?${PLAYLIST_TAB_PARAM}=setlist`;
     try {
       if (navigator.share) {
         await navigator.share({ title: `${title} 셋리스트`, text: `${title} 셋리스트를 확인해보세요.`, url });
