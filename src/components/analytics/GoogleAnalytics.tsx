@@ -2,7 +2,7 @@
 
 import Script from "next/script";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { gaPage, gaReferrer, parseGaMeasurementId } from "@/domain/google-analytics";
 
 type Gtag = NonNullable<Window["gtag"]>;
@@ -30,7 +30,9 @@ export default function GoogleAnalytics() {
   const last = useRef<{ pathname: string; location: string } | null>(null);
 
   // Keyed on the pathname alone: a query-only change (/band/x?created=1 → /band/x) is the same page to GA.
-  useEffect(() => {
+  // A layout effect, so the gtag queue and this page's fields exist before any page's own mount effect calls
+  // track(): passive effects run children first, wherever this component sits in the tree.
+  useLayoutEffect(() => {
     if (!id || last.current?.pathname === pathname) return;
     const gtag = installGtag(id);
     const origin = window.location.origin;

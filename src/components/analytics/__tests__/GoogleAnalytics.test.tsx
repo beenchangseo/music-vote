@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
 import { cleanup, render } from "@testing-library/react";
-import { StrictMode } from "react";
+import { StrictMode, useEffect } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const navigation = vi.hoisted(() => ({ pathname: "/" }));
 vi.mock("next/navigation", () => ({ usePathname: () => navigation.pathname }));
+vi.mock("@vercel/analytics", () => ({ track: vi.fn() }));
 
+import { track } from "@/lib/analytics";
 import GoogleAnalytics from "../GoogleAnalytics";
 
 const ORIGIN = window.location.origin;
@@ -18,14 +20,29 @@ function commands(): unknown[][] {
   return (window.dataLayer ?? []).map((entry) => Array.from(entry as IArguments));
 }
 
-function pageViews() {
-  const sent: Record<string, unknown>[] = [];
+/** Every event in the order gtag.js will send it, with the page fields `set` had given it by then. */
+function sentEvents() {
+  const sent: { name: unknown; params: unknown; fields: Record<string, unknown> }[] = [];
   let fields: Record<string, unknown> = {};
   for (const [command, ...args] of commands()) {
     if (command === "set") fields = { ...fields, ...(args[0] as Record<string, unknown>) };
-    if (command === "event" && args[0] === "page_view") sent.push(fields);
+    if (command === "event") sent.push({ name: args[0], params: args[1], fields });
   }
   return sent;
+}
+
+function pageViews() {
+  return sentEvents()
+    .filter((event) => event.name === "page_view")
+    .map((event) => event.fields);
+}
+
+/** A page that reports itself from its mount effect, as BandHomeClient does with band_home_viewed. */
+function TracksOnMount() {
+  useEffect(() => {
+    track("band_home_viewed", { role: "owner" });
+  }, []);
+  return null;
 }
 
 function setReferrer(referrer: string) {
@@ -144,5 +161,42 @@ describe("GoogleAnalytics page views", () => {
 
     expect(pageViews()).toEqual([{ page_location: `${ORIGIN}/band/[id]`, page_title: "밴드 홈" }]);
     expect(commands().filter(([command]) => command === "config")).toHaveLength(1);
+  });
+});
+
+describe("GoogleAnalytics and a page's own mount-time track()", () => {
+  it("queues the event after the masked fields of its own page, on first load and after a client navigation", () => {
+    vi.stubEnv("NEXT_PUBLIC_GA_ID", "G-TEST123456");
+    // The page before GoogleAnalytics: passive effects run in this order, the order that dropped the event on first
+    // load and stamped it with the previous page after a navigation.
+    const tree = () => (
+      <>
+        <TracksOnMount key={navigation.pathname} />
+        <GoogleAnalytics />
+      </>
+    );
+    navigation.pathname = "/band/team-1";
+    const { rerender } = render(tree());
+    navigation.pathname = "/playlist/qDPJnh1d";
+    rerender(tree());
+
+    expect(sentEvents().map(({ name, params, fields }) => [name, params, fields.page_location])).toEqual([
+      ["page_view", undefined, `${ORIGIN}/band/[id]`],
+      ["band_home_viewed", { role: "owner" }, `${ORIGIN}/band/[id]`],
+      ["page_view", undefined, `${ORIGIN}/playlist/[code]`],
+      ["band_home_viewed", { role: "owner" }, `${ORIGIN}/playlist/[code]`],
+    ]);
+  });
+
+  it("without a measurement id the event goes nowhere and nothing is queued", () => {
+    render(
+      <>
+        <TracksOnMount />
+        <GoogleAnalytics />
+      </>,
+    );
+
+    expect(window.gtag).toBeUndefined();
+    expect(window.dataLayer).toBeUndefined();
   });
 });

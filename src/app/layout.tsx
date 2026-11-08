@@ -60,6 +60,8 @@ export default function RootLayout({
       </head>
       {/* A bottom bar that paints the inset itself (data-safe-bottom) takes the padding over, so the two never stack. */}
       <body className="min-h-full flex flex-col bg-bg text-text font-sans pb-safe-bottom has-data-safe-bottom:pb-0">
+        {/* First, so its layout effect also comes before any layout effect below that calls track(). */}
+        <GoogleAnalytics />
         <DialogProvider>
           <div className="fixed top-2 right-2 z-50">
             <Suspense fallback={null}>
@@ -69,7 +71,6 @@ export default function RootLayout({
           {children}
         </DialogProvider>
         <Analytics />
-        <GoogleAnalytics />
         <SpeedInsights />
         <KakaoInit />
       </body>
