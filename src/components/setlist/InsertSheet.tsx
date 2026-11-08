@@ -45,9 +45,7 @@ export default function InsertSheet({ target, initialStep = "choose", candidates
   }
 
   return (
-    <Modal open onClose={onClose} title="여기에 넣기">
-      <p className="-mt-3 mb-4 text-caption text-text-muted tabular-nums">{where}</p>
-
+    <Modal open onClose={onClose} title="여기에 넣기" description={where}>
       {step === "choose" && (
         <div className="flex flex-col">
           <Choice tone="text-text-muted" icon={<ClockIcon />} title="인터벌" description="셋업 변경·멘트 시간 · 기본 1:00" onClick={() => goTo("interval")} />

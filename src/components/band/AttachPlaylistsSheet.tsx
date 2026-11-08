@@ -41,7 +41,8 @@ export default function AttachPlaylistsSheet({ open, onClose, teamId, count }: A
   }
 
   return (
-    <Modal open={open} onClose={close} title={`있던 플레이리스트 넣기 · ${count}개`}>
+    // DR9: putting a playlist in does not make its participants members.
+    <Modal open={open} onClose={close} title={`있던 플레이리스트 넣기 · ${count}개`} description="넣어도 참여자는 밴드 멤버가 되지 않아요">
       <SheetBody teamId={teamId} onAttached={() => setAttachedAny(true)} onClose={close} />
     </Modal>
   );
@@ -94,8 +95,6 @@ function SheetBody({ teamId, onAttached, onClose }: { teamId: string; onAttached
 
   return (
     <div>
-      {/* DR9: putting a playlist in does not make its participants members. */}
-      <p className="-mt-2 mb-4 text-sm text-text-muted">넣어도 참여자는 밴드 멤버가 되지 않아요</p>
       <p role="status" className="sr-only">
         {announcement}
       </p>

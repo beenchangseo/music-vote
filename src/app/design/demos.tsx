@@ -8,7 +8,17 @@ import NoticeCard from "@/components/ui/NoticeCard";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import Switch from "@/components/ui/Switch";
 import TabBar from "@/components/ui/TabBar";
-import ListRow, { ListGroup, ListRowButton, ListRowIcon, ListRowLink } from "@/components/ui/ListRow";
+import Textarea from "@/components/ui/Textarea";
+import ListRow, {
+  ListGroup,
+  ListRowButton,
+  ListRowIcon,
+  ListRowLink,
+  SongRow,
+  SongRowTitleButton,
+} from "@/components/ui/ListRow";
+import { ActionTab, ActionTabBar } from "@/components/ui/ActionTab";
+import IconButton from "@/components/ui/IconButton";
 import Avatar from "@/components/ui/Avatar";
 import GuitarIcon from "@/components/ui/GuitarIcon";
 import { useDialog } from "@/components/ui/DialogProvider";
@@ -84,13 +94,38 @@ export function DialogDemo() {
 
 export function ModalDemo() {
   const [open, setOpen] = useState(false);
+  const [footerOpen, setFooterOpen] = useState(false);
   const [mode, setMode] = useState<"free" | "quota">("free");
   return (
     <>
-      <Button variant="tonal" size="sm" onClick={() => setOpen(true)}>
-        시트 열기
-      </Button>
-      <Modal open={open} onClose={() => setOpen(false)} title="플레이리스트 설정">
+      <div className="flex flex-wrap gap-2">
+        <Button variant="tonal" size="sm" onClick={() => setOpen(true)}>
+          시트 열기
+        </Button>
+        <Button variant="tonal" size="sm" onClick={() => setFooterOpen(true)}>
+          아래 칸이 붙은 시트
+        </Button>
+      </div>
+      <Modal
+        open={footerOpen}
+        onClose={() => setFooterOpen(false)}
+        title="댓글 · 예뻤어"
+        footer={
+          <div className="flex items-end gap-2">
+            <Textarea aria-label="댓글" className="flex-1" rows={2} placeholder="본문이 길어도 이 칸은 제자리에 있어요" />
+            <Button onClick={() => setFooterOpen(false)}>작성</Button>
+          </div>
+        }
+      >
+        <div className="space-y-3">
+          {Array.from({ length: 12 }, (_, i) => (
+            <p key={i} className="rounded-control bg-surface-hover p-3 text-sm text-text-muted">
+              {i + 1}번째 댓글. 목록만 스크롤돼요.
+            </p>
+          ))}
+        </div>
+      </Modal>
+      <Modal open={open} onClose={() => setOpen(false)} title="플레이리스트 설정" description="투표 방식은 플레이리스트마다 정해요">
         <div className="flex gap-2">
           <Chip selected={mode === "free"} onClick={() => setMode("free")}>
             자유 투표
@@ -260,6 +295,43 @@ export function ListGroupDemo() {
           <span className="block truncate text-sm font-medium text-text">10월 정기 합주</span>
         </ListRowLink>
       </div>
+    </div>
+  );
+}
+
+export function SongRowActionsDemo() {
+  const [open, setOpen] = useState(true);
+  const [inSetlist, setInSetlist] = useState(false);
+  return (
+    <div className="mt-3 rounded-card bg-surface">
+      <div className="px-2">
+        <SongRow rank={1} topRank cover={<span className="absolute inset-0 bg-surface-hover" />} trailing={<span className="text-sm font-bold tabular-nums text-text">6</span>}>
+          <SongRowTitleButton onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-controls="design-song-actions">
+            <span className="line-clamp-2 text-body font-semibold leading-snug text-text">예뻤어</span>
+            <span className="text-caption text-text-muted">DAY6 · 눌러서 접고 펴기</span>
+          </SongRowTitleButton>
+        </SongRow>
+      </div>
+      {open && (
+        <ActionTabBar id="design-song-actions">
+          <ActionTab icon={<GuitarIcon />} onClick={() => undefined}>
+            댓글 2
+          </ActionTab>
+          <ActionTab icon={<GuitarIcon />} onClick={() => undefined}>
+            버전
+          </ActionTab>
+          <ActionTab icon={<GuitarIcon />} selected={inSetlist} onClick={() => setInSetlist((v) => !v)}>
+            {inSetlist ? "셋리스트에 있음" : "셋리스트에 추가"}
+          </ActionTab>
+          <IconButton bare aria-label="예뻤어 더보기">
+            <svg className="size-4.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <circle cx="5" cy="12" r="1.6" />
+              <circle cx="12" cy="12" r="1.6" />
+              <circle cx="19" cy="12" r="1.6" />
+            </svg>
+          </IconButton>
+        </ActionTabBar>
+      )}
     </div>
   );
 }

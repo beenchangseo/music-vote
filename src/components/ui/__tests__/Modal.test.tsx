@@ -165,6 +165,66 @@ describe("Modal — focus management", () => {
   });
 });
 
+describe("Modal — header description", () => {
+  afterEach(cleanup);
+
+  it("reads the line under the title as the dialog's description", () => {
+    render(
+      <Modal open onClose={vi.fn()} title="여기에 넣기" description="맨 앞 · 0:00 에 시작">
+        <button type="button">인터벌</button>
+      </Modal>,
+    );
+    const dialog = screen.getByRole("dialog", { name: "여기에 넣기" });
+    expect(dialog).toHaveAccessibleDescription("맨 앞 · 0:00 에 시작");
+    expect(dialog).toHaveTextContent("맨 앞 · 0:00 에 시작");
+  });
+
+  it("has no description when none is given", () => {
+    render(
+      <Modal open onClose={vi.fn()} title="여기에 넣기">
+        <button type="button">인터벌</button>
+      </Modal>,
+    );
+    expect(screen.getByRole("dialog", { name: "여기에 넣기" })).not.toHaveAccessibleDescription();
+  });
+});
+
+describe("Modal — footer", () => {
+  afterEach(cleanup);
+
+  it("keeps a footer button inside the Tab trap", () => {
+    render(
+      <Modal open onClose={vi.fn()} title="댓글 · 예뻤어" footer={<button type="button">작성</button>}>
+        <button type="button">댓글 더 보기</button>
+      </Modal>,
+    );
+    const close = screen.getByRole("button", { name: "닫기" });
+    const submit = screen.getByRole("button", { name: "작성" });
+
+    close.focus();
+    fireEvent.keyDown(close, { key: "Tab", shiftKey: true });
+    expect(submit).toHaveFocus();
+
+    fireEvent.keyDown(submit, { key: "Tab" });
+    expect(close).toHaveFocus();
+  });
+
+  // jsdom has no layout, so the safe-area padding shows only as the env() class on the last region.
+  it("pads only the last region for the bottom safe area", () => {
+    const sheet = (footer?: string) => (
+      <Modal open onClose={vi.fn()} title="안내" footer={footer && <p>{footer}</p>}>
+        <p>본문</p>
+      </Modal>
+    );
+    const { rerender } = render(sheet());
+    expect(screen.getByText("본문").parentElement?.className).toMatch(/env\(safe-area-inset-bottom\)/);
+
+    rerender(sheet("아래 칸"));
+    expect(screen.getByText("아래 칸").parentElement?.className).toMatch(/env\(safe-area-inset-bottom\)/);
+    expect(screen.getByText("본문").parentElement?.className).not.toMatch(/safe-area-inset-bottom/);
+  });
+});
+
 /** SetlistItemEditModal's "초기화": a useDialog confirm opened from inside a sheet. */
 function SheetWithConfirm({ onClose, onResult }: { onClose: () => void; onResult: (ok: boolean) => void }) {
   const { showConfirm } = useDialog();

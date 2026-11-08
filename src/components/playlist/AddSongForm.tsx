@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Button from "../ui/Button";
 import Input from "../ui/Input";
 import Image from "next/image";
 import { useDialog } from "../ui/DialogProvider";
@@ -145,19 +146,9 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
               enterKeyHint="search"
             />
           </div>
-          <button
-            type="submit"
-            disabled={!input.trim() || isPending}
-            className="h-11 shrink-0 rounded-pill bg-primary px-5 text-sm font-semibold text-white transition-all hover:bg-primary-hover active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isPending ? (
-              <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : looksLikeLink ? (
-              "추가"
-            ) : (
-              "찾기"
-            )}
-          </button>
+          <Button type="submit" pill loading={isPending} disabled={!input.trim()} className="shrink-0">
+            {looksLikeLink ? "추가" : "찾기"}
+          </Button>
         </div>
 
         {showManualTitle && (
@@ -184,25 +175,27 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
             const length = formatDuration(item.durationSeconds);
             const isPreviewing = previewId === item.videoId;
             return (
-              <div key={item.videoId} className="rounded-xl border border-border bg-surface p-2">
+              <div key={item.videoId} className="rounded-control border border-border bg-surface p-2">
                 <div className="flex items-start gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewId(isPreviewing ? null : item.videoId)}
-                    className="relative h-12 w-16 shrink-0 overflow-hidden rounded-lg bg-surface-hover"
-                    aria-label={`${item.title} ${isPreviewing ? "미리듣기 닫기" : "미리듣기"}`}
-                  >
-                    <Image src={item.thumbnail} alt="" fill sizes="64px" className="object-cover" />
-                    <span className="absolute inset-0 flex items-center justify-center bg-black/35">
-                      <svg className="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        {isPreviewing ? (
-                          <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                        ) : (
-                          <path d="M8 5v14l11-7z" />
-                        )}
-                      </svg>
-                    </span>
-                  </button>
+                  <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-control bg-surface-hover has-focus-visible:ring-2 has-focus-visible:ring-focus-ring has-focus-visible:ring-offset-2 has-focus-visible:ring-offset-surface">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewId(isPreviewing ? null : item.videoId)}
+                      className="absolute inset-0"
+                      aria-label={`${item.title} ${isPreviewing ? "미리듣기 닫기" : "미리듣기"}`}
+                    >
+                      <Image src={item.thumbnail} alt="" fill sizes="64px" className="object-cover" />
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/35">
+                        <svg className="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          {isPreviewing ? (
+                            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                          ) : (
+                            <path d="M8 5v14l11-7z" />
+                          )}
+                        </svg>
+                      </span>
+                    </button>
+                  </div>
 
                   <div className="min-w-0 flex-1">
                     <p className="line-clamp-2 text-sm font-medium leading-snug text-text">{item.title}</p>
@@ -212,14 +205,9 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
                     </p>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleAddFromSearch(item)}
-                    disabled={isPending}
-                    className="min-h-11 shrink-0 rounded-lg bg-primary px-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
-                  >
+                  <Button variant="tonal" size="sm" onClick={() => handleAddFromSearch(item)} disabled={isPending} className="shrink-0">
                     추가
-                  </button>
+                  </Button>
                 </div>
 
                 {isPreviewing && (
@@ -229,7 +217,7 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
                     allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                     referrerPolicy="strict-origin-when-cross-origin"
                     allowFullScreen
-                    className="mt-2 aspect-video w-full rounded-lg"
+                    className="mt-2 aspect-video w-full rounded-control"
                   />
                 )}
               </div>

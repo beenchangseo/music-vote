@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type AnimationEvent } from "react";
 import Badge from "../ui/Badge";
+import RoundButton, { type RoundLook, type RoundVoteTone } from "../ui/RoundButton";
 import { triggerKakaoLogin } from "@/lib/kakao-login";
-import type { VoteDirection } from "@/domain/vote";
+import { applyVotePress, type VoteDirection } from "@/domain/vote";
 import type { VotingMode } from "@/domain/types";
 
 interface VoteButtonsProps {
@@ -37,18 +38,11 @@ export default function VoteButtons({
   const direction = userVote === 1 || userVote === -1 ? userVote : null;
   // 비로그인 방문자에게 활성 버튼처럼 보이면 눌러보고서야 로그인 벽을 만난다.
   // 누를 수는 있게 두되(누르면 로그인) 잠긴 상태임을 먼저 보여준다.
-  const upLabel = loginGate
-    ? "로그인하고 찬성하기"
-    : votingMode === "allocated" && direction === -1
-      ? "반대표 한 개 취소"
-      : "찬성표 추가";
-  const downLabel = loginGate
-    ? "로그인하고 반대하기"
-    : votingMode === "allocated" && direction === 1
-      ? "찬성표 한 개 취소"
-      : "반대표 추가";
-  const lockedTone = loginGate ? "text-text-subtle" : "";
-
+  const upLabel = loginGate ? "로그인하고 찬성하기" : arrowLabel(1, direction, userVoteCount, votingMode);
+  const downLabel = loginGate ? "로그인하고 반대하기" : arrowLabel(-1, direction, userVoteCount, votingMode);
+  // Logged out: plain grey arrows that open the login (the lock sits by the score), not a vote that could be on.
+  const look = (tone: RoundVoteTone, chosen: boolean): RoundLook =>
+    loginGate ? { tone: "ghost", size: "md" } : { tone, size: "md", chosen };
 
   const [popped, setPopped] = useState<VoteDirection | null>(null);
 
@@ -62,34 +56,34 @@ export default function VoteButtons({
     onPress(pressed);
   }
 
+  // animationend bubbles, so an animation inside the arrow would otherwise end the pop early.
+  function endPop(e: AnimationEvent<HTMLButtonElement>) {
+    if (e.animationName === "vote-pop") setPopped(null);
+  }
+
   // YouTube Music style: up, score and down in one pill so the three read as one control.
   return (
     <div className="inline-flex items-center rounded-pill bg-surface-hover/80">
-      <button
+      <RoundButton
+        {...look("upvote", direction === 1)}
         onClick={() => handleClick(1)}
-        onAnimationEnd={() => setPopped(null)}
+        onAnimationEnd={endPop}
         disabled={!loginGate && (disabled || pending)}
-        className={`relative inline-flex h-11 w-11 items-center justify-center rounded-pill transition-all active:scale-90 disabled:opacity-60 ${popped === 1 ? "animate-vote-pop" : ""} ${
-          loginGate
-            ? lockedTone
-            : direction === 1
-              ? "text-upvote bg-upvote/15"
-              : "text-text-muted hover:text-upvote hover:bg-upvote/10"
-        }`}
+        className={popped === 1 ? "animate-vote-pop" : undefined}
         aria-label={upLabel}
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+        <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
         </svg>
         {votingMode === "allocated" && direction === 1 && userVoteCount > 0 && (
           <VoteCountBadge count={userVoteCount} />
         )}
-      </button>
+      </RoundButton>
 
       <span
         role="status"
         aria-label={loginGate ? `점수 ${score}점, 투표하려면 로그인이 필요해요` : `점수 ${score}점`}
-        className={`min-w-[1.75rem] text-center text-base font-bold tabular-nums ${
+        className={`min-w-7 text-center text-body font-bold tabular-nums ${
           score > 0
             ? "text-upvote"
             : score < 0
@@ -103,7 +97,7 @@ export default function VoteButtons({
 
       {loginGate && (
         <svg
-          className="h-3 w-3 shrink-0 text-text-subtle"
+          className="size-3 shrink-0 text-text-subtle"
           fill="none"
           stroke="currentColor"
           strokeWidth={2}
@@ -115,28 +109,34 @@ export default function VoteButtons({
         </svg>
       )}
 
-      <button
+      <RoundButton
+        {...look("downvote", direction === -1)}
         onClick={() => handleClick(-1)}
-        onAnimationEnd={() => setPopped(null)}
+        onAnimationEnd={endPop}
         disabled={!loginGate && (disabled || pending)}
-        className={`relative inline-flex h-11 w-11 items-center justify-center rounded-pill transition-all active:scale-90 disabled:opacity-60 ${popped === -1 ? "animate-vote-pop" : ""} ${
-          loginGate
-            ? lockedTone
-            : direction === -1
-              ? "text-downvote bg-downvote/15"
-              : "text-text-muted hover:text-downvote hover:bg-downvote/10"
-        }`}
+        className={popped === -1 ? "animate-vote-pop" : undefined}
         aria-label={downLabel}
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+        <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
         </svg>
         {votingMode === "allocated" && direction === -1 && userVoteCount > 0 && (
           <VoteCountBadge count={userVoteCount} />
         )}
-      </button>
+      </RoundButton>
     </div>
   );
+}
+
+const VOTE_NAME: Record<VoteDirection, string> = { 1: "찬성표", [-1]: "반대표" };
+
+/** Names what a press does, from the same rule the vote write follows, so the label cannot drift from it. */
+function arrowLabel(arrow: VoteDirection, direction: VoteDirection | null, count: number, mode: VotingMode): string {
+  const { action } = applyVotePress({ direction, count }, arrow, mode);
+  if (action === "removed" && direction !== null) {
+    return mode === "allocated" ? `${VOTE_NAME[direction]} 한 개 취소` : `${VOTE_NAME[direction]} 취소`;
+  }
+  return `${VOTE_NAME[arrow]} 추가`;
 }
 
 function VoteCountBadge({ count }: { count: number }) {

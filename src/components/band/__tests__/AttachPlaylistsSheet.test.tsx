@@ -45,7 +45,7 @@ afterEach(cleanup);
 describe("AttachPlaylistsSheet (DR8, DR9)", () => {
   it("says putting in does not make members, shows a skeleton, then each row with participants and date", async () => {
     const sheet = open();
-    expect(within(sheet).getByText("넣어도 참여자는 밴드 멤버가 되지 않아요")).toBeInTheDocument();
+    expect(sheet).toHaveAccessibleDescription("넣어도 참여자는 밴드 멤버가 되지 않아요");
     expect(within(sheet).getByRole("list", { name: "플레이리스트를 불러오는 중" })).toBeInTheDocument();
     expect(await within(sheet).findByText("10월 합주")).toBeInTheDocument();
     expect(within(sheet).getAllByText("참여자 4명 · 10월 1일")).toHaveLength(2);

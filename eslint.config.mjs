@@ -101,6 +101,13 @@ const eslintConfig = defineConfig([
     ignores: ["src/components/ui/**", "src/**/__tests__/**"],
     rules: { "ds/no-raw-control": "error" },
   },
+  {
+    // globals.css draws the keyboard focus outline in @layer base, so an outline-none utility beats it. A class list that
+    // removes the outline draws its own focus ring, or Tab moves focus where nobody can see it.
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/**/__tests__/**"],
+    rules: { "ds/focus-ring": "error" },
+  },
 ]);
 
 export default eslintConfig;

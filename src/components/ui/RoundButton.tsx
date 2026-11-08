@@ -17,11 +17,22 @@ const DISC_SKIN = {
 
 const TOGGLE_SKIN = { off: BARE_SKIN.ghost, on: "text-primary-fg hover:bg-surface-hover" };
 
+/**
+ * 투표 화살표. 고른 쪽(chosen)이면 찬성·반대 색 글리프에 같은 색의 옅은 원판을 깐다.
+ * 누르는 일이 켜고 끄기가 아니라서(할당 모드는 한 표를 더 쌓는다) aria-pressed 를 달지 않는다. 할 일은 라벨이 말한다.
+ */
+const VOTE_SKIN = {
+  upvote: { idle: "text-text-muted hover:bg-upvote/10 hover:text-upvote", chosen: "bg-upvote/15 text-upvote" },
+  downvote: { idle: "text-text-muted hover:bg-downvote/10 hover:text-downvote", chosen: "bg-downvote/15 text-downvote" },
+};
+
 export type RoundBareTone = keyof typeof BARE_SKIN;
 export type RoundDiscTone = keyof typeof DISC_SKIN;
 export type RoundSize = "md" | "lg" | "hero";
+export type RoundVoteTone = keyof typeof VOTE_SKIN;
 export const ROUND_BARE_TONES = Object.keys(BARE_SKIN) as RoundBareTone[];
 export const ROUND_DISC_TONES = Object.keys(DISC_SKIN) as RoundDiscTone[];
+export const ROUND_VOTE_TONES = Object.keys(VOTE_SKIN) as RoundVoteTone[];
 
 const DIAMETER: Record<RoundSize, string> = { md: "size-control-md", lg: "size-control-lg", hero: "size-control-hero" };
 
@@ -36,10 +47,11 @@ const DISC_GLYPH: Record<RoundSize, string> = {
   hero: "[&_svg]:size-7 text-h3",
 };
 
-type BareLook = { tone: RoundBareTone; size: "md" | "lg"; pressed?: never; edge?: "start" };
-type ToggleLook = { tone?: never; size: "md" | "lg"; pressed: boolean; edge?: never };
-type DiscLook = { tone: RoundDiscTone; size: RoundSize; pressed?: never; edge?: never };
-export type RoundLook = BareLook | ToggleLook | DiscLook;
+type BareLook = { tone: RoundBareTone; size: "md" | "lg"; pressed?: never; chosen?: never; edge?: "start" };
+type ToggleLook = { tone?: never; size: "md" | "lg"; pressed: boolean; chosen?: never; edge?: never };
+type VoteLook = { tone: RoundVoteTone; size: "md" | "lg"; chosen: boolean; pressed?: never; edge?: never };
+type DiscLook = { tone: RoundDiscTone; size: RoundSize; pressed?: never; chosen?: never; edge?: never };
+export type RoundLook = BareLook | ToggleLook | VoteLook | DiscLook;
 
 type Own = { "aria-label": string; className?: string; children: ReactNode };
 type Closed = keyof Own | "aria-pressed" | "style";
@@ -57,6 +69,10 @@ function lookClassName(look: RoundLook): string {
   if (look.pressed !== undefined) {
     return `${DIAMETER[look.size]} ${BARE[look.size].glyph} ${look.pressed ? TOGGLE_SKIN.on : TOGGLE_SKIN.off}`;
   }
+  if (look.chosen !== undefined) {
+    const skin = VOTE_SKIN[look.tone];
+    return `${DIAMETER[look.size]} ${BARE[look.size].glyph} ${look.chosen ? skin.chosen : skin.idle}`;
+  }
   if (isBare(look)) {
     return `${DIAMETER[look.size]} ${BARE[look.size].glyph} ${BARE_SKIN[look.tone]} ${look.edge ? BARE[look.size].edgeStart : ""}`;
   }
@@ -64,7 +80,7 @@ function lookClassName(look: RoundLook): string {
 }
 
 const RoundButton = forwardRef<HTMLButtonElement, RoundButtonProps>(function RoundButton(
-  { tone, size, pressed, edge, className = "", type = "button", children, ...rest },
+  { tone, size, pressed, chosen, edge, className = "", type = "button", children, ...rest },
   ref,
 ) {
   return (
@@ -72,7 +88,7 @@ const RoundButton = forwardRef<HTMLButtonElement, RoundButtonProps>(function Rou
       ref={ref}
       type={type}
       aria-pressed={pressed}
-      className={`${BASE} ${lookClassName({ tone, size, pressed, edge } as RoundLook)} ${className}`}
+      className={`${BASE} ${lookClassName({ tone, size, pressed, chosen, edge } as RoundLook)} ${className}`}
       {...rest}
     >
       {children}

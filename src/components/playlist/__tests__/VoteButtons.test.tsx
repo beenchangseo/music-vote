@@ -5,8 +5,18 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import VoteButtons from "../VoteButtons";
 
 // jsdom has no AnimationEvent, so react-dom would listen for webkitAnimationEnd instead of the animationend browsers fire.
+// The stand-in keeps animationName, which jsdom's plain Event would drop.
 vi.hoisted(() => {
-  if (!("AnimationEvent" in window)) Object.assign(window, { AnimationEvent: Event });
+  if (!("AnimationEvent" in window)) {
+    class AnimationEvent extends Event {
+      animationName: string;
+      constructor(type: string, init: AnimationEventInit = {}) {
+        super(type, init);
+        this.animationName = init.animationName ?? "";
+      }
+    }
+    Object.assign(window, { AnimationEvent });
+  }
 });
 
 vi.mock("@/lib/kakao-login", () => ({ triggerKakaoLogin: vi.fn() }));
@@ -32,11 +42,31 @@ describe("VoteButtons pop", () => {
     expect(up).toHaveClass("animate-vote-pop");
     expect(down).not.toHaveClass("animate-vote-pop");
 
-    fireEvent.animationEnd(up);
+    fireEvent.animationEnd(up, { animationName: "vote-pop" });
     expect(up).not.toHaveClass("animate-vote-pop");
 
     fireEvent.click(up);
     expect(up).toHaveClass("animate-vote-pop");
+  });
+
+  it("keeps popping when an animation inside the arrow ends first", () => {
+    renderButtons();
+    const up = screen.getByRole("button", { name: "찬성표 추가" });
+
+    fireEvent.click(up);
+    fireEvent.animationEnd(up.querySelector("svg")!, { animationName: "score-in" });
+    expect(up).toHaveClass("animate-vote-pop");
+
+    fireEvent.animationEnd(up, { animationName: "vote-pop" });
+    expect(up).not.toHaveClass("animate-vote-pop");
+  });
+
+  it("names the next action on a chosen arrow instead of announcing a toggle", () => {
+    render(<VoteButtons score={3} userVote={1} userVoteCount={2} votingMode="allocated" onPress={() => undefined} />);
+
+    const up = screen.getByRole("button", { name: "찬성표 추가" });
+    expect(up).not.toHaveAttribute("aria-pressed");
+    expect(screen.getByRole("button", { name: "찬성표 한 개 취소" })).not.toHaveAttribute("aria-pressed");
   });
 
   it("leaves no timer behind when it unmounts right after a press", () => {

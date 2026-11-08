@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
+import { ListRowButton, ListRowLink } from "../ui/ListRow";
 import Modal from "../ui/Modal";
 import { useDialog } from "../ui/DialogProvider";
 import { RoomCover } from "../band/BandArt";
@@ -179,31 +180,32 @@ export default function PlaylistHeader({
 
       {/* ⋮ sheet (Spotify / YouTube Music "more" sheet): what used to crowd the header. */}
       <Modal open={menuOpen} onClose={() => setMenuOpen(false)} title={title}>
-        <div className="-mx-2 flex flex-col">
+        <div className="flex flex-col">
           {onOpenSettings && (
-            <button
-              type="button"
+            <ListRowButton
               onClick={() => {
                 setMenuOpen(false);
                 onOpenSettings();
               }}
-              className="flex min-h-12 items-center gap-3 rounded-control px-2 text-left text-body text-text transition-colors hover:bg-surface-hover"
+              leading={
+                <svg className="size-5 text-text-muted" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+                </svg>
+              }
             >
-              <svg className="h-5 w-5 text-text-muted" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
-              </svg>
-              플레이리스트 설정
-            </button>
+              <span className="text-body text-text">플레이리스트 설정</span>
+            </ListRowButton>
           )}
-          <Link
+          <ListRowLink
             href="/"
-            className="flex min-h-12 items-center gap-3 rounded-control px-2 text-body text-text transition-colors hover:bg-surface-hover"
+            leading={
+              <svg className="size-5 text-text-muted" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12L12 3l9.75 9M4.5 10.5V21h5.25v-6h4.5v6H19.5V10.5" />
+              </svg>
+            }
           >
-            <svg className="h-5 w-5 text-text-muted" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12L12 3l9.75 9M4.5 10.5V21h5.25v-6h4.5v6H19.5V10.5" />
-            </svg>
-            홈으로
-          </Link>
+            <span className="text-body text-text">홈으로</span>
+          </ListRowLink>
         </div>
       </Modal>
     </header>

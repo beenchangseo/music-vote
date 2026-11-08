@@ -137,7 +137,7 @@ const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
         referrerPolicy="strict-origin-when-cross-origin"
         allowFullScreen
-        className={className ?? "w-full aspect-video rounded-lg"}
+        className={className ?? "w-full aspect-video rounded-control"}
       />
     );
   }
