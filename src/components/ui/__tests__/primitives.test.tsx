@@ -2,13 +2,14 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import Button from "../Button";
+import Button, { touchTarget44 } from "../Button";
 import Card from "../Card";
 import Chip from "../Chip";
 import IconButton from "../IconButton";
 import Input from "../Input";
 import { ListRowButton, ListRowIcon, ListRowLink } from "../ListRow";
 import RoundButton, { RoundLink } from "../RoundButton";
+import Switch from "../Switch";
 
 afterEach(cleanup);
 
@@ -285,5 +286,26 @@ describe("ListRowLink", () => {
     const link = screen.getByRole("link", { name: /벚꽃 엔딩/ });
     expect(link).toHaveAttribute("href", "/playlist/abc");
     expect(link.className).toBe(screen.getByRole("button", { name: /예뻤어/ }).className);
+  });
+});
+
+// jsdom has no layout, so these read the classes. Every small control draws the one shared tap area, and that area is
+// never under control-md (44px, pinned to globals.css by tokens.test) on either side.
+describe("controls drawn smaller than 44px", () => {
+  it("share one tap area that is at least 44×44 around the control", () => {
+    expect(touchTarget44.split(" ")).toEqual(
+      expect.arrayContaining(["relative", "after:absolute", "after:size-full", "after:min-h-control-md", "after:min-w-control-md"]),
+    );
+  });
+
+  it.each([
+    ["IconButton sm", () => render(<IconButton size="sm" bare aria-label="삭제">⊖</IconButton>), "삭제"],
+    ["Button sm", () => render(<Button size="sm">더 보기</Button>), "더 보기"],
+    ["Chip", () => render(<Chip>C</Chip>), "C"],
+    ["Switch", () => render(<Switch checked={false} onCheckedChange={() => {}} aria-label="익명 투표" />), "익명 투표"],
+  ])("%s keeps that tap area", (_name, draw, name) => {
+    draw();
+    const control = screen.getByRole(name === "익명 투표" ? "switch" : "button", { name });
+    expect(control.className.split(/\s+/)).toEqual(expect.arrayContaining(touchTarget44.split(" ")));
   });
 });
