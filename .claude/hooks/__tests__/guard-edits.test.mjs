@@ -22,7 +22,11 @@ describe("guard-edits", () => {
     expect(decide(tool, "supabase/migrations/v01.sql").permissionDecision).toBe("deny");
   });
 
-  it.each(["supabase/migrations/v999.sql", "scripts/ds-inventory.mjs"])("allows %s", (path) => {
+  it.each(["Edit", "Write", "MultiEdit"])("denies %s of eslint-suppressions.json, which would let lint pass any rule's errors", (tool) => {
+    expect(decide(tool, "eslint-suppressions.json").permissionDecision).toBe("deny");
+  });
+
+  it.each(["supabase/migrations/v999.sql", "scripts/ds-inventory.mjs", "src/eslint-suppressions.json"])("allows %s", (path) => {
     expect(decide("Edit", path).permissionDecision).toBe("allow");
   });
 });
