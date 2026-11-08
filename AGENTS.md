@@ -98,6 +98,7 @@ verification/     TLA+ 형식 검증 (verify-vote-quota 스킬)
 | 위험 버튼 바탕 | `bg-danger` + `text-on-danger`, hover `danger-hover` |
 | 주의 배지 바탕 | `bg-warning-tint` + `text-warning` (`warning-soft` 위 warning 글자는 4.22:1 이라 금지) |
 | 빨강 글자·오류 문구 | `text-danger-fg` |
+| 고른 투표 화살표 원판 (투표 알약 `bg-surface-hover` 위) | `bg-success-tint` + `text-success`, `bg-danger-tint` + `text-danger-fg` |
 | 입력칸·꺼진 스위치 테두리 / 키보드 포커스 | `border-border-input` / `ring-focus-ring` |
 
 - `text-primary`·`text-danger`·`primary-soft` 는 eslint 가 막는다(`eslint.config.mjs`). 옛 클래스를 옮길 때는

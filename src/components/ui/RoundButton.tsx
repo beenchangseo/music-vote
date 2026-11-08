@@ -18,12 +18,13 @@ const DISC_SKIN = {
 const TOGGLE_SKIN = { off: BARE_SKIN.ghost, on: "text-primary-fg hover:bg-surface-hover" };
 
 /**
- * 투표 화살표. 고른 쪽(chosen)이면 찬성·반대 색 글리프에 같은 색의 옅은 원판을 깐다.
+ * 투표 화살표. 투표 알약(surface-hover) 위에 놓인다. 고른 쪽(chosen)이면 찬성·반대 색 글리프에 같은 색의 옅은 원판
+ * (success-tint·danger-tint)을 깐다. 글리프와 원판은 tokens.ts 가 4.5:1 이상으로 묶어 둔다.
  * 누르는 일이 켜고 끄기가 아니라서(할당 모드는 한 표를 더 쌓는다) aria-pressed 를 달지 않는다. 할 일은 라벨이 말한다.
  */
 const VOTE_SKIN = {
-  upvote: { idle: "text-text-muted hover:bg-upvote/10 hover:text-upvote", chosen: "bg-upvote/15 text-upvote" },
-  downvote: { idle: "text-text-muted hover:bg-downvote/10 hover:text-downvote", chosen: "bg-downvote/15 text-downvote" },
+  upvote: { idle: "text-text-muted hover:bg-surface-elevated hover:text-success", chosen: "bg-success-tint text-success" },
+  downvote: { idle: "text-text-muted hover:bg-surface-elevated hover:text-danger-fg", chosen: "bg-danger-tint text-danger-fg" },
 };
 
 export type RoundBareTone = keyof typeof BARE_SKIN;
