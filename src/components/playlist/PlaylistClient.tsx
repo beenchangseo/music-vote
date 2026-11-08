@@ -41,14 +41,14 @@ import type { CreatedBand } from "../band/CreateBandSheet";
 import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import type { ViewMode } from "./NavigationBar";
-import { setlistEditAccess } from "@/domain/setlist";
+import { setlistEditAccess, summarizeSetlist } from "@/domain/setlist";
 import { PLAYLIST_TAB_PARAM, type PlaylistLinkTab } from "@/domain/playlist-tab";
 import type { MyTeam } from "@/actions/team";
 import type { PlaylistView, RoomTeam, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/domain/types";
 import { displayTitle } from "@/domain/song-meta";
 import { inviteSongs } from "@/domain/invite-card";
 import { assignRanks } from "@/domain/vote";
-import { PLAYLIST_STAGE_LABEL, isSetlistBlock, playlistStage } from "@/domain/playlist-stage";
+import { PLAYLIST_STAGE_LABEL, playlistStage } from "@/domain/playlist-stage";
 
 interface PlaylistClientProps {
   playlist: PlaylistView;
@@ -235,8 +235,10 @@ export default function PlaylistClient({
 
 
   // A failed server read leaves the items unknown until the setlist tab loads them. Until then the banner and the Kakao
-  // card print no count, since setlist_count is only the target and the candidates are not the setlist (#87).
-  const setlistSongCount = setlistItems === null ? null : setlistItems.filter(isSetlistBlock).length;
+  // card print no count, since setlist_count is only the target and the candidates are not the setlist (#87). Counted
+  // like the setlist tab and the exports: a block whose candidate the host just deleted stays in this screen's loaded
+  // setlist until the next read, but it is no longer a song of the setlist.
+  const setlistSongCount = setlistItems === null ? null : summarizeSetlist(setlistItems, songsWithVotes).songCount;
   // The cron also sets the confirm flag on an expired playlist with no songs, so the flag alone does not mean a setlist.
   // While the items are unknown the flag decides.
   const showsConfirmedSetlist =

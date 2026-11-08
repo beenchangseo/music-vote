@@ -241,6 +241,15 @@ describe("PlaylistClient confirmed banner", () => {
     expect(sharedSetlistCard()).toEqual({ description: "4곡 셋리스트가 확정됐어요", imageCount: "4" });
   });
 
+  // The host deletes a candidate from the 후보곡 tab: the server drops its setlist row, but this screen keeps the setlist
+  // it loaded. Count what the setlist tab and the exports draw, not the stale row.
+  it("leaves out a block whose candidate the host just deleted, as the setlist tab and the exports do", () => {
+    renderConfirmed(fiveCandidates.filter((candidate) => candidate.id !== "c"), handBuilt);
+
+    expect(bannerLine()).toBe("총 3곡 · 다음 공연 준비 완료");
+    expect(sharedSetlistCard()).toEqual({ description: "3곡 셋리스트가 확정됐어요", imageCount: "3" });
+  });
+
   it("says the setlist is confirmed when it has blocks, 자작곡 included", () => {
     renderConfirmed([], [labeledBlock("original", "자작곡", 0)]);
     expect(screen.getByText(/셋리스트 확정/)).toBeInTheDocument();
