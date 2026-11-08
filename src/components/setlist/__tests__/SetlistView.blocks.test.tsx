@@ -150,3 +150,36 @@ describe("SetlistView edit mode", () => {
     expect(screen.queryByRole("button", { name: "셋리 전체 듣기" })).not.toBeInTheDocument();
   });
 });
+
+describe("SetlistView without Intl.Segmenter (Firefox before 125)", () => {
+  it("still draws the setlist and its edit mode", async () => {
+    const { Segmenter } = Intl;
+    Reflect.deleteProperty(Intl, "Segmenter");
+    try {
+      vi.resetModules();
+      const { default: FreshSetlistView } = await import("../SetlistView");
+      render(
+        <FreshSetlistView
+          setlistItems={[at(0, { song_id: "pretty" }), at(1, { item_type: "interval", label: "기타 셋업 변경", duration_seconds: 60 })]}
+          songs={songs}
+          playlistId="p"
+          shareCode="abc123"
+          loading={false}
+          onItemsChange={vi.fn()}
+          title="10월 합주"
+          access="edit"
+          onPlay={vi.fn()}
+        />,
+      );
+      expect(setlistBlocks()[1]).toHaveTextContent("기타 셋업 변경 · 1:00");
+
+      fireEvent.click(screen.getByRole("button", { name: "편집" }));
+
+      expect(await screen.findByRole("button", { name: "「예뻤어」 제목 고치기" })).toHaveTextContent(/^예뻤어DAY6 · 4:44$/);
+      expect(screen.getByRole("button", { name: "「기타 셋업 변경」 인터벌 고치기" })).toHaveTextContent("기타 셋업 변경 · 1:00");
+    } finally {
+      Reflect.set(Intl, "Segmenter", Segmenter);
+      vi.resetModules();
+    }
+  });
+});

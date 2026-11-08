@@ -1,4 +1,5 @@
 import { displayTitle } from "./song-meta";
+import { graphemes } from "./text-segments";
 
 /**
  * 투표 초대 카드(카톡 공유 이미지와 플레이리스트 링크 미리보기)에 싣는 곡.
@@ -29,13 +30,10 @@ function toCover(ids: string[]): InviteCover {
   return [];
 }
 
-// Firefox gained Intl.Segmenter in 125 while Next 16 supports 111+; there code points are the closest count.
-const graphemes = typeof Intl.Segmenter === "function" ? new Intl.Segmenter(undefined, { granularity: "grapheme" }) : null;
-
 /** 보이는 글자(grapheme)로 세어 NAME_MAX 를 넘으면 단어 경계에서 자르고 "…" 를 붙인다. 이모지 가족·국기를 가르지 않는다. */
 function clipName(name: string): string {
   const trimmed = name.trim();
-  const chars = graphemes ? Array.from(graphemes.segment(trimmed), (s) => s.segment) : Array.from(trimmed);
+  const chars = graphemes(trimmed);
   if (chars.length <= NAME_MAX) return chars.join("");
   let cut = chars.slice(0, NAME_MAX - 1).join("");
   const space = cut.lastIndexOf(" ");

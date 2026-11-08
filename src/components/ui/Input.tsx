@@ -12,17 +12,20 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   invalid?: boolean;
   /** 둥근 알약 모양 (검색창). 왼쪽에 아이콘 자리를 비운다. */
   pill?: boolean;
+  /** 두세 자리 숫자 칸(분·초·BPM). 좌우 여백을 줄이고 가운데 맞춤한다. 56px 폭에서도 "59" 와 숫자 화살표가 들어간다. */
+  compact?: boolean;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { invalid = false, pill = false, className = "", ...rest },
+  { invalid = false, pill = false, compact = false, className = "", ...rest },
   ref,
 ) {
+  const shape = pill ? "rounded-pill pl-11 pr-4" : compact ? "rounded-control px-2 text-center tabular-nums" : "rounded-control px-4";
   return (
     <input
       ref={ref}
       aria-invalid={invalid || undefined}
-      className={`h-control-md ${pill ? "rounded-pill pl-11 pr-4" : "rounded-control px-4"} ${controlSkin(invalid)} ${className}`}
+      className={`h-control-md ${shape} ${controlSkin(invalid)} ${className}`}
       {...rest}
     />
   );

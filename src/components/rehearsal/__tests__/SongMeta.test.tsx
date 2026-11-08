@@ -44,6 +44,23 @@ describe("SongMeta", () => {
     expect(updateSongMeta).toHaveBeenCalledWith("s1", "p", "abc123", { keyRoot: "D" });
   });
 
+  it("names each field and saves the BPM and length typed into them", () => {
+    updateSongMeta.mockResolvedValue({ success: true });
+    render(<SongMeta song={song} playlistId="p" shareCode="abc123" onClose={vi.fn()} />);
+
+    expect(screen.getByRole("spinbutton", { name: "BPM" })).toHaveValue(107);
+    expect(screen.getByRole("spinbutton", { name: "길이 분" })).toHaveValue(4);
+    expect(screen.getByRole("spinbutton", { name: "길이 초" })).toHaveValue(44);
+
+    fireEvent.change(screen.getByRole("spinbutton", { name: "BPM" }), { target: { value: "120" } });
+    fireEvent.change(screen.getByRole("spinbutton", { name: "길이 분" }), { target: { value: "3" } });
+    fireEvent.change(screen.getByRole("spinbutton", { name: "길이 초" }), { target: { value: "5" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "키 메모" }), { target: { value: "capo 2" } });
+    fireEvent.blur(screen.getByRole("textbox", { name: "키 메모" }));
+
+    expect(updateSongMeta).toHaveBeenLastCalledWith("s1", "p", "abc123", { keyMemo: "capo 2", tempoBpm: 120, durationSeconds: 185 });
+  });
+
   it("folds through the card and links the metronome at the song's BPM", () => {
     const onClose = vi.fn();
     render(<SongMeta song={song} playlistId="p" shareCode="abc123" onClose={onClose} />);
