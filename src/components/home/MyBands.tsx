@@ -1,5 +1,6 @@
 import Link from "next/link";
 import GuitarIcon from "../ui/GuitarIcon";
+import Shelf from "../ui/Shelf";
 import type { MyTeam } from "@/actions/team";
 import { showDday, showDdayLabel } from "@/domain/team";
 
@@ -17,11 +18,11 @@ export default function MyBands({ teams }: { teams: MyTeam[] }) {
       <h2 id="my-bands-title" className="mb-3 text-h3 font-bold text-text">
         내 밴드
       </h2>
-      <ul className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <Shelf>
         {teams.map((team) => {
           const dday = showDdayLabel(showDday(team.nextShowAt, now));
           return (
-            <li key={team.id} className="w-36 shrink-0 snap-start">
+            <li key={team.id} className="w-36">
               {/* Same as the playlist tiles: a band home renders per request, so prefetching buys nothing. */}
               <Link href={`/band/${team.id}`} prefetch={false} className="group block">
                 {/* The same violet as the band home hero (existing tokens only). */}
@@ -43,7 +44,7 @@ export default function MyBands({ teams }: { teams: MyTeam[] }) {
             </li>
           );
         })}
-      </ul>
+      </Shelf>
     </section>
   );
 }

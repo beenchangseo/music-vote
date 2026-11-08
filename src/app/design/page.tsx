@@ -11,7 +11,7 @@ import Input from "@/components/ui/Input";
 import PlayPauseIcon from "@/components/ui/PlayPauseIcon";
 import RoundButton, { ROUND_BARE_TONES, ROUND_DISC_TONES, ROUND_VOTE_TONES, RoundLink, RoundRow } from "@/components/ui/RoundButton";
 import ScreenToolbar, { ToolbarButton } from "@/components/ui/ScreenToolbar";
-import { COLOR_GROUPS, COLORS, HEIGHTS, MOTION, RADII, SHADOWS, TYPE, contrastRatio, type ColorToken, type Pairing } from "@/components/ui/tokens";
+import { COLOR_GROUPS, COLORS, HEIGHTS, INSETS, MOTION, RADII, SHADOWS, TYPE, contrastRatio, type ColorToken, type Pairing } from "@/components/ui/tokens";
 import Avatar, { AvatarStack } from "@/components/ui/Avatar";
 import Badge, { BADGE_TONES } from "@/components/ui/Badge";
 import ButtonGroup from "@/components/ui/ButtonGroup";
@@ -19,6 +19,8 @@ import EmptyState from "@/components/ui/EmptyState";
 import Field from "@/components/ui/Field";
 import InlineNotice from "@/components/ui/InlineNotice";
 import { RankNumber, SongRow } from "@/components/ui/ListRow";
+import { MenuItemButton, MenuItemLink, MenuPanel } from "@/components/ui/Menu";
+import Shelf from "@/components/ui/Shelf";
 import Textarea from "@/components/ui/Textarea";
 import { DialogDemo, HoverSample, ListGroupDemo, ModalDemo, MotionDemo, NoticeDemo, SegmentedDemo, SongRowActionsDemo, SwitchDemo, TabBarDemo } from "./demos";
 
@@ -83,6 +85,9 @@ export default function DesignPage() {
             </li>
           ))}
         </ul>
+        {INSETS.map((t) => (
+          <TokenLabel key={t.name} token={t} />
+        ))}
       </Section>
 
       <Section title="그림자" note="다크에서 층은 표면 색으로 만들어요. 그림자는 떠 있는 것에만.">
@@ -494,6 +499,35 @@ export default function DesignPage() {
           <Avatar name="도윤" size="lg" />
           <AvatarStack names={["창빈", "민지", "도윤", "서연", "지호"]} />
         </div>
+      </Section>
+
+      <Section title="Menu" note="눌러 여는 작은 메뉴(로그인 메뉴). 판은 트리거 바로 아래 오른쪽에 붙고, 줄은 44px 에 위험한 동작만 danger 예요. 판이 넘치는 부분을 잘라서 포커스 링은 줄 안쪽에 그려요.">
+        <div className="flex h-60 justify-end">
+          <div className="relative flex self-start">
+            <RoundButton tone="plain" size="md" aria-label="메뉴 예시" aria-expanded>
+              <Avatar name="창빈" size="md" />
+            </RoundButton>
+            <MenuPanel className="w-44">
+              <MenuItemLink href="/design">문의하기</MenuItemLink>
+              <MenuItemButton>로그아웃</MenuItemButton>
+              <MenuItemButton disabled>확인하는 중…</MenuItemButton>
+              <div className="border-t border-border">
+                <MenuItemButton tone="danger">탈퇴하기</MenuItemButton>
+              </div>
+            </MenuPanel>
+          </div>
+        </div>
+      </Section>
+
+      <Section title="Shelf" note="가로로 넘기는 선반(홈의 내 밴드). 페이지 좌우 여백까지 넘쳐서 카드가 화면 끝에서 잘리고, 첫 카드는 본문 왼쪽 선에 서요. 여백을 지우는 음수 margin 은 Shelf 안에만 있어요.">
+        <Shelf>
+          {["새벽세시", "토요일 합주팀", "교회 찬양팀", "동아리 밴드", "버스킹"].map((name) => (
+            <li key={name} className="w-28">
+              <span className="block aspect-square rounded-control bg-surface-hover" />
+              <span className="mt-2 block truncate text-sm font-semibold text-text">{name}</span>
+            </li>
+          ))}
+        </Shelf>
       </Section>
 
       <Section title="Field · Textarea" note="라벨은 위, 도움말·오류는 아래. 오류는 danger-fg 테두리와 aria-invalid.">
