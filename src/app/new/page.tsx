@@ -5,6 +5,7 @@ import MyPlaylists from "@/components/home/MyPlaylists";
 import LoginButton from "@/components/auth/LoginButton";
 import GuitarIcon from "@/components/ui/GuitarIcon";
 import { buttonClassName } from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { getCurrentUser } from "@/lib/auth";
 import { getMyPlaylists } from "@/actions/playlist";
 import { getMyTeams, getTeamHome } from "@/actions/team";
@@ -71,12 +72,12 @@ export default async function NewPlaylistPage({ searchParams }: PageProps) {
           </div>
 
           {bandProblem ? (
-            <div className="bg-surface border border-border rounded-2xl p-6 text-center">
+            <Card padding="lg" className="text-center">
               <p className="text-body text-text mb-5 font-semibold">{bandProblem}</p>
               <Link href="/" className={buttonClassName({ size: "md" })}>
                 홈으로
               </Link>
-            </div>
+            </Card>
           ) : (
             <>
               {/* Heading */}
@@ -100,7 +101,7 @@ export default async function NewPlaylistPage({ searchParams }: PageProps) {
                   <MyPlaylists dbPlaylists={dbPlaylists} />
                 </>
               ) : (
-                <div className="bg-surface border border-border rounded-2xl p-6 text-center">
+                <Card padding="lg" className="text-center">
                   <p className="text-body text-text mb-2 font-semibold">
                     플레이리스트를 만들려면 로그인이 필요해요
                   </p>
@@ -110,7 +111,7 @@ export default async function NewPlaylistPage({ searchParams }: PageProps) {
                   </p>
                   {/* Keep ?band= through login, or the room is made outside the band without notice. */}
                   <LoginButton next={bandId ? `/new?band=${encodeURIComponent(bandId)}` : "/new"} />
-                </div>
+                </Card>
               )}
             </>
           )}

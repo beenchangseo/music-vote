@@ -12,14 +12,14 @@ export default function HomeSkeleton() {
           홈을 불러오는 중이에요
         </p>
         <div aria-hidden className="motion-safe:animate-pulse-soft">
-          <div className="h-8 w-28 rounded-lg bg-surface" />
-          <div className="mt-10 h-7 w-3/4 rounded-lg bg-surface" />
-          <div className="mt-2 h-7 w-1/2 rounded-lg bg-surface" />
+          <div className="h-8 w-28 rounded-badge bg-surface" />
+          <div className="mt-10 h-7 w-3/4 rounded-badge bg-surface" />
+          <div className="mt-2 h-7 w-1/2 rounded-badge bg-surface" />
           <div className="mt-6 h-12 w-full rounded-pill bg-surface" />
-          <div className="mt-10 h-6 w-32 rounded-lg bg-surface" />
+          <div className="mt-10 h-6 w-32 rounded-badge bg-surface" />
           <div className="mt-3 grid grid-cols-2 gap-2">
             {Array.from({ length: 4 }, (_, i) => (
-              <div key={i} className="h-16 rounded-control bg-surface" />
+              <div key={i} className="h-16 rounded-card bg-surface" />
             ))}
           </div>
         </div>

@@ -14,6 +14,7 @@ import Button from "../ui/Button";
 import Card from "../ui/Card";
 import IconButton from "../ui/IconButton";
 import Input from "../ui/Input";
+import { ListRowIcon } from "../ui/ListRow";
 import SegmentedControl, { type SegmentOption } from "../ui/SegmentedControl";
 import Switch from "../ui/Switch";
 import type { VotingMode } from "@/domain/types";
@@ -197,13 +198,13 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
         {/* Outline, not filled: the form sits on a surface sheet at home and on bg at /new, and the tonal and
             QR fills inside have to stay one step above either. */}
         <Card variant="outline" padding="lg" className="text-center">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-upvote/20 flex items-center justify-center">
+          <div className="size-12 mx-auto mb-4 rounded-pill bg-upvote/20 flex items-center justify-center">
             <svg className="w-6 h-6 text-upvote" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
             </svg>
           </div>
 
-          <h2 className="text-xl font-bold text-text mb-1">{created.title}</h2>
+          <h2 className="text-h3 font-bold text-text mb-1">{created.title}</h2>
           <p className="text-sm text-text-muted mb-6">
             만들었어요. 단톡방에 바로 공유해보세요.
           </p>
@@ -244,7 +245,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
 
           {showQR && (
             <div className="mt-3 animate-fade-in">
-              <div className="bg-surface-hover rounded-xl p-3 inline-block">
+              <div className="bg-surface-hover rounded-control p-3 inline-block">
                 <Image
                   src={qrUrl}
                   alt="QR 코드"
@@ -395,11 +396,11 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
         {/* 투표 마감일 */}
         <div className="px-4 py-3">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-              <svg className="w-5 h-5 text-primary-fg" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <ListRowIcon className="shrink-0 mt-0.5 text-primary-fg">
+              <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
               </svg>
-            </div>
+            </ListRowIcon>
             <div className="flex-1 min-w-0">
               <label className="block text-sm text-text font-medium text-left">투표 마감일</label>
               <p className="text-caption text-text-muted mt-0.5 mb-2 text-left">마감일이 지나면 투표가 종료됩니다</p>
@@ -425,11 +426,11 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
         {/* 셋리스트 곡 수 */}
         <div className="px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <svg className="w-5 h-5 text-primary-fg" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <ListRowIcon className="shrink-0 text-primary-fg">
+              <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
               </svg>
-            </div>
+            </ListRowIcon>
             <div className="flex-1 min-w-0">
               <label className="block text-sm text-text font-medium text-left">셋리스트 곡 수</label>
               <p className="text-caption text-text-muted mt-0.5 text-left">투표 종료 후 상위 N곡이 셋리스트로 선정됩니다</p>
@@ -438,7 +439,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
               <IconButton onClick={() => setSetlistCount((c) => Math.max(0, c - 1))} disabled={setlistCount <= 0} aria-label="곡 수 줄이기">
                 <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" d="M5 12h14" /></svg>
               </IconButton>
-              <span className={`min-w-[5rem] text-center text-sm tabular-nums ${setlistCount > 0 ? "font-semibold text-text" : "text-text-subtle"}`}>{setlistCount > 0 ? `${setlistCount}곡` : "정하지 않음"}</span>
+              <span className={`min-w-20 text-center text-sm tabular-nums ${setlistCount > 0 ? "font-semibold text-text" : "text-text-subtle"}`}>{setlistCount > 0 ? `${setlistCount}곡` : "정하지 않음"}</span>
               <IconButton onClick={() => setSetlistCount((c) => Math.min(30, c + 1))} disabled={setlistCount >= 30} aria-label="곡 수 늘리기">
                 <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" d="M12 5v14M5 12h14" /></svg>
               </IconButton>

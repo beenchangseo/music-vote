@@ -3,6 +3,7 @@
 import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import Button from "../ui/Button";
+import Card from "../ui/Card";
 import GuitarIcon from "../ui/GuitarIcon";
 import { RoomCover } from "../band/BandArt";
 
@@ -89,25 +90,31 @@ export default function MyPlaylists({ loggedIn = true, dbPlaylists = [] }: MyPla
       {/* Spotify home recents: two columns, cover flush left, title beside it. */}
       <div className="grid grid-cols-2 gap-2">
         {visible.map((pl) => (
-          <Link
+          // The card clips the cover to its corners, which also clips the link's focus outline, so the card draws the ring.
+          <Card
             key={pl.shareCode}
-            href={`/playlist/${pl.shareCode}`}
-            // Playlist pages render per request, so a prefetch only brings a ~236-byte shell. With six tiles it
-            // cost 12 server calls per home view and piled onto cold starts (2~8s in the network tab, 2026-10-06).
-            prefetch={false}
-            className="flex h-16 min-w-0 items-center gap-2.5 overflow-hidden rounded-control bg-surface pr-2 transition-colors hover:bg-surface-hover"
+            padding="none"
+            className="min-w-0 overflow-hidden transition-colors hover:bg-surface-hover has-focus-visible:ring-2 has-focus-visible:ring-focus-ring has-focus-visible:ring-offset-2 has-focus-visible:ring-offset-bg"
           >
-            <RoomCover thumbs={pl.coverThumbs ?? []} sizes="64px" square className="h-16 w-16 shrink-0" />
-            <span className="min-w-0 flex-1">
-              <span className="line-clamp-2 break-keep text-sm font-semibold leading-snug text-text">{pl.title}</span>
-              {pl.teamName && (
-                <span className="mt-0.5 flex min-w-0 items-center gap-1 text-[11px] text-text-muted">
-                  <GuitarIcon className="h-3 w-3 shrink-0" />
-                  <span className="truncate">{pl.teamName}</span>
-                </span>
-              )}
-            </span>
-          </Link>
+            <Link
+              href={`/playlist/${pl.shareCode}`}
+              // Playlist pages render per request, so a prefetch only brings a ~236-byte shell. With six tiles it
+              // cost 12 server calls per home view and piled onto cold starts (2~8s in the network tab, 2026-10-06).
+              prefetch={false}
+              className="flex h-16 items-center gap-2.5 pr-2"
+            >
+              <RoomCover thumbs={pl.coverThumbs ?? []} sizes="64px" square className="h-16 w-16 shrink-0" />
+              <span className="min-w-0 flex-1">
+                <span className="line-clamp-2 break-keep text-sm font-semibold leading-snug text-text">{pl.title}</span>
+                {pl.teamName && (
+                  <span className="mt-0.5 flex min-w-0 items-center gap-1 text-caption text-text-muted">
+                    <GuitarIcon className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{pl.teamName}</span>
+                  </span>
+                )}
+              </span>
+            </Link>
+          </Card>
         ))}
       </div>
       {!expanded && hiddenCount > 0 && (
