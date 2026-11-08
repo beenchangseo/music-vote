@@ -19,7 +19,7 @@ description: Plypick 의 Server Action(src/actions/*) 을 새로 만들거나 �
 2. **클라이언트를 고른다.**
    - `createServerSupabaseClient()` 는 publishable 키 + 사용자 세션이다. RLS 가 적용된다
    - `createAdminClient()` 는 secret 키(service_role)다. RLS 를 건너뛰므로 **권한 검사를 코드에서 반드시** 한다.
-     `votes`·`teams`·`team_members`·`playlist_admin` 과 `songs` UPDATE 는 공개 키로 닿지 않는다(`docs/adr/0013`)
+     `votes`·`teams`·`team_members`·`playlist_admin` 과 `songs` INSERT·UPDATE 는 공개 키로 닿지 않는다(`docs/adr/0013`)
 3. **검사를 이 순서로 한다.** 로그인(`getCurrentUser`) → 입력 검사(domain 함수) → 보관 합주방
    (`assertPlaylistWritable`·`assertPlaylistWritableBySong`, `docs/adr/0012`) → 역할(방장 `assertPlaylistAdmin`,
    셋리스트 편집 `assertSetlistEditor`, 밴드는 `team.ts` 의 `readMyRole`). 플레이리스트에 쓰는 새 경로는 보관 검사를

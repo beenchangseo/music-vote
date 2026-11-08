@@ -12,15 +12,25 @@ import MyPlaylists from "@/components/home/MyPlaylists";
 import MyBands from "@/components/home/MyBands";
 import LeftBandNotice from "@/components/band/LeftBandNotice";
 import { HomeBandCard } from "@/components/band/BandPromptCard";
+import ProductShot from "@/components/guide/ProductShot";
 import { buttonClassName } from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import InlineNotice from "@/components/ui/InlineNotice";
+import Shelf from "@/components/ui/Shelf";
 import type { BandCandidate } from "@/components/band/CreateBandSheet";
 import { getCurrentUser, hasAuthCookie } from "@/lib/auth";
 import { BAND_PROMPT_COOKIE, parseDismissals } from "@/lib/prompt-dismissals";
 import { getMyPlaylists, type MyPlaylistDbEntry } from "@/actions/playlist";
 import { getMyTeams } from "@/actions/team";
-import { HOME_DESCRIPTION, HOME_TITLE, homeJsonLd, jsonLdScript, pageMetadata } from "@/lib/seo";
+import {
+  GUIDE_ARTICLES,
+  HOME_DESCRIPTION,
+  HOME_TITLE,
+  PRODUCT_SCREENSHOTS,
+  homeJsonLd,
+  jsonLdScript,
+  pageMetadata,
+} from "@/lib/seo";
 
 // `?left=1` and other query variants are the same page.
 export const metadata: Metadata = pageMetadata({
@@ -163,6 +173,13 @@ const COMPARE_ROWS = [
 const SECTION_TITLE = "break-keep text-h2 font-bold text-text lg:text-h1";
 const SECTION_LEAD = "mt-2.5 max-w-xl break-keep text-body text-text-muted lg:text-h4 lg:font-normal";
 
+// The screens the landing shows, which the web app's structured data also lists as its screenshots.
+const LANDING_SCREENS = [
+  { shot: PRODUCT_SCREENSHOTS.candidates, caption: "후보곡 투표" },
+  { shot: PRODUCT_SCREENSHOTS.setlist, caption: "셋리스트와 총 공연 시간" },
+  { shot: PRODUCT_SCREENSHOTS.bandHome, caption: "밴드 홈" },
+] as const;
+
 /**
  * 로그아웃 랜딩. 로그인 쿠키가 없거나 세션이 끝난 사람. 검색엔진이 읽는 화면이라 모든 글이 서버
  * HTML 로 나가고, 섹션 제목마다 사람들이 검색하는 말(밴드·곡 투표·합주곡·셋리스트)이 들어간다.
@@ -172,7 +189,7 @@ function Landing({ left }: { left: boolean }) {
   return (
     <main className="min-h-full">
       {/* Structured data for search engines. Only the landing: the signed-in home is personal. */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(homeJsonLd(LANDING_FAQ)) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(homeJsonLd(LANDING_FAQ, LANDING_SCREENS.map((screen) => screen.shot))) }} />
       <div className="mx-auto w-full max-w-md px-4 pb-16 pt-6 lg:max-w-6xl lg:px-6">
         {/* 디자인 2회차 6A: once, right after leaving a band. */}
         <LeftBandNotice left={left} />
@@ -255,6 +272,20 @@ function Landing({ left }: { left: boolean }) {
           </div>
         </section>
 
+        <section aria-labelledby="screens-title" className="mt-16 lg:mt-28">
+          <h2 id="screens-title" className={SECTION_TITLE}>
+            후보곡 투표부터 밴드 홈까지
+          </h2>
+          <p className={SECTION_LEAD}>가상의 밴드로 만든 실제 화면이에요.</p>
+          <Shelf className="mt-5">
+            {LANDING_SCREENS.map(({ shot, caption }) => (
+              <li key={shot.src} className="w-60">
+                <ProductShot shot={shot} caption={caption} sizes="240px" />
+              </li>
+            ))}
+          </Shelf>
+        </section>
+
         <section aria-labelledby="compare-title" className="mt-16 lg:mt-28">
           <h2 id="compare-title" className={SECTION_TITLE}>
             단톡방 vs 플레이리스트
@@ -314,10 +345,12 @@ function Landing({ left }: { left: boolean }) {
               <HeroCTA variant="landing" />
             </div>
           </Card>
-          {/* Keyword anchor text for the two pages search engines should reach next. */}
+          {/* Keyword anchor text for the pages search engines should reach next. */}
           <nav aria-label="더 알아보기" className="mt-4 flex flex-col">
             {[
-              { href: "/guide", label: "셋리스트 정하는 방법 보기" },
+              { href: GUIDE_ARTICLES.setlist.path, label: GUIDE_ARTICLES.setlist.headline },
+              { href: GUIDE_ARTICLES.chooseSongs.path, label: GUIDE_ARTICLES.chooseSongs.headline },
+              { href: "/guide", label: "Plypick 사용 가이드" },
               { href: "/about", label: "밴드 곡 투표 서비스 소개" },
             ].map((link) => (
               <a
