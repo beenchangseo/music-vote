@@ -11,14 +11,14 @@ export function LandingShareChat() {
         </span>
         <div className="flex min-w-0 flex-col gap-1.5">
           <span className="text-caption text-text-muted">보컬 지민</span>
-          <span className="self-start rounded-[4px_14px_14px_14px] bg-surface-hover px-3 py-2 text-sm text-text">
+          <span className="self-start rounded-control rounded-tl-badge bg-surface-hover px-3 py-2 text-sm text-text">
             이번 주 일요일까지 투표해 줘!
           </span>
           <div className="w-62 max-w-full overflow-hidden rounded-card border border-border bg-surface-hover">
             <div className="relative h-31 overflow-hidden bg-primary-tint p-3.5">
               <span aria-hidden className="absolute -right-7 -top-10 size-35 rounded-pill bg-primary opacity-60" />
               <span aria-hidden className="absolute right-12 top-2.5 size-28 rounded-pill bg-primary-hover opacity-90" />
-              <p className="relative text-[11px] font-bold text-text">PLYPICK</p>
+              <p className="relative text-caption font-bold text-text">PLYPICK</p>
               <p className="relative mt-7 text-h3 font-black text-text">10월 정기 합주</p>
             </div>
             <div className="px-3.5 py-3">

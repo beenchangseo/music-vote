@@ -196,7 +196,7 @@ function Landing({ left }: { left: boolean }) {
             </div>
           </section>
 
-          <section aria-labelledby="vote-title" className="lg:max-w-[500px] lg:flex-1">
+          <section aria-labelledby="vote-title" className="lg:max-w-lg lg:flex-1">
             <h2 id="vote-title" className="break-keep text-h2 font-bold text-text">
               누르는 순간 순위가 바뀌어요
             </h2>
@@ -212,7 +212,7 @@ function Landing({ left }: { left: boolean }) {
         </div>
 
         {/* Phones: heading, poster, features. Wide: poster left, heading and features right. */}
-        <section aria-labelledby="setlist-title" className="mt-16 grid gap-y-5 lg:mt-28 lg:grid-cols-2 lg:gap-x-16">
+        <section aria-labelledby="setlist-title" className="mt-16 grid grid-cols-1 gap-y-5 lg:mt-28 lg:grid-cols-2 lg:gap-x-16">
           <div className="lg:col-start-2 lg:row-start-1 lg:self-end">
             <h2 id="setlist-title" className={SECTION_TITLE}>
               투표가 끝나면 셋리스트가 나와요
@@ -237,7 +237,7 @@ function Landing({ left }: { left: boolean }) {
         </section>
 
         {/* Phones: heading, chat, steps. Wide: heading and steps left, chat right. */}
-        <section aria-labelledby="share-title" className="mt-16 grid gap-y-5 lg:mt-28 lg:grid-cols-2 lg:gap-x-16">
+        <section aria-labelledby="share-title" className="mt-16 grid grid-cols-1 gap-y-5 lg:mt-28 lg:grid-cols-2 lg:gap-x-16">
           <div className="lg:col-start-1 lg:row-start-1 lg:self-end">
             <h2 id="share-title" className={SECTION_TITLE}>
               멤버는 카톡 카드만 누르면 돼요
@@ -376,7 +376,7 @@ function LandingFeature({ title, body, icon }: { title: string; body: string; ic
 function BrandMark() {
   return (
     <div className="flex items-center gap-2">
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-indigo-600 shadow-lg shadow-primary/30">
+      <div className="flex h-8 w-8 items-center justify-center rounded-control bg-gradient-to-br from-primary to-indigo-600 shadow-lg shadow-primary/30">
         <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
           <path
             strokeLinecap="round"
@@ -385,7 +385,7 @@ function BrandMark() {
           />
         </svg>
       </div>
-      <span className="text-base font-bold text-text">Plypick</span>
+      <span className="text-body font-bold text-text">Plypick</span>
     </div>
   );
 }

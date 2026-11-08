@@ -60,9 +60,12 @@ export function MotionDemo({ durations }: { durations: readonly ScaleToken[] }) 
               {d.name} {d.value}
             </span>
             <span className="relative h-6 flex-1 rounded-pill bg-surface-hover">
-              <span
-                className={`absolute top-0 size-6 rounded-pill bg-primary transition-[left] ease-standard ${d.utility} ${moved ? "left-[calc(100%-1.5rem)]" : "left-0"}`}
-              />
+              {/* The dot runs on a track one dot narrower, so left-full stops it flush with the end. */}
+              <span className="absolute inset-y-0 left-0 right-6">
+                <span
+                  className={`absolute top-0 size-6 rounded-pill bg-primary transition-[left] ease-standard ${d.utility} ${moved ? "left-full" : "left-0"}`}
+                />
+              </span>
             </span>
           </li>
         ))}

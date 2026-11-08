@@ -157,6 +157,16 @@ export const HEIGHTS: readonly ScaleToken[] = [
   { name: "row-song", cssVar: "--spacing-row-song", value: "4.5rem", utility: "min-h-row-song", use: "곡 행 72px" },
 ];
 
+export const INSETS: readonly ScaleToken[] = [
+  {
+    name: "safe-bottom",
+    cssVar: "--spacing-safe-bottom",
+    value: "env(safe-area-inset-bottom)",
+    utility: "pb-safe-bottom",
+    use: "홈 인디케이터 자리. body 가 비우고, 그 자리를 스스로 칠하는 아래 막대는 data-safe-bottom 을 단다",
+  },
+];
+
 export const SHADOWS: readonly ScaleToken[] = [
   { name: "float", cssVar: "--shadow-float", value: "0 12px 32px -8px rgb(0 0 0 / 0.6)", utility: "shadow-float", use: "시트·토스트·FAB 만" },
 ];

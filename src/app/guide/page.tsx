@@ -1,5 +1,8 @@
+import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { buttonClassName } from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -10,11 +13,22 @@ export const metadata: Metadata = pageMetadata({
   ogTitle: "셋리스트 정하는 방법 - Plypick",
 });
 
+function StepHeading({ step, children }: { step: number; children: ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 mb-3">
+      <div className="size-8 rounded-control bg-primary-tint flex items-center justify-center text-on-primary-tint font-bold text-sm">
+        {step}
+      </div>
+      <h2 className="text-h3 font-semibold text-text">{children}</h2>
+    </div>
+  );
+}
+
 export default function GuidePage() {
   return (
     <main className="min-h-full bg-bg">
       <div className="max-w-2xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold text-text mb-4">
+        <h1 className="text-h1 font-bold text-text mb-4">
           셋리스트 정하는 방법
         </h1>
         <p className="text-text-muted mb-8">
@@ -22,16 +36,8 @@ export default function GuidePage() {
         </p>
 
         <div className="space-y-10 text-text-muted leading-relaxed">
-          {/* Step 1 */}
           <section>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary-fg font-bold text-sm">
-                1
-              </div>
-              <h2 className="text-xl font-semibold text-text">
-                플레이리스트 만들기
-              </h2>
-            </div>
+            <StepHeading step={1}>플레이리스트 만들기</StepHeading>
             <p>
               홈 화면에서 플레이리스트 이름을 입력해요.
               밴드 이름, 공연명, 날짜 등을 넣으면 구분하기 쉬워요.
@@ -44,16 +50,8 @@ export default function GuidePage() {
             </p>
           </section>
 
-          {/* Step 2 */}
           <section>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary-fg font-bold text-sm">
-                2
-              </div>
-              <h2 className="text-xl font-semibold text-text">
-                곡 후보 추가하기
-              </h2>
-            </div>
+            <StepHeading step={2}>곡 후보 추가하기</StepHeading>
             <p>
               YouTube에서 연주하고 싶은 곡을 검색하고, URL을 붙여넣으면 돼요.
               곡 제목, 아티스트, 썸네일이 자동으로 채워져요.
@@ -64,16 +62,8 @@ export default function GuidePage() {
             </p>
           </section>
 
-          {/* Step 3 */}
           <section>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary-fg font-bold text-sm">
-                3
-              </div>
-              <h2 className="text-xl font-semibold text-text">
-                멤버에게 링크 공유
-              </h2>
-            </div>
+            <StepHeading step={3}>멤버에게 링크 공유</StepHeading>
             <p>
               플레이리스트를 만들면 공유 링크와 QR 코드가 생성돼요.
               카카오톡 단톡방에 링크를 보내면 멤버들이 바로 참여할 수 있어요.
@@ -83,16 +73,8 @@ export default function GuidePage() {
             </p>
           </section>
 
-          {/* Step 4 */}
           <section>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary-fg font-bold text-sm">
-                4
-              </div>
-              <h2 className="text-xl font-semibold text-text">
-                투표하기
-              </h2>
-            </div>
+            <StepHeading step={4}>투표하기</StepHeading>
             <p>
               각 곡에 찬성(+1) 또는 반대(-1) 투표를 해요.
               같은 버튼을 다시 누르면 투표가 취소되고,
@@ -104,25 +86,16 @@ export default function GuidePage() {
             </p>
           </section>
 
-          {/* Step 5 */}
           <section>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary-fg font-bold text-sm">
-                5
-              </div>
-              <h2 className="text-xl font-semibold text-text">
-                결과 확인 및 공유
-              </h2>
-            </div>
+            <StepHeading step={5}>결과 확인 및 공유</StepHeading>
             <p>
               투표가 끝나면 &quot;결과 공유&quot; 버튼으로 결과를 텍스트로 복사할 수 있어요.
               단톡방에 붙여넣으면 셋리스트 확정 완료.
             </p>
           </section>
 
-          {/* Tips */}
-          <section className="bg-surface border border-border rounded-2xl p-6">
-            <h2 className="text-lg font-semibold text-text mb-3">
+          <Card padding="lg">
+            <h2 className="text-h4 font-semibold text-text mb-3">
               효과적인 투표를 위한 팁
             </h2>
             <ul className="space-y-2 text-text-muted text-sm">
@@ -131,13 +104,10 @@ export default function GuidePage() {
               <li>• 각 멤버가 직접 곡을 추가하면 참여도가 높아져요</li>
               <li>• 리스트 보기로 빠르게 훑고, 카드 보기로 곡을 미리 들어봐요</li>
             </ul>
-          </section>
+          </Card>
 
           <section className="text-center">
-            <Link
-              href="/"
-              className="inline-block px-6 py-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold transition-all active:scale-95"
-            >
+            <Link href="/" className={buttonClassName({ size: "lg" })}>
               지금 플레이리스트 만들기
             </Link>
           </section>

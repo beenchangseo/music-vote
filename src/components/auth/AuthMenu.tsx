@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Avatar from "../ui/Avatar";
+import { MenuItemButton, MenuItemLink, MenuPanel } from "../ui/Menu";
+import RoundButton from "../ui/RoundButton";
 import {
   deleteAccount,
   previewAccountDeletion,
@@ -130,49 +131,36 @@ export default function AuthMenu({ nickname, avatarUrl, embedded = false }: Auth
   if (!embedded && pathname?.startsWith("/playlist/")) return null;
 
   return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
+    <div ref={ref} className="relative flex">
+      <RoundButton
+        tone="plain"
+        size="md"
         onClick={() => setOpen((v) => !v)}
         aria-label={`${nickname} 계정 메뉴`}
         aria-expanded={open}
-        className="group block rounded-pill"
+        className="group"
       >
         <Avatar name={nickname} src={avatarUrl} size="md" className="ring-1 ring-border transition-shadow group-hover:ring-border-strong" />
-      </button>
+      </RoundButton>
 
       {open && (
-        // z-40: the playlist header renders this menu embedded (outside the fixed z-50 slot), and the
-        // cover below it is positioned, so without a z-index the cover painted over the menu. Below sheets (z-[90]).
-        <div className="absolute right-0 top-11 z-40 w-44 rounded-control border border-border bg-surface shadow-float animate-fade-in overflow-hidden">
-          <div className="px-3 py-2 border-b border-border">
+        <MenuPanel className="w-44">
+          <div className="border-b border-border px-4 py-2">
             <p className="text-caption text-text-subtle">로그인됨</p>
             <p className="text-sm font-medium text-text truncate">{nickname}</p>
           </div>
-          <Link
-            href="/support"
-            onClick={() => setOpen(false)}
-            className="flex min-h-11 items-center px-3 text-sm text-text-muted hover:bg-surface-hover hover:text-text transition-colors"
-          >
+          <MenuItemLink href="/support" onClick={() => setOpen(false)}>
             문의하기
-          </Link>
+          </MenuItemLink>
           <form action="/auth/logout" method="post">
-            <button
-              type="submit"
-              className="w-full text-left px-3 py-2.5 text-sm text-text-muted hover:bg-surface-hover hover:text-text transition-colors"
-            >
-              로그아웃
-            </button>
+            <MenuItemButton type="submit">로그아웃</MenuItemButton>
           </form>
-          <button
-            type="button"
-            onClick={confirmDeleteAccount}
-            disabled={deletePhase !== "idle"}
-            className="flex min-h-11 w-full items-center border-t border-border px-3 text-left text-sm text-danger-fg hover:bg-surface-hover transition-colors disabled:opacity-60"
-          >
-            {DELETE_LABEL[deletePhase]}
-          </button>
-        </div>
+          <div className="border-t border-border">
+            <MenuItemButton tone="danger" onClick={confirmDeleteAccount} disabled={deletePhase !== "idle"}>
+              {DELETE_LABEL[deletePhase]}
+            </MenuItemButton>
+          </div>
+        </MenuPanel>
       )}
     </div>
   );

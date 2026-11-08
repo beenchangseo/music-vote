@@ -57,7 +57,8 @@ export default function RootLayout({
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link rel="stylesheet" href={PRETENDARD_CSS} precedence="default" />
       </head>
-      <body className="min-h-full flex flex-col bg-bg text-text font-sans pb-[env(safe-area-inset-bottom)]">
+      {/* A bottom bar that paints the inset itself (data-safe-bottom) takes the padding over, so the two never stack. */}
+      <body className="min-h-full flex flex-col bg-bg text-text font-sans pb-safe-bottom has-data-safe-bottom:pb-0">
         <DialogProvider>
           <div className="fixed top-2 right-2 z-50">
             <Suspense fallback={null}>

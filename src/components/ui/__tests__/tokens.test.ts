@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { COLORS, HEIGHTS, MOTION, RADII, SHADOWS, TYPE, contrastRatio } from "../tokens";
+import { COLORS, HEIGHTS, INSETS, MOTION, RADII, SHADOWS, TYPE, contrastRatio } from "../tokens";
 
 const css = readFileSync(fileURLToPath(new URL("../../../app/globals.css", import.meta.url)), "utf8");
 const cssVar = (name: string) => css.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1].trim();
@@ -19,7 +19,7 @@ describe("tokens.ts agrees with globals.css", () => {
     expect(cssVar(`--color-${name}`)?.toLowerCase()).toBe(hex);
   });
 
-  it.each([...TYPE, ...RADII, ...HEIGHTS, ...SHADOWS, ...MOTION].filter((t) => t.cssVar).map((t) => [t.cssVar, t.value]))("%s is %s", (v, value) => {
+  it.each([...TYPE, ...RADII, ...HEIGHTS, ...INSETS, ...SHADOWS, ...MOTION].filter((t) => t.cssVar).map((t) => [t.cssVar, t.value]))("%s is %s", (v, value) => {
     expect(cssVar(v)).toBe(value);
   });
 });

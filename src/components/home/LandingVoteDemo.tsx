@@ -4,6 +4,7 @@
 // 서버로 아무것도 보내지 않는 예시다. 첫 상태는 서버 HTML 로 나가 검색엔진도 읽는다.
 import { useState } from "react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import RoundButton from "../ui/RoundButton";
 
 type Cover = "violet" | "slate" | "night";
 
@@ -72,7 +73,7 @@ export default function LandingVoteDemo() {
               <p className="text-caption text-text-muted">{song.artist}</p>
             </div>
             <div className="flex shrink-0 items-center rounded-pill bg-surface-hover px-0.5">
-              <VoteButton label={`${song.title} 찬성`} pressed={myVote === 1} dir="up" onClick={() => vote(song.id, 1)} />
+              <VoteButton title={song.title} chosen={myVote === 1} dir="up" onClick={() => vote(song.id, 1)} />
               <span
                 className={`min-w-6 text-center text-body font-extrabold tabular-nums ${
                   score > 0 ? "text-success" : score < 0 ? "text-danger-fg" : "text-text-muted"
@@ -80,7 +81,7 @@ export default function LandingVoteDemo() {
               >
                 {score > 0 ? `+${score}` : score}
               </span>
-              <VoteButton label={`${song.title} 반대`} pressed={myVote === -1} dir="down" onClick={() => vote(song.id, -1)} />
+              <VoteButton title={song.title} chosen={myVote === -1} dir="down" onClick={() => vote(song.id, -1)} />
             </div>
           </li>
         ))}
@@ -89,31 +90,30 @@ export default function LandingVoteDemo() {
   );
 }
 
+/** The playlist's own arrow: a vote look without aria-pressed, and a label that says what a press does. */
 function VoteButton({
-  label,
-  pressed,
+  title,
+  chosen,
   dir,
   onClick,
 }: {
-  label: string;
-  pressed: boolean;
+  title: string;
+  chosen: boolean;
   dir: "up" | "down";
   onClick: () => void;
 }) {
-  const on = dir === "up" ? "bg-success-soft text-success" : "bg-danger-soft text-text";
+  const name = dir === "up" ? "찬성" : "반대";
   return (
-    <button
-      type="button"
-      aria-label={label}
-      aria-pressed={pressed}
+    <RoundButton
+      tone={dir === "up" ? "upvote" : "downvote"}
+      size="md"
+      chosen={chosen}
+      aria-label={chosen ? `${title} ${name} 취소` : `${title} ${name}`}
       onClick={onClick}
-      className={`flex size-11 items-center justify-center rounded-pill transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
-        pressed ? on : "text-text-muted hover:text-text"
-      }`}
     >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <path d={dir === "up" ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"} />
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d={dir === "up" ? "M4.5 15.75l7.5-7.5 7.5 7.5" : "M19.5 8.25l-7.5 7.5-7.5-7.5"} />
       </svg>
-    </button>
+    </RoundButton>
   );
 }
