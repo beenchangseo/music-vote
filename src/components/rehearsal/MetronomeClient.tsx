@@ -49,8 +49,8 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
         </div>
       </div>
 
-      {/* Metronome body */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 -mt-8">
+      {/* Metronome body. pb-8 lifts the centred block 16px above the middle of the space under the header. */}
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pb-8">
         {/* Beat indicators */}
         <p className="text-caption text-text-subtle mb-2">4/4 박자</p>
         <div className="flex gap-5 mb-6">

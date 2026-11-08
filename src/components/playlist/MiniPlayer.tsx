@@ -166,9 +166,9 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
               }}
               aria-label="재생 위치"
               aria-valuetext={`${formatTime(progress.current)} / ${formatTime(progress.duration)}`}
-              className="h-11 w-full cursor-pointer accent-text"
+              className="block h-11 w-full cursor-pointer accent-text"
             />
-            <div className="-mt-2 flex justify-between text-caption tabular-nums text-text-muted">
+            <div className="flex justify-between text-caption tabular-nums text-text-muted">
               <span>{formatTime(progress.current)}</span>
               <span>{formatTime(progress.duration)}</span>
             </div>
