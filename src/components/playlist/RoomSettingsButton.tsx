@@ -344,7 +344,7 @@ export default function RoomSettingsButton({
               {team ? (
                 team.isMember && team.id ? (
                   <ListGroup className="mt-2">
-                    <Link href={`/band/${team.id}`} className="-mx-4 block px-4 text-sm font-semibold text-text">
+                    <Link href={`/band/${team.id}`} className="block text-sm font-semibold text-text">
                       <ListRow
                         leading={<GuitarIcon className="size-4 text-text-muted" />}
                         trailing={<span className="text-text-muted">밴드 홈 ›</span>}
