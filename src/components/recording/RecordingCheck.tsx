@@ -135,6 +135,13 @@ function closeInput(input: LiveInput | null) {
   if (input.context && input.context.state !== "closed") void input.context.close();
 }
 
+// iOS Safari can leave the meter's AudioContext suspended or "interrupted" after getUserMedia switches the audio
+// session or the screen locks. The recording is fine, but frozen meters read as "no USB signal".
+function wakeMeters(input: LiveInput | null) {
+  const context = input?.context;
+  if (context && context.state !== "running" && context.state !== "closed") void context.resume().catch(() => {});
+}
+
 async function readMicPermission(): Promise<MicPermission> {
   try {
     const status = await navigator.permissions.query({ name: "microphone" as PermissionName });
@@ -304,6 +311,7 @@ export default function RecordingCheck() {
     input.track.addEventListener("mute", () => note("track-mute"));
     input.track.addEventListener("unmute", () => note("track-unmute"));
     inputRef.current = input;
+    wakeMeters(input);
     setMic({ phase: "live", input });
   }
 
@@ -343,6 +351,7 @@ export default function RecordingCheck() {
   function startTake(mode: "timed" | "manual") {
     const input = inputRef.current;
     if (!input || sessionRef.current?.recorder.state === "recording") return;
+    wakeMeters(input);
     if (urlRef.current) URL.revokeObjectURL(urlRef.current);
     urlRef.current = null;
 
@@ -400,7 +409,11 @@ export default function RecordingCheck() {
     input.devices = await listInputs();
     if (inputRef.current === input) setMic({ phase: "live", input: { ...input } });
   });
-  const onVisibilityChange = useEffectEvent(() => note(document.visibilityState === "hidden" ? "page-hidden" : "page-visible"));
+  const onVisibilityChange = useEffectEvent(() => {
+    const visible = document.visibilityState !== "hidden";
+    if (visible) wakeMeters(inputRef.current);
+    note(visible ? "page-visible" : "page-hidden");
+  });
   const onUnmount = useEffectEvent(() => {
     latestOpenRef.current += 1;
     const session = sessionRef.current;

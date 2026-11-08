@@ -81,7 +81,12 @@ const tone = Float32Array.from({ length: 4800 }, (_, i) => 0.5 * Math.sin((2 * M
 
 class FakeAudioContext {
   static instances: FakeAudioContext[] = [];
-  state: "running" | "closed" = "running";
+  static startState: "running" | "suspended" = "running";
+  state: "running" | "suspended" | "closed" = FakeAudioContext.startState;
+  resume() {
+    if (this.state !== "closed") this.state = "running";
+    return Promise.resolve();
+  }
   sampleRate = 48000;
   constructor() {
     FakeAudioContext.instances.push(this);
@@ -128,6 +133,7 @@ function grantWith(label: string, deviceId: string) {
 beforeEach(() => {
   FakeMediaRecorder.instances = [];
   FakeAudioContext.instances = [];
+  FakeAudioContext.startState = "running";
   tracks.length = 0;
   media.getUserMedia.mockReset();
   media.enumerateDevices.mockReset().mockResolvedValue([
@@ -181,6 +187,17 @@ describe("RecordingCheck", () => {
     expect(screen.getByRole("meter", { name: "L 입력 레벨" })).toBeInTheDocument();
     expect(screen.getByRole("meter", { name: "R 입력 레벨" })).toBeInTheDocument();
     expect(screen.getByText("에코 제거 끔")).toBeInTheDocument();
+  });
+
+  it("wakes a suspended meter after opening the input and when the page comes back", async () => {
+    FakeAudioContext.startState = "suspended";
+    await openUsbInput();
+    const context = FakeAudioContext.instances.at(-1)!;
+    expect(context.state).toBe("running");
+
+    context.state = "suspended";
+    fireEvent(document, new Event("visibilitychange"));
+    expect(context.state).toBe("running");
   });
 
   it("explains a refused permission and offers to ask again", async () => {
