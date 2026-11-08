@@ -77,8 +77,12 @@ describe("ds-inventory", () => {
 });
 
 describe("src", () => {
+  // Lints the whole tree: under a second alone, but past vitest's 5s default on a 2-core CI runner while every other
+  // file runs beside it (main a28824d, 2026-11-08).
+  const WHOLE_TREE_LINT_MS = 60_000;
+
   it("has no raw control or text field and no outline removed without a focus ring, even under an inline eslint-disable", async () => {
     const lintRules = ["raw-button", "raw-link", "raw-input", "focus-ring"];
     expect((await inventory()).filter((f) => lintRules.includes(f.category))).toEqual([]);
-  });
+  }, WHOLE_TREE_LINT_MS);
 });
