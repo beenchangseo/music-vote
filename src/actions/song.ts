@@ -1,8 +1,8 @@
 "use server";
 
-import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
-import { assertPlaylistWritable } from "@/lib/playlist-access";
+import { assertPlaylistWritable, songAddDenial, type SongAddDenial } from "@/lib/playlist-access";
 import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/domain/playlist-archive";
 import { isHostOrAdder } from "@/domain/playlist-host";
 import { extractVideoId, fetchVideoMetadata } from "@/lib/youtube";
@@ -15,7 +15,7 @@ import {
 } from "@/domain/song-meta";
 import { nestedRows } from "@/lib/supabase/nested";
 import { MAX_BPM, MIN_BPM } from "@/domain/tap-tempo";
-import type { KeyRoot, KeyMode, Genre, Difficulty } from "@/domain/types";
+import type { ActionResult, KeyRoot, KeyMode, Genre, Difficulty } from "@/domain/types";
 import { revalidatePath } from "next/cache";
 
 type CarriedSongMeta = {
@@ -90,20 +90,28 @@ async function findTeamSongMeta(playlistId: string, videoId: string): Promise<Ca
   }
 }
 
+export type AddSongReason = "not_logged_in" | "invalid_url" | SongAddDenial;
+
+export type AddSongResult = ActionResult<
+  { needsManualTitle: boolean; notEmbeddable: boolean; prefilledMeta: boolean },
+  AddSongReason
+>;
+
 export async function addSong(
   playlistId: string,
   youtubeUrl: string,
   shareCode: string,
   manualTitle?: string
-) {
-  if (!youtubeUrl || youtubeUrl.length > 500) {
-    throw new Error("올바른 YouTube URL을 입력해주세요.");
-  }
+): Promise<AddSongResult> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, reason: "not_logged_in" };
 
-  const videoId = extractVideoId(youtubeUrl);
-  if (!videoId) {
-    throw new Error("올바른 YouTube URL을 입력해주세요.");
-  }
+  const videoId = youtubeUrl && youtubeUrl.length <= 500 ? extractVideoId(youtubeUrl) : null;
+  if (!videoId) return { success: false, reason: "invalid_url" };
+
+  // 세션 토큰의 songs INSERT 는 v28 이 걷었다. 마감·보관 뒤 후보곡을 막는 곳은 이 검사 하나다(#88).
+  const denial = await songAddDenial(playlistId);
+  if (denial) return { success: false, reason: denial };
 
   // 제목·썸네일은 oEmbed, 재생시간·임베드 가능 여부는 Data API 가 준다.
   // 둘 다 실패해도 곡 추가는 진행한다. 밴드 방이면 키·BPM 이어받기(E4)도 같이 찾는다.
@@ -117,14 +125,7 @@ export async function addSong(
   const artist = metadata?.author_name || null;
   const thumbnailUrl = metadata?.thumbnail_url || `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
 
-  await assertPlaylistWritable(playlistId);
-
-  const user = await getCurrentUser();
-  if (!user) throw new Error("로그인이 필요합니다.");
-
-  const supabase = await createServerSupabaseClient();
-
-  const { error } = await supabase.from("songs").insert({
+  const { error } = await createAdminClient().from("songs").insert({
     playlist_id: playlistId,
     title,
     artist,

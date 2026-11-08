@@ -1,10 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createFakeClient, type FakeOp, type FakeResult } from "./fake-supabase";
 
 const state = vi.hoisted(() => ({
   admin: null as unknown as ReturnType<typeof createFakeClient>,
   session: null as unknown as ReturnType<typeof createFakeClient>,
-  assertPlaylistWritable: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -14,7 +13,6 @@ vi.mock("@/lib/supabase/server", () => ({
 vi.mock("@/lib/auth", () => ({
   getCurrentUser: vi.fn(async () => ({ id: "user-1", nickname: "기타", avatarUrl: null })),
 }));
-vi.mock("@/lib/playlist-access", () => ({ assertPlaylistWritable: state.assertPlaylistWritable }));
 vi.mock("@/lib/youtube", () => ({
   extractVideoId: () => "vid-123",
   fetchVideoMetadata: vi.fn(async () => ({
@@ -29,6 +27,8 @@ vi.mock("@/lib/youtube-data", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { getCurrentUser } from "@/lib/auth";
+import { fetchVideoMetadata } from "@/lib/youtube";
+import { fetchSingleVideoDetails } from "@/lib/youtube-data";
 import { addSong, removeSong } from "../song";
 
 const ROOM = "room-new";
@@ -36,6 +36,8 @@ const TEAM = "team-1";
 const URL = "https://youtu.be/vid-123";
 
 const ok = (data: unknown = null): FakeResult => ({ data, error: null });
+
+const OPEN_PLAYLIST = { creator_user_id: "host-1", deadline: null };
 
 const meta = (overrides: Record<string, unknown> = {}) => ({
   key_memo: "+3키",
@@ -47,22 +49,27 @@ const meta = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-/** Admin responder: the room's team, then the matching songs of the band. */
-function admin(room: FakeResult, songs: FakeResult = ok([])) {
+/**
+ * Admin responder. The E4 lookups read the room's band (team_id only) and then the band's songs; every other
+ * playlists read is the playlist itself.
+ */
+function admin(team: FakeResult, songs: FakeResult = ok([]), playlist: FakeResult = ok(OPEN_PLAYLIST)) {
   return (op: FakeOp): FakeResult => {
-    if (op.table === "playlists") return room;
-    if (op.table === "songs") return songs;
+    if (op.table === "playlists") return op.columns === "team_id" ? team : playlist;
+    if (op.table === "songs" && op.action === "select") return songs;
     return ok();
   };
 }
 
-const songInsert = () => state.session.ops.find((op) => op.table === "songs" && op.action === "insert");
-const songLookup = () => state.admin.ops.find((op) => op.table === "songs");
+/** Song rows written by either client. */
+const songInserts = () =>
+  [...state.admin.ops, ...state.session.ops].filter((op) => op.table === "songs" && op.action === "insert");
+const songInsert = () => songInserts()[0];
+const songLookup = () => state.admin.ops.find((op) => op.table === "songs" && op.action === "select");
 
 describe("addSong E4 key/BPM carry-over", () => {
   beforeEach(() => {
     state.session = createFakeClient();
-    state.assertPlaylistWritable.mockReset().mockResolvedValue(undefined);
   });
 
   it("copies the four values from the most recent matching song in the same band", async () => {
@@ -145,7 +152,9 @@ describe("addSong E4 key/BPM carry-over", () => {
   });
 
   it("still adds the song when the lookup throws", async () => {
-    state.admin = createFakeClient(() => {
+    state.admin = createFakeClient((op) => {
+      if (op.table === "playlists" && op.columns !== "team_id") return ok(OPEN_PLAYLIST);
+      if (op.action === "insert") return ok();
       throw new TypeError("fetch failed");
     });
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -153,6 +162,57 @@ describe("addSong E4 key/BPM carry-over", () => {
     await expect(addSong(ROOM, URL, "share")).resolves.toMatchObject({ success: true, prefilledMeta: false });
     expect(songInsert()).toBeDefined();
     log.mockRestore();
+  });
+});
+
+describe("addSong deadline and access", () => {
+  const NOW = new Date("2026-11-08T12:00:00.000Z");
+  const at = (offsetMs: number) => new Date(NOW.getTime() + offsetMs).toISOString();
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(NOW);
+    state.session = createFakeClient();
+    vi.mocked(getCurrentUser).mockResolvedValue({ id: "user-1", nickname: "기타", avatarUrl: null });
+    vi.mocked(fetchVideoMetadata).mockClear();
+    vi.mocked(fetchSingleVideoDetails).mockClear();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  // v28 takes INSERT on songs away from sessions, so a session-client insert would fail on every add in production.
+  const sessionSongInserts = () => state.session.ops.filter((op) => op.table === "songs" && op.action === "insert");
+
+  // Same boundary as cast_playlist_vote (v24, deadline < now) and the auto-confirm cron (lt deadline).
+  it.each([
+    ["before the deadline", at(60_000)],
+    ["at the deadline instant", at(0)],
+    ["with no deadline", null],
+  ])("adds the song %s", async (_label, deadline) => {
+    state.admin = createFakeClient(admin(ok({ team_id: null }), ok([]), ok({ creator_user_id: "host-1", deadline })));
+
+    await expect(addSong(ROOM, URL, "share")).resolves.toMatchObject({ success: true });
+    expect(songInserts()).toHaveLength(1);
+    expect(songInsert()?.row).toMatchObject({ playlist_id: ROOM, youtube_video_id: "vid-123", added_by_user_id: "user-1" });
+    expect(sessionSongInserts()).toEqual([]);
+  });
+
+  it.each([
+    ["a playlist whose deadline has passed", () => undefined, URL, ok({ creator_user_id: "host-1", deadline: at(-1) }), "deadline_passed"],
+    ["an archived playlist", () => undefined, URL, ok({ creator_user_id: null, deadline: null }), "archived"],
+    ["an unknown playlist", () => undefined, URL, ok(null), "playlist_not_found"],
+    ["a logged-out caller", () => vi.mocked(getCurrentUser).mockResolvedValue(null), URL, ok(OPEN_PLAYLIST), "not_logged_in"],
+    ["a link longer than 500 characters", () => undefined, `${URL}&${"x".repeat(500)}`, ok(OPEN_PLAYLIST), "invalid_url"],
+  ])("adds nothing to %s and says why", async (_label, arrange, url, playlist, reason) => {
+    arrange();
+    state.admin = createFakeClient(admin(ok({ team_id: null }), ok([]), playlist));
+
+    await expect(addSong(ROOM, url, "share")).resolves.toEqual({ success: false, reason });
+    expect(songInserts()).toEqual([]);
+    // Checked before YouTube is asked, so a refused add spends no API quota.
+    expect(fetchVideoMetadata).not.toHaveBeenCalled();
+    expect(fetchSingleVideoDetails).not.toHaveBeenCalled();
   });
 });
 

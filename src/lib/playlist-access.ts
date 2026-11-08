@@ -2,6 +2,7 @@
 // 화면이 필요한 순수 판정은 playlist-archive 에 있다.
 import { createAdminClient } from "@/lib/supabase/server";
 import { ARCHIVED_PLAYLIST_MESSAGE, isArchivedPlaylist } from "@/domain/playlist-archive";
+import { isPastDeadline } from "@/domain/deadline";
 
 /** 합주방 id 로 보관 여부를 확인한다. */
 export async function isArchivedPlaylistId(playlistId: string): Promise<boolean> {
@@ -25,6 +26,22 @@ export async function assertPlaylistWritable(playlistId: string): Promise<void> 
 
   if (!data) throw new Error("플레이리스트를 찾을 수 없습니다.");
   if (isArchivedPlaylist(data)) throw new Error(ARCHIVED_PLAYLIST_MESSAGE);
+}
+
+export type SongAddDenial = "playlist_not_found" | "archived" | "deadline_passed";
+
+/** 후보곡을 더 받을지. 되면 null, 안 되면 그 이유. 보관 검사에 마감을 더한다. */
+export async function songAddDenial(playlistId: string): Promise<SongAddDenial | null> {
+  const { data } = await createAdminClient()
+    .from("playlists")
+    .select("creator_user_id, deadline")
+    .eq("id", playlistId)
+    .single<{ creator_user_id: string | null; deadline: string | null }>();
+
+  if (!data) return "playlist_not_found";
+  if (isArchivedPlaylist(data)) return "archived";
+  if (isPastDeadline(data.deadline, new Date())) return "deadline_passed";
+  return null;
 }
 
 /** 곡이 속한 합주방이 쓰기 가능한지 확인하고 합주방 id 를 돌려준다. */
