@@ -47,6 +47,7 @@ vi.mock("@/components/home/LandingVoteDemo", () => ({ default: () => null }));
 
 import Home from "../page";
 import HomeSkeleton from "@/components/home/HomeSkeleton";
+import { jsonLdNodes, linkTargets, publicFileOf, shownImages } from "./rendered-page";
 
 const ME = { id: "u-me", nickname: "보컬", avatarUrl: null };
 const SESSION_COOKIE = "sb-abcdef-auth-token";
@@ -125,6 +126,25 @@ describe("home without a login cookie", () => {
     state.cookieNames = [];
     await renderHome();
     expect(screen.getByRole("link", { name: "문의하기" })).toHaveAttribute("href", "/support");
+  });
+
+  it("links to both band guides and the usage guide", async () => {
+    state.cookieNames = [];
+    await renderHome();
+    expect(linkTargets()).toEqual(expect.arrayContaining(["/guide/setlist", "/guide/choose-songs", "/guide", "/about"]));
+  });
+
+  it("shows real product screens with alt text, the same ones its web app data lists", async () => {
+    state.cookieNames = [];
+    await renderHome();
+    const shown = shownImages();
+    expect(shown.length).toBeGreaterThan(0);
+    for (const image of shown) expect(image.alt.trim(), image.path).not.toBe("");
+
+    const app = jsonLdNodes().find((node) => node["@type"] === "WebApplication")!;
+    const screenshots = (app.screenshot as { url: string }[]).map((shot) => publicFileOf(shot.url));
+    expect(screenshots).toEqual(shown.map((image) => image.path));
+    expect(publicFileOf(app.image as string)).toBe(screenshots[0]);
   });
 });
 

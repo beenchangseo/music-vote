@@ -12,6 +12,8 @@ export const GA_PAGES: readonly GaPage[] = [
   { path: "/", title: "홈" },
   { path: "/about", title: "소개" },
   { path: "/guide", title: "사용 가이드" },
+  { path: "/guide/setlist", title: "셋리스트 짜는 법" },
+  { path: "/guide/choose-songs", title: "곡 정하는 법" },
   { path: "/new", title: "새 플레이리스트" },
   { path: "/privacy", title: "개인정보처리방침" },
   { path: "/terms", title: "이용약관" },
