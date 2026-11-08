@@ -27,6 +27,8 @@ vi.mock("@/lib/youtube-data", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { getCurrentUser } from "@/lib/auth";
+import { fetchVideoMetadata } from "@/lib/youtube";
+import { fetchSingleVideoDetails } from "@/lib/youtube-data";
 import { addSong, removeSong } from "../song";
 
 const ROOM = "room-new";
@@ -172,10 +174,15 @@ describe("addSong deadline and access", () => {
     vi.setSystemTime(NOW);
     state.session = createFakeClient();
     vi.mocked(getCurrentUser).mockResolvedValue({ id: "user-1", nickname: "기타", avatarUrl: null });
+    vi.mocked(fetchVideoMetadata).mockClear();
+    vi.mocked(fetchSingleVideoDetails).mockClear();
   });
   afterEach(() => {
     vi.useRealTimers();
   });
+
+  // v28 takes INSERT on songs away from sessions, so a session-client insert would fail on every add in production.
+  const sessionSongInserts = () => state.session.ops.filter((op) => op.table === "songs" && op.action === "insert");
 
   // Same boundary as cast_playlist_vote (v24, deadline < now) and the auto-confirm cron (lt deadline).
   it.each([
@@ -188,6 +195,7 @@ describe("addSong deadline and access", () => {
     await expect(addSong(ROOM, URL, "share")).resolves.toMatchObject({ success: true });
     expect(songInserts()).toHaveLength(1);
     expect(songInsert()?.row).toMatchObject({ playlist_id: ROOM, youtube_video_id: "vid-123", added_by_user_id: "user-1" });
+    expect(sessionSongInserts()).toEqual([]);
   });
 
   it.each([
@@ -202,6 +210,9 @@ describe("addSong deadline and access", () => {
 
     await expect(addSong(ROOM, url, "share")).resolves.toEqual({ success: false, reason });
     expect(songInserts()).toEqual([]);
+    // Checked before YouTube is asked, so a refused add spends no API quota.
+    expect(fetchVideoMetadata).not.toHaveBeenCalled();
+    expect(fetchSingleVideoDetails).not.toHaveBeenCalled();
   });
 });
 
