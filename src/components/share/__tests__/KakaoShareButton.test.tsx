@@ -51,7 +51,6 @@ describe("KakaoShareButton links", () => {
   it.each([
     { variant: "playlist", props: { shareCode: "abc123" } },
     { variant: "decided", props: { shareCode: "abc123" } },
-    { variant: "setlist", props: { shareCode: "abc123" } },
     { variant: "band", props: { linkPath: "/join/aB3_x-9Zq0" } },
   ] as const)("tags the $variant link with kakao / share and the card, never the code", ({ variant, props }) => {
     render(<KakaoShareButton {...props} variant={variant} title="합주" />);
@@ -59,6 +58,21 @@ describe("KakaoShareButton links", () => {
     const card = sentCard();
     for (const url of [card.content.link.webUrl, card.buttons[0].link.webUrl]) {
       expect(new URL(url).search).toBe(`?utm_source=kakao&utm_medium=share&variant=${variant}`);
+    }
+  });
+
+  it("opens the setlist card's 셋리스트 보기 on the setlist tab and keeps the kakao / share tags (#80)", () => {
+    render(<KakaoShareButton shareCode="abc123" variant="setlist" title="합주" />);
+    click();
+    const card = sentCard();
+    expect(card.buttons[0].title).toBe("셋리스트 보기");
+    for (const url of [card.content.link.webUrl, card.buttons[0].link.webUrl]) {
+      expect(Object.fromEntries(new URL(url).searchParams)).toEqual({
+        utm_source: "kakao",
+        utm_medium: "share",
+        variant: "setlist",
+        tab: "setlist",
+      });
     }
   });
 
