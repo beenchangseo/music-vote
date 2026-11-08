@@ -39,6 +39,7 @@ function room(overrides: Partial<TeamRoom> = {}): TeamRoom {
     createdAt: "2026-10-01T03:00:00Z",
     setlistConfirmed: false,
     setlist: [],
+    setlistBlockCount: 0,
     songCount: 0,
     coverThumbs: [],
     participantCount: 0,
@@ -188,13 +189,28 @@ describe("BandHomeClient primary action (1A)", () => {
   const nowCard = () => within(screen.getByRole("region", { name: "지금 플레이리스트" })).getByRole("link");
   const PLAY_TRIANGLE = "M8 5.14v13.72";
 
+  // The badge, title and counts are one link, so a screen reader reads them as one name; the commas make it pause.
   it("features a running room that is still voting", () => {
     renderHome(view({ rooms: [room({ songCount: 7 })] }));
     const card = nowCard();
     expect(card).toHaveAttribute("href", "/playlist/abc123");
-    expect(card.textContent).toBe("투표 중" + "10월 정기 합주" + "후보곡 7곡");
+    expect(card).toHaveAccessibleName("투표 중, 10월 정기 합주, 후보곡 7곡");
     expect(card.innerHTML).not.toContain(PLAY_TRIANGLE);
     expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toHaveAttribute("href", `/new?band=${TEAM}`);
+  });
+
+  it("counts a setlist made only of 자작곡 as a setlist being built", () => {
+    renderHome(view({ rooms: [room({ setlistBlockCount: 3, songCount: 2 })] }));
+    expect(nowCard()).toHaveAccessibleName("셋리스트 짜는 중, 10월 정기 합주, 셋리스트 3곡 · 후보곡 2곡");
+  });
+
+  it("leaves out a count of zero instead of printing 후보곡 0곡", () => {
+    renderHome(view({ rooms: [room({ setlistBlockCount: 3 })] }));
+    expect(nowCard()).toHaveAccessibleName("셋리스트 짜는 중, 10월 정기 합주, 셋리스트 3곡");
+    cleanup();
+    renderHome(view({ rooms: [room()] }));
+    expect(nowCard()).toHaveAccessibleName("투표 중, 10월 정기 합주");
+    expect(nowCard().textContent).not.toContain("0곡");
   });
 
   it("features a running room whose setlist is being built, without promising the setlist tab", () => {
@@ -206,15 +222,15 @@ describe("BandHomeClient primary action (1A)", () => {
       videoId: `v${i}`,
       thumbnailUrl: `https://img.youtube.com/vi/v${i}/mqdefault.jpg`,
     }));
-    renderHome(view({ rooms: [room({ songCount: 12, setlist })] }));
+    renderHome(view({ rooms: [room({ songCount: 12, setlist, setlistBlockCount: 8 })] }));
     const card = nowCard();
     expect(card).toHaveAttribute("href", "/playlist/abc123");
-    expect(card.textContent).toBe("셋리스트 짜는 중" + "10월 정기 합주" + "셋리스트 8곡 · 후보곡 12곡");
+    expect(card).toHaveAccessibleName("셋리스트 짜는 중, 10월 정기 합주, 셋리스트 8곡 · 후보곡 12곡");
     expect(card.innerHTML).not.toContain(PLAY_TRIANGLE);
   });
 
   it("falls back to 플레이리스트 만들기 when nothing is running", () => {
-    renderHome(view({ rooms: [room({ setlistConfirmed: true })] }));
+    renderHome(view({ rooms: [room({ setlistConfirmed: true, setlistBlockCount: 8 })] }));
     expect(screen.queryByRole("region", { name: "지금 플레이리스트" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toBeInTheDocument();
   });
@@ -330,23 +346,26 @@ describe("BandHomeClient rooms shelf and played songs (26A, E1)", () => {
     renderHome(
       view({
         rooms: [
-          room({ id: "r3", title: "11월 합주", shareCode: "new", createdAt: "2026-11-02T03:00:00Z" }),
-          room({ id: "r2", title: "10월 합주", setlist: [run, crush], createdAt: "2026-10-12T03:00:00Z" }),
-          room({ id: "r1", title: "9월 합주", shareCode: "old", setlist: [{ ...run, songId: "s1-old" }], setlistConfirmed: true, createdAt: "2026-09-05T03:00:00Z" }),
+          room({ id: "r4", title: "12월 합주", shareCode: "newest", createdAt: "2026-11-05T03:00:00Z" }),
+          room({ id: "r3", title: "11월 합주", shareCode: "new", setlistBlockCount: 2, createdAt: "2026-11-02T03:00:00Z" }),
+          room({ id: "r2", title: "10월 합주", setlist: [run, crush], setlistBlockCount: 2, setlistConfirmed: true, createdAt: "2026-10-12T03:00:00Z" }),
+          // The cron confirms an expired playlist with no songs only to take it off its queue.
+          room({ id: "r1", title: "9월 합주", shareCode: "old", setlistConfirmed: true, createdAt: "2026-09-05T03:00:00Z" }),
         ],
       }),
     );
-    const shelf = screen.getByRole("region", { name: /^플레이리스트\s*3$/ });
+    const shelf = screen.getByRole("region", { name: /^플레이리스트\s*4$/ });
     const links = within(shelf).getAllByRole("link");
-    expect(links.map((link) => link.getAttribute("href"))).toEqual([`/new?band=${TEAM}`, "/playlist/new", "/playlist/abc123", "/playlist/old"]);
+    expect(links.map((link) => link.getAttribute("href"))).toEqual([`/new?band=${TEAM}`, "/playlist/newest", "/playlist/new", "/playlist/abc123", "/playlist/old"]);
     // The section title already says 플레이리스트, so the tile reads 만들기; its name still says what it makes.
     expect(links[0]).toHaveAccessibleName("플레이리스트 만들기");
     expect(links[0]).toHaveTextContent(/^만들기$/);
-    expect(links.slice(1).map((link) => link.textContent)).toEqual([
-      "11월 합주" + "투표 중" + "11월 2일",
-      "10월 합주" + "셋리스트 짜는 중" + "10월 12일",
-      "9월 합주" + "셋리스트 확정" + "9월 5일",
-    ]);
+    [
+      "12월 합주, 투표 중, 11월 5일",
+      "11월 합주, 셋리스트 짜는 중, 11월 2일",
+      "10월 합주, 셋리스트 확정, 10월 12일",
+      "9월 합주, 마감, 9월 5일",
+    ].forEach((name, i) => expect(links[i + 1]).toHaveAccessibleName(name));
   });
 
   it("counts a song once per room, puts the most played first and links its latest room", () => {

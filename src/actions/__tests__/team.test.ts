@@ -608,6 +608,8 @@ describe("getTeamHome", () => {
     },
     { playlist_id: "room-old", position: 1, item_type: "interval", song_id: null, title_override: null, songs: null },
     { playlist_id: "room-old", position: 3, item_type: "song", song_id: null, title_override: null, songs: null },
+    // A setlist made only of 자작곡 still has a setlist; it is just not part of the played-songs history.
+    { playlist_id: "room-new", position: 0, item_type: "original", song_id: null, title_override: "우리 곡", songs: null },
     {
       playlist_id: "room-attached",
       position: 0,
@@ -695,6 +697,7 @@ describe("getTeamHome", () => {
           createdAt: "2026-10-20T00:00:00+00:00",
           setlistConfirmed: false,
           setlist: [],
+          setlistBlockCount: 1,
           songCount: 1,
           coverThumbs: [thumb("n1")],
           participantCount: 3,
@@ -710,6 +713,7 @@ describe("getTeamHome", () => {
             { songId: "s1", title: "오프닝", artist: null, position: 0, videoId: "v1", thumbnailUrl: thumb("v1") },
             { songId: "s2", title: "Creep", artist: "Radiohead", position: 2, videoId: "v2", thumbnailUrl: thumb("v2") },
           ],
+          setlistBlockCount: 2,
           songCount: 3,
           // setlist order first, then the newest songs; the same picture once
           coverThumbs: [thumb("v1"), thumb("v2"), thumb("o3")],
@@ -722,6 +726,7 @@ describe("getTeamHome", () => {
           createdAt: "2026-07-01T00:00:00+00:00",
           setlistConfirmed: false,
           setlist: [{ songId: "s9", title: "Yellow", artist: "Coldplay", position: 0, videoId: null, thumbnailUrl: null }],
+          setlistBlockCount: 1,
           songCount: 0,
           coverThumbs: [],
           participantCount: 0,
@@ -739,7 +744,7 @@ describe("getTeamHome", () => {
     expect(history).toHaveLength(1);
     expect(history[0].filters).toEqual({
       playlist_id: ["room-new", "room-old", "room-attached"],
-      item_type: "song",
+      "neq:item_type": "interval",
     });
     expect(opsFor("playlists", "select")[0].filters).toEqual({ team_id: TEAM });
     const songs = opsFor("songs", "select");

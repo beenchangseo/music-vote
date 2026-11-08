@@ -47,7 +47,7 @@ import type { PlaylistView, RoomTeam, SongWithScore, SetlistItem, Comment, VoteA
 import { displayTitle } from "@/domain/song-meta";
 import { inviteSongs } from "@/domain/invite-card";
 import { assignRanks } from "@/domain/vote";
-import { PLAYLIST_STAGE_LABEL } from "@/domain/playlist-stage";
+import { PLAYLIST_STAGE_LABEL, isSetlistBlock, playlistStage } from "@/domain/playlist-stage";
 
 interface PlaylistClientProps {
   playlist: PlaylistView;
@@ -222,6 +222,13 @@ export default function PlaylistClient({
   });
 
 
+
+  // The cron also sets the confirm flag on an expired playlist with no songs, so the flag alone does not mean a setlist.
+  // A failed server read leaves the items unknown until the setlist tab loads them; the flag decides until then.
+  const showsConfirmedSetlist =
+    setlistItems === null
+      ? playlist.setlist_confirmed
+      : playlistStage({ setlistConfirmed: playlist.setlist_confirmed, setlistBlockCount: setlistItems.filter(isSetlistBlock).length }) === "confirmed";
 
   // Setlist highlight: top N songs after deadline
   const setlistCount = playlist.setlist_count;
@@ -598,7 +605,7 @@ export default function PlaylistClient({
               )}
 
               {/* Setlist share banner — confirmed setlist */}
-              {playlist.setlist_confirmed && (
+              {showsConfirmedSetlist && (
                 <Card className="mt-5 text-center animate-fade-in">
                   <Badge tone="primary">🎵 {PLAYLIST_STAGE_LABEL.confirmed}</Badge>
                   <p className="mt-3 mb-4 text-sm text-text">

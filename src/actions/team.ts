@@ -33,6 +33,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { assertPlaylistWritable } from "@/lib/playlist-access";
 import { ARCHIVED_PLAYLIST_MESSAGE } from "@/domain/playlist-archive";
+import { isSetlistBlock } from "@/domain/playlist-stage";
 import { memberKeyFor, membersByKey } from "@/lib/member-key";
 import { insertRoom } from "@/lib/room-insert";
 import { createAdminClient } from "@/lib/supabase/server";
@@ -51,7 +52,7 @@ import { effectiveSetlistTitle } from "@/domain/setlist";
 import { compareTimestamps } from "@/domain/timestamp";
 import { isValidDefaultVoteLimit } from "@/domain/vote";
 import type { TeamReason } from "@/lib/team-messages";
-import type { ActionResult, MemberKey, TeamRole, VotingMode } from "@/domain/types";
+import type { ActionResult, MemberKey, SetlistItem, TeamRole, VotingMode } from "@/domain/types";
 
 // ============================================================
 // 반환 타입
@@ -180,6 +181,8 @@ export interface TeamRoom {
   setlistConfirmed: boolean;
   /** E1 "우리가 했던 곡": 이 방 셋리스트의 곡만, position 순. 셋리스트가 없으면 빈 배열. */
   setlist: TeamSetlistSong[];
+  /** 셋리스트의 곡·자작곡 블록 수(`isSetlistBlock`). 단계와 "셋리스트 N곡"은 자작곡도 세서 setlist 길이가 아니라 이것을 읽는다. */
+  setlistBlockCount: number;
   /** 후보곡 수 (셋리스트가 아니라 방에 올라온 곡 전체). */
   songCount: number;
   /** 방 커버 모자이크용 썸네일 최대 4개. 셋리스트 순서 먼저, 없으면 최근에 올라온 곡. */
@@ -696,6 +699,7 @@ export async function getTeamHome(teamId: string): Promise<TeamHomeView | null> 
     : null;
 
   const setlistByRoom = new Map<string, TeamSetlistSong[]>();
+  const blockCountByRoom = new Map<string, number>();
   const songsByRoom = new Map<string, { thumbnailUrl: string | null }[]>();
   if (rooms.length > 0) {
     const roomIds = rooms.map((room) => room.id);
@@ -706,7 +710,7 @@ export async function getTeamHome(teamId: string): Promise<TeamHomeView | null> 
           "playlist_id, position, item_type, song_id, title_override, songs(title, artist, youtube_video_id, thumbnail_url)",
         )
         .in("playlist_id", roomIds)
-        .eq("item_type", "song")
+        .neq("item_type", "interval")
         .order("position", { ascending: true }),
       admin
         .from("songs")
@@ -722,13 +726,14 @@ export async function getTeamHome(teamId: string): Promise<TeamHomeView | null> 
     type ItemRow = {
       playlist_id: string;
       position: number;
-      item_type: string;
+      item_type: SetlistItem["item_type"];
       song_id: string | null;
       title_override: string | null;
       songs: SongRef | SongRef[] | null;
     };
     for (const item of (items ?? []) as ItemRow[]) {
-      // Interval blocks and songs deleted later (song_id SET NULL) are not part of the history.
+      if (isSetlistBlock(item)) blockCountByRoom.set(item.playlist_id, (blockCountByRoom.get(item.playlist_id) ?? 0) + 1);
+      // Interval blocks, 자작곡 and songs deleted later (song_id SET NULL) are not part of the history.
       const song = nestedRows(item.songs)[0];
       if (item.item_type !== "song" || !item.song_id || !song) continue;
       const list = setlistByRoom.get(item.playlist_id) ?? [];
@@ -791,6 +796,7 @@ export async function getTeamHome(teamId: string): Promise<TeamHomeView | null> 
         createdAt: room.created_at,
         setlistConfirmed: !!room.setlist_confirmed,
         setlist,
+        setlistBlockCount: blockCountByRoom.get(room.id) ?? 0,
         songCount: songs.length,
         coverThumbs: roomCoverThumbs(setlist, songs),
         participantCount: nestedRows(room.playlist_members)[0]?.count ?? 0,

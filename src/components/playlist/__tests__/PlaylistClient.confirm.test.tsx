@@ -206,3 +206,26 @@ describe("PlaylistClient setlist confirm", () => {
     expect(realtime.notifyChange).not.toHaveBeenCalled();
   });
 });
+
+describe("PlaylistClient confirmed banner", () => {
+  const confirmed = { ...playlist, setlist_confirmed: true } as PlaylistView;
+  const renderConfirmed = (songs: SongWithScore[], initialSetlistItems: SetlistItem[] | null) =>
+    render(<PlaylistClient playlist={confirmed} songs={songs} shareCode="abc123" participantCount={0} userNickname="기타" loggedIn isHost={false} team={null} initialSetlistItems={initialSetlistItems} />);
+
+  it("says the setlist is confirmed when it has blocks, 자작곡 included", () => {
+    renderConfirmed([], [labeledBlock("original", "자작곡", 0)]);
+    expect(screen.getByText(/셋리스트 확정/)).toBeInTheDocument();
+  });
+
+  // The cron confirms an expired playlist with no songs only to take it off its queue (auto-confirm-setlist).
+  it("does not call an empty setlist confirmed", () => {
+    renderConfirmed([], [labeledBlock("interval", "멘트", 0)]);
+    expect(screen.queryByText(/셋리스트 확정/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/다음 공연 준비 완료/)).not.toBeInTheDocument();
+  });
+
+  it("trusts the confirm flag while a failed server read leaves the setlist unknown", () => {
+    renderConfirmed([song("top")], null);
+    expect(screen.getByText(/셋리스트 확정/)).toBeInTheDocument();
+  });
+});

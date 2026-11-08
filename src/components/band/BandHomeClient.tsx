@@ -417,25 +417,49 @@ function ShowDateChip({ dday, onOpen }: { dday: ShowDday; onOpen: () => void }) 
 }
 
 function StageBadge({ room }: { room: TeamRoom }) {
-  const stage = playlistStage({ setlistConfirmed: room.setlistConfirmed, setlistCount: room.setlist.length });
+  const stage = playlistStage({ setlistConfirmed: room.setlistConfirmed, setlistBlockCount: room.setlistBlockCount });
   return <Badge tone="primary">{PLAYLIST_STAGE_LABEL[stage]}</Badge>;
 }
 
+/** A failed songs read leaves songCount at 0, so a zero count is left out rather than printed. */
 function roomCounts(room: TeamRoom): string {
-  const candidates = `후보곡 ${room.songCount}곡`;
-  return room.setlist.length > 0 ? `셋리스트 ${room.setlist.length}곡 · ${candidates}` : candidates;
+  return [
+    room.setlistBlockCount > 0 && `셋리스트 ${room.setlistBlockCount}곡`,
+    room.songCount > 0 && `후보곡 ${room.songCount}곡`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+/**
+ * A card link's parts read as one accessible name; the comma lets a screen reader pause. The space stays outside the
+ * sr-only span because name computation trims each element's text.
+ */
+function NameBreak() {
+  return (
+    <>
+      <span className="sr-only">,</span>{" "}
+    </>
+  );
 }
 
 /** 지금 플레이리스트 (#80 V3): 카드 전체가 플레이리스트로 가는 링크. 단계 배지 + 제목 + 곡 수, 끝에 화살표. */
 function NowRoomCard({ room }: { room: TeamRoom }) {
+  const counts = roomCounts(room);
   return (
     <Card padding="none" role="region" aria-label="지금 플레이리스트" className="mt-6 transition-transform active:scale-[0.99]">
       <Link href={`/playlist/${room.shareCode}`} className="flex items-center gap-4 rounded-card p-4">
         <RoomCover thumbs={room.coverThumbs} sizes="88px" className="h-22 w-22 shrink-0" />
         <span className="min-w-0 flex-1">
           <StageBadge room={room} />
+          <NameBreak />
           <span className="mt-0.5 line-clamp-2 block break-keep text-h4 font-bold text-text">{room.title}</span>
-          <span className="mt-1 block text-sm text-text-muted tabular-nums">{roomCounts(room)}</span>
+          {counts && (
+            <>
+              <NameBreak />
+              <span className="mt-1 block text-sm text-text-muted tabular-nums">{counts}</span>
+            </>
+          )}
         </span>
         <svg className="size-5 shrink-0 text-text-subtle" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -495,9 +519,11 @@ function RoomsShelf({
             <Link href={`/playlist/${room.shareCode}`} className="block">
               <RoomCover thumbs={room.coverThumbs} sizes="144px" className="aspect-square w-full" />
               <span className="mt-2 block truncate text-sm font-semibold text-text">{room.title}</span>
+              <NameBreak />
               {/* A cut date reads as another day ("10월 2…"), so the date moves under a long badge instead. */}
               <span className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-caption text-text-muted tabular-nums">
                 <StageBadge room={room} />
+                <NameBreak />
                 <span>{roomDate.format(new Date(room.createdAt))}</span>
               </span>
             </Link>
