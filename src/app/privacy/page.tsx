@@ -8,11 +8,21 @@ export const metadata: Metadata = pageMetadata({
   description: "Plypick(plypick.kr) 개인정보처리방침",
 });
 
+const LINK_CLASS = "font-semibold text-primary-fg underline-offset-2 hover:underline";
+
 function SupportLink() {
   return (
-    <Link href="/support" className="font-semibold text-primary-fg underline-offset-2 hover:underline">
+    <Link href="/support" className={LINK_CLASS}>
       문의하기
     </Link>
+  );
+}
+
+function GaOptOutLink() {
+  return (
+    <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
+      Google 애널리틱스 차단 부가기능
+    </a>
   );
 }
 
@@ -36,8 +46,8 @@ export default function PrivacyPage() {
                 플레이리스트·밴드 참여 기록. 기록에는 계정과 그때의 닉네임이 함께 저장돼요.
               </li>
               <li>
-                자동으로 생기는 정보: 로그인 유지 쿠키, 브라우저 저장소(만든 플레이리스트 목록, 닫은 안내, 방금 나간
-                밴드 이름. 밴드 이름은 탭을 닫으면 지워져요), 접속 IP, 이용 통계
+                자동으로 생기는 정보: 로그인 유지 쿠키, Google 애널리틱스 쿠키, 브라우저 저장소(만든 플레이리스트 목록,
+                닫은 안내, 방금 나간 밴드 이름. 밴드 이름은 탭을 닫으면 지워져요), 접속 IP, 이용 통계
               </li>
             </ul>
           </section>
@@ -73,8 +83,22 @@ export default function PrivacyPage() {
                 시각)은 로그인 서비스(Supabase)가 따로 남기고, 탈퇴 뒤에도 남을 수 있어요.
               </li>
               <li>
-                이용 통계와 성능 측정(Vercel)은 쿠키 없이 모으고 개인을 알아볼 수 없는 통계로만 봐요. 페이지 주소,
-                투표·곡 추가 같은 사용 기록, 브라우저와 기기 종류, 대략적인 지역이 들어가요.
+                페이지 방문 통계와 성능 측정(Vercel)은 쿠키 없이 모으고 개인을 알아볼 수 없는 통계로만 봐요. 페이지
+                주소, 브라우저와 기기 종류, 대략적인 지역이 들어가요.
+              </li>
+              <li>
+                사용 흐름 통계(Google 애널리틱스)는 쿠키(_ga, _ga_로 시작하는 쿠키)로 같은 브라우저의 방문을 이어서 봐요.
+                플레이리스트·밴드·초대 주소는 코드를 지운 모양(/playlist/[code] 같은)으로만 보내고, 투표·곡 추가 같은
+                사용 기록, 브라우저와 기기 종류, 대략적인 지역이 들어가요. 닉네임, 카카오 계정 정보, 플레이리스트 제목은
+                보내지 않아요. 어느 기능이 쓰이고 어디서 멈추는지 보고 서비스를 고치는 데만 쓰고, 광고에는 쓰지 않아요.
+              </li>
+              <li>
+                Google 애널리틱스 기록은 보관 기간 설정에 따라 14개월이 지나면 지워져요. 쿠키는 브라우저에 최대 2년
+                남아요.
+              </li>
+              <li>
+                Google 애널리틱스를 원하지 않으면 브라우저 설정에서 쿠키를 막거나 <GaOptOutLink />을 설치하면 돼요.
+                막아도 서비스는 그대로 쓸 수 있어요.
               </li>
             </ul>
           </section>
@@ -91,6 +115,25 @@ export default function PrivacyPage() {
               <li>Vercel: 서비스 호스팅과 이용 통계</li>
               <li>카카오: 카카오 로그인과 카카오톡 공유</li>
               <li>YouTube(Google): 후보곡 영상 재생과 검색</li>
+              <li>Google: 사용 흐름 통계(Google 애널리틱스)</li>
+            </ul>
+            <p className="mt-2">Google 애널리틱스 기록은 아래처럼 국외로 옮겨져요.</p>
+            <ul className="list-disc list-inside mt-2 space-y-1 text-text-muted">
+              <li>
+                받는 곳: Google LLC. 연락처는 Google 개인정보처리방침(policies.google.com/privacy)의 문의 경로예요.
+              </li>
+              <li>옮겨지는 나라: 미국</li>
+              <li>
+                옮겨지는 항목: 코드를 지운 페이지 주소와 제목, 사용 기록, 쿠키 식별자, 브라우저와 기기 정보, 접속 IP(대략적인
+                지역을 계산하는 데 쓰여요)
+              </li>
+              <li>옮겨지는 때와 방법: 서비스를 쓸 때마다 네트워크로 보내요.</li>
+              <li>쓰는 목적: 사용 흐름 통계</li>
+              <li>보관 기간: 14개월 (Google 애널리틱스 보관 기간 설정)</li>
+              <li>
+                거부하는 방법: 브라우저에서 쿠키를 막거나 <GaOptOutLink />을 설치해요. 거부해도 서비스는 그대로 쓸 수
+                있어요.
+              </li>
             </ul>
           </section>
 
