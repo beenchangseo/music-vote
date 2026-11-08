@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { cumulativeStarts, effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, moveSetlistBlock, parseBlockFields, rehearsalSteps, setlistBlocks, setlistBlockTitle, setlistEditAccess, setlistInsertSlots, setlistPlayOrder, setlistRows, summarizeSetlist } from "../setlist";
+import { isSetlistBlock } from "../playlist-stage";
 import type { SetlistItem, SongWithScore } from "../types";
 import { FIXTURE_SONG_COUNT, FIXTURE_TOTAL_SECONDS, fixtureItems, fixtureSongs } from "./setlist-fixture";
 
@@ -138,6 +139,10 @@ describe("한 셋리스트는 셋리스트 탭과 내보내기에서 같은 곡 
       missingDurationCount: 1,
     });
     expect(formatRuntime(FIXTURE_TOTAL_SECONDS)).toBe("16:28");
+  });
+
+  it("확정 배너와 카톡 카드가 isSetlistBlock 으로 센 곡 수도 내보내기와 같다 (#87)", () => {
+    expect(fixtureItems.filter(isSetlistBlock)).toHaveLength(FIXTURE_SONG_COUNT);
   });
 
   it("이미지·PDF 는 자작곡까지 셋리스트 탭과 같은 번호와 시간으로 그린다", () => {

@@ -193,12 +193,9 @@ export async function GET(
             }}
           >
             <span>총 {songCount}곡</span>
-            {totalRuntime > 0 && (
-              <>
-                <span style={{ color: C.textSubtle }}>·</span>
-                <span>{formatRuntime(totalRuntime)}</span>
-              </>
-            )}
+            {/* Not a fragment: satori lays one out as its own box, and the gap never reaches between the dot and the time. */}
+            {totalRuntime > 0 && <span style={{ color: C.textSubtle }}>·</span>}
+            {totalRuntime > 0 && <span>{formatRuntime(totalRuntime)}</span>}
           </div>
         </div>
 

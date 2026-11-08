@@ -41,7 +41,6 @@ vi.mock("../SongCard", () => ({ default: () => null }));
 vi.mock("../MiniPlayer", () => ({ default: () => null }));
 vi.mock("../YouTubePlayer", () => ({ default: () => null }));
 vi.mock("../RoomSettingsButton", () => ({ default: () => null }));
-vi.mock("../../share/KakaoShareButton", () => ({ default: () => null }));
 vi.mock("../../rehearsal/RehearsalView", () => ({ default: () => null }));
 vi.mock("../../auth/LoginButton", () => ({ default: () => null }));
 vi.mock("../NavigationBar", () => ({
@@ -209,8 +208,47 @@ describe("PlaylistClient setlist confirm", () => {
 
 describe("PlaylistClient confirmed banner", () => {
   const confirmed = { ...playlist, setlist_confirmed: true } as PlaylistView;
-  const renderConfirmed = (songs: SongWithScore[], initialSetlistItems: SetlistItem[] | null) =>
-    render(<PlaylistClient playlist={confirmed} songs={songs} shareCode="abc123" participantCount={0} userNickname="기타" loggedIn isHost={false} team={null} initialSetlistItems={initialSetlistItems} />);
+  const renderConfirmed = (songs: SongWithScore[], initialSetlistItems: SetlistItem[] | null, setlistCount: number | null = 2) =>
+    render(<PlaylistClient playlist={{ ...confirmed, setlist_count: setlistCount }} songs={songs} shareCode="abc123" participantCount={0} userNickname="기타" loggedIn isHost={false} team={null} initialSetlistItems={initialSetlistItems} />);
+
+  const sendDefault = vi.fn();
+  beforeEach(() => {
+    window.Kakao = { isInitialized: () => true, Share: { sendDefault } };
+  });
+  afterEach(() => {
+    delete window.Kakao;
+  });
+
+  const bannerLine = () => screen.getByText(/다음 공연 준비 완료/).textContent;
+
+  function sharedSetlistCard() {
+    fireEvent.click(screen.getByText("셋리스트 카톡 공유"));
+    const { content } = sendDefault.mock.calls[0][0] as { content: { description: string; imageUrl: string } };
+    return { description: content.description, imageCount: new URL(content.imageUrl).searchParams.get("setlistCount") };
+  }
+
+  const fiveCandidates = ["a", "b", "c", "d", "e"].map(song);
+  // Three songs and an original; the interval and the block whose song was deleted are not songs of the setlist.
+  const handBuilt = [block("a", 0), labeledBlock("interval", "멘트", 1), labeledBlock("original", "자작곡", 2), block("c", 3), { ...block("gone", 4), song_id: null }, block("e", 5)];
+
+  it.each([
+    ["a target of 2 songs", 2],
+    ["no target", null],
+  ])("counts the songs of the setlist the band built, not %s or the 5 candidates, on the banner and the Kakao card", (_case, setlistCount) => {
+    renderConfirmed(fiveCandidates, handBuilt, setlistCount);
+
+    expect(bannerLine()).toBe("총 4곡 · 다음 공연 준비 완료");
+    expect(sharedSetlistCard()).toEqual({ description: "4곡 셋리스트가 확정됐어요", imageCount: "4" });
+  });
+
+  // The host deletes a candidate from the 후보곡 tab: the server drops its setlist row, but this screen keeps the setlist
+  // it loaded. Count what the setlist tab and the exports draw, not the stale row.
+  it("leaves out a block whose candidate the host just deleted, as the setlist tab and the exports do", () => {
+    renderConfirmed(fiveCandidates.filter((candidate) => candidate.id !== "c"), handBuilt);
+
+    expect(bannerLine()).toBe("총 3곡 · 다음 공연 준비 완료");
+    expect(sharedSetlistCard()).toEqual({ description: "3곡 셋리스트가 확정됐어요", imageCount: "3" });
+  });
 
   it("says the setlist is confirmed when it has blocks, 자작곡 included", () => {
     renderConfirmed([], [labeledBlock("original", "자작곡", 0)]);
@@ -224,8 +262,10 @@ describe("PlaylistClient confirmed banner", () => {
     expect(screen.queryByText(/다음 공연 준비 완료/)).not.toBeInTheDocument();
   });
 
-  it("trusts the confirm flag while a failed server read leaves the setlist unknown", () => {
-    renderConfirmed([song("top")], null);
+  it("trusts the confirm flag while a failed server read leaves the setlist unknown, and prints no count it cannot know", () => {
+    renderConfirmed(fiveCandidates, null);
     expect(screen.getByText(/셋리스트 확정/)).toBeInTheDocument();
+    expect(bannerLine()).toBe("다음 공연 준비 완료");
+    expect(sharedSetlistCard()).toEqual({ description: "셋리스트가 확정됐어요", imageCount: null });
   });
 });

@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
   const topSong = searchParams.get("topSong") || "";
   const topArtist = searchParams.get("topArtist") || "";
   const topScore = parseInt(searchParams.get("topScore") || "0", 10);
-  const setlistCount = parseInt(searchParams.get("setlistCount") || "0", 10);
+  const setlistCount = parseInt(searchParams.get("setlistCount") || "0", 10) || 0;
   const members = parseInt(searchParams.get("members") || "0", 10) || 0;
   // Exact show date only (25A). The caller already dropped past dates; a malformed value shows nothing.
   const showDate = formatShowDate(searchParams.get("date") || "");
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
   } else if (variant === "setlist") {
     body = <SetlistView
       title={title}
-      setlistCount={setlistCount || songs}
+      setlistCount={setlistCount}
       participants={participants}
     />;
   } else if (variant === "band") {
@@ -641,7 +641,8 @@ function SetlistView({
           fontWeight: 700,
         }}
       >
-        총 {setlistCount}곡 · 다음 공연 준비 완료
+        {/* 0: the sharer did not know the setlist. The candidate count is not the setlist's, so no count (#87). */}
+        {setlistCount > 0 ? `총 ${setlistCount}곡 · 다음 공연 준비 완료` : "다음 공연 준비 완료"}
       </div>
 
       <div style={{ display: "flex", gap: 32, marginTop: "auto" }}>
