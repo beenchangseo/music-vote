@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { buttonClassName } from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -14,7 +16,7 @@ export default function AboutPage() {
   return (
     <main className="min-h-full bg-bg">
       <div className="max-w-2xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold text-text mb-4">
+        <h1 className="text-h1 font-bold text-text mb-4">
           밴드 투표 서비스란?
         </h1>
         <p className="text-text-muted mb-8">
@@ -23,7 +25,7 @@ export default function AboutPage() {
 
         <div className="space-y-8 text-text-muted leading-relaxed">
           <section>
-            <h2 className="text-xl font-semibold text-text mb-3">
+            <h2 className="text-h3 font-semibold text-text mb-3">
               셋리스트 정하기, 왜 어려울까?
             </h2>
             <p>
@@ -38,7 +40,7 @@ export default function AboutPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-text mb-3">
+            <h2 className="text-h3 font-semibold text-text mb-3">
               Plypick으로 이렇게 정해요
             </h2>
             <p>
@@ -65,7 +67,7 @@ export default function AboutPage() {
                 },
               ].map((item) => (
                 <li key={item.title} className="flex gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2.5 shrink-0" />
+                  <div className="size-1.5 rounded-pill bg-primary mt-2.5 shrink-0" />
                   <div>
                     <span className="font-medium text-text">{item.title}</span>
                     <span className="text-text-muted"> — {item.desc}</span>
@@ -76,7 +78,7 @@ export default function AboutPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-text mb-3">
+            <h2 className="text-h3 font-semibold text-text mb-3">
               이런 분들께 추천해요
             </h2>
             <ul className="space-y-2 text-text-muted">
@@ -87,20 +89,17 @@ export default function AboutPage() {
             </ul>
           </section>
 
-          <section className="bg-surface border border-border rounded-2xl p-6 text-center">
-            <p className="text-lg font-semibold text-text mb-2">
+          <Card padding="lg" className="text-center">
+            <p className="text-h4 font-semibold text-text mb-2">
               다음 합주곡, 투표로 정해요
             </p>
             <p className="text-sm text-text-muted mb-4">
               무료예요. 카카오 로그인 한 번이면 30초 만에 플레이리스트를 만들 수 있어요.
             </p>
-            <Link
-              href="/"
-              className="inline-block px-6 py-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold transition-all active:scale-95"
-            >
+            <Link href="/" className={buttonClassName({ size: "lg" })}>
               플레이리스트 만들기
             </Link>
-          </section>
+          </Card>
         </div>
 
         <div className="mt-12 pt-6 border-t border-border">

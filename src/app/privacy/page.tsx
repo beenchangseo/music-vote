@@ -20,11 +20,11 @@ export default function PrivacyPage() {
   return (
     <main className="min-h-full bg-bg">
       <div className="max-w-2xl mx-auto px-4 py-12">
-        <h1 className="text-2xl font-bold text-text mb-8">개인정보처리방침</h1>
+        <h1 className="text-h2 font-bold text-text mb-8">개인정보처리방침</h1>
 
         <div className="space-y-6 text-text-muted text-sm leading-relaxed">
           <section>
-            <h2 className="text-lg font-semibold text-text mb-2">1. 수집하는 개인정보</h2>
+            <h2 className="text-h4 font-semibold text-text mb-2">1. 수집하는 개인정보</h2>
             <p>Plypick(이하 &quot;서비스&quot;)는 서비스에 꼭 필요한 정보만 받아요.</p>
             <ul className="list-disc list-inside mt-2 space-y-1 text-text-muted">
               <li>
@@ -43,7 +43,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-text mb-2">2. 개인정보의 이용 목적</h2>
+            <h2 className="text-h4 font-semibold text-text mb-2">2. 개인정보의 이용 목적</h2>
             <ul className="list-disc list-inside space-y-1 text-text-muted">
               <li>카카오 로그인과 본인 확인 (투표권, 방장 권한, 내가 추가한 곡 관리)</li>
               <li>플레이리스트·투표·셋리스트 제공과 함께 쓰는 멤버에게 닉네임 표시</li>
@@ -53,7 +53,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-text mb-2">3. 개인정보의 보유 및 파기</h2>
+            <h2 className="text-h4 font-semibold text-text mb-2">3. 개인정보의 보유 및 파기</h2>
             <ul className="list-disc list-inside space-y-1 text-text-muted">
               <li>탈퇴하기 전까지 보관해요.</li>
               <li>탈퇴하면 카카오 로그인 정보, 투표, 댓글, 플레이리스트·밴드 참여 기록을 바로 지워요.</li>
@@ -80,7 +80,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-text mb-2">4. 개인정보의 제3자 제공과 처리 위탁</h2>
+            <h2 className="text-h4 font-semibold text-text mb-2">4. 개인정보의 제3자 제공과 처리 위탁</h2>
             <p>
               서비스는 사용자의 개인정보를 제3자에게 제공하지 않아요.
               다만, 법령에 따른 요청이 있는 경우 예외로 해요.
@@ -95,7 +95,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-text mb-2">5. 이용자의 권리와 탈퇴</h2>
+            <h2 className="text-h4 font-semibold text-text mb-2">5. 이용자의 권리와 탈퇴</h2>
             <p>
               언제든지 탈퇴할 수 있어요. 프로필 사진을 눌러 여는 로그인 메뉴에서 &quot;탈퇴하기&quot;를 누르고,
               확인창에서 한 번 더 누르면 탈퇴해요. 도중에 실패하면 계정은 그대로 남고 다시 시도할 수 있어요. 탈퇴하지
@@ -109,7 +109,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-text mb-2">6. 개인정보 보호책임자</h2>
+            <h2 className="text-h4 font-semibold text-text mb-2">6. 개인정보 보호책임자</h2>
             <p>
               서비스 운영자: plypick.kr 관리자
             </p>
@@ -119,7 +119,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-text mb-2">7. 시행일</h2>
+            <h2 className="text-h4 font-semibold text-text mb-2">7. 시행일</h2>
             <p>본 개인정보처리방침은 2026년 3월 31일부터 시행돼요.</p>
           </section>
         </div>
