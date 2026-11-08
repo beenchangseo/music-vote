@@ -44,7 +44,8 @@ type KakaoShareButtonProps = ShareLink & {
   topSong?: string;
   topArtist?: string;
   topScore?: number;
-  setlistCount?: number;
+  /** Setlist card only: songs in the setlist (`isSetlistBlock`). Absent or null while unknown, and the card states no count. */
+  setlistCount?: number | null;
   /** UI */
   children?: React.ReactNode;
   className?: string;
@@ -61,6 +62,7 @@ const variantContent = (
   showDate: string | null,
   members: number,
   ownerName: string | null,
+  setlistCount: number | null | undefined,
 ): { title: string; description: string; cta: string } => {
   const now = new Date();
   switch (v) {
@@ -82,7 +84,7 @@ const variantContent = (
       return {
         title: `🎵 셋리스트 확정 — ${title}`,
         description:
-          description || `${songs}곡 셋리스트가 확정됐어요`,
+          description || (setlistCount ? `${setlistCount}곡 셋리스트가 확정됐어요` : "셋리스트가 확정됐어요"),
         cta: "셋리스트 보기",
       };
     case "playlist":
@@ -175,7 +177,7 @@ export default function KakaoShareButton({
       setlistCount,
       ...(variant === "band" ? { members, date: shareableShowDate(showDate, new Date()) } : {}),
     });
-    const c = variantContent(variant, title, description, songs, participants, showDate, members, ownerName);
+    const c = variantContent(variant, title, description, songs, participants, showDate, members, ownerName, setlistCount);
 
     // Kakao Share path
     try {

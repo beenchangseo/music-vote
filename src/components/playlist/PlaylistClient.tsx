@@ -234,12 +234,15 @@ export default function PlaylistClient({
 
 
 
+  // A failed server read leaves the items unknown until the setlist tab loads them. Until then the banner and the Kakao
+  // card print no count, since setlist_count is only the target and the candidates are not the setlist (#87).
+  const setlistSongCount = setlistItems === null ? null : setlistItems.filter(isSetlistBlock).length;
   // The cron also sets the confirm flag on an expired playlist with no songs, so the flag alone does not mean a setlist.
-  // A failed server read leaves the items unknown until the setlist tab loads them; the flag decides until then.
+  // While the items are unknown the flag decides.
   const showsConfirmedSetlist =
-    setlistItems === null
+    setlistSongCount === null
       ? playlist.setlist_confirmed
-      : playlistStage({ setlistConfirmed: playlist.setlist_confirmed, setlistBlockCount: setlistItems.filter(isSetlistBlock).length }) === "confirmed";
+      : playlistStage({ setlistConfirmed: playlist.setlist_confirmed, setlistBlockCount: setlistSongCount }) === "confirmed";
 
   // Setlist highlight: top N songs after deadline
   const setlistCount = playlist.setlist_count;
@@ -620,15 +623,14 @@ export default function PlaylistClient({
                 <Card className="mt-5 text-center animate-fade-in">
                   <Badge tone="primary">🎵 {PLAYLIST_STAGE_LABEL.confirmed}</Badge>
                   <p className="mt-3 mb-4 text-sm text-text">
-                    총 {setlistCount || songsWithVotes.length}곡 · 다음 공연 준비 완료
+                    {setlistSongCount !== null && `총 ${setlistSongCount}곡 · `}다음 공연 준비 완료
                   </p>
                   <KakaoShareButton
                     shareCode={shareCode}
                     variant="setlist"
                     title={playlist.title}
-                    songs={songs.length}
                     participants={participantCount}
-                    setlistCount={setlistCount || songsWithVotes.length}
+                    setlistCount={setlistSongCount}
                     size="md"
                   >
                     셋리스트 카톡 공유
