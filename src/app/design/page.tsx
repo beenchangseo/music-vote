@@ -425,11 +425,29 @@ export default function DesignPage() {
         </div>
       </Section>
 
-      <Section title="ButtonGroup" note="나란한 버튼 둘은 같은 폭·같은 높이. 주 동작은 오른쪽.">
+      <Section
+        title="ButtonGroup"
+        note="나란한 버튼 둘. 긴 쪽 글자가 반 폭에 들어가면 같은 폭·같은 높이 두 칸이고, 안 들어가면 iOS 알림 버튼처럼 한 줄에 하나씩 꽉 찬 폭으로 쌓여요. 버튼 글자는 어느 폭에서도 줄을 바꾸지 않아요. 주 동작은 오른쪽, 쌓이면 먼저 쓴 버튼이 위예요."
+      >
         <ButtonGroup>
           <Button variant="tonal">취소</Button>
           <Button variant="danger">삭제</Button>
         </ButtonGroup>
+        <p className="mt-5 text-caption text-text-muted">320px 칸: 「플레이리스트 만들기」가 반 폭(156px)에 안 들어가서 쌓여요 (홈 첫 버튼 줄)</p>
+        <div className="mt-2 max-w-xs">
+          <ButtonGroup>
+            <Button size="lg">
+              <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              플레이리스트 만들기
+            </Button>
+            <Button variant="tonal" size="lg">
+              <GuitarIcon className="size-5" />
+              밴드 만들기
+            </Button>
+          </ButtonGroup>
+        </div>
       </Section>
 
       <Section title="Switch" note="켜고 끄기. 라벨을 주면 줄 전체가 눌러져요. 꺼진 트랙은 border-input 이라 3:1 이 나와요.">

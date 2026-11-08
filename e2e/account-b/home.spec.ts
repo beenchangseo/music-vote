@@ -30,6 +30,6 @@ test.describe("account-b: first-login home", () => {
     await expect(page.getByRole("button", { name: "밴드로 시작하기" })).toBeVisible();
     await expect(page.getByText("멤버를 한 번 모아 두면 공연마다 바로 투표해요")).toBeVisible();
     await expect(page.getByRole("button", { name: "이번 합주곡만 정하기" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "새 밴드" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "밴드 만들기", exact: true })).toHaveCount(0);
   });
 });

@@ -12,7 +12,7 @@ import { authProblem, metricsProblem } from "../helpers/guards";
 test.describe("account-a: a new band from the home page", () => {
   skipWhen(authProblem("account-a"), adminProblem(), metricsProblem("account-a"));
 
-  test("home → 새 밴드 → empty band → start area → first playlist link", async ({ page, cleanup }) => {
+  test("home → 밴드 만들기 → empty band → start area → first playlist link", async ({ page, cleanup }) => {
     test.setTimeout(120_000);
     const { error: schemaError } = await adminClient().from("teams").select("created_via").limit(1);
     test.skip(schemaError !== null, "teams.created_via 가 없어요 (supabase/migrations/v21.sql 적용 전)");
@@ -24,8 +24,8 @@ test.describe("account-a: a new band from the home page", () => {
 
     // 1. The signed-in home has the band entry next to the playlist one (DR3).
     await page.goto("/");
-    await expect(page.getByRole("button", { name: "새 플레이리스트" })).toBeVisible();
-    await page.getByRole("button", { name: "새 밴드" }).click();
+    await expect(page.getByRole("button", { name: "플레이리스트 만들기", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "밴드 만들기", exact: true }).click();
     const sheet = page.getByRole("dialog", { name: "밴드 만들기" });
 
     // 2. account-a may have playlists to build from; pick the empty band either way.

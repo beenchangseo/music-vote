@@ -15,6 +15,7 @@ import { MenuItemButton, MenuPanel, useMenu } from "../ui/Menu";
 import Shelf from "../ui/Shelf";
 import { useDialog } from "../ui/DialogProvider";
 import GuitarIcon from "../ui/GuitarIcon";
+import Badge from "../ui/Badge";
 import { showDateSpokenLabel } from "./ShowDateTile";
 import { BandArt, RoomCover, SongThumb } from "./BandArt";
 import BandInviteSheet from "./BandInviteSheet";
@@ -26,6 +27,7 @@ import { LEFT_BAND_STORAGE_KEY } from "./LeftBandNotice";
 import { leaveTeam, type TeamHomeMember, type TeamHomeView, type TeamRoom } from "@/actions/team";
 import { track } from "@/lib/analytics";
 import { aggregatePlayedSongs, formatShowDate, showDday, type PlayedSong, type ShowDday } from "@/domain/team";
+import { PLAYLIST_STAGE_LABEL, playlistStage } from "@/domain/playlist-stage";
 import type { MemberKey } from "@/domain/types";
 import { teamMessage } from "@/lib/team-messages";
 
@@ -414,35 +416,54 @@ function ShowDateChip({ dday, onOpen }: { dday: ShowDday; onOpen: () => void }) 
   );
 }
 
-function roomStatus(room: TeamRoom): string {
-  if (room.setlist.length > 0) return `셋리스트 ${room.setlist.length}곡`;
-  if (room.songCount > 0) return `투표 중 · 후보곡 ${room.songCount}곡`;
-  return "투표 중";
+function StageBadge({ room }: { room: TeamRoom }) {
+  const stage = playlistStage({ setlistConfirmed: room.setlistConfirmed, setlistBlockCount: room.setlistBlockCount });
+  return <Badge tone="primary">{PLAYLIST_STAGE_LABEL[stage]}</Badge>;
 }
 
-/** 지금 합주방 (YouTube Music 추천 플레이리스트 카드): 커버 + 제목 + 상태 + 흰 재생 버튼. */
+/** A failed songs read leaves songCount at 0, so a zero count is left out rather than printed. */
+function roomCounts(room: TeamRoom): string {
+  return [
+    room.setlistBlockCount > 0 && `셋리스트 ${room.setlistBlockCount}곡`,
+    room.songCount > 0 && `후보곡 ${room.songCount}곡`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+/**
+ * A card link's parts read as one accessible name; the comma lets a screen reader pause. The space stays outside the
+ * sr-only span because name computation trims each element's text.
+ */
+function NameBreak() {
+  return (
+    <>
+      <span className="sr-only">,</span>{" "}
+    </>
+  );
+}
+
+/** 지금 플레이리스트 (#80 V3): 카드 전체가 플레이리스트로 가는 링크. 단계 배지 + 제목 + 곡 수, 끝에 화살표. */
 function NowRoomCard({ room }: { room: TeamRoom }) {
+  const counts = roomCounts(room);
   return (
     <Card padding="none" role="region" aria-label="지금 플레이리스트" className="mt-6 transition-transform active:scale-[0.99]">
-      <Link href={`/playlist/${room.shareCode}`} className="block rounded-card p-4">
-        <span className="flex items-center gap-4">
-          <RoomCover thumbs={room.coverThumbs} sizes="88px" className="h-22 w-22 shrink-0" />
-          <span className="min-w-0 flex-1">
-            <span className="block text-caption font-semibold text-text-muted">지금 플레이리스트</span>
-            <span className="mt-0.5 line-clamp-2 block break-keep text-h4 font-bold text-text">{room.title}</span>
-            <span className="mt-1 block text-sm text-text-muted tabular-nums">{roomStatus(room)}</span>
-          </span>
+      <Link href={`/playlist/${room.shareCode}`} className="flex items-center gap-4 rounded-card p-4">
+        <RoomCover thumbs={room.coverThumbs} sizes="88px" className="h-22 w-22 shrink-0" />
+        <span className="min-w-0 flex-1">
+          <StageBadge room={room} />
+          <NameBreak />
+          <span className="mt-0.5 line-clamp-2 block break-keep text-h4 font-bold text-text">{room.title}</span>
+          {counts && (
+            <>
+              <NameBreak />
+              <span className="mt-1 block text-sm text-text-muted tabular-nums">{counts}</span>
+            </>
+          )}
         </span>
-        <span className="mt-4 flex items-center justify-between gap-3">
-          <span className="text-sm font-semibold text-text">
-            {room.setlist.length > 0 ? "셋리스트 보러 가기" : "들어가서 투표하기"}
-          </span>
-          <span aria-hidden className="inline-flex h-10 w-10 items-center justify-center rounded-pill bg-white text-black">
-            <svg className="ml-0.5 h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5.14v13.72a1 1 0 001.5.86l11-6.86a1 1 0 000-1.72l-11-6.86A1 1 0 008 5.14z" />
-            </svg>
-          </span>
-        </span>
+        <svg className="size-5 shrink-0 text-text-subtle" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
       </Link>
     </Card>
   );
@@ -472,13 +493,13 @@ function RoomsShelf({
       <SectionTitle id="band-rooms" title="플레이리스트" count={rooms.length} />
       <Shelf className="mt-4">
         <li className="w-36">
-          <Link href={newRoomHref} className="group block">
+          <Link href={newRoomHref} aria-label="플레이리스트 만들기" className="group block">
             <span className="flex aspect-square w-full items-center justify-center rounded-control border-2 border-dashed border-border-strong text-text-muted transition-colors group-hover:border-text-muted group-hover:text-text">
               <svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
             </span>
-            <span className="mt-2 block text-sm font-semibold text-text">새 플레이리스트</span>
+            <span className="mt-2 block text-sm font-semibold text-text">만들기</span>
           </Link>
         </li>
         {onAttach && (
@@ -498,10 +519,12 @@ function RoomsShelf({
             <Link href={`/playlist/${room.shareCode}`} className="block">
               <RoomCover thumbs={room.coverThumbs} sizes="144px" className="aspect-square w-full" />
               <span className="mt-2 block truncate text-sm font-semibold text-text">{room.title}</span>
-              <span className="block truncate text-caption text-text-muted tabular-nums">
-                {roomDate.format(new Date(room.createdAt))}
-                <Dot />
-                {room.setlist.length > 0 ? `셋리스트 ${room.setlist.length}곡` : "투표 중"}
+              <NameBreak />
+              {/* A cut date reads as another day ("10월 2…"), so the date moves under a long badge instead. */}
+              <span className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-caption text-text-muted tabular-nums">
+                <StageBadge room={room} />
+                <NameBreak />
+                <span>{roomDate.format(new Date(room.createdAt))}</span>
               </span>
             </Link>
           </li>

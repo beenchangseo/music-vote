@@ -2,14 +2,22 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import Button, { touchTarget44 } from "../Button";
+import Link from "next/link";
+import { ActionTab } from "../ActionTab";
+import Badge from "../Badge";
+import Button, { buttonClassName, touchTarget44 } from "../Button";
+import ButtonGroup from "../ButtonGroup";
 import Card from "../Card";
 import Chip from "../Chip";
 import IconButton from "../IconButton";
 import Input from "../Input";
 import { ListRowButton, ListRowIcon, ListRowLink, SongRow, SongRowLink } from "../ListRow";
+import { MenuItemButton, MenuItemLink } from "../Menu";
 import RoundButton, { RoundLink } from "../RoundButton";
+import { ToolbarButton } from "../ScreenToolbar";
+import SegmentedControl from "../SegmentedControl";
 import Switch from "../Switch";
+import TabBar from "../TabBar";
 
 afterEach(cleanup);
 
@@ -307,6 +315,74 @@ describe("controls drawn smaller than 44px", () => {
     draw();
     const control = screen.getByRole(name === "익명 투표" ? "switch" : "button", { name });
     expect(control.className.split(/\s+/)).toEqual(expect.arrayContaining(touchTarget44.split(" ")));
+  });
+});
+
+// #79: a label that wraps inside a fixed-height control spills out of it. jsdom has no layout, so this reads what CSS
+// would: the nearest white-space class between the label's text and the control must be nowrap.
+function labelWhiteSpace(text: HTMLElement): string | undefined {
+  for (let el: HTMLElement | null = text; el; el = el.parentElement) {
+    const found = el.className.match(/(?:^|\s)(?:whitespace|text)-(nowrap|normal|pre|pre-line|pre-wrap|break-spaces|wrap|balance|pretty)(?:\s|$)/);
+    if (found) return found[1];
+  }
+  return undefined;
+}
+
+describe("control labels stay on one line (#79)", () => {
+  it.each([
+    ["Button lg", () => render(<Button size="lg">플레이리스트 만들기</Button>)],
+    ["Button sm", () => render(<Button size="sm">플레이리스트 만들기</Button>)],
+    ["a link drawn with buttonClassName", () => render(<Link href="/new" className={buttonClassName({ variant: "tonal" })}>플레이리스트 만들기</Link>)],
+    ["ToolbarButton", () => render(<ToolbarButton label="플레이리스트 만들기" />)],
+    ["Chip", () => render(<Chip>플레이리스트 만들기</Chip>)],
+    [
+      "SegmentedControl",
+      () => render(<SegmentedControl aria-label="방식" options={[{ value: "a", label: "플레이리스트 만들기" }, { value: "b", label: "밴드" }]} value="a" onChange={() => {}} />),
+    ],
+    ["TabBar", () => render(<TabBar aria-label="화면" items={[{ id: "a", label: "플레이리스트 만들기", icon: null }]} value="a" onChange={() => {}} />)],
+    ["ActionTab", () => render(<ActionTab icon={null} onClick={() => {}}>플레이리스트 만들기</ActionTab>)],
+    ["MenuItemButton", () => render(<MenuItemButton>플레이리스트 만들기</MenuItemButton>)],
+    ["MenuItemLink", () => render(<MenuItemLink href="/new">플레이리스트 만들기</MenuItemLink>)],
+    ["Badge", () => render(<Badge>플레이리스트 만들기</Badge>)],
+  ])("%s", (_name, draw) => {
+    draw();
+    expect(labelWhiteSpace(screen.getByText("플레이리스트 만들기"))).toBe("nowrap");
+  });
+
+  // min-width: fit-content is min(max-content, max(min-content, row)). A short label keeps its button at least label
+  // wide, so the row breaks into one button per line; a truncating band name is capped at the row and gives way.
+  // min-w-max would push that button past the screen (min-width beats Button's max-w-full).
+  it("ButtonGroup keeps each button at least as wide as its label, up to the row, and lets the row break into one button per line", () => {
+    render(
+      <ButtonGroup>
+        <Button>플레이리스트 만들기</Button>
+        <Button variant="tonal">밴드 만들기</Button>
+      </ButtonGroup>,
+    );
+    const group = screen.getByRole("button", { name: "플레이리스트 만들기" }).parentElement!;
+    expect(group.className.split(/\s+/)).toEqual(expect.arrayContaining(["flex-wrap", "*:min-w-fit", "*:grow"]));
+    expect(group.className).not.toMatch(/\*:min-w-(0|max)(\s|$)/);
+  });
+
+  it("ButtonGroup lets a Button's truncating band name shrink to the row", () => {
+    const name = "아주아주긴밴드이름".repeat(5);
+    render(
+      <ButtonGroup>
+        <Button variant="tonal">
+          <span className="flex min-w-0">
+            <span className="truncate">{name}</span>에 넣기
+          </span>
+        </Button>
+        <Button variant="ghost">취소</Button>
+      </ButtonGroup>,
+    );
+    const button = screen.getByRole("button", { name: `${name}에 넣기` });
+    // Every box from the button down to the truncate span may be narrower than its text.
+    expect(button.parentElement!.className).toMatch(/(^|\s)\*:min-w-fit(\s|$)/);
+    expect(button.className).toMatch(/(^|\s)max-w-full(\s|$)/);
+    const cells: string[] = [];
+    for (let el = screen.getByText(name).parentElement; el && el !== button; el = el.parentElement) cells.push(el.className);
+    expect(cells.every((cls) => /(^|\s)(min-w-0|max-w-full)(\s|$)/.test(cls))).toBe(true);
   });
 });
 

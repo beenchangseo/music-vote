@@ -16,18 +16,18 @@ type HeroCTAProps =
   | {
       /**
        * start = 상태 A (밴드 0 · 플레이리스트 0): 뜻이 붙은 두 선택지(DR2).
-       * row = 상태 B: [＋ 새 플레이리스트][새 밴드] 버튼 줄(DR3).
+       * row = 상태 B: [＋ 플레이리스트 만들기][밴드 만들기] 버튼 줄(DR3). 좁으면 두 줄로 쌓인다(#79).
        */
       variant: "start" | "row";
       /** 완료 화면의 "이 플레이리스트를 밴드에 넣을까요?" 후보 (디자인 리뷰 13A). */
       myTeams: MyTeam[];
-      /** 새 밴드 시트의 "같이 투표한 멤버로 만들기" 목록 (DR3). */
+      /** 밴드 만들기 시트의 "같이 투표한 멤버로 만들기" 목록 (DR3). */
       bandCandidates: BandCandidate[];
-      /** 새 밴드 시트 맨 위 한 줄 (DR11). */
+      /** 밴드 만들기 시트 맨 위 한 줄 (DR11). */
       participantOnlyTitle: string | null;
     };
 
-/** 홈의 첫 버튼들. 플레이리스트 만들기 모달과 새 밴드 시트를 함께 든다. */
+/** 홈의 첫 버튼들. 플레이리스트 만들기 모달과 밴드 만들기 시트를 함께 든다. */
 export default function HeroCTA(props: HeroCTAProps) {
   if (props.variant === "landing") {
     return (
@@ -70,11 +70,11 @@ function SignedInCTA({
             <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
               <path d="M12 5v14M5 12h14" />
             </svg>
-            새 플레이리스트
+            플레이리스트 만들기
           </Button>
           <Button variant="tonal" size="lg" onClick={() => setBandOpen(true)}>
             <GuitarIcon className="size-5" />
-            새 밴드
+            밴드 만들기
           </Button>
         </ButtonGroup>
       )}

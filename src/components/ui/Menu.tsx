@@ -59,7 +59,7 @@ const TONE: Record<Tone, string> = {
 
 // The panel clips its overflow, which would cut off the global focus outline, so the focus ring is drawn inside.
 const ITEM =
-  "flex min-h-control-md w-full items-center px-4 text-left text-sm transition-colors hover:bg-surface-hover " +
+  "flex min-h-control-md w-full items-center whitespace-nowrap px-4 text-left text-sm transition-colors hover:bg-surface-hover " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring " +
   "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent";
 

@@ -58,12 +58,14 @@ describe("HeroCTA (CEO2-A, DR2, DR3)", () => {
     expect(screen.getByRole("form", { name: "플레이리스트 만들기 폼" })).toBeInTheDocument();
   });
 
-  it("puts 새 밴드 next to 새 플레이리스트 in state B and hands the candidates to the sheet", () => {
+  // #79: the buttons say what they do, in the words their sheets open with.
+  it("puts 밴드 만들기 next to 플레이리스트 만들기 in state B and hands the candidates to the sheet", () => {
     bandSheet.props = [];
     const candidate = { id: "pl-1", title: "10월 합주", memberCount: 3, memberPreview: ["기타", "드럼"] };
     render(<HeroCTA variant="row" {...signedIn} bandCandidates={[candidate]} participantOnlyTitle="남의 합주" />);
-    expect(screen.getByRole("button", { name: "새 플레이리스트" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "새 밴드" }));
+    fireEvent.click(screen.getByRole("button", { name: "플레이리스트 만들기" }));
+    expect(screen.getByRole("form", { name: "플레이리스트 만들기 폼" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "밴드 만들기" }));
     expect(bandSheet.props.at(-1)).toMatchObject({ open: true, candidates: [candidate], participantOnlyTitle: "남의 합주" });
   });
 });

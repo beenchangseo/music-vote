@@ -61,6 +61,8 @@ const sizeClasses: Record<Size, string> = {
 /**
  * Button 의 모양만. 버튼처럼 보여야 하는 `<Link>` 가 같은 클래스를 쓰게 한다
  * (not-found·안내 화면의 "홈으로" 처럼 이동이 목적인 곳).
+ * 글자는 줄을 바꾸지 않고(#79) 버튼은 담긴 칸보다 넓어지지 않는다. 밴드 이름처럼 길이를 모르는 글자는 `truncate` span 에
+ * 담으면 그 부분만 말줄임된다.
  */
 export function buttonClassName({
   variant = "primary",
@@ -69,7 +71,7 @@ export function buttonClassName({
   pill = false,
   className = "",
 }: { variant?: Variant; size?: Size; fullWidth?: boolean; pill?: boolean; className?: string } = {}) {
-  return `inline-flex items-center justify-center gap-2 ${pill ? "rounded-pill" : "rounded-control"} font-semibold transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`;
+  return `inline-flex max-w-full items-center justify-center gap-2 whitespace-nowrap ${pill ? "rounded-pill" : "rounded-control"} font-semibold transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`;
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
@@ -100,9 +102,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
       className={buttonClassName({ variant: pressed ? "primary" : variant, size, fullWidth, pill, className })}
       {...rest}
     >
-      {/* One grid cell holds both, so the spinner sits on the hidden label and the button keeps its width. */}
-      <span className="inline-grid place-items-center">
-        <span className={`col-start-1 row-start-1 inline-flex items-center gap-2 ${loading ? "opacity-0" : ""}`}>
+      {/* One grid cell holds both, so the spinner sits on the hidden label and the button keeps its width. The cell can
+          shrink to the button (min-w-0, a minmax(0, 1fr) column, max-w-full) so a truncate span in the label gives way. */}
+      <span className="inline-grid min-w-0 grid-cols-1 place-items-center">
+        <span className={`col-start-1 row-start-1 inline-flex max-w-full items-center gap-2 ${loading ? "opacity-0" : ""}`}>
           {kakaoMark && <KakaoMark />}
           {children}
         </span>

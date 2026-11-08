@@ -73,7 +73,7 @@ test.describe("account-a + account-b: band flow", () => {
 
     // 5. account-a makes a new room from the band home.
     await page.goto(`/band/${teamId}`);
-    await page.getByRole("link", { name: "새 플레이리스트" }).click();
+    await page.getByRole("link", { name: "플레이리스트 만들기", exact: true }).click();
     await page.waitForURL(new RegExp(`/new\\?band=${teamId}$`));
     await expect(page.getByText(`${bandName}의 플레이리스트`)).toBeVisible();
     await page.getByPlaceholder(/어떤 합주예요/).fill(bandRoomTitle);

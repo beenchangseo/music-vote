@@ -48,6 +48,7 @@ import type { PlaylistView, RoomTeam, SongWithScore, SetlistItem, Comment, VoteA
 import { displayTitle } from "@/domain/song-meta";
 import { inviteSongs } from "@/domain/invite-card";
 import { assignRanks } from "@/domain/vote";
+import { PLAYLIST_STAGE_LABEL, isSetlistBlock, playlistStage } from "@/domain/playlist-stage";
 
 interface PlaylistClientProps {
   playlist: PlaylistView;
@@ -232,6 +233,13 @@ export default function PlaylistClient({
   });
 
 
+
+  // The cron also sets the confirm flag on an expired playlist with no songs, so the flag alone does not mean a setlist.
+  // A failed server read leaves the items unknown until the setlist tab loads them; the flag decides until then.
+  const showsConfirmedSetlist =
+    setlistItems === null
+      ? playlist.setlist_confirmed
+      : playlistStage({ setlistConfirmed: playlist.setlist_confirmed, setlistBlockCount: setlistItems.filter(isSetlistBlock).length }) === "confirmed";
 
   // Setlist highlight: top N songs after deadline
   const setlistCount = playlist.setlist_count;
@@ -602,15 +610,15 @@ export default function PlaylistClient({
                       셋리스트 확정하기
                     </Button>
                   ) : (
-                    <p className="text-caption text-text-muted">생성자가 셋리스트를 확정하면 셋리스트/합주 모드를 사용할 수 있습니다.</p>
+                    <p className="text-caption text-text-muted">셋리스트는 방장이 확정해요</p>
                   )}
                 </div>
               )}
 
               {/* Setlist share banner — confirmed setlist */}
-              {playlist.setlist_confirmed && (
+              {showsConfirmedSetlist && (
                 <Card className="mt-5 text-center animate-fade-in">
-                  <Badge tone="primary">🎵 셋리스트 확정</Badge>
+                  <Badge tone="primary">🎵 {PLAYLIST_STAGE_LABEL.confirmed}</Badge>
                   <p className="mt-3 mb-4 text-sm text-text">
                     총 {setlistCount || songsWithVotes.length}곡 · 다음 공연 준비 완료
                   </p>

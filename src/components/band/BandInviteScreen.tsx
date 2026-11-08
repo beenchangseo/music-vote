@@ -140,7 +140,7 @@ export default function BandInviteScreen({
           )}
         </div>
 
-        <p className="mt-6 text-sm leading-relaxed text-text-muted">플레이리스트·셋리스트를 이 밴드에서 같이 관리해요</p>
+        <p className="mt-6 text-sm leading-relaxed text-text-muted">이 밴드의 플레이리스트에서 같이 투표하고 셋리스트를 짜요</p>
 
         <div className="mt-10">
           {loggedIn ? (
