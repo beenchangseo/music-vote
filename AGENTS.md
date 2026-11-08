@@ -135,7 +135,7 @@ Variable(한국어) + Geist(영문) 폴백.
 - 고르기: 필터·켜고 끄는 선택지는 `Chip`(36px, 누르는 영역 44px), 한 화면 안 보기·방식 하나는 `SegmentedControl`
   (radiogroup), 켜고 끄기는 `Switch`(label 을 주면 줄 전체가 눌린다), 화면 아래 탭은 `TabBar`.
 - 목록: 곡은 `SongRow`(카드 없이 72px, 48px 커버, 고정 폭 `RankNumber`), 설정·멤버는 `ListRow`(56px)를 시트 안에서
-  `ListGroup` 으로 묶는다. 줄 전체가 눌리면 `ListRowButton`, 줄 전체가 링크면 `ListRowLink` 다. 둘은 좌우 8px 여백을 스스로 가져서 hover 바탕이 글자에 붙지 않는다. 버튼 안에 div 를 둘 수 없어 칸이 span 이다.
+  `ListGroup` 으로 묶는다. 줄 전체가 눌리면 `ListRowButton`, 줄 전체가 링크면 `ListRowLink` 다. 둘은 `SongRow` 처럼 내용을 열 가장자리에 두고 hover 바탕만 양옆 8px 밖까지 편다. 그래서 시트 제목·위 글자와 같은 세로줄에 서고, 옆에 다른 칸을 두면 8px 이상 띄운다. 버튼 안에 div 를 둘 수 없어 칸이 span 이다.
   펼치는 곡 행의 제목 줄은 `SongRowTitleButton`, 펼친 아래 동작은 `ActionTab` 을 `ActionTabBar` 에 담는다(바탕 없는 44px 탭, 끝에 ⋯ `IconButton`). 사람은 `Avatar`·`AvatarStack`, 메타·상태는 `Badge`(neutral·primary·warning).
   가로로 넘기는 줄(홈의 내 밴드)은 `Shelf` 다. 페이지 여백까지 넘치는 음수 margin 은 그 안에만 둔다.
 - 메뉴: 눌러 여는 작은 메뉴는 트리거와 같은 relative 부모 안의 `MenuPanel` 에 `MenuItemButton`·`MenuItemLink`(44px,

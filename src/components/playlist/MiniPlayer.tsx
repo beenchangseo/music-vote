@@ -245,7 +245,8 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
           <div className="h-0.5 w-full bg-surface-hover" aria-hidden>
             <div className="h-0.5 bg-text transition-[width] duration-500 ease-linear" style={{ width: `${ratio * 100}%` }} />
           </div>
-          <div className="mx-auto flex max-w-lg items-center gap-1 px-4">
+          {/* gap-2: the bar's hover fill reaches 8px past its column, so it stops at the play button instead of under it. */}
+          <div className="mx-auto flex max-w-lg items-center gap-2 px-4">
             <ListRowButton
               ref={barRef}
               onClick={() => setExpanded(true)}
@@ -256,14 +257,16 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
               <span className="block truncate text-sm font-semibold text-text">{currentSong.shownTitle}</span>
               {artist && <span className="block truncate text-caption text-text-muted">{artist}</span>}
             </ListRowButton>
-            <RoundButton tone="plain" size="md" onClick={handlePlayPause} aria-label={isPlaying ? "일시정지" : "재생"}>
-              <PlayPauseIcon playing={isPlaying} />
-            </RoundButton>
-            <RoundButton tone="plain" size="md" onClick={() => actions.playNext(true)} aria-label="다음 곡">
-              <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path d="M16 5h2v14h-2zM4 6.5v11a1 1 0 001.53.85l8.5-5.5a1 1 0 000-1.7l-8.5-5.5A1 1 0 004 6.5z" />
-              </svg>
-            </RoundButton>
+            <div className="flex shrink-0 items-center gap-1">
+              <RoundButton tone="plain" size="md" onClick={handlePlayPause} aria-label={isPlaying ? "일시정지" : "재생"}>
+                <PlayPauseIcon playing={isPlaying} />
+              </RoundButton>
+              <RoundButton tone="plain" size="md" onClick={() => actions.playNext(true)} aria-label="다음 곡">
+                <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path d="M16 5h2v14h-2zM4 6.5v11a1 1 0 001.53.85l8.5-5.5a1 1 0 000-1.7l-8.5-5.5A1 1 0 004 6.5z" />
+                </svg>
+              </RoundButton>
+            </div>
           </div>
         </div>
       )}

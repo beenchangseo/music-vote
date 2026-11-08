@@ -9,6 +9,10 @@ interface RowSlots {
 
 const rowLayout = "flex min-h-row items-center gap-3 py-2";
 
+// A row surface (hover or open fill) reaches 8px past the column on each side, and the row pads its content back onto
+// the column edge: the fill never sits flush against the words, and the words stay in line with the title above.
+const bleed = { frame: "-mx-2", content: "px-2" };
+
 function Slots({ as: Slot, leading, trailing, children }: RowSlots & { as: "div" | "span" }) {
   return (
     <>
@@ -30,17 +34,14 @@ export default function ListRow({ leading, trailing, className = "", children, .
   );
 }
 
-/**
- * 눌리는 줄의 좌우 여백. hover 바탕이 칠해져도 글자가 바탕 끝에 붙지 않는다. 줄과 같은 세로선에 서야 하는
- * 옆 줄(합주 인터벌)도 이 값을 쓴다.
- */
-export const pressableRowInset = "px-2";
-
-const pressableRow = `group/row ${rowLayout} ${pressableRowInset} w-full min-w-0 rounded-control text-left transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent`;
+// One element is both the frame and the content row. A button is only as wide as its content unless given a width, so
+// the width is the column plus both bleeds.
+const pressableRow = `group/row ${rowLayout} ${bleed.frame} ${bleed.content} w-[calc(100%+1rem)] min-w-0 rounded-control text-left transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent`;
 
 /**
  * 줄 전체가 눌리는 ListRow. 버튼 안에는 글자·span 만 둘 수 있어서 칸도 span 으로 그린다.
  * 그래서 칸에는 div·p 대신 span 을 넣고, 버튼이나 링크는 넣지 않는다.
+ * 내용은 열 가장자리에 그대로 서고 hover 바탕만 양옆 8px 밖까지 편다 (SongRow 와 같다). 옆에 다른 칸을 두면 8px 이상 띄운다.
  */
 export function ListRowButton({
   leading,
@@ -139,8 +140,7 @@ export function SongRowTitleButton({ type = "button", children, ...rest }: Omit<
 }
 
 const songRowLayout = "flex min-h-row-song items-center gap-2.5 max-[359px]:gap-2";
-// The surface reaches 8px past the column on each side; px-2 puts the row's own content back on the column edge.
-const songRowSurface = { frame: "-mx-2 rounded-card transition-colors", row: "px-2", hover: "hover:bg-surface", open: "bg-surface" };
+const songRowSurface = { frame: `${bleed.frame} rounded-card transition-colors`, row: bleed.content, hover: "hover:bg-surface", open: "bg-surface" };
 
 function SongRowCellsView({ cover, rank, topRank = false, trailing, children }: SongRowCells) {
   return (

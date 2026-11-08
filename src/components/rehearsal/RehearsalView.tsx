@@ -6,7 +6,7 @@ import Image from "next/image";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
-import { ListRowButton, pressableRowInset } from "../ui/ListRow";
+import { ListRowButton } from "../ui/ListRow";
 import SongMeta from "./SongMeta";
 import CommentSection from "./CommentSection";
 import { useDialog } from "../ui/DialogProvider";
@@ -480,7 +480,7 @@ function StepLead({ marker, className = "", children }: { marker?: ReactNode; cl
 
 function IntervalLine({ interval, past }: { interval: RehearsalInterval; past: boolean }) {
   return (
-    <p className={`${pressableRowInset} flex min-h-8 items-center text-caption ${past ? "text-text-subtle" : "text-text-muted"}`}>
+    <p className={`flex min-h-8 items-center text-caption ${past ? "text-text-subtle" : "text-text-muted"}`}>
       <StepLead>
         <span className="flex min-w-0 items-center gap-1.5">
           <ClockIcon className="size-3.5 shrink-0" />
