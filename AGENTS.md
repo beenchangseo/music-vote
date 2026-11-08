@@ -111,6 +111,8 @@ verification/     TLA+ 형식 검증 (verify-vote-quota 스킬)
 · `min-h-row-song` 72(곡). 그림자는 `shadow-float` 하나이고 시트·토스트·FAB 에만 쓴다. 다른 층은 표면 색으로 만든다.
 화면에 붙는 막대(`ScreenToolbar`·`TabBar`·`MiniPlayer` 막대)는 `ui/chrome-inset.ts` 로 자기 높이를 알리고, `html` 의
 scroll-padding 이 그만큼 비운다. 막대 밑으로 스크롤되는 여백을 `scroll-mt-*` 같은 숫자로 따로 적지 않는다.
+홈 인디케이터 자리는 `pb-safe-bottom` 이다. body 가 비우고, 그 자리를 스스로 칠하는 아래 막대는 `data-safe-bottom` 을 달아
+body 의 몫을 가져간다. `env(safe-area-inset-bottom)` 을 임의 값이나 음수 margin 으로 적지 않는다.
 타이포는 `text-display`·`text-h1`~`text-h4`·`text-body`·`text-sm`·`text-caption`, 한국어 줄간격 1.5 이상. 폰트는 Pretendard
 Variable(한국어) + Geist(영문) 폴백.
 
@@ -134,6 +136,9 @@ Variable(한국어) + Geist(영문) 폴백.
 - 목록: 곡은 `SongRow`(카드 없이 72px, 48px 커버, 고정 폭 `RankNumber`), 설정·멤버는 `ListRow`(56px)를 시트 안에서
   `ListGroup` 으로 묶는다. 줄 전체가 눌리면 `ListRowButton`, 줄 전체가 링크면 `ListRowLink` 다. 버튼 안에 div 를 둘 수 없어 칸이 span 이다.
   펼치는 곡 행의 제목 줄은 `SongRowTitleButton`, 펼친 아래 동작은 `ActionTab` 을 `ActionTabBar` 에 담는다(바탕 없는 44px 탭, 끝에 ⋯ `IconButton`). 사람은 `Avatar`·`AvatarStack`, 메타·상태는 `Badge`(neutral·primary·warning).
+  가로로 넘기는 줄(홈의 내 밴드)은 `Shelf` 다. 페이지 여백까지 넘치는 음수 margin 은 그 안에만 둔다.
+- 메뉴: 눌러 여는 작은 메뉴는 트리거와 같은 relative 부모 안의 `MenuPanel` 에 `MenuItemButton`·`MenuItemLink`(44px,
+  위험한 동작은 tone `danger`)를 넣는다(로그인 메뉴).
 - 안내: 닫을 수 있는 안내는 `NoticeCard`(늘 닫기가 있고, 닫힘 기억은 부르는 쪽), 상태가 이어지는 동안 남는 안내는
   `InlineNotice`, 빈 목록은 `EmptyState`(screen·inline). 성공 확인을 띄우는 토스트는 아직 없다.
 - 입력: `Field`(라벨 위, 도움말·오류 아래, aria 를 이어 준다) 안에 `Input`·`Textarea`.
