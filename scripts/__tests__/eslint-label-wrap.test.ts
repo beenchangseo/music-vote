@@ -34,6 +34,10 @@ describe("eslint label-wrap rules", () => {
     '<div className="flex [&>button]:min-w-0"><Button>취소</Button></div>',
     '<div className="flex *:min-w-0">{open && <Button>취소</Button>}</div>',
     '<div className="flex *:min-w-0">{bands.map((band) => <Button key={band.id}>{band.name}</Button>)}</div>',
+    // Behind a breakpoint it bites exactly at phone width, where #79 happened.
+    '<div className="flex max-sm:*:min-w-0"><Button>취소</Button></div>',
+    '<div className="flex sm:[&>*]:min-w-0"><Button>취소</Button></div>',
+    '<div className="max-sm:**:min-w-0"><section><Button>취소</Button></section></div>',
     // ** and [&_*] reach every descendant, so a button any depth down shrinks.
     '<div className="**:min-w-0"><section><Button>취소</Button></section></div>',
     '<div className="[&_*]:max-w-40"><p><span><Button>취소</Button></span></p></div>',

@@ -12,8 +12,8 @@ const CONTROL_SIZE_UTILITY =
 const LABEL_WRAP_UTILITY = "/(^|[\\s:])!?(whitespace-(?!nowrap(?![\\w-]))[\\w-]+|text-(wrap|balance|pretty)(?![\\w-]))/";
 // A variant that lets the buttons of a row shrink under their one-line labels: ButtonGroup's old `*:min-w-0`.
 // `*:` and `[&>…]:` reach the direct children only; `**:` and `[&_…]:` reach every descendant.
-const CHILD_SHRINK_UTILITY = "/(^|\\s)!?(\\*|\\[&>[^\\]\\s]+\\]):!?(min-w-0|max-w-)/";
-const DESCENDANT_SHRINK_UTILITY = "/(^|\\s)!?(\\*\\*|\\[&_[^\\]\\s]+\\]):!?(min-w-0|max-w-)/";
+const CHILD_SHRINK_UTILITY = "/(^|[\\s:])!?(\\*|\\[&>[^\\]\\s]+\\]):!?(min-w-0|max-w-)/";
+const DESCENDANT_SHRINK_UTILITY = "/(^|[\\s:])!?(\\*\\*|\\[&_[^\\]\\s]+\\]):!?(min-w-0|max-w-)/";
 // A Button, a ToolbarButton or a link drawn with buttonClassName.
 const BUTTON_LIKE =
   "JSXElement:matches([openingElement.name.name=/^(Button|ToolbarButton)$/], :has(> JSXOpeningElement:has(CallExpression[callee.name='buttonClassName'])))";
