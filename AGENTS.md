@@ -171,6 +171,8 @@ Variable(한국어) + Geist(영문) 폴백.
 - **Export route** `src/app/api/*`: OG·셋리스트 이미지는 Edge, 셋리스트 PDF 는 Node, cron 은 서버 런타임.
   Pretendard 는 CDN 에서 받는다.
 - **분석**: `src/lib/analytics.ts` 의 `track()`. 새 이벤트는 `EventMap` 타입에 먼저 등록한다. 분석 실패는 조용히 넘긴다.
+  GA(`NEXT_PUBLIC_GA_ID`)도 같은 이벤트를 받지만 페이지 주소·제목은 `src/domain/google-analytics.ts` 표의 가린 값만
+  받아서, 새 페이지는 그 표에 더하고 이벤트 속성은 그냥 `string` 으로 두지 않는다.
 
 ## 마이그레이션
 

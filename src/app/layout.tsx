@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import KakaoInit from "@/components/share/KakaoInit";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Suspense } from "react";
@@ -68,6 +69,7 @@ export default function RootLayout({
           {children}
         </DialogProvider>
         <Analytics />
+        <GoogleAnalytics />
         <SpeedInsights />
         <KakaoInit />
       </body>
