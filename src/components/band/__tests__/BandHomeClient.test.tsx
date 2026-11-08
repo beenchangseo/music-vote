@@ -512,6 +512,29 @@ describe("BandHomeClient member management (F1, 24B, R7)", () => {
     expect(screen.getByText(/\/join\/NEWcode_03$/)).toBeInTheDocument();
   });
 
+  it("hands focus back to the member's menu button when Escape closes the menu", () => {
+    renderHome(ownerView());
+    fireEvent.click(screen.getByRole("button", { name: "기타 메뉴" }));
+    const item = screen.getByRole("menuitem", { name: "내보내기" });
+    item.focus();
+    fireEvent.keyDown(item, { key: "Escape" });
+
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "기타 메뉴" })).toHaveFocus();
+  });
+
+  it("hands focus back to the member's menu button when the remove dialog is cancelled", () => {
+    renderHome(ownerView());
+    fireEvent.click(screen.getByRole("button", { name: "기타 메뉴" }));
+    const item = screen.getByRole("menuitem", { name: "내보내기" });
+    item.focus();
+    fireEvent.click(item);
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "취소" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "기타 메뉴" })).toHaveFocus();
+  });
+
   it("gives members no remove menu", () => {
     renderHome(view());
     expect(screen.queryByRole("button", { name: /메뉴$/ })).not.toBeInTheDocument();
