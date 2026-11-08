@@ -76,9 +76,10 @@ const eslintConfig = defineConfig([
             message: "primary-soft 는 지웠다. 선택·tonal 바탕은 primary-tint 를 쓴다.",
           },
           {
-            selector: `:matches(JSXOpeningElement[name.name=/^(Button|IconButton|Chip|RoundButton|RoundLink|RoundRow)$/] > JSXAttribute[name.name='className'], CallExpression[callee.name='buttonClassName'] Property[key.name='className']) ${node}${CONTROL_SIZE_UTILITY}]`,
+            selector: `:matches(JSXOpeningElement[name.name=/^(Button|IconButton|Chip|RoundButton|RoundLink|RoundRow|ListRowButton|ListRowLink)$/] > JSXAttribute[name.name='className'], CallExpression[callee.name='buttonClassName'] Property[key.name='className']) ${node}${CONTROL_SIZE_UTILITY}]`,
             message:
-              "Button·IconButton·Chip·RoundButton·buttonClassName 의 높이·폭·안쪽 여백·모서리·글자 크기는 size·variant prop 이 정한다. className 에는 바깥 배치만 둔다" +
+              "Button·IconButton·Chip·RoundButton·ListRowButton·ListRowLink·buttonClassName 의 높이·폭·안쪽 여백·모서리·글자 크기는 size·variant prop 이나 " +
+              "부품이 정한다. className 에는 바깥 배치만 둔다" +
               "(m*·flex-1·shrink-0·self-*·order-*·hidden 같은 표시 여부). 꽉 찬 폭은 Button 의 fullWidth, 툴바 동작은 ToolbarButton 을 쓴다.",
           },
           {
@@ -95,11 +96,11 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    // A <button> or button-looking link drawn outside the primitives picks its own height, radius and font size, which is
-    // how mismatched controls kept shipping. Files that already did are counted in eslint-suppressions.json, which only shrinks.
+    // A <button>, button-looking link or text field drawn outside the primitives picks its own height, radius and font
+    // size, which is how mismatched controls kept shipping.
     files: ["src/**/*.tsx"],
     ignores: ["src/components/ui/**", "src/**/__tests__/**"],
-    rules: { "ds/no-raw-control": "error" },
+    rules: { "ds/no-raw-control": "error", "ds/no-raw-input": "error" },
   },
   {
     // globals.css draws the keyboard focus outline in @layer base, so an outline-none utility beats it. A class list that

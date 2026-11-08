@@ -28,12 +28,12 @@ const guards = [
     onMain(path) &&
     `${path} 는 main 에 들어가 운영 DB 에 적용된 마이그레이션이다. 고치지 말고 npm run db:new 로 다음 번호 파일을 만들어 ` +
       "바꿀 내용을 거기에 적는다(.claude/skills/db-migration).",
-  // The DS ratchet only shrinks; eslint writes this file, and only to prune it.
+  // The eslint CLI reads this file from the repo root on its own and passes every error it lists, whatever the rule.
   (path) =>
     path === "eslint-suppressions.json" &&
-    "eslint-suppressions.json 은 DS 래칫 baseline 이라 손으로 고치지 않는다. 새로 걸린 컨트롤은 src/components/ui 의 primitive 로 " +
-      "그리고(npx eslint 메시지가 무엇으로 그릴지 알려 준다), 고쳐서 남은 항목은 npx eslint --prune-suppressions 로 줄인다. " +
-      "늘린 항목은 node scripts/ds-inventory.mjs --check-baseline 이 main 과 비교해 잡는다.",
+    "eslint 에는 봐주는 baseline 이 없다. eslint-suppressions.json 이 있으면 eslint CLI 가 그 파일을 읽어 적힌 규칙의 에러를 " +
+      "그대로 넘긴다. ds/* 뿐 아니라 익명 모드를 지키는 postgres_changes 금지(no-restricted-syntax)도 지나간다. 걸린 곳은 " +
+      "eslint 메시지가 알려 주는 src/components/ui 부품이나 맞는 토큰으로 고친다.",
 ];
 
 const reason = guards.map((guard) => guard(rel)).find(Boolean);

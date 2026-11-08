@@ -369,6 +369,20 @@ export default function DesignPage() {
               찾기
             </Button>
           </div>
+          <p className="text-caption text-text-subtle">compact 는 두세 자리 숫자 칸이에요 (곡 정보의 BPM·분·초). 폭은 감싸는 칸이 정해요.</p>
+          <div className="flex items-center gap-2">
+            <div className="w-20">
+              <Input aria-label="BPM" type="number" compact placeholder="BPM" defaultValue={120} />
+            </div>
+            <span className="text-caption text-text-subtle">·</span>
+            <div className="w-14">
+              <Input aria-label="길이 분" type="number" compact placeholder="분" defaultValue={4} />
+            </div>
+            <span className="text-caption text-text-subtle">:</span>
+            <div className="w-14">
+              <Input aria-label="길이 초" type="number" compact placeholder="초" defaultValue={56} />
+            </div>
+          </div>
         </div>
       </Section>
 

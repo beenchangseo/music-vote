@@ -135,7 +135,7 @@ Variable(한국어) + Geist(영문) 폴백.
 - 고르기: 필터·켜고 끄는 선택지는 `Chip`(36px, 누르는 영역 44px), 한 화면 안 보기·방식 하나는 `SegmentedControl`
   (radiogroup), 켜고 끄기는 `Switch`(label 을 주면 줄 전체가 눌린다), 화면 아래 탭은 `TabBar`.
 - 목록: 곡은 `SongRow`(카드 없이 72px, 48px 커버, 고정 폭 `RankNumber`), 설정·멤버는 `ListRow`(56px)를 시트 안에서
-  `ListGroup` 으로 묶는다. 줄 전체가 눌리면 `ListRowButton`, 줄 전체가 링크면 `ListRowLink` 다. 버튼 안에 div 를 둘 수 없어 칸이 span 이다.
+  `ListGroup` 으로 묶는다. 줄 전체가 눌리면 `ListRowButton`, 줄 전체가 링크면 `ListRowLink` 다. 둘은 `SongRow` 처럼 내용을 열 가장자리에 두고 hover 바탕만 양옆 8px 밖까지 편다. 그래서 시트 제목·위 글자와 같은 세로줄에 서고, 옆에 다른 칸을 두면 8px 이상 띄운다. 버튼 안에 div 를 둘 수 없어 칸이 span 이다.
   펼치는 곡 행의 제목 줄은 `SongRowTitleButton`, 펼친 아래 동작은 `ActionTab` 을 `ActionTabBar` 에 담는다(바탕 없는 44px 탭, 끝에 ⋯ `IconButton`). 사람은 `Avatar`·`AvatarStack`, 메타·상태는 `Badge`(neutral·primary·warning).
   가로로 넘기는 줄(홈의 내 밴드)은 `Shelf` 다. 페이지 여백까지 넘치는 음수 margin 은 그 안에만 둔다.
 - 메뉴: 눌러 여는 작은 메뉴는 트리거와 같은 relative 부모 안의 `MenuPanel` 에 `MenuItemButton`·`MenuItemLink`(44px,
@@ -154,12 +154,14 @@ Variable(한국어) + Geist(영문) 폴백.
   tone 만 된다. 켜고 끄기는 tone 대신 `pressed`(꺼지면 ghost, 켜지면 primary-fg 글리프). 투표 화살표는 tone `upvote`·`downvote` 에 `chosen` 이다(고른 쪽에 옅은 원판, aria-pressed 없음). 글리프 크기는 버튼이 정하니 svg 에 크기·margin 을
   두지 않는다(eslint). 재생 삼각형은 `PlayPauseIcon`. 링크는 `RoundLink`, `edge="start"` 면 글리프가 내용 왼쪽 끝에 맞는다. 둥근 버튼을
   모은 줄은 `RoundRow` 다. 원은 줄지 않고 간격이 준다.
-- 크기는 prop 이 정한다. `Button`·`IconButton`·`Chip`·`RoundButton` 의 className 에 높이·폭·여백·모서리·글자 크기를 덧칠하면 eslint 가
+- 크기는 prop 이 정한다. `Button`·`IconButton`·`Chip`·`RoundButton`·`ListRowButton`·`ListRowLink` 의 className 에 높이·폭·여백·모서리·글자 크기를 덧칠하면 eslint 가
   막는다. className 에는 바깥 배치(margin·`flex-1`·`shrink-0`·표시 여부)만 둔다.
-- **DS 래칫.** `src/components/ui` 밖에서 높이·여백·모서리·글자 크기를 칠한 `<button>` 과 바탕·테두리에 크기까지 칠한 `<a>`·`<Link>` 는
-  eslint(`ds/no-raw-control`)가 막는다. 링크는 버튼 모양이면 `buttonClassName()`, 둥근 아이콘이면 `RoundLink`, 줄이면 `ListRowLink`, 카드면 `Card` 안에 바탕 없는
-  링크로 그린다. 이미 있던 곳은 `eslint-suppressions.json` 이 파일별 개수로 봐주고, 이 파일은 줄기만 한다(고친 뒤
-  `npx eslint --prune-suppressions`). `npm run check` 가 이 파일을 main 의 것과 비교해서, 손으로 늘린 개수도 실패한다. 남은 곳과 토큰 밖 모서리·글자 크기·임의 값, ui 밖 음수 margin 은 `node scripts/ds-inventory.mjs` 가 파일·줄마다 보여 준다. 글리프를 내용 끝에 맞추는 자리(`RoundLink edge="start"`)처럼 어긋남을 보정하는 margin 은 부품이 한 번만 갖는다.
+- **손으로 그린 컨트롤.** `src/components/ui` 밖에서 높이·여백·모서리·글자 크기를 칠한 `<button>` 과 바탕·테두리에 크기까지 칠한 `<a>`·`<Link>` 는
+  eslint(`ds/no-raw-control`)가, `<input>`·`<textarea>` 는 `ds/no-raw-input` 이, 포커스 ring 없이 outline 을 지운 클래스는
+  `ds/focus-ring` 이 막는다. 셋 다 봐주는 baseline 이 없는 그냥 에러다. 링크는 버튼 모양이면 `buttonClassName()`, 둥근 아이콘이면 `RoundLink`,
+  줄이면 `ListRowLink`, 카드면 `Card` 안에 바탕 없는 링크로 그린다. 글자 칸은 `Input`·`Textarea`, submit 같은 버튼 type 은 `Button` 이고,
+  `<input>` 을 그대로 두는 것은 checkbox·radio·range·hidden·file 뿐이다. `eslint-disable` 주석으로 넘겨도 `npm test` 의 `ds-inventory` 테스트가 잡는다. lint 가 막지 않는 토큰 밖 모서리·글자 크기·임의 값,
+  ui 밖 음수 margin 은 `node scripts/ds-inventory.mjs` 가 파일·줄마다 보여 준다. 글리프를 내용 끝에 맞추는 자리(`RoundLink edge="start"`)처럼 어긋남을 보정하는 margin 은 부품이 한 번만 갖는다.
 
 ## 데이터 흐름
 
@@ -226,7 +228,8 @@ hook(`.claude/settings.json`, `.claude/hooks/`):
 - 편집한 ts·tsx·mjs 파일을 eslint 로 바로 검사한다.
 - 커밋하지 않은 코드 변경이 있으면 턴을 끝내기 전에 `npm run check` 를 돌리고, 실패하면 끝내지 못하게 막는다.
 - `echo` 로 값을 넘기는 `vercel env add` 를 거부한다. main push 와 `vercel --prod` 는 확인을 묻는다.
-- eslint `--suppress-all`·`--suppress-rule` 과 `eslint-suppressions.json` 편집을 거부한다. DS 래칫 baseline 은 줄기만 한다.
+- eslint `--suppress-all`·`--suppress-rule` 과 `eslint-suppressions.json` 편집을 거부한다. eslint CLI 는 그 파일을 스스로 읽어
+  적힌 에러를 규칙과 상관없이 넘긴다. 파일이 생기면 `npm test` 도 실패한다.
 - main 에 들어간 마이그레이션 파일 편집을 거부한다.
 
 스킬(`.claude/skills/`): `server-action`, `db-migration`, `prod-deploy`, `verify-vote-quota`.

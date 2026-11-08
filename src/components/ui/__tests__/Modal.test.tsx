@@ -209,7 +209,7 @@ describe("Modal — footer", () => {
     expect(close).toHaveFocus();
   });
 
-  // jsdom has no layout, so the safe-area padding shows only as the env() class on the last region.
+  // jsdom has no layout, so the safe-area padding shows only as the --spacing-safe-bottom class on the last region.
   it("pads only the last region for the bottom safe area", () => {
     const sheet = (footer?: string) => (
       <Modal open onClose={vi.fn()} title="안내" footer={footer && <p>{footer}</p>}>
@@ -217,11 +217,11 @@ describe("Modal — footer", () => {
       </Modal>
     );
     const { rerender } = render(sheet());
-    expect(screen.getByText("본문").parentElement?.className).toMatch(/env\(safe-area-inset-bottom\)/);
+    expect(screen.getByText("본문").parentElement?.className).toMatch(/var\(--spacing-safe-bottom\)/);
 
     rerender(sheet("아래 칸"));
-    expect(screen.getByText("아래 칸").parentElement?.className).toMatch(/env\(safe-area-inset-bottom\)/);
-    expect(screen.getByText("본문").parentElement?.className).not.toMatch(/safe-area-inset-bottom/);
+    expect(screen.getByText("아래 칸").parentElement?.className).toMatch(/var\(--spacing-safe-bottom\)/);
+    expect(screen.getByText("본문").parentElement?.className).not.toMatch(/safe-bottom/);
   });
 });
 

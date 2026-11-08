@@ -1,5 +1,5 @@
 // Design-system rules shared by eslint.config.mjs (lint) and scripts/ds-inventory.mjs (inventory).
-// One definition of "what breaks the design system" so the ratchet and the inventory never disagree.
+// One definition of "what breaks the design system" so lint and the inventory never disagree.
 
 const SIDES = "(?:[trblse]|tl|tr|bl|br|ss|se|es|ee)";
 
@@ -145,6 +145,61 @@ const noRawControl = {
   },
 };
 
+/**
+ * What draws each <input> type outside ui. "native" stays a plain <input>. A type missing here, and a missing or
+ * unresolved type, may take typed text, which ui Input draws.
+ */
+const INPUT_KIND = {
+  checkbox: "native",
+  radio: "native",
+  range: "native",
+  hidden: "native",
+  file: "native",
+  submit: "button",
+  reset: "button",
+  button: "button",
+  image: "button",
+  color: "noPrimitive",
+};
+const KEEP_NATIVE = "<input> 을 그대로 두는 것은 type 이 checkbox·radio·range·hidden·file 일 때뿐이다.";
+
+const noRawInput = {
+  meta: {
+    type: "problem",
+    docs: { description: "Inputs and textareas outside src/components/ui are drawn by the ui primitives." },
+    messages: {
+      text:
+        "<{{tag}}{{type}}> 를 직접 그리지 않는다. 글자를 받는 칸은 src/components/ui 의 Input·Textarea 로 그리고, 라벨·도움말·오류는 Field 로 잇는다. " +
+        KEEP_NATIVE,
+      button: `<{{tag}}{{type}}> 를 직접 그리지 않는다. 누르는 버튼은 src/components/ui 의 Button 으로 그린다(폼 제출은 type="submit"). ${KEEP_NATIVE}`,
+      noPrimitive: `<{{tag}}{{type}}> 를 직접 그리지 않는다. 이 칸을 그리는 부품은 src/components/ui 에 아직 없으니 부품을 먼저 만들고 /design 에 더한다. ${KEEP_NATIVE}`,
+    },
+    schema: [],
+  },
+  create(context) {
+    return {
+      JSXOpeningElement(node) {
+        if (node.name.type !== "JSXIdentifier") return;
+        const tag = node.name.name;
+        if (tag === "textarea") {
+          context.report({ node, messageId: "text", data: { tag, type: "" } });
+          return;
+        }
+        if (tag !== "input") return;
+        const attr = node.attributes.find((a) => a.type === "JSXAttribute" && a.name.name === "type");
+        // A type this file cannot pin down (a prop) may be text, so it is reported too.
+        const types = attr?.value ? classStrings(attr.value, context.sourceCode).strings.map((t) => t.trim().toLowerCase()) : [];
+        const kinds = new Set(types.map((t) => (Object.hasOwn(INPUT_KIND, t) ? INPUT_KIND[t] : "text")));
+        kinds.delete("native");
+        if (types.length && kinds.size === 0) return;
+        // One kind names its own fix; a mix of kinds, or no known type, may still take text.
+        const messageId = kinds.size === 1 ? [...kinds][0] : "text";
+        context.report({ node, messageId, data: { tag, type: attr ? ` type="${types.join("|") || "…"}"` : "" } });
+      },
+    };
+  },
+};
+
 /** Utilities that take away the keyboard focus outline globals.css draws in @layer base. */
 const OUTLINE_REMOVED = /^outline-(none|hidden|0)$/;
 /** A nonzero ring width under a focus variant (`focus-visible:ring-2`, `has-focus-visible:ring-2`): the focus style that replaces the outline. */
@@ -208,6 +263,7 @@ const plugin = {
   meta: { name: "ds" },
   rules: {
     "no-raw-control": noRawControl,
+    "no-raw-input": noRawInput,
     "focus-ring": focusRing,
     "non-token": classTokenRule(
       "Radius and font size outside the tokens (rounded-badge·control·card·sheet·pill, text-display·h1–h4·body·sm·caption).",

@@ -421,7 +421,6 @@ function StepRow({ step, number, done, onSelect }: { step: Step; number: number;
       onClick={onSelect}
       aria-label={done ? `${step.title}, 끝남` : step.title}
       aria-describedby={step.duration != null ? `${id}-sub ${id}-len` : `${id}-sub`}
-      className={stepInset}
       leading={
         <StepLead
           className={done ? "opacity-55" : ""}
@@ -466,9 +465,6 @@ function ClockIcon({ className }: { className: string }) {
   );
 }
 
-/** 단계 행과 인터벌 줄이 같이 쓰는 좌우 여백. */
-const stepInset = "px-1";
-
 /**
  * [표시 칸][내용]. 단계 행은 표시 칸에 번호·끝남 원을, 인터벌 줄은 빈 칸을 둔다.
  * 같은 칸과 같은 간격을 지나서 인터벌 줄의 시계가 행의 커버와 같은 세로줄에 선다.
@@ -484,7 +480,7 @@ function StepLead({ marker, className = "", children }: { marker?: ReactNode; cl
 
 function IntervalLine({ interval, past }: { interval: RehearsalInterval; past: boolean }) {
   return (
-    <p className={`${stepInset} flex min-h-8 items-center text-caption ${past ? "text-text-subtle" : "text-text-muted"}`}>
+    <p className={`flex min-h-8 items-center text-caption ${past ? "text-text-subtle" : "text-text-muted"}`}>
       <StepLead>
         <span className="flex min-w-0 items-center gap-1.5">
           <ClockIcon className="size-3.5 shrink-0" />

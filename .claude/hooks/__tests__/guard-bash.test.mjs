@@ -48,6 +48,7 @@ describe("guard-bash", () => {
     ["allow", "vercel deploy"],
     ["deny", "npx eslint --suppress-rule ds/no-raw-control ."],
     ["deny", "npm run lint -- --suppress-all"],
+    ["deny", "npx eslint --suppressions-location src/eslint-suppressions.json ."],
     ["allow", "npx eslint --prune-suppressions ."],
   ])("%s: %s", (want, command) => {
     expect(decision(command)).toBe(want);
