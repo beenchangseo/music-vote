@@ -404,7 +404,8 @@ export default function PlaylistClient({
   return (
     <>
       <div className="min-h-full bg-bg">
-        <div className={`max-w-lg mx-auto px-4 py-6 ${bottomPadding}`}>
+        {/* The one-line title bar of the setlist and rehearsal tabs starts nearer the top than the 후보곡 header. */}
+        <div className={`max-w-lg mx-auto px-4 ${navMode !== "playlist" ? "pt-3" : "pt-6"} ${bottomPadding}`}>
           {navMode !== "playlist" ? (
             <PlaylistTitleBar
               title={playlist.title}

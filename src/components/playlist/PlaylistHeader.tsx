@@ -124,9 +124,11 @@ export default function PlaylistHeader({
         {band ? (
           <Link
             href={`/band/${band.id}`}
-            className="-ml-1 inline-flex min-h-11 min-w-0 items-center gap-1 text-caption text-text-muted transition-colors hover:text-text"
+            className="inline-flex min-h-11 min-w-0 items-center gap-1 text-caption text-text-muted transition-colors hover:text-text"
           >
-            <span aria-hidden>‹</span>
+            <svg className="size-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
             <GuitarIcon className="h-4 w-4 shrink-0" />
             <span className="truncate">{band.name}</span>
             {bandDday && (

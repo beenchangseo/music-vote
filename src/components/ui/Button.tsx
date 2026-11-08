@@ -40,8 +40,12 @@ export const variantClasses: Record<Variant, string> = {
 
 export const BUTTON_VARIANTS = Object.keys(variantClasses) as Variant[];
 
-/** Keeps a 44px tap area around a control drawn shorter than 44px. The parent must not clip it. */
-export const touchTarget44 = "relative after:absolute after:inset-x-0 after:top-1/2 after:h-control-md after:-translate-y-1/2";
+/**
+ * The one way a control drawn smaller than 44px keeps a 44×44 tap area: an invisible box centred on it, as big as the
+ * control and never under control-md on either side. Button sm, IconButton sm, Chip and Switch use it. The parent must not clip it.
+ */
+export const touchTarget44 =
+  "relative after:absolute after:left-1/2 after:top-1/2 after:size-full after:min-h-control-md after:min-w-control-md after:-translate-x-1/2 after:-translate-y-1/2";
 
 const sizeClasses: Record<Size, string> = {
   sm: `h-control-sm px-3 text-sm ${touchTarget44}`,
@@ -80,6 +84,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
     disabled,
     className = "",
     children,
+    type = "button",
     ...rest
   },
   ref,
@@ -87,6 +92,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   return (
     <button
       ref={ref}
+      // A <button> in a form submits it by default. Submitting is the rarer job, so it is asked for with type="submit".
+      type={type}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       aria-pressed={pressed}

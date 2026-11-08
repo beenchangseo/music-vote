@@ -101,12 +101,23 @@ export function RankNumber({ rank, top = false }: { rank: number; top?: boolean 
   );
 }
 
-interface SongRowProps extends HTMLAttributes<HTMLDivElement> {
+interface SongRowCells {
   /** 48px 정사각 자리. 안에 `<Image fill>` 이나 그 자리를 다 덮는 재생 버튼을 넣는다. */
   cover: ReactNode;
   rank?: number;
   topRank?: boolean;
   trailing?: ReactNode;
+  children?: ReactNode;
+}
+
+interface SongRowProps extends SongRowCells, Omit<HTMLAttributes<HTMLDivElement>, "children"> {
+  /**
+   * 바탕을 칠하는 행. 내용은 열 가장자리에 그대로 두고 바탕만 양옆 8px 밖까지 편다 (Spotify 행).
+   * hover 는 올렸을 때, open 은 펼친 행이라 늘 surface 로 칠한다. 부르는 쪽이 음수 margin 으로 바탕을 넓히지 않는다.
+   */
+  surface?: "hover" | "open";
+  /** 바탕 안, 행 아래 칸 (펼친 행의 동작 줄). 바탕 폭 끝까지 닿는다. surface 와 같이 쓴다. */
+  footer?: ReactNode;
 }
 
 /**
@@ -121,19 +132,57 @@ export function SongRowTitleButton({ type = "button", children, ...rest }: Omit<
   );
 }
 
-/**
- * 곡 한 줄 (Spotify 행, 72px). 카드 배경 없이 바탕 위에 놓는다. [순위][48px 커버][제목·메타][점수·투표].
- * 가운데 칸(children)은 부르는 쪽이 그린다. 펼치는 행이면 제목 줄이 버튼이 된다.
- */
-export function SongRow({ cover, rank, topRank = false, trailing, className = "", children, ...rest }: SongRowProps) {
+const songRowLayout = "flex min-h-row-song items-center gap-2.5 max-[359px]:gap-2";
+// The surface reaches 8px past the column on each side; px-2 puts the row's own content back on the column edge.
+const songRowSurface = { frame: "-mx-2 rounded-card transition-colors", row: "px-2", hover: "hover:bg-surface", open: "bg-surface" };
+
+function SongRowCellsView({ cover, rank, topRank = false, trailing, children }: SongRowCells) {
   return (
-    <div className={`flex min-h-row-song items-center gap-2.5 max-[359px]:gap-2 ${className}`} {...rest}>
+    <>
       {rank != null && <RankNumber rank={rank} top={topRank} />}
       <div className="relative size-12 shrink-0 overflow-hidden rounded-control bg-surface-elevated has-focus-visible:ring-2 has-focus-visible:ring-focus-ring has-focus-visible:ring-offset-2 has-focus-visible:ring-offset-bg max-[359px]:size-10">
         {cover}
       </div>
       <div className="min-w-0 flex-1">{children}</div>
       {trailing && <div className="shrink-0">{trailing}</div>}
+    </>
+  );
+}
+
+/**
+ * 곡 한 줄 (Spotify 행, 72px). 카드 배경 없이 바탕 위에 놓는다. [순위][48px 커버][제목·메타][점수·투표].
+ * 가운데 칸(children)은 부르는 쪽이 그린다. 펼치는 행이면 제목 줄이 버튼이 되고, surface·footer 로 바탕과 동작 줄을 단다.
+ */
+export function SongRow({ cover, rank, topRank, trailing, surface, footer, className = "", children, ...rest }: SongRowProps) {
+  const cells = (
+    <SongRowCellsView cover={cover} rank={rank} topRank={topRank} trailing={trailing}>
+      {children}
+    </SongRowCellsView>
+  );
+  if (!surface) {
+    return (
+      <div className={`${songRowLayout} ${className}`} {...rest}>
+        {cells}
+      </div>
+    );
+  }
+  return (
+    <div className={`${songRowSurface.frame} ${songRowSurface[surface]} ${className}`} {...rest}>
+      <div className={`${songRowLayout} ${songRowSurface.row}`}>{cells}</div>
+      {footer}
     </div>
+  );
+}
+
+/** 줄 전체가 링크인 SongRow. 바탕은 surface="hover" 와 같고, 포커스 테두리도 그 바탕을 따른다. */
+export function SongRowLink({ cover, rank, topRank, trailing, className = "", children, ...rest }: SongRowCells & Omit<ComponentProps<typeof Link>, "children">) {
+  return (
+    <Link className={`block ${songRowSurface.frame} ${songRowSurface.hover} ${className}`} {...rest}>
+      <div className={`${songRowLayout} ${songRowSurface.row}`}>
+        <SongRowCellsView cover={cover} rank={rank} topRank={topRank} trailing={trailing}>
+          {children}
+        </SongRowCellsView>
+      </div>
+    </Link>
   );
 }

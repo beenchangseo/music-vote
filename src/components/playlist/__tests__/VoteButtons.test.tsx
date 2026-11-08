@@ -3,6 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import VoteButtons from "../VoteButtons";
+import { COLORS } from "@/components/ui/tokens";
 
 // jsdom has no AnimationEvent, so react-dom would listen for webkitAnimationEnd instead of the animationend browsers fire.
 // The stand-in keeps animationName, which jsdom's plain Event would drop.
@@ -77,5 +78,34 @@ describe("VoteButtons pop", () => {
     unmount();
 
     expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+// A colour on the pill only counts when tokens.ts holds it to 4.5:1 on what it sits on, so tokens.test guards the contrast.
+const colorsOf = (el: Element, prefix: "bg" | "text") =>
+  el.className
+    .split(/\s+/)
+    .filter((c) => c.startsWith(`${prefix}-`) && COLORS.has(c.slice(prefix.length + 1)))
+    .map((c) => c.slice(prefix.length + 1));
+const heldTo45 = (fg: string | undefined, bg: string | undefined) =>
+  [COLORS.get(fg ?? "")?.pairs.find((p) => p.against === bg), COLORS.get(bg ?? "")?.pairs.find((p) => p.against === fg)].some((p) => p?.min === 4.5);
+
+describe("VoteButtons colours", () => {
+  it.each([
+    ["an up vote", 3, 1],
+    ["a down vote", -2, -1],
+    ["no vote", 0, null],
+  ] as const)("with %s, each arrow and the score reach 4.5:1 on the pill or their disc", (_label, score, userVote) => {
+    const { container } = render(
+      <VoteButtons score={score} userVote={userVote} userVoteCount={userVote ? 1 : 0} votingMode="free" onPress={() => undefined} />,
+    );
+    const [pill] = colorsOf(container.firstElementChild!, "bg");
+    for (const arrow of screen.getAllByRole("button")) {
+      const [glyph] = colorsOf(arrow, "text");
+      const [disc = pill] = colorsOf(arrow, "bg");
+      expect(heldTo45(glyph, disc), `${arrow.getAttribute("aria-label")}: ${glyph} on ${disc}`).toBe(true);
+    }
+    const [scoreColor] = colorsOf(screen.getByRole("status"), "text");
+    expect(heldTo45(scoreColor, pill), `score: ${scoreColor} on ${pill}`).toBe(true);
   });
 });
