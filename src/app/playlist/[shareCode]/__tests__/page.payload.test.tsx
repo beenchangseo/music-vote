@@ -9,6 +9,7 @@ const OTHER = "9c1f6a2e-3333-4333-8333-000000000003";
 const state = vi.hoisted(() => ({
   user: null as { id: string; nickname: string; avatarUrl: string | null } | null,
   creator: null as string | null,
+  setlistFails: false,
 }));
 
 const song = (id: string, addedBy: string | null) => ({
@@ -57,6 +58,7 @@ vi.mock("@/lib/supabase/server", () => ({
       }
       if (op.table === "songs") return { data: [song("mine", ADDER), song("hosts", HOST), song("legacy", null)] };
       if (op.table === "playlist_members") return { data: null, count: 2 };
+      if (op.table === "setlist_items" && state.setlistFails) return { data: null, error: { code: "57014" } };
       return { data: [] };
     }).client,
   createServerSupabaseClient: async () =>
@@ -72,11 +74,14 @@ vi.mock("@/components/playlist/PlaylistClient", () => ({ default: () => null }))
 import PlaylistPage from "../page";
 
 type ShownSong = { id: string; canDelete: boolean };
-type ClientProps = { playlist: { archived: boolean }; songs: ShownSong[]; loggedIn: boolean; isHost: boolean };
+type ClientProps = { playlist: { archived: boolean }; songs: ShownSong[]; loggedIn: boolean; isHost: boolean; initialTab: string };
 
 /** What the browser receives: the props the server page hands to the client component. */
-async function pageData() {
-  const element = (await PlaylistPage({ params: Promise.resolve({ shareCode: "qDPJnh1d" }) })) as ReactElement<ClientProps>;
+async function pageData(query: { [key: string]: string | string[] | undefined } = {}) {
+  const element = (await PlaylistPage({
+    params: Promise.resolve({ shareCode: "qDPJnh1d" }),
+    searchParams: Promise.resolve(query),
+  })) as ReactElement<ClientProps>;
   return { props: element.props, wire: JSON.stringify(element.props) };
 }
 
@@ -91,6 +96,7 @@ const canDelete = (songs: ShownSong[]) => Object.fromEntries(songs.map((shown) =
 beforeEach(() => {
   state.user = null;
   state.creator = HOST;
+  state.setlistFails = false;
 });
 
 describe("/playlist/[shareCode] page data (ADR 0011: no account id in any mode)", () => {
@@ -141,5 +147,26 @@ describe("/playlist/[shareCode] page data (ADR 0011: no account id in any mode)"
 
     expect(props).toMatchObject({ loggedIn: true, isHost: false, playlist: { archived: true } });
     expect(canDelete(props.songs)).toEqual({ mine: false, hosts: false, legacy: false });
+  });
+});
+
+describe("/playlist/[shareCode] first tab (#80)", () => {
+  it.each([
+    { link: "a plain link", query: {}, tab: "playlist" },
+    { link: "a setlist link", query: { tab: "setlist" }, tab: "setlist" },
+    { link: "the Kakao setlist card", query: { utm_source: "kakao", utm_medium: "share", variant: "setlist", tab: "setlist" }, tab: "setlist" },
+    { link: "an edited tab", query: { tab: "<script>" }, tab: "playlist" },
+  ])("opens $link on the $tab tab", async ({ query, tab }) => {
+    const { props } = await pageData(query);
+
+    expect(props.initialTab).toBe(tab);
+  });
+
+  it("opens a setlist link on 후보곡 when the setlist could not be read", async () => {
+    state.setlistFails = true;
+
+    const { props } = await pageData({ tab: "setlist" });
+
+    expect(props.initialTab).toBe("playlist");
   });
 });

@@ -33,6 +33,11 @@ describe("gaPage", () => {
       path: "/playlist/[code]",
       title: "플레이리스트",
     },
+    {
+      url: "/playlist/qDPJnh1d?utm_source=kakao&utm_medium=share&variant=setlist&tab=setlist",
+      path: "/playlist/[code]",
+      title: "플레이리스트",
+    },
     { url: "/playlist/qDPJnh1d/metronome?bpm=120&songId=42", path: "/playlist/[code]/metronome", title: "메트로놈" },
     { url: "/band/0b6f1f0e-8c7e-4c1a-9d1f-3f2b1a7c9e10?created=1", path: "/band/[id]", title: "밴드 홈" },
     { url: "/join/Xy7Kp2Qa?join=1", path: "/join/[code]", title: "밴드 초대" },

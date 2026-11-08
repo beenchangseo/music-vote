@@ -9,6 +9,7 @@ import { BASE_OPEN_GRAPH } from "@/lib/seo";
 import { inviteSongs, playlistShareCard } from "@/domain/invite-card";
 import { isArchivedPlaylist } from "@/domain/playlist-archive";
 import { hostDenial, isHostOrAdder } from "@/domain/playlist-host";
+import { initialPlaylistTab, PLAYLIST_TAB_PARAM } from "@/domain/playlist-tab";
 import { getMyTeams, type MyTeam } from "@/actions/team";
 import { readSetlistItems } from "@/lib/playlist-reads";
 import PlaylistClient from "@/components/playlist/PlaylistClient";
@@ -146,8 +147,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function PlaylistPage({ params }: PageProps) {
+export default async function PlaylistPage({
+  params,
+  searchParams,
+}: PageProps & { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const { shareCode } = await params;
+  const { [PLAYLIST_TAB_PARAM]: requestedTab } = await searchParams;
   // Views that compute "my vote" from auth.uid() stay on the session client;
   // the songs table itself is closed to the public key (v18).
   const supabase = await createServerSupabaseClient();
@@ -198,7 +203,11 @@ export default async function PlaylistPage({ params }: PageProps) {
         ? admin.from("playlist_members").select("user_id", { count: "exact", head: true }).eq("playlist_id", playlist.id)
         : Promise.resolve(null),
       // Candidate rows mark songs already in the setlist (디자인 C9). A failed read leaves it null, so the setlist tab loads it the old way.
-      readSetlistItems(admin, playlist.id).catch(() => null),
+      readSetlistItems(admin, playlist.id).catch((error: unknown) => {
+        // Logged because a 셋리스트 link then lands on 후보곡 with nothing else to show for it.
+        console.error(`[playlist] 셋리스트 조회 실패 (shareCode=${shareCode}):`, error instanceof Error ? error.message : error);
+        return null;
+      }),
     ]);
 
   // Payload rules per field: the band link and name only reach members (the name also reaches the
@@ -274,6 +283,7 @@ export default async function PlaylistPage({ params }: PageProps) {
       memberCount={memberCount}
       bandPromptDismissed={bandPromptDismissed}
       initialSetlistItems={setlistItems}
+      initialTab={initialPlaylistTab(requestedTab, setlistItems)}
     />
   );
 }
