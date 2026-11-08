@@ -136,7 +136,8 @@ Variable(한국어) + Geist(영문) 폴백.
 - 채운 `primary` 버튼은 화면에 하나다. 나란한 보조 동작은 `tonal`, 덜 중요한 동작은 `ghost`. 같은 일을 하는 버튼을 두
   개 두지 않는다. 나란한 버튼 둘은 `ButtonGroup` 이다. 긴 쪽 글자가 반 폭에 들어가면 같은 폭 두 칸이고, 안 들어가면
   iOS 알림 버튼처럼 한 줄에 하나씩 꽉 찬 폭으로 쌓인다(먼저 쓴 버튼이 위). 홈의 「플레이리스트 만들기」·「밴드 만들기」는
-  390px 에서도 쌓인다.
+  390px 에서도 쌓인다. 줄보다 긴 `truncate` 이름은 `Button` 안에서 줄 폭으로 말줄임되지만, `buttonClassName` 링크는 글자 칸이
+  줄지 않아 넘치므로 `ButtonGroup` 안 링크에는 truncate 글자를 두지 않는다(eslint).
 - 고르기: 필터·켜고 끄는 선택지는 `Chip`(36px, 누르는 영역 44px), 한 화면 안 보기·방식 하나는 `SegmentedControl`
   (radiogroup), 켜고 끄기는 `Switch`(label 을 주면 줄 전체가 눌린다), 화면 아래 탭은 `TabBar`.
 - 목록: 곡은 `SongRow`(카드 없이 72px, 48px 커버, 고정 폭 `RankNumber`), 설정·멤버는 `ListRow`(56px)를 시트 안에서
@@ -163,8 +164,8 @@ Variable(한국어) + Geist(영문) 폴백.
   막는다. className 에는 바깥 배치(margin·`flex-1`·`shrink-0`·표시 여부)만 둔다.
 - 글자가 있는 부품(`Button`·`buttonClassName`·`ToolbarButton`·`Chip`·`SegmentedControl`·`TabBar`·`ActionTab`·`MenuItem*`·`Badge`)의
   글자는 줄을 바꾸지 않는다. 부품에서 `whitespace-nowrap` 이 빠지면 `primitives.test.tsx` 가, 부르는 쪽 className 에
-  `whitespace-normal`·`text-wrap`·`text-balance` 를 두거나 버튼을 담은 줄의 칸에 `*:min-w-0`·`*:max-w-*` 를 주면 eslint 가
-  막는다. 나란한 버튼 줄을 손으로 만들지 않고 `ButtonGroup` 을 쓴다.
+  `whitespace-normal`·`text-wrap`·`text-balance` 를 두거나 버튼을 바로 담은 줄에 `*:min-w-0`·`[&>button]:min-w-0`·`*:max-w-*`
+  를(`**:`·`[&_*]:` 는 어느 깊이든) 주면 eslint 가 막는다. 나란한 버튼 줄을 손으로 만들지 않고 `ButtonGroup` 을 쓴다.
 - **손으로 그린 컨트롤.** `src/components/ui` 밖에서 높이·여백·모서리·글자 크기를 칠한 `<button>` 과 바탕·테두리에 크기까지 칠한 `<a>`·`<Link>` 는
   eslint(`ds/no-raw-control`)가, `<input>`·`<textarea>` 는 `ds/no-raw-input` 이, 포커스 ring 없이 outline 을 지운 클래스는
   `ds/focus-ring` 이 막는다. 셋 다 봐주는 baseline 이 없는 그냥 에러다. 링크는 버튼 모양이면 `buttonClassName()`, 둥근 아이콘이면 `RoundLink`,

@@ -349,7 +349,10 @@ describe("control labels stay on one line (#79)", () => {
     expect(labelWhiteSpace(screen.getByText("플레이리스트 만들기"))).toBe("nowrap");
   });
 
-  it("ButtonGroup keeps each button at least as wide as its label and lets the row break into one button per line", () => {
+  // min-width: fit-content is min(max-content, max(min-content, row)). A short label keeps its button at least label
+  // wide, so the row breaks into one button per line; a truncating band name is capped at the row and gives way.
+  // min-w-max would push that button past the screen (min-width beats Button's max-w-full).
+  it("ButtonGroup keeps each button at least as wide as its label, up to the row, and lets the row break into one button per line", () => {
     render(
       <ButtonGroup>
         <Button>플레이리스트 만들기</Button>
@@ -357,8 +360,29 @@ describe("control labels stay on one line (#79)", () => {
       </ButtonGroup>,
     );
     const group = screen.getByRole("button", { name: "플레이리스트 만들기" }).parentElement!;
-    expect(group.className.split(/\s+/)).toEqual(expect.arrayContaining(["flex-wrap", "*:min-w-max", "*:grow"]));
-    expect(group.className).not.toMatch(/\*:min-w-0/);
+    expect(group.className.split(/\s+/)).toEqual(expect.arrayContaining(["flex-wrap", "*:min-w-fit", "*:grow"]));
+    expect(group.className).not.toMatch(/\*:min-w-(0|max)(\s|$)/);
+  });
+
+  it("ButtonGroup lets a Button's truncating band name shrink to the row", () => {
+    const name = "아주아주긴밴드이름".repeat(5);
+    render(
+      <ButtonGroup>
+        <Button variant="tonal">
+          <span className="flex min-w-0">
+            <span className="truncate">{name}</span>에 넣기
+          </span>
+        </Button>
+        <Button variant="ghost">취소</Button>
+      </ButtonGroup>,
+    );
+    const button = screen.getByRole("button", { name: `${name}에 넣기` });
+    // Every box from the button down to the truncate span may be narrower than its text.
+    expect(button.parentElement!.className).toMatch(/(^|\s)\*:min-w-fit(\s|$)/);
+    expect(button.className).toMatch(/(^|\s)max-w-full(\s|$)/);
+    const cells: string[] = [];
+    for (let el = screen.getByText(name).parentElement; el && el !== button; el = el.parentElement) cells.push(el.className);
+    expect(cells.every((cls) => /(^|\s)(min-w-0|max-w-full)(\s|$)/.test(cls))).toBe(true);
   });
 });
 

@@ -10,8 +10,30 @@ const CONTROL_SIZE_UTILITY =
 
 // white-space and text-wrap utilities that let a label wrap. Wrapped, "＋ 새 플레이리스트" spilled out of its 52px button (#79).
 const LABEL_WRAP_UTILITY = "/(^|[\\s:])!?(whitespace-(?!nowrap(?![\\w-]))[\\w-]+|text-(wrap|balance|pretty)(?![\\w-]))/";
-// A child variant that lets the buttons of a row shrink under their one-line labels: ButtonGroup's old `*:min-w-0`.
-const CHILD_SHRINK_UTILITY = "/(^|\\s)!?(\\*{1,2}|\\[&[>_]\\*\\]):!?(min-w-0|max-w-)/";
+// A variant that lets the buttons of a row shrink under their one-line labels: ButtonGroup's old `*:min-w-0`.
+// `*:` and `[&>…]:` reach the direct children only; `**:` and `[&_…]:` reach every descendant.
+const CHILD_SHRINK_UTILITY = "/(^|\\s)!?(\\*|\\[&>[^\\]\\s]+\\]):!?(min-w-0|max-w-)/";
+const DESCENDANT_SHRINK_UTILITY = "/(^|\\s)!?(\\*\\*|\\[&_[^\\]\\s]+\\]):!?(min-w-0|max-w-)/";
+// A Button, a ToolbarButton or a link drawn with buttonClassName.
+const BUTTON_LIKE =
+  "JSXElement:matches([openingElement.name.name=/^(Button|ToolbarButton)$/], :has(> JSXOpeningElement:has(CallExpression[callee.name='buttonClassName'])))";
+// A direct child is written out, behind `&&` or `?:`, or returned from a `.map` arrow. esquery 1.7 matches nothing for a
+// chained `:has(> A > B)`, so each step is its own one-level `:has(> …)`.
+const ROW_OF_BUTTONS = `JSXElement:matches(${[
+  `:has(> ${BUTTON_LIKE})`,
+  `:has(> JSXExpressionContainer:has(> :matches(LogicalExpression, ConditionalExpression):has(> ${BUTTON_LIKE})))`,
+  `:has(> JSXExpressionContainer:has(> CallExpression:has(> ArrowFunctionExpression:has(> ${BUTTON_LIKE}))))`,
+].join(", ")})`;
+const HOLDS_BUTTONS = `JSXElement:has(${BUTTON_LIKE})`;
+// A buttonClassName link that ButtonGroup lays out. Outside `:has`, chained child combinators work.
+const BUTTON_LINK = "JSXElement:has(> JSXOpeningElement:has(CallExpression[callee.name='buttonClassName']))";
+const LINK_IN_BUTTON_GROUP = `:matches(${[
+  "",
+  "JSXExpressionContainer > :matches(LogicalExpression, ConditionalExpression) >",
+  "JSXExpressionContainer > CallExpression > ArrowFunctionExpression >",
+]
+  .map((path) => `JSXElement[openingElement.name.name='ButtonGroup'] > ${path} ${BUTTON_LINK}`)
+  .join(", ")})`;
 
 const ROUND_SKIN_UTILITY = "/(^|[\\s:])!?(bg-|text-|font-|border|shadow|ring-|opacity-|scale-|-m[trblxyse]?-|[\\w-]*\\[)/";
 const GLYPH_PLACEMENT_UTILITY =
@@ -93,11 +115,20 @@ const eslintConfig = defineConfig([
               "Button·Chip·Badge·buttonClassName 의 글자는 한 줄이다. whitespace-normal·text-wrap·text-balance 처럼 줄을 바꾸게 하는 클래스를 두지 않는다. " +
               "나란한 두 버튼이 한 줄에 안 들어가면 ButtonGroup 이 한 줄에 하나씩 쌓는다.",
           },
-          {
-            selector: `JSXElement:has(JSXOpeningElement[name.name=/^(Button|ToolbarButton)$/], CallExpression[callee.name='buttonClassName']) > JSXOpeningElement > JSXAttribute[name.name='className'] ${node}${CHILD_SHRINK_UTILITY}]`,
+          ...[
+            [ROW_OF_BUTTONS, CHILD_SHRINK_UTILITY],
+            [HOLDS_BUTTONS, DESCENDANT_SHRINK_UTILITY],
+          ].map(([row, utility]) => ({
+            selector: `${row} > JSXOpeningElement > JSXAttribute[name.name='className'] ${node}${utility}]`,
             message:
               "버튼을 담은 줄의 칸에 min-w-0·max-w 를 주면 버튼이 한 줄 글자보다 좁아져 글자가 넘친다. 나란한 버튼은 ButtonGroup 을 쓴다" +
               "(긴 글자가 반 폭에 들어가면 같은 폭 두 칸, 아니면 한 줄에 하나씩).",
+          })),
+          {
+            selector: `${LINK_IN_BUTTON_GROUP} JSXAttribute[name.name='className'] ${node}/(^|\\s)truncate(?![\\w-])/]`,
+            message:
+              "ButtonGroup 안 buttonClassName 링크는 글자 칸이 줄지 않아 truncate 글자가 줄 밖으로 넘친다. " +
+              "말줄임할 이름이 든 동작은 Button 으로 그리거나 링크를 ButtonGroup 밖에 둔다.",
           },
           {
             selector: `JSXOpeningElement[name.name=/^Round(Button|Link)$/] > JSXAttribute[name.name='className'] ${node}${ROUND_SKIN_UTILITY}]`,
