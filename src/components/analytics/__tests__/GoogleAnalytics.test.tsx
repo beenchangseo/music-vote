@@ -1,19 +1,24 @@
 // @vitest-environment jsdom
-import { cleanup, render } from "@testing-library/react";
-import { StrictMode, useEffect } from "react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { StrictMode, useEffect, type ReactElement } from "react";
+import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const navigation = vi.hoisted(() => ({ pathname: "/" }));
 vi.mock("next/navigation", () => ({ usePathname: () => navigation.pathname }));
 vi.mock("@vercel/analytics", () => ({ track: vi.fn() }));
+// next/script loads a src once per module and remembers it, so a second test rendering it would show no script.
+vi.mock("next/script", () => ({ default: ({ src }: { src: string }) => <i data-script-src={src} /> }));
 
 import { track } from "@/lib/analytics";
+import { setGaOptedOut } from "@/lib/ga-opt-out";
+import GaOptOutSwitch from "../GaOptOutSwitch";
 import GoogleAnalytics from "../GoogleAnalytics";
 
 const ORIGIN = window.location.origin;
 
 function gtagScripts() {
-  return document.querySelectorAll('script[src^="https://www.googletagmanager.com/gtag/js"]');
+  return document.querySelectorAll('[data-script-src^="https://www.googletagmanager.com/gtag/js"]');
 }
 
 function commands(): unknown[][] {
@@ -37,6 +42,13 @@ function pageViews() {
     .map((event) => event.fields);
 }
 
+/** A full page load: the server's HTML, then hydration, where useSyncExternalStore still gives the server snapshot. */
+function hydrate(ui: ReactElement) {
+  const container = document.body.appendChild(document.createElement("div"));
+  container.innerHTML = renderToString(ui);
+  return render(ui, { container, hydrate: true });
+}
+
 /** A page that reports itself from its mount effect, as BandHomeClient does with band_home_viewed. */
 function TracksOnMount() {
   useEffect(() => {
@@ -52,6 +64,9 @@ function setReferrer(referrer: string) {
 beforeEach(() => {
   delete window.gtag;
   delete window.dataLayer;
+  delete window["ga-disable-G-TEST123456"];
+  window.localStorage.clear();
+  setGaOptedOut(false);
   document.querySelectorAll("script").forEach((script) => script.remove());
   setReferrer("");
   window.history.replaceState(null, "", "/");
@@ -61,6 +76,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.unstubAllEnvs();
+  vi.restoreAllMocks();
 });
 
 describe("GoogleAnalytics env gate", () => {
@@ -84,7 +100,7 @@ describe("GoogleAnalytics env gate", () => {
 
     render(<GoogleAnalytics />);
 
-    expect([...gtagScripts()].map((s) => s.getAttribute("src"))).toEqual([
+    expect([...gtagScripts()].map((s) => s.getAttribute("data-script-src"))).toEqual([
       "https://www.googletagmanager.com/gtag/js?id=G-TEST123456",
     ]);
     expect(commands()).toContainEqual([
@@ -217,7 +233,7 @@ describe("GoogleAnalytics and a page's own mount-time track()", () => {
       </>
     );
     navigation.pathname = "/band/team-1";
-    const { rerender } = render(tree());
+    const { rerender } = hydrate(tree());
     navigation.pathname = "/playlist/qDPJnh1d";
     rerender(tree());
 
@@ -239,5 +255,85 @@ describe("GoogleAnalytics and a page's own mount-time track()", () => {
 
     expect(window.gtag).toBeUndefined();
     expect(window.dataLayer).toBeUndefined();
+  });
+});
+
+describe("opting out on /privacy", () => {
+  beforeEach(() => vi.stubEnv("NEXT_PUBLIC_GA_ID", "G-TEST123456"));
+
+  const sendSwitch = () => screen.getByRole("switch", { name: "Google 애널리틱스로 사용 통계 보내기" });
+  const privacyPage = () => (
+    <>
+      <GaOptOutSwitch />
+      <GoogleAnalytics />
+    </>
+  );
+
+  it("a visitor who opted out before gets no gtag.js and no queue, and the page's own events go nowhere", () => {
+    setGaOptedOut(true);
+    navigation.pathname = "/band/team-1";
+
+    hydrate(
+      <>
+        <TracksOnMount />
+        <GoogleAnalytics />
+      </>,
+    );
+
+    expect(gtagScripts()).toHaveLength(0);
+    expect(window.gtag).toBeUndefined();
+    expect(window.dataLayer).toBeUndefined();
+    expect(window["ga-disable-G-TEST123456"]).toBe(true);
+  });
+
+  it("turning the switch off stops a tag that already runs, at once and on the next pages", () => {
+    navigation.pathname = "/privacy";
+    const { rerender } = render(privacyPage());
+    expect(sendSwitch().getAttribute("aria-checked")).toBe("true");
+    expect(window["ga-disable-G-TEST123456"]).toBe(false);
+
+    fireEvent.click(sendSwitch());
+    navigation.pathname = "/terms";
+    rerender(privacyPage());
+
+    expect(sendSwitch().getAttribute("aria-checked")).toBe("false");
+    // gtag.js reads this before every cookie and hit, user_engagement included.
+    expect(window["ga-disable-G-TEST123456"]).toBe(true);
+    expect(pageViews()).toEqual([{ page_location: `${ORIGIN}/privacy`, page_title: "개인정보처리방침" }]);
+  });
+
+  it("turning it back on loads GA and counts the page it is on", () => {
+    setGaOptedOut(true);
+    navigation.pathname = "/privacy";
+    render(privacyPage());
+    expect(sendSwitch().getAttribute("aria-checked")).toBe("false");
+    expect(gtagScripts()).toHaveLength(0);
+
+    fireEvent.click(sendSwitch());
+
+    expect(window["ga-disable-G-TEST123456"]).toBe(false);
+    expect(gtagScripts()).toHaveLength(1);
+    expect(pageViews()).toEqual([{ page_location: `${ORIGIN}/privacy`, page_title: "개인정보처리방침" }]);
+  });
+
+  it("the choice outlives the page", async () => {
+    render(privacyPage());
+    fireEvent.click(sendSwitch());
+
+    vi.resetModules();
+    const { isGaOptedOut } = await import("@/lib/ga-opt-out");
+    expect(isGaOptedOut()).toBe(true);
+  });
+
+  it("storage that refuses the choice still stops sending for this page", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("full", "QuotaExceededError");
+    });
+    render(privacyPage());
+
+    fireEvent.click(sendSwitch());
+
+    expect(sendSwitch().getAttribute("aria-checked")).toBe("false");
+    expect(window["ga-disable-G-TEST123456"]).toBe(true);
   });
 });

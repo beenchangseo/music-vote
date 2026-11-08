@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import GaOptOutSwitch from "@/components/analytics/GaOptOutSwitch";
+import Card from "@/components/ui/Card";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -8,21 +10,11 @@ export const metadata: Metadata = pageMetadata({
   description: "Plypick(plypick.kr) 개인정보처리방침",
 });
 
-const LINK_CLASS = "font-semibold text-primary-fg underline-offset-2 hover:underline";
-
 function SupportLink() {
   return (
-    <Link href="/support" className={LINK_CLASS}>
+    <Link href="/support" className="font-semibold text-primary-fg underline-offset-2 hover:underline">
       문의하기
     </Link>
-  );
-}
-
-function GaOptOutLink() {
-  return (
-    <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
-      Google 애널리틱스 차단 부가기능
-    </a>
   );
 }
 
@@ -47,7 +39,8 @@ export default function PrivacyPage() {
               </li>
               <li>
                 자동으로 생기는 정보: 로그인 유지 쿠키, Google 애널리틱스 쿠키, 브라우저 저장소(만든 플레이리스트 목록,
-                닫은 안내, 방금 나간 밴드 이름. 밴드 이름은 탭을 닫으면 지워져요), 접속 IP, 이용 통계
+                닫은 안내, 방금 나간 밴드 이름, Google 애널리틱스를 끈 선택. 밴드 이름은 탭을 닫으면 지워져요), 접속 IP,
+                이용 통계
               </li>
             </ul>
           </section>
@@ -83,24 +76,35 @@ export default function PrivacyPage() {
                 시각)은 로그인 서비스(Supabase)가 따로 남기고, 탈퇴 뒤에도 남을 수 있어요.
               </li>
               <li>
-                페이지 방문 통계와 성능 측정(Vercel)은 쿠키 없이 모으고 개인을 알아볼 수 없는 통계로만 봐요. 페이지
-                주소, 브라우저와 기기 종류, 대략적인 지역이 들어가요.
+                이용 통계와 성능 측정(Vercel)은 쿠키 없이 모으고 개인을 알아볼 수 없는 통계로만 봐요. 페이지 주소,
+                투표·곡 추가 같은 사용 기록, 브라우저와 기기 종류, 대략적인 지역이 들어가요.
               </li>
               <li>
                 사용 흐름 통계(Google 애널리틱스)는 쿠키(_ga, _ga_로 시작하는 쿠키)로 같은 브라우저의 방문을 이어서 봐요.
-                플레이리스트·밴드·초대 주소는 코드를 지운 모양(/playlist/[code] 같은)으로만 보내고, 투표·곡 추가 같은
-                사용 기록, 브라우저와 기기 종류, 대략적인 지역이 들어가요. 닉네임, 카카오 계정 정보, 플레이리스트 제목은
-                보내지 않아요. 어느 기능이 쓰이고 어디서 멈추는지 보고 서비스를 고치는 데만 쓰고, 광고에는 쓰지 않아요.
+                플레이리스트·밴드·초대 주소는 코드를 지운 모양(/playlist/[code] 같은)으로만 보내요. 바로 전에 본 페이지
+                주소도 Plypick 안이면 같은 모양으로, 다른 사이트면 도메인만 보내요. 카카오톡 공유 링크로 들어왔는지와
+                어떤 공유 카드였는지, 투표·곡 추가 같은 사용 기록, 브라우저와 기기 종류, 대략적인 지역이 들어가요.
+                닉네임, 카카오 계정 정보, 플레이리스트 제목은 보내지 않아요. 어느 기능이 쓰이고 어디서 멈추는지 보고
+                서비스를 고치는 데만 쓰고, 광고에는 쓰지 않아요.
               </li>
               <li>
-                Google 애널리틱스 기록은 보관 기간 설정에 따라 14개월이 지나면 지워져요. 쿠키는 브라우저에 최대 2년
-                남아요.
+                Google 애널리틱스에 남은 방문 하나하나의 기록은 14개월이 지나면 지워지고, 그 기록을 합친 통계(날짜별
+                방문 수 같은)는 남아요. 쿠키는 브라우저에 최대 2년 남아요.
               </li>
               <li>
-                Google 애널리틱스를 원하지 않으면 브라우저 설정에서 쿠키를 막거나 <GaOptOutLink />을 설치하면 돼요.
-                막아도 서비스는 그대로 쓸 수 있어요.
+                후보곡 영상을 틀면 YouTube(Google) 플레이어가 자기 쿠키를 둘 수 있어요. 이 쿠키는 아래 스위치와 상관없이
+                Google 개인정보처리방침을 따라요.
+              </li>
+              <li>
+                Google 애널리틱스로 보내기 싫으면 아래 스위치를 끄면 돼요. 끈 순간부터 이 브라우저에서는 보내지 않고,
+                다음에 와도 꺼져 있어요. 카카오톡 안에서 연 화면, 다른 브라우저, 다른 기기는 따로 꺼야 하고, 브라우저
+                저장소를 지우면 다시 켜져요. 이미 있는 쿠키는 브라우저 설정에서 지울 수 있어요. 꺼도 서비스는 그대로 쓸
+                수 있어요.
               </li>
             </ul>
+            <Card padding="sm" className="mt-3">
+              <GaOptOutSwitch />
+            </Card>
           </section>
 
           <section>
@@ -124,16 +128,29 @@ export default function PrivacyPage() {
               </li>
               <li>옮겨지는 나라: 미국</li>
               <li>
-                옮겨지는 항목: 코드를 지운 페이지 주소와 제목, 사용 기록, 쿠키 식별자, 브라우저와 기기 정보, 접속 IP(대략적인
-                지역을 계산하는 데 쓰여요)
+                옮겨지는 항목: 코드를 지운 페이지 주소와 제목, 바로 전에 본 페이지 주소(Plypick 안이면 코드를 지운 모양,
+                다른 사이트면 도메인만), 카카오톡 공유로 들어왔는지와 공유 카드 종류, 사용 기록, 쿠키 식별자, 브라우저와
+                기기 정보, 접속 IP(대략적인 지역을 계산하는 데 쓰여요)
               </li>
               <li>옮겨지는 때와 방법: 서비스를 쓸 때마다 네트워크로 보내요.</li>
               <li>쓰는 목적: 사용 흐름 통계</li>
-              <li>보관 기간: 14개월 (Google 애널리틱스 보관 기간 설정)</li>
+              <li>보관 기간: 방문 하나하나의 기록은 14개월 (Google 애널리틱스 보관 기간 설정). 합친 통계는 남아요.</li>
+              <li>거부하는 방법: 3번의 스위치를 꺼요. 거부해도 서비스는 그대로 쓸 수 있어요.</li>
+            </ul>
+            <p className="mt-2">서비스 호스팅과 이용 통계는 아래처럼 국외로 옮겨져요.</p>
+            <ul className="list-disc list-inside mt-2 space-y-1 text-text-muted">
               <li>
-                거부하는 방법: 브라우저에서 쿠키를 막거나 <GaOptOutLink />을 설치해요. 거부해도 서비스는 그대로 쓸 수
-                있어요.
+                받는 곳: Vercel Inc. 연락처는 Vercel 개인정보처리방침(vercel.com/legal/privacy-policy)의 문의 경로예요.
               </li>
+              <li>옮겨지는 나라: 미국</li>
+              <li>
+                옮겨지는 항목: 서비스를 쓸 때 오가는 요청(접속 IP, 브라우저 정보 포함), 이용 통계(페이지 주소, 사용 기록,
+                브라우저와 기기 종류, 대략적인 지역)
+              </li>
+              <li>옮겨지는 때와 방법: 서비스를 쓸 때마다 네트워크로 보내요.</li>
+              <li>쓰는 목적: 서비스 호스팅과 이용 통계</li>
+              <li>보관 기간: Vercel 이 정한 기간 (Vercel 개인정보처리방침)</li>
+              <li>거부하는 방법: 서비스가 Vercel 위에서 돌아가서, 거부하면 서비스를 쓸 수 없어요.</li>
             </ul>
           </section>
 

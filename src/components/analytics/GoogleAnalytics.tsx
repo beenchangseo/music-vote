@@ -2,8 +2,9 @@
 
 import Script from "next/script";
 import { usePathname } from "next/navigation";
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useSyncExternalStore } from "react";
 import { gaCampaign, gaPage, gaReferrer, parseGaMeasurementId } from "@/domain/google-analytics";
+import { isGaOptedOut, subscribeGaOptOut } from "@/lib/ga-opt-out";
 
 type Gtag = NonNullable<Window["gtag"]>;
 
@@ -27,13 +28,21 @@ function installGtag(id: string): Gtag {
 export default function GoogleAnalytics() {
   const id = parseGaMeasurementId(process.env.NEXT_PUBLIC_GA_ID);
   const pathname = usePathname();
+  // null on the server and through hydration. The server can't read the choice, and a server-rendered <Script>
+  // has the browser preload gtag.js from Google even for a visitor who opted out.
+  const optedOut = useSyncExternalStore(subscribeGaOptOut, isGaOptedOut, () => null);
   const last = useRef<{ pathname: string; location: string } | null>(null);
 
   // Keyed on the pathname alone: a query-only change (/band/x?created=1 → /band/x) is the same page to GA.
   // A layout effect, so the gtag queue and this page's fields exist before any page's own mount effect calls
   // track(): passive effects run children first, wherever this component sits in the tree.
   useLayoutEffect(() => {
-    if (!id || last.current?.pathname === pathname) return;
+    if (!id) return;
+    // Still the server's null through hydration, and that commit's mount effects are the first to call track().
+    const off = optedOut ?? isGaOptedOut();
+    // gtag.js checks this before it sets a cookie or sends a hit, so it also stops a tag that already loaded.
+    window[`ga-disable-${id}`] = off;
+    if (off || last.current?.pathname === pathname) return;
     const gtag = installGtag(id);
     const origin = window.location.origin;
     const page = gaPage(pathname);
@@ -51,8 +60,8 @@ export default function GoogleAnalytics() {
       ...campaign,
     });
     gtag("event", "page_view");
-  }, [id, pathname]);
+  }, [id, pathname, optedOut]);
 
-  if (!id) return null;
+  if (!id || optedOut !== false) return null;
   return <Script src={`https://www.googletagmanager.com/gtag/js?id=${id}`} />;
 }
