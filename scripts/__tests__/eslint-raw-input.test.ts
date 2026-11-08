@@ -19,6 +19,7 @@ describe("eslint ds/no-raw-input rule", () => {
     ['<input type={secret ? "password" : "text"} />', '<input type="password|text">'],
     ['<input type={on ? "checkbox" : "text"} />', '<input type="checkbox|text">'],
     ["<input type={kind} />", '<input type="…">'],
+    ['<input type="constructor" />', '<input type="constructor">'],
     ["<textarea rows={3} />", "<textarea>"],
   ])("flags %s", async (code, shown) => {
     const errors = await rawInputErrors(code);

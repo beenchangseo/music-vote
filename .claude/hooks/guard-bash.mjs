@@ -28,7 +28,7 @@ if (at(String.raw`echo\b[^|\n]*\|\s*(?:npx\s+)?vercel\s+env\s+add\b`).test(code)
   );
 }
 
-if (/(?:^|\s)--suppress-(?:all|rule)\b/.test(code)) {
+if (/(?:^|\s)--suppress(?:-all|-rule|ions-location)\b/.test(code)) {
   decide(
     "deny",
     "eslint 규칙에는 봐주는 baseline 이 없다. --suppress-* 로 eslint-suppressions.json 을 만들면 손으로 그린 컨트롤이 lint 를 " +

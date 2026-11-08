@@ -48,11 +48,11 @@ afterEach(() => {
 describe("useMenu", () => {
   it("closes on a press outside the trigger and panel, and stays open on a press inside them", () => {
     openMenu();
-    fireEvent.mouseDown(screen.getByRole("menuitem", { name: "내보내기" }));
-    fireEvent.mouseDown(screen.getByRole("button", { name: "민지 메뉴" }));
+    fireEvent.pointerDown(screen.getByRole("menuitem", { name: "내보내기" }));
+    fireEvent.pointerDown(screen.getByRole("button", { name: "민지 메뉴" }));
     expect(screen.getByRole("menu")).toBeInTheDocument();
 
-    fireEvent.mouseDown(screen.getByText("멤버 목록"));
+    fireEvent.pointerDown(screen.getByText("멤버 목록"));
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "민지 메뉴" })).toHaveAttribute("aria-expanded", "false");
   });
@@ -69,7 +69,7 @@ describe("useMenu", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "내보내기" }));
     const confirm = screen.getByRole("alertdialog");
 
-    fireEvent.mouseDown(confirm);
+    fireEvent.pointerDown(confirm);
     escape(confirm);
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     expect(screen.getByRole("menu")).toBeInTheDocument();
@@ -93,7 +93,7 @@ describe("useMenu", () => {
         layer.setAttribute("data-dialog-layer", "");
         document.body.append(layer);
         escape();
-        fireEvent.mouseDown(document.body);
+        fireEvent.pointerDown(document.body);
       },
     ],
   ])("ignores input that belongs to %s", (_, act) => {

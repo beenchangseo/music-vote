@@ -17,7 +17,8 @@ export function useMenu() {
   useEffect(() => {
     if (!open) return;
     // Same rule as Modal: while a confirm from the menu is up, input belongs to the confirm, so the menu stays open behind it.
-    function onPointerDown(e: MouseEvent) {
+    // pointerdown, not mousedown: iOS Safari sends no mouse events for a tap on a non-clickable spot.
+    function onPointerDown(e: PointerEvent) {
       if (dialogLayerOpen()) return;
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
@@ -25,10 +26,10 @@ export function useMenu() {
       if (e.defaultPrevented || dialogLayerOpen()) return;
       if (e.key === "Escape") setOpen(false);
     }
-    window.addEventListener("mousedown", onPointerDown);
+    window.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("keydown", onKeyDown);
     return () => {
-      window.removeEventListener("mousedown", onPointerDown);
+      window.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);

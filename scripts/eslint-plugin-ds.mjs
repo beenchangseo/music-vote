@@ -189,7 +189,7 @@ const noRawInput = {
         const attr = node.attributes.find((a) => a.type === "JSXAttribute" && a.name.name === "type");
         // A type this file cannot pin down (a prop) may be text, so it is reported too.
         const types = attr?.value ? classStrings(attr.value, context.sourceCode).strings.map((t) => t.trim().toLowerCase()) : [];
-        const kinds = new Set(types.map((t) => INPUT_KIND[t] ?? "text"));
+        const kinds = new Set(types.map((t) => (Object.hasOwn(INPUT_KIND, t) ? INPUT_KIND[t] : "text")));
         kinds.delete("native");
         if (types.length && kinds.size === 0) return;
         // One kind names its own fix; a mix of kinds, or no known type, may still take text.

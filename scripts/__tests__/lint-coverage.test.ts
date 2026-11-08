@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -9,6 +9,12 @@ describe("npm run lint", () => {
   // one entry for no-restricted-syntax lets a postgres_changes subscription through, which breaks anonymous mode.
   it("has no eslint-suppressions.json to read, so no rule's errors are waved through", () => {
     expect(existsSync(`${root}eslint-suppressions.json`)).toBe(false);
+  });
+
+  // --suppressions-location points the CLI at a suppressions file anywhere else, past the check above.
+  it("runs eslint without pointing it at a suppressions file elsewhere", () => {
+    const { scripts } = JSON.parse(readFileSync(`${root}package.json`, "utf8")) as { scripts: Record<string, string> };
+    expect(Object.values(scripts).filter((script) => script.includes("suppressions-location"))).toEqual([]);
   });
 
   // Every rule on src in eslint.config.mjs, and the ds inventory, reads .ts and .tsx only. tsconfig's allowJs would still
