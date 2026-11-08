@@ -135,3 +135,17 @@ describe("GET /api/og vote invite card", () => {
     expect(res.headers.get("Vercel-CDN-Cache-Control")).toBe("max-age=604800");
   });
 });
+
+describe("GET /api/og setlist card (#87)", () => {
+  const countLine = () => screen.getByText(/다음 공연 준비 완료/).textContent;
+
+  it("states the setlist's song count, not the candidate count", async () => {
+    await draw(new URLSearchParams({ variant: "setlist", title: "10월 합주", songs: "8", participants: "4", setlistCount: "6" }).toString());
+    expect(countLine()).toBe("총 6곡 · 다음 공연 준비 완료");
+  });
+
+  it("leaves the count out when the card carries none, instead of falling back to the candidates", async () => {
+    await draw(new URLSearchParams({ variant: "setlist", title: "10월 합주", songs: "8", participants: "4" }).toString());
+    expect(countLine()).toBe("다음 공연 준비 완료");
+  });
+});

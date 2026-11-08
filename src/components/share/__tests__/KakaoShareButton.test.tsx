@@ -118,6 +118,31 @@ describe("KakaoShareButton links", () => {
     click();
     expect(sentCard().content.description).toBe("3곡 등록 · 2명 참여 중");
   });
+
+  it("counts the candidates on the result card", () => {
+    render(<KakaoShareButton shareCode="abc123" variant="decided" title="합주" songs={8} participants={4} topSong="곡" />);
+    click();
+    expect(sentCard().content.description).toBe("4명 투표 결과 · 8곡 후보 중 1위");
+  });
+});
+
+describe("KakaoShareButton setlist card (#87)", () => {
+  it("states the setlist's song count, not the candidate count, in the card and its image", () => {
+    render(<KakaoShareButton shareCode="abc123" variant="setlist" title="10월 합주" songs={8} setlistCount={6} participants={4} />);
+    click();
+    const card = sentCard();
+    expect(card.content.title).toBe("🎵 셋리스트 확정 — 10월 합주");
+    expect(card.content.description).toBe("6곡 셋리스트가 확정됐어요");
+    expect(new URL(card.content.imageUrl).searchParams.get("setlistCount")).toBe("6");
+  });
+
+  it("leaves the count out while the setlist is unknown, instead of sending the candidate count", () => {
+    render(<KakaoShareButton shareCode="abc123" variant="setlist" title="10월 합주" songs={8} participants={4} />);
+    click();
+    const card = sentCard();
+    expect(card.content.description).toBe("셋리스트가 확정됐어요");
+    expect(new URL(card.content.imageUrl).searchParams.get("setlistCount")).toBeNull();
+  });
 });
 
 describe("KakaoShareButton without Kakao or the share sheet", () => {
