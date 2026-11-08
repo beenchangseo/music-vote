@@ -7,6 +7,7 @@ import { touchTarget44 } from "../ui/Button";
 import IconButton from "../ui/IconButton";
 import { effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, type SetlistBlock } from "@/domain/setlist";
 import { displayArtist, formatKey } from "@/domain/song-meta";
+import { graphemes } from "@/domain/text-segments";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
 import { BLOCK_TONES, PLAYING_CARD, type BlockKind } from "./block-tones";
 
@@ -44,14 +45,12 @@ function EditMark() {
   );
 }
 
-const graphemes = new Intl.Segmenter("ko", { granularity: "grapheme" });
-
 /**
  * 줄이지 않은 제목의 마지막 글자와 뒤에 붙는 것(시간·✎)을 nowrap 으로 묶는다. 그림 앞은 브라우저가 늘 줄을 바꿀 수 있는
  * 자리이고, 띄어 쓰지 않은 긴 제목을 칸 끝에서 자를 때도 마찬가지라서, 묶지 않으면 ✎ 나 시간만 다음 줄로 내려간다.
  */
 function GluedEnd({ text, children }: { text: string; children: ReactNode }) {
-  const last = Array.from(graphemes.segment(text)).at(-1)?.segment ?? "";
+  const last = graphemes(text).at(-1) ?? "";
   return (
     <>
       {text.slice(0, text.length - last.length)}
