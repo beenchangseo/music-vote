@@ -17,3 +17,4 @@
 - `scripts/audit-anon-access.mjs`가 이 계약을 확인한다. 마이그레이션 뒤 한 번 돌려 모두 통과하는지 본다.
 - 통계 뷰 `playlist_stats`·`home_stats`도 `SECURITY DEFINER`여야 한다. `security_invoker = on`이면 `votes` 권한 회수와 함께 집계가 막힌다.
 - 이 결정과 달리 `playlists_insert WITH CHECK (true)`(`supabase/migrations/v01.sql`)가 남아 공개 키로 아무 `creator_user_id`의 합주방을 넣을 수 있었다. `supabase/migrations/v18.sql`에서 정책을 지우고 INSERT 권한을 회수해 닫았고, `createPlaylist`는 `service_role`로 넣는다.
+- `songs`도 `songs_insert`(`auth.uid() = added_by_user_id`)와 authenticated 의 INSERT 권한이 남아, 로그인한 누구나 자기 세션 토큰으로 마감이 지났거나 보관된 플레이리스트에 후보곡을 넣을 수 있었다(#88). `supabase/migrations/v28.sql`에서 INSERT 권한을 회수해 닫았고, `addSong`은 마감·보관을 검사한 뒤 `service_role`로 넣는다. 세션 클라이언트로 남은 테이블 쓰기는 `comments` INSERT다.

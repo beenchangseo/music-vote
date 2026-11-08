@@ -49,6 +49,7 @@ import { displayTitle } from "@/domain/song-meta";
 import { inviteSongs } from "@/domain/invite-card";
 import { assignRanks } from "@/domain/vote";
 import { PLAYLIST_STAGE_LABEL, isSetlistBlock, playlistStage } from "@/domain/playlist-stage";
+import { isPastDeadline } from "@/domain/deadline";
 
 interface PlaylistClientProps {
   playlist: PlaylistView;
@@ -131,7 +132,7 @@ export default function PlaylistClient({
 
   // 링크 토큰은 플레이리스트를 만든 기기에만 남아 로그인 플레이리스트의 방장 판정에 쓰지 않는다(#47).
   const isAdmin = isArchived ? !!adminToken : isHost;
-  const isExpired = playlist.deadline ? new Date(playlist.deadline) < new Date() : false;
+  const isExpired = isPastDeadline(playlist.deadline, new Date());
   const setlistAccess = setlistEditAccess({ archived: isArchived, mode: playlist.setlist_edit_mode, loggedIn, isHost: isAdmin });
   const canEditSetlist = setlistAccess === "edit";
   // F7: owner · room without a band · at least two logged-in members. A brand-new room (1 member) has no card.

@@ -5,11 +5,20 @@ import Button from "../ui/Button";
 import Input from "../ui/Input";
 import Image from "next/image";
 import { useDialog } from "../ui/DialogProvider";
-import { addSong } from "@/actions/song";
+import { addSong, type AddSongReason } from "@/actions/song";
 import { searchSongs } from "@/actions/youtube-search";
 import { extractVideoId } from "@/lib/youtube";
 import { track } from "@/lib/analytics";
+import { ARCHIVED_PLAYLIST_MESSAGE } from "@/domain/playlist-archive";
 import type { SearchResult } from "@/lib/youtube-data";
+
+const ADD_SONG_REJECTED_MESSAGES: Record<AddSongReason, string> = {
+  deadline_passed: "마감이 지나서 후보곡을 더 추가할 수 없어요.",
+  archived: ARCHIVED_PLAYLIST_MESSAGE,
+  playlist_not_found: "플레이리스트를 찾을 수 없어요.",
+  not_logged_in: "로그인이 필요해요. 카카오로 로그인해 주세요.",
+  invalid_url: "올바른 YouTube 링크를 입력해 주세요.",
+};
 
 interface AddSongFormProps {
   playlistId: string;
@@ -52,6 +61,10 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
 
   async function submitUrl(url: string, title?: string) {
     const result = await addSong(playlistId, url, shareCode, title || undefined);
+    if (!result.success) {
+      showAlert(ADD_SONG_REJECTED_MESSAGES[result.reason]);
+      return;
+    }
     if (result.needsManualTitle && !title) {
       setShowManualTitle(true);
       return;
