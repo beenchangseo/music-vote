@@ -145,8 +145,9 @@ function SortableBlockRow({ block, insert, dragging, autoFocus, onOpenSlot, onEd
       <InsertRow target={insert} hidden={dragging} onOpen={onOpenSlot} />
       <div ref={setNodeRef} style={{ transform: CSS.Translate.toString(transform), transition }} className="grid grid-cols-[minmax(0,1fr)_3.5rem]">
         <div className="flex flex-col justify-center py-1">
-          {/* The lifted card rides in the DragOverlay; its slot keeps the size as a dashed outline. */}
-          <div className={isDragging ? `${BLOCK_TONES[block.kind].radius} border border-dashed border-border-strong` : undefined}>
+          {/* The lifted card rides in the DragOverlay; its slot keeps the size as a dashed outline. An inset outline takes no
+              room, so the slot is exactly the card it stands for and the rows below do not move. */}
+          <div className={isDragging ? `${BLOCK_TONES[block.kind].radius} outline-1 -outline-offset-1 outline-dashed outline-border-strong` : undefined}>
             <div className={isDragging ? "invisible" : undefined}>
               <BlockCard block={block} editing onEdit={() => onEdit(block.item)} onRemove={() => onRemove(block.item.id)} />
             </div>
