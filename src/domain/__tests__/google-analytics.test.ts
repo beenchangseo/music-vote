@@ -22,6 +22,8 @@ describe("gaPage", () => {
     { url: "/", path: "/", title: "홈" },
     { url: "/about", path: "/about", title: "소개" },
     { url: "/guide", path: "/guide", title: "사용 가이드" },
+    { url: "/guide/setlist", path: "/guide/setlist", title: "셋리스트 짜는 법" },
+    { url: "/guide/choose-songs?from=guide", path: "/guide/choose-songs", title: "곡 정하는 법" },
     { url: "/new", path: "/new", title: "새 플레이리스트" },
     { url: "/privacy", path: "/privacy", title: "개인정보처리방침" },
     { url: "/terms", path: "/terms", title: "이용약관" },
