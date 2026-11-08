@@ -7,12 +7,14 @@ import { dialogLayerOpen } from "./focus-trap";
 type Tone = "default" | "danger";
 
 /**
- * 메뉴가 열렸는지와 닫는 규칙. 트리거와 MenuPanel 을 같이 감싼 요소에 ref 를 달면, 그 밖을 누르거나 포커스가 어디 있든
- * Esc 를 누를 때 닫힌다.
+ * 메뉴가 열렸는지와 닫는 규칙. 트리거와 MenuPanel 을 같이 감싼 요소에 ref 를, 트리거 버튼에 triggerRef 를 단다.
+ * 그 밖을 누르면 닫히고 포커스는 건드리지 않는다. Esc 는 포커스가 어디 있든 닫는다. 이때 포커스가 메뉴 안에 있었거나
+ * body 로 떨어져 있었으면 트리거로 돌려보내고, 사용자가 페이지의 다른 칸으로 옮긴 포커스는 그대로 둔다.
  */
 export function useMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -23,8 +25,10 @@ export function useMenu() {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
     function onKeyDown(e: KeyboardEvent) {
-      if (e.defaultPrevented || dialogLayerOpen()) return;
-      if (e.key === "Escape") setOpen(false);
+      if (e.defaultPrevented || dialogLayerOpen() || e.key !== "Escape") return;
+      const focused = document.activeElement;
+      if (!focused || focused === document.body || ref.current?.contains(focused)) triggerRef.current?.focus();
+      setOpen(false);
     }
     window.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("keydown", onKeyDown);
@@ -34,7 +38,7 @@ export function useMenu() {
     };
   }, [open]);
 
-  return { open, setOpen, ref };
+  return { open, setOpen, ref, triggerRef };
 }
 
 /**
