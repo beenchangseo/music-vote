@@ -95,11 +95,11 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    // A <button> or button-looking link drawn outside the primitives picks its own height, radius and font size, which is
-    // how mismatched controls kept shipping.
+    // A <button>, button-looking link or text field drawn outside the primitives picks its own height, radius and font
+    // size, which is how mismatched controls kept shipping.
     files: ["src/**/*.tsx"],
     ignores: ["src/components/ui/**", "src/**/__tests__/**"],
-    rules: { "ds/no-raw-control": "error" },
+    rules: { "ds/no-raw-control": "error", "ds/no-raw-input": "error" },
   },
   {
     // globals.css draws the keyboard focus outline in @layer base, so an outline-none utility beats it. A class list that

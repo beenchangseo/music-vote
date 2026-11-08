@@ -7,10 +7,12 @@ import { ESLint } from "eslint";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const RAW_CONTROL_RULE = "ds/no-raw-control";
+const RAW_INPUT_RULE = "ds/no-raw-input";
 
 const CATEGORIES = {
   "raw-button": "ui 밖에서 크기·모서리·글자 크기를 직접 칠한 <button>",
   "raw-link": "ui 밖에서 바탕·테두리와 크기를 직접 칠한 <a>·<Link>",
+  "raw-input": "ui 밖에서 직접 그린 텍스트 <input>·<textarea>",
   "non-token": "토큰이 아닌 모서리·글자 크기 (rounded-xl·text-lg 등)",
   arbitrary: "크기·여백·위치의 임의 값 [..]",
   "negative-margin": "ui 밖의 음수 margin (-mt-3·-mx-2 등). 칸을 레이아웃 밖으로 당기는 손 보정",
@@ -19,7 +21,14 @@ const CATEGORIES = {
 
 function categoryOf(message) {
   if (message.ruleId === RAW_CONTROL_RULE) return message.messageId === "rawLink" ? "raw-link" : "raw-button";
+  if (message.ruleId === RAW_INPUT_RULE) return "raw-input";
   return message.ruleId.slice("ds/".length);
+}
+
+function detailOf(message) {
+  if (message.ruleId === RAW_CONTROL_RULE) return message.message.match(/className="([^"]*)"/)?.[1] ?? "";
+  if (message.ruleId === RAW_INPUT_RULE) return message.message.match(/^<[^>]*>/)?.[0] ?? "";
+  return message.message;
 }
 
 /** src/components/<screen> keeps its screen; everything else groups by its top folder (app, lib, hooks). */
@@ -28,7 +37,7 @@ export function folderOf(file) {
   return parts[1] === "components" ? parts.slice(1, 3).join("/") : parts[1];
 }
 
-// eslint.config.mjs registers the ds plugin and decides where ds/no-raw-control applies.
+// eslint.config.mjs registers the ds plugin and decides where ds/no-raw-control and ds/no-raw-input apply.
 // non-token and arbitrary cover all of src, ui included. Negative margins skip ui: a primitive that lines a glyph up
 // with the content edge (RoundLink edge="start") owns that offset once, so its callers need none.
 const engine = () =>
@@ -73,7 +82,7 @@ function toFindings(results) {
           category: categoryOf(m),
           file: relative(root, result.filePath),
           line: m.line,
-          detail: m.ruleId === RAW_CONTROL_RULE ? (m.message.match(/className="([^"]*)"/)?.[1] ?? "") : m.message,
+          detail: detailOf(m),
         })),
     )
     .sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);

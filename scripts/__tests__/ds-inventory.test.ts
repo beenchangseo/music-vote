@@ -62,6 +62,7 @@ describe("ds-inventory", () => {
   it.each([
     ["raw-button", '// eslint-disable-next-line ds/no-raw-control\nexport const X = () => <button className="h-11 px-3" />;'],
     ["focus-ring", '// eslint-disable-next-line ds/focus-ring\nexport const c = "focus:outline-none";'],
+    ["raw-input", '// eslint-disable-next-line ds/no-raw-input\nexport const X = () => <textarea rows={3} />;'],
   ])("still lists a %s under an inline eslint-disable, so the comment cannot hide it", async (category, code) => {
     expect((await inventoryOf(code, "src/components/playlist/Fixture.tsx")).map((f) => f.category)).toEqual([category]);
   });
@@ -76,8 +77,8 @@ describe("ds-inventory", () => {
 });
 
 describe("src", () => {
-  it("has no raw control and no outline removed without a focus ring, even under an inline eslint-disable", async () => {
-    const lintRules = ["raw-button", "raw-link", "focus-ring"];
+  it("has no raw control or text field and no outline removed without a focus ring, even under an inline eslint-disable", async () => {
+    const lintRules = ["raw-button", "raw-link", "raw-input", "focus-ring"];
     expect((await inventory()).filter((f) => lintRules.includes(f.category))).toEqual([]);
   });
 });

@@ -145,6 +145,40 @@ const noRawControl = {
   },
 };
 
+/** Input types that take no typed text. Every other type, and a missing one, is a text box that ui Input draws. */
+const NON_TEXT_INPUT = new Set(["checkbox", "radio", "range", "hidden", "file"]);
+
+const noRawInput = {
+  meta: {
+    type: "problem",
+    docs: { description: "Text fields outside src/components/ui are drawn by Input and Textarea." },
+    messages: {
+      rawInput:
+        "<{{tag}}{{type}}> 를 직접 그리지 않는다. 글자를 받는 칸은 src/components/ui 의 Input·Textarea 로 그리고, 라벨·도움말·오류는 Field 로 잇는다. " +
+        "<input> 을 그대로 두는 것은 type 이 checkbox·radio·range·hidden·file 일 때뿐이다.",
+    },
+    schema: [],
+  },
+  create(context) {
+    return {
+      JSXOpeningElement(node) {
+        if (node.name.type !== "JSXIdentifier") return;
+        const tag = node.name.name;
+        if (tag === "textarea") {
+          context.report({ node, messageId: "rawInput", data: { tag, type: "" } });
+          return;
+        }
+        if (tag !== "input") return;
+        const attr = node.attributes.find((a) => a.type === "JSXAttribute" && a.name.name === "type");
+        // A type this file cannot pin down (a prop) may be text, so it is reported too.
+        const types = attr?.value ? classStrings(attr.value, context.sourceCode).strings.map((t) => t.trim().toLowerCase()) : [];
+        if (types.length && types.every((t) => NON_TEXT_INPUT.has(t))) return;
+        context.report({ node, messageId: "rawInput", data: { tag, type: attr ? ` type="${types.join("|") || "…"}"` : "" } });
+      },
+    };
+  },
+};
+
 /** Utilities that take away the keyboard focus outline globals.css draws in @layer base. */
 const OUTLINE_REMOVED = /^outline-(none|hidden|0)$/;
 /** A nonzero ring width under a focus variant (`focus-visible:ring-2`, `has-focus-visible:ring-2`): the focus style that replaces the outline. */
@@ -208,6 +242,7 @@ const plugin = {
   meta: { name: "ds" },
   rules: {
     "no-raw-control": noRawControl,
+    "no-raw-input": noRawInput,
     "focus-ring": focusRing,
     "non-token": classTokenRule(
       "Radius and font size outside the tokens (rounded-badge·control·card·sheet·pill, text-display·h1–h4·body·sm·caption).",
