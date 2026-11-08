@@ -131,7 +131,7 @@ export default function SetlistGuidePage() {
         </GuideList>
         <p>30분 무대 예시예요. 곡 6곡에 멘트 두 번과 튜닝 시간을 넣으면 27분 20초라서 2분 40초 여유가 남아요.</p>
         <div className="overflow-x-auto">
-          <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-card border border-surface-hover text-sm">
+          <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-card border border-border text-sm">
             <caption className="sr-only">30분 무대 셋리스트 예시</caption>
             <thead>
               <tr className="bg-surface text-caption text-text-muted">
@@ -152,17 +152,17 @@ export default function SetlistGuidePage() {
             <tbody>
               {EXAMPLE.map((row) => (
                 <tr key={row.start} className={row.no ? "text-text" : "text-text-muted"}>
-                  <td className="border-t border-surface-hover px-3 py-2.5 tabular-nums">{row.no || "·"}</td>
-                  <td className="border-t border-surface-hover px-3 py-2.5">{row.block}</td>
-                  <td className="border-t border-surface-hover px-3 py-2.5 text-right tabular-nums">{formatRuntime(row.seconds)}</td>
-                  <td className="border-t border-surface-hover px-3 py-2.5 text-right tabular-nums">{formatRuntime(row.start)}</td>
+                  <td className="border-t border-border px-3 py-2.5 tabular-nums">{row.no || "·"}</td>
+                  <td className="border-t border-border px-3 py-2.5">{row.block}</td>
+                  <td className="border-t border-border px-3 py-2.5 text-right tabular-nums">{formatRuntime(row.seconds)}</td>
+                  <td className="border-t border-border px-3 py-2.5 text-right tabular-nums">{formatRuntime(row.start)}</td>
                 </tr>
               ))}
               <tr className="font-bold text-text">
-                <td className="border-t border-surface-hover px-3 py-2.5" />
-                <td className="border-t border-surface-hover px-3 py-2.5">끝</td>
-                <td className="border-t border-surface-hover px-3 py-2.5" />
-                <td className="border-t border-surface-hover px-3 py-2.5 text-right tabular-nums">{formatRuntime(EXAMPLE_END)}</td>
+                <td className="border-t border-border px-3 py-2.5" />
+                <td className="border-t border-border px-3 py-2.5">끝</td>
+                <td className="border-t border-border px-3 py-2.5" />
+                <td className="border-t border-border px-3 py-2.5 text-right tabular-nums">{formatRuntime(EXAMPLE_END)}</td>
               </tr>
             </tbody>
           </table>
