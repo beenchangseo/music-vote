@@ -4,6 +4,7 @@ import { useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import Button, { buttonClassName } from "../ui/Button";
 import Chip from "../ui/Chip";
+import Input from "../ui/Input";
 import { useDialog } from "../ui/DialogProvider";
 import SheetMusicLinks from "./SheetMusicLinks";
 import { updateSongMeta } from "@/actions/song";
@@ -143,51 +144,61 @@ export default function SongMeta({ song, playlistId, shareCode, onClose }: SongM
             ))}
           </div>
         )}
-        <input
-          type="text"
+        <Input
           value={keyMemo}
           onChange={(e) => setKeyMemo(e.target.value)}
           onBlur={handleSaveAll}
           placeholder="자유 메모 (예: 1키 다운, capo 2…)"
-          className="mt-2 w-full h-11 px-3 rounded-control bg-surface border border-border text-caption text-text placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-focus-ring"
+          aria-label="키 메모"
+          className="mt-2"
         />
       </Field>
 
       {/* BPM + Duration */}
       <Field label="BPM · 길이">
         <div className="flex flex-wrap items-center gap-2">
-          <input
-            type="number"
-            value={tempoBpm}
-            onChange={(e) => setTempoBpm(e.target.value)}
-            onBlur={handleSaveAll}
-            placeholder="BPM"
-            min={40}
-            max={300}
-            className="w-20 h-11 px-2 rounded-control bg-surface border border-border text-caption text-text text-center focus:outline-none focus:ring-2 focus:ring-focus-ring"
-          />
+          {/* Input is w-full, so its width comes from this box. */}
+          <div className="w-20">
+            <Input
+              type="number"
+              value={tempoBpm}
+              onChange={(e) => setTempoBpm(e.target.value)}
+              onBlur={handleSaveAll}
+              placeholder="BPM"
+              aria-label="BPM"
+              min={40}
+              max={300}
+              compact
+            />
+          </div>
           <span className="text-caption text-text-subtle">·</span>
           <div className="flex items-center gap-1">
-            <input
-              type="number"
-              value={durationMin}
-              onChange={(e) => setDurationMin(e.target.value)}
-              onBlur={handleSaveAll}
-              placeholder="분"
-              min={0}
-              className="w-14 h-11 px-1 rounded-control bg-surface border border-border text-caption text-text text-center focus:outline-none focus:ring-2 focus:ring-focus-ring"
-            />
+            <div className="w-14">
+              <Input
+                type="number"
+                value={durationMin}
+                onChange={(e) => setDurationMin(e.target.value)}
+                onBlur={handleSaveAll}
+                placeholder="분"
+                aria-label="길이 분"
+                min={0}
+                compact
+              />
+            </div>
             <span className="text-caption text-text-subtle">:</span>
-            <input
-              type="number"
-              value={durationSec}
-              onChange={(e) => setDurationSec(e.target.value)}
-              onBlur={handleSaveAll}
-              placeholder="초"
-              min={0}
-              max={59}
-              className="w-14 h-11 px-1 rounded-control bg-surface border border-border text-caption text-text text-center focus:outline-none focus:ring-2 focus:ring-focus-ring"
-            />
+            <div className="w-14">
+              <Input
+                type="number"
+                value={durationSec}
+                onChange={(e) => setDurationSec(e.target.value)}
+                onBlur={handleSaveAll}
+                placeholder="초"
+                aria-label="길이 초"
+                min={0}
+                max={59}
+                compact
+              />
+            </div>
           </div>
           {hasBpm && (
             <Link
