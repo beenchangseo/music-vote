@@ -6,6 +6,8 @@ import Modal from "../ui/Modal";
 import Button from "../ui/Button";
 import Field from "../ui/Field";
 import Input from "../ui/Input";
+import { ListRowButton, ListRowIcon } from "../ui/ListRow";
+import GuitarIcon from "../ui/GuitarIcon";
 import { createTeam, createTeamFromPlaylist } from "@/actions/team";
 import { getVotingSettings } from "@/actions/member";
 import { track } from "@/lib/analytics";
@@ -179,24 +181,26 @@ function HomeBody({ source, candidates, participantOnlyTitle, target, inputRef }
       <div>
         {participantNote}
         <p className="text-sm font-semibold text-text">같이 투표한 멤버로 만들기</p>
-        <ul className="mt-2 space-y-2">
+        <ul className="mt-2">
           {candidates.map((candidate) => (
             <li key={candidate.id}>
-              <button
-                type="button"
+              <ListRowButton
                 ref={returnTo === candidate.id ? returnRef : undefined}
                 onClick={() => setStep(candidate)}
-                className="flex min-h-14 w-full items-center justify-between gap-3 rounded-control bg-surface-hover px-4 py-3 text-left transition-colors hover:bg-surface-elevated"
+                className="px-2"
+                leading={
+                  <ListRowIcon className="text-primary-fg">
+                    <GuitarIcon className="size-5" />
+                  </ListRowIcon>
+                }
+                trailing={<span className="text-sm text-text-muted tabular-nums">멤버 {candidate.memberCount}명</span>}
               >
                 {/* Names tell apart playlists with similar titles before picking one. */}
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-body font-medium text-text">{candidate.title}</span>
-                  {candidate.memberPreview.length > 0 && (
-                    <span className="mt-0.5 block truncate text-caption text-text-muted">{memberLine(candidate)}</span>
-                  )}
-                </span>
-                <span className="shrink-0 text-sm text-text-muted tabular-nums">멤버 {candidate.memberCount}명</span>
-              </button>
+                <span className="block truncate text-body font-medium text-text">{candidate.title}</span>
+                {candidate.memberPreview.length > 0 && (
+                  <span className="mt-0.5 block truncate text-caption text-text-muted">{memberLine(candidate)}</span>
+                )}
+              </ListRowButton>
             </li>
           ))}
         </ul>

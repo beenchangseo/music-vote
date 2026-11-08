@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 import Card from "../ui/Card";
 import IconButton from "../ui/IconButton";
 import Button, { buttonClassName } from "../ui/Button";
+import { RoundLink } from "../ui/RoundButton";
 import NoticeCard from "../ui/NoticeCard";
 import Avatar, { AvatarStack } from "../ui/Avatar";
 import EmptyState from "../ui/EmptyState";
-import { SongRowLink } from "../ui/ListRow";
+import { ListRowButton, SongRowLink } from "../ui/ListRow";
 import { useDialog } from "../ui/DialogProvider";
 import GuitarIcon from "../ui/GuitarIcon";
 import { showDateSpokenLabel } from "./ShowDateTile";
@@ -152,17 +153,13 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
     <main className="min-h-full bg-bg">
       {/* Hero: Spotify Blend-style art in the band's own colors, the name sitting on the fade. */}
       <header className="relative isolate">
-        <BandArt className="absolute inset-x-0 top-0 -z-10 h-[22rem]" />
+        <BandArt className="absolute inset-x-0 top-0 -z-10 h-88" />
         <div className="mx-auto max-w-md px-4 pt-4">
-          <Link
-            href="/"
-            aria-label="홈으로"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-pill bg-black/35 text-white backdrop-blur-sm transition-colors hover:bg-black/50"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+          <RoundLink href="/" tone="tonal" size="md" aria-label="홈으로">
+            <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
-          </Link>
+          </RoundLink>
 
           <div className="pt-28">
             <p className="flex items-center gap-1.5 text-caption font-semibold text-white/80">
@@ -313,14 +310,9 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
         {/* 디자인 2회차 1A·8A: a quiet row at the very bottom, never for the owner. */}
         {!isOwner && (
           <div className="mt-10 border-t border-border pt-2">
-            <button
-              type="button"
-              onClick={leave}
-              disabled={leaving}
-              className="inline-flex min-h-11 items-center text-sm text-text-muted transition-colors hover:text-text disabled:opacity-50"
-            >
-              {leaving ? "나가는 중…" : "밴드 나가기"}
-            </button>
+            <ListRowButton onClick={leave} disabled={leaving}>
+              <span className="text-sm text-text-muted transition-colors group-hover/row:text-text">{leaving ? "나가는 중…" : "밴드 나가기"}</span>
+            </ListRowButton>
             {leaveError && (
               <p role="alert" className="text-sm text-danger-fg">
                 {leaveError}
@@ -382,9 +374,6 @@ function Dot() {
   );
 }
 
-const chipClass =
-  "inline-flex min-h-11 items-center gap-2 rounded-pill bg-white/10 px-4 text-sm font-semibold text-text backdrop-blur-sm transition-colors hover:bg-white/15";
-
 function CalendarIcon() {
   return (
     <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
@@ -397,29 +386,29 @@ function CalendarIcon() {
 function ShowDateChip({ dday, onOpen }: { dday: ShowDday; onOpen: () => void }) {
   if (dday.state === "upcoming" || dday.state === "today") {
     return (
-      <button type="button" onClick={onOpen} aria-label={showDateSpokenLabel(dday)} className={`mt-4 ${chipClass}`}>
+      <Button variant="tonal" pill onClick={onOpen} aria-label={showDateSpokenLabel(dday)} className="mt-4">
         <CalendarIcon />
         <span className="tabular-nums">{dday.state === "today" ? "오늘 공연" : `D-${dday.days}`}</span>
         <span className="font-normal text-text-muted">{formatShowDate(dday.date)} 공연</span>
-      </button>
+      </Button>
     );
   }
   if (dday.state === "ended") {
     return (
       <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1">
         <p className="text-sm text-text">{formatShowDate(dday.date, false)} 공연 끝 · 수고했어요</p>
-        <button type="button" onClick={onOpen} className={chipClass}>
+        <Button variant="tonal" pill onClick={onOpen}>
           <CalendarIcon />
           다음 공연 날짜 정하기
-        </button>
+        </Button>
       </div>
     );
   }
   return (
-    <button type="button" onClick={onOpen} className={`mt-4 ${chipClass}`}>
+    <Button variant="tonal" pill onClick={onOpen} className="mt-4">
       <CalendarIcon />
       공연 날짜 정하기
-    </button>
+    </Button>
   );
 }
 

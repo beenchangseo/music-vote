@@ -12,7 +12,7 @@ export default function BandHomeSkeleton() {
           <div className="h-11 w-11 rounded-control bg-surface animate-pulse-soft" />
         </div>
         <div className="mt-4 h-8 w-2/3 rounded-control bg-surface animate-pulse-soft" />
-        <div className="mt-3 h-[88px] rounded-card bg-surface animate-pulse-soft" />
+        <div className="mt-3 h-22 rounded-card bg-surface animate-pulse-soft" />
         <div className="mt-4 h-12 rounded-control bg-surface animate-pulse-soft" />
         <div className="mt-8 h-6 w-1/3 rounded-control bg-surface animate-pulse-soft" />
         <div className="mt-3 space-y-2">
