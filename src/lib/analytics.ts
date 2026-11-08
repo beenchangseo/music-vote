@@ -15,7 +15,7 @@ declare global {
 // GA 는 속성을 그대로 받는다. 그냥 string 인 속성은 공유 코드나 사용자가 쓴 글을 Google 로 실어 보낼 수 있어서,
 // 속성은 boolean·number·정해진 문자열의 union 만 된다. 다른 타입을 넣으면 컴파일이 실패한다.
 type NoFreeText<M> = { [E in keyof M]: { [K in keyof M[E]]: string extends M[E][K] ? never : M[E][K] } };
-type GaSafe<M extends NoFreeText<M>> = M;
+export type GaSafe<M extends NoFreeText<M>> = M;
 
 // 이벤트 이름은 snake_case 일관. 데이터 분석 시 grep 쉬움.
 type EventMap = GaSafe<{
