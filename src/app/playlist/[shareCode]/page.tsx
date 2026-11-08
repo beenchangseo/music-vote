@@ -203,7 +203,11 @@ export default async function PlaylistPage({
         ? admin.from("playlist_members").select("user_id", { count: "exact", head: true }).eq("playlist_id", playlist.id)
         : Promise.resolve(null),
       // Candidate rows mark songs already in the setlist (디자인 C9). A failed read leaves it null, so the setlist tab loads it the old way.
-      readSetlistItems(admin, playlist.id).catch(() => null),
+      readSetlistItems(admin, playlist.id).catch((error: unknown) => {
+        // Logged because a 셋리스트 link then lands on 후보곡 with nothing else to show for it.
+        console.error(`[playlist] 셋리스트 조회 실패 (shareCode=${shareCode}):`, error instanceof Error ? error.message : error);
+        return null;
+      }),
     ]);
 
   // Payload rules per field: the band link and name only reach members (the name also reaches the

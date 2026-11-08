@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchSetlistItems } from "@/lib/playlist-refetch";
 import type { PlaylistView, SetlistItem } from "@/domain/types";
@@ -76,6 +76,16 @@ describe("PlaylistClient first tab (#80)", () => {
     expect(currentTab()).toHaveTextContent("셋리스트");
     expect(within(screen.getByRole("list", { name: "셋리스트" })).getByText("사운드 체크")).toBeInTheDocument();
     expect(fetchSetlistItems).not.toHaveBeenCalled();
+  });
+
+  it("drops the link's tab from the address once the member picks a tab, so a refresh stays where they are", () => {
+    window.history.replaceState(null, "", "/playlist/abc123?utm_source=kakao&tab=setlist");
+    renderRoom({ initialTab: "setlist" });
+
+    fireEvent.click(within(screen.getByRole("navigation", { name: "플레이리스트 화면" })).getByRole("button", { name: /후보곡/ }));
+
+    expect(currentTab()).toHaveTextContent("후보곡");
+    expect(`${window.location.pathname}${window.location.search}`).toBe("/playlist/abc123?utm_source=kakao");
   });
 
   it("opens on 후보곡 otherwise", () => {

@@ -42,7 +42,7 @@ import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import type { ViewMode } from "./NavigationBar";
 import { setlistEditAccess } from "@/domain/setlist";
-import type { PlaylistLinkTab } from "@/domain/playlist-tab";
+import { PLAYLIST_TAB_PARAM, type PlaylistLinkTab } from "@/domain/playlist-tab";
 import type { MyTeam } from "@/actions/team";
 import type { PlaylistView, RoomTeam, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/domain/types";
 import { displayTitle } from "@/domain/song-meta";
@@ -148,6 +148,13 @@ export default function PlaylistClient({
   const handleModeChange = useCallback(async (mode: ViewMode) => {
     window.scrollTo({ top: 0 });
     setNavMode(mode);
+    // The link's ?tab= only picks the first tab. Left in the address, a refresh in KakaoTalk's browser or a copied address
+    // would jump back to it after the member moved on.
+    const url = new URL(window.location.href);
+    if (url.searchParams.has(PLAYLIST_TAB_PARAM)) {
+      url.searchParams.delete(PLAYLIST_TAB_PARAM);
+      window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+    }
     track("playlist_tab_viewed", { tab: mode === "playlist" ? "candidates" : mode });
     if (mode === "setlist" && setlistItems === null && !loadingSetlist) {
       setLoadingSetlist(true);
