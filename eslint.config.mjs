@@ -20,7 +20,8 @@ const BUTTON_COMPONENTS = ["Button", "ToolbarButton", "KakaoShareButton", "Login
 const BUTTON_LIKE = `JSXElement:matches([openingElement.name.name=/^(${BUTTON_COMPONENTS.join("|")})$/], :has(> JSXOpeningElement:has(CallExpression[callee.name='buttonClassName'])))`;
 // The AST steps between an element and a child it lays out are none, `{… && …}` or `{… ? … : …}`, or a `.map` callback
 // that returns the child from an expression or a block body. A fragment adds no box, so its children in any of those
-// places are the element's children too.
+// places are the element's children too. Steps do not nest further: `.map((x) => x.ok && <Button/>)`,
+// `{open && xs.map(…)}`, a `return` inside an `if` and `<React.Fragment>` still slip past.
 const CALLBACK = ":matches(ArrowFunctionExpression, FunctionExpression)";
 const CHILD_STEPS = [
   [],
@@ -38,11 +39,12 @@ const ROW_OF_BUTTONS = `JSXElement:matches(${CHILD_PATHS.map((path) =>
   [...path, BUTTON_LIKE].reduceRight((inner, step) => `:has(> ${step}${inner})`, ""),
 ).join(", ")})`;
 const HOLDS_BUTTONS = `JSXElement:has(${BUTTON_LIKE})`;
-// A buttonClassName link that ButtonGroup lays out. Outside `:has`, chained child combinators work.
-const BUTTON_LINK = "JSXElement:has(> JSXOpeningElement:has(CallExpression[callee.name='buttonClassName']))";
-const LINK_IN_BUTTON_GROUP = `:matches(${CHILD_PATHS.map((path) =>
-  ["JSXElement[openingElement.name.name='ButtonGroup']", ...path, BUTTON_LINK].join(" > "),
-).join(", ")})`;
+// A buttonClassName link that ButtonGroup lays out. Outside `:has`, chained child combinators work. The ancestor paths
+// come before the `:has`: esquery checks a compound left to right, so the subtree walk runs only for an element already
+// in a ButtonGroup. With the `:has` first, every truncate literal walked every ancestor 20 times and lint took 2s longer.
+const LINK_IN_BUTTON_GROUP = `JSXElement:matches(${CHILD_PATHS.map((path) =>
+  ["JSXElement[openingElement.name.name='ButtonGroup']", ...path, "JSXElement"].join(" > "),
+).join(", ")}):has(> JSXOpeningElement:has(CallExpression[callee.name='buttonClassName']))`;
 
 const ROUND_SKIN_UTILITY = "/(^|[\\s:])!?(bg-|text-|font-|border|shadow|ring-|opacity-|scale-|-m[trblxyse]?-|[\\w-]*\\[)/";
 const GLYPH_PLACEMENT_UTILITY =
