@@ -11,7 +11,7 @@ import NoticeCard from "../ui/NoticeCard";
 import Avatar, { AvatarStack } from "../ui/Avatar";
 import EmptyState from "../ui/EmptyState";
 import { ListRowButton, SongRowLink } from "../ui/ListRow";
-import { MenuItemButton, MenuPanel } from "../ui/Menu";
+import { MenuItemButton, MenuPanel, useMenu } from "../ui/Menu";
 import Shelf from "../ui/Shelf";
 import { useDialog } from "../ui/DialogProvider";
 import GuitarIcon from "../ui/GuitarIcon";
@@ -550,15 +550,10 @@ function PlayedSongs({ songs }: { songs: PlayedSong[] }) {
 
 /** 멤버 한 칸 (YouTube Music "좋아하는 아티스트" 원). owner 에게는 내보내기 메뉴가 붙는다. */
 function MemberTile({ member, onRemove }: { member: TeamHomeMember; onRemove: () => void }) {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const { open: menuOpen, setOpen: setMenuOpen, ref: menuRef } = useMenu();
   const sub = member.role === "owner" ? "리더" : member.isMe ? "나" : null;
   return (
-    <li
-      className="relative flex flex-col items-center gap-2 text-center"
-      onKeyDown={(e) => {
-        if (e.key === "Escape") setMenuOpen(false);
-      }}
-    >
+    <li className="relative flex flex-col items-center gap-2 text-center">
       <Avatar name={member.displayName} size="lg" />
       <span className="w-full min-w-0">
         <span className="block truncate text-sm text-text">{member.displayName}</span>
@@ -570,7 +565,7 @@ function MemberTile({ member, onRemove }: { member: TeamHomeMember; onRemove: ()
         )}
       </span>
       {member.canRemove && (
-        <div className="absolute -right-1 -top-2 flex">
+        <div ref={menuRef} className="absolute -right-1 -top-2 flex">
           <IconButton
             bare
             aria-label={`${member.displayName} 메뉴`}

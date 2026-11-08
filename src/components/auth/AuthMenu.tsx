@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Avatar from "../ui/Avatar";
-import { MenuItemButton, MenuItemLink, MenuPanel } from "../ui/Menu";
+import { MenuItemButton, MenuItemLink, MenuPanel, useMenu } from "../ui/Menu";
 import RoundButton from "../ui/RoundButton";
 import {
   deleteAccount,
@@ -12,7 +12,6 @@ import {
   type DeleteAccountResult,
 } from "@/actions/account";
 import { useDialog } from "@/components/ui/DialogProvider";
-import { dialogLayerOpen } from "@/components/ui/focus-trap";
 
 const DELETE_ACCOUNT_RECORDS =
   "내 투표와 댓글, 플레이리스트·밴드 참여 기록이 지워져요. 내가 추가한 곡은 남고 이름만 '탈퇴한 멤버'로 바뀌어요.\n\n" +
@@ -54,32 +53,10 @@ interface AuthMenuProps {
 
 export default function AuthMenu({ nickname, avatarUrl, embedded = false }: AuthMenuProps) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  // The menu stays open behind the delete confirm, so it shows "탈퇴하는 중…" afterwards.
+  const { open, setOpen, ref } = useMenu();
   const { showDanger, showAlert } = useDialog();
   const [deletePhase, setDeletePhase] = useState<DeletePhase>("idle");
-
-  useEffect(() => {
-    if (!open) return;
-    // Same rule as Modal: input on the delete confirm belongs to the confirm, so the menu stays
-    // open behind it and shows "탈퇴하는 중…" afterwards.
-    function onClick(e: MouseEvent) {
-      if (dialogLayerOpen()) return;
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.defaultPrevented || dialogLayerOpen()) return;
-      if (e.key === "Escape") setOpen(false);
-    }
-    window.addEventListener("mousedown", onClick);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("mousedown", onClick);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
 
   // The session ended (signed out in another tab, or an earlier try already deleted the account).
   // Do not claim a deletion that may not have happened.
