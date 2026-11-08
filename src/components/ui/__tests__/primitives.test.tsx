@@ -36,6 +36,20 @@ describe("Button", () => {
     expect(screen.getByRole("button", { name: "저장" })).not.toHaveAttribute("aria-busy");
   });
 
+  it("submits the form it sits in only when asked to with type=submit", () => {
+    const onSubmit = vi.fn((e: React.FormEvent) => e.preventDefault());
+    render(
+      <form onSubmit={onSubmit}>
+        <Button variant="ghost">다시 고르기</Button>
+        <Button type="submit">밴드 만들기</Button>
+      </form>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "다시 고르기" }));
+    expect(onSubmit).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "밴드 만들기" }));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
   it("ignores clicks when disabled", () => {
     const onClick = vi.fn();
     render(<Button disabled onClick={onClick}>삭제</Button>);

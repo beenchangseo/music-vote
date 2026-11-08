@@ -80,6 +80,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
     disabled,
     className = "",
     children,
+    type = "button",
     ...rest
   },
   ref,
@@ -87,6 +88,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   return (
     <button
       ref={ref}
+      // A <button> in a form submits it by default. Submitting is the rarer job, so it is asked for with type="submit".
+      type={type}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       aria-pressed={pressed}
