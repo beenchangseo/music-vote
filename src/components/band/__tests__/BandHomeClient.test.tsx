@@ -157,7 +157,7 @@ describe("BandHomeClient primary action (1A)", () => {
   it("asks a lone owner to call members", () => {
     renderHome(ownerView({ members: [ownerView().members[0]], rooms: [room()] }));
     expect(screen.getByRole("button", { name: "카톡으로 멤버 부르기" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "새 플레이리스트" })).toHaveAttribute("href", `/new?band=${TEAM}`);
+    expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toHaveAttribute("href", `/new?band=${TEAM}`);
   });
 
   it("does not ask once a second member is in", () => {
@@ -183,18 +183,40 @@ describe("BandHomeClient primary action (1A)", () => {
     expect(screen.getByRole("dialog", { name: "멤버 초대" })).toBeInTheDocument();
   });
 
-  it("features the running room", () => {
+  // #80 V3: the whole card is one link to the playlist. A stage badge, the title and the counts; no caption, no
+  // sentence promising the setlist, no play disc.
+  const nowCard = () => within(screen.getByRole("region", { name: "지금 플레이리스트" })).getByRole("link");
+  const PLAY_TRIANGLE = "M8 5.14v13.72";
+
+  it("features a running room that is still voting", () => {
     renderHome(view({ rooms: [room({ songCount: 7 })] }));
-    const card = screen.getByRole("link", { name: /지금 플레이리스트/ });
+    const card = nowCard();
     expect(card).toHaveAttribute("href", "/playlist/abc123");
-    expect(card).toHaveTextContent("투표 중 · 후보곡 7곡");
-    expect(screen.getByRole("link", { name: "새 플레이리스트" })).toHaveAttribute("href", `/new?band=${TEAM}`);
+    expect(card.textContent).toBe("투표 중" + "10월 정기 합주" + "후보곡 7곡");
+    expect(card.innerHTML).not.toContain(PLAY_TRIANGLE);
+    expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toHaveAttribute("href", `/new?band=${TEAM}`);
   });
 
-  it("falls back to 새 플레이리스트 when nothing is running", () => {
+  it("features a running room whose setlist is being built, without promising the setlist tab", () => {
+    const setlist = Array.from({ length: 8 }, (_, i) => ({
+      songId: `s${i}`,
+      title: `곡 ${i}`,
+      artist: "밴드",
+      position: i,
+      videoId: `v${i}`,
+      thumbnailUrl: `https://img.youtube.com/vi/v${i}/mqdefault.jpg`,
+    }));
+    renderHome(view({ rooms: [room({ songCount: 12, setlist })] }));
+    const card = nowCard();
+    expect(card).toHaveAttribute("href", "/playlist/abc123");
+    expect(card.textContent).toBe("셋리스트 짜는 중" + "10월 정기 합주" + "셋리스트 8곡 · 후보곡 12곡");
+    expect(card.innerHTML).not.toContain(PLAY_TRIANGLE);
+  });
+
+  it("falls back to 플레이리스트 만들기 when nothing is running", () => {
     renderHome(view({ rooms: [room({ setlistConfirmed: true })] }));
-    expect(screen.queryByRole("link", { name: /지금 플레이리스트/ })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "새 플레이리스트" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "지금 플레이리스트" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toBeInTheDocument();
   });
 });
 
@@ -213,7 +235,7 @@ describe("BandHomeClient start area for a new empty band (DR1, DR16)", () => {
     // No lone avatar link above the area; the members section shows the one member.
     expect(screen.queryByRole("link", { name: "멤버 1명" })).not.toBeInTheDocument();
     // No empty shelf with a second "new playlist" and no empty history.
-    expect(screen.queryByRole("link", { name: "새 플레이리스트" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "플레이리스트 만들기" })).not.toBeInTheDocument();
     expect(screen.queryByRole("region", { name: /우리가 했던 곡/ })).not.toBeInTheDocument();
 
     fireEvent.click(within(area).getByRole("button", { name: "카톡으로 멤버 부르기" }));
@@ -236,7 +258,7 @@ describe("BandHomeClient start area for a new empty band (DR1, DR16)", () => {
   it("goes back to the usual home once a member joins", () => {
     renderHome(ownerView({ rooms: [] }));
     expect(screen.queryByRole("region", { name: "첫 플레이리스트부터 시작해요" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "새 플레이리스트" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toBeInTheDocument();
   });
 
   it("sends an invite card that names the band's leader, not '멤버 1명' (DR13)", () => {
@@ -262,7 +284,7 @@ describe("BandHomeClient start area for a new empty band (DR1, DR16)", () => {
 });
 
 describe("BandHomeClient attach entry (DR8) and the guests line (DR9)", () => {
-  it("gives the owner a 있던 플레이리스트 넣기 tile next to 새 플레이리스트 when there is something to put in", () => {
+  it("gives the owner a 있던 플레이리스트 넣기 tile next to 만들기 when there is something to put in", () => {
     renderHome(ownerView({ rooms: [room()], attachableCount: 2 }));
     const shelf = screen.getByRole("region", { name: /^플레이리스트\s*1$/ });
     fireEvent.click(within(shelf).getByRole("button", { name: "있던 플레이리스트 넣기" }));
@@ -304,22 +326,27 @@ describe("BandHomeClient rooms shelf and played songs (26A, E1)", () => {
   const run = song("s1", "말달리자", "크라잉넛", "v-run");
   const crush = song("s2", "넌 내게 반했어", "노브레인", "v-crush", 1);
 
-  it("shelves a 새 플레이리스트 tile, then every room newest first", () => {
+  it("shelves a 만들기 tile, then every room newest first with its stage and date", () => {
     renderHome(
       view({
         rooms: [
-          room({ id: "r2", title: "10월 합주", setlist: [run, crush] }),
-          room({ id: "r1", title: "9월 합주", shareCode: "old", setlist: [{ ...run, songId: "s1-old" }], setlistConfirmed: true }),
+          room({ id: "r3", title: "11월 합주", shareCode: "new", createdAt: "2026-11-02T03:00:00Z" }),
+          room({ id: "r2", title: "10월 합주", setlist: [run, crush], createdAt: "2026-10-12T03:00:00Z" }),
+          room({ id: "r1", title: "9월 합주", shareCode: "old", setlist: [{ ...run, songId: "s1-old" }], setlistConfirmed: true, createdAt: "2026-09-05T03:00:00Z" }),
         ],
       }),
     );
-    const shelf = screen.getByRole("region", { name: /^플레이리스트\s*2$/ });
-    expect(within(shelf).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
-      `/new?band=${TEAM}`,
-      "/playlist/abc123",
-      "/playlist/old",
+    const shelf = screen.getByRole("region", { name: /^플레이리스트\s*3$/ });
+    const links = within(shelf).getAllByRole("link");
+    expect(links.map((link) => link.getAttribute("href"))).toEqual([`/new?band=${TEAM}`, "/playlist/new", "/playlist/abc123", "/playlist/old"]);
+    // The section title already says 플레이리스트, so the tile reads 만들기; its name still says what it makes.
+    expect(links[0]).toHaveAccessibleName("플레이리스트 만들기");
+    expect(links[0]).toHaveTextContent(/^만들기$/);
+    expect(links.slice(1).map((link) => link.textContent)).toEqual([
+      "11월 합주" + "투표 중" + "11월 2일",
+      "10월 합주" + "셋리스트 짜는 중" + "10월 12일",
+      "9월 합주" + "셋리스트 확정" + "9월 5일",
     ]);
-    expect(within(shelf).getByText(/셋리스트 1곡/)).toBeInTheDocument();
   });
 
   it("counts a song once per room, puts the most played first and links its latest room", () => {

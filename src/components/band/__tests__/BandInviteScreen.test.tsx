@@ -141,6 +141,12 @@ describe("BandInviteScreen", () => {
     expect(screen.getByText("보컬, 기타, 드럼 외 2명")).toBeInTheDocument();
   });
 
+  // #80: the setlist lives inside a playlist, so the two are not listed as two things the band manages.
+  it("says what the band does together in the one vocabulary", () => {
+    renderInvite();
+    expect(screen.getByText("이 밴드의 플레이리스트에서 같이 투표하고 셋리스트를 짜요")).toBeInTheDocument();
+  });
+
   it("joins on tap and shows the reason under the button when it fails", async () => {
     joinTeam.mockResolvedValue({ success: false, reason: "write_failed" });
     renderInvite();

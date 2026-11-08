@@ -179,7 +179,8 @@ describe("PlaylistClient setlist confirm", () => {
     render(<PlaylistClient playlist={playlist} songs={[song("top"), song("second")]} shareCode="abc123" participantCount={2} userNickname="기타" loggedIn isHost={false} team={null} initialSetlistItems={[]} />);
 
     expect(screen.queryByRole("button", { name: "셋리스트 확정하기" })).not.toBeInTheDocument();
-    expect(screen.getByText("생성자가 셋리스트를 확정하면 셋리스트/합주 모드를 사용할 수 있습니다.")).toBeInTheDocument();
+    // The 셋리스트 and 합주 tabs open before a confirm too, so the line only says who confirms (#80).
+    expect(screen.getByText("셋리스트는 방장이 확정해요")).toBeInTheDocument();
   });
 
   it.each([
