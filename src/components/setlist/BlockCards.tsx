@@ -7,7 +7,7 @@ import { touchTarget44 } from "../ui/Button";
 import IconButton from "../ui/IconButton";
 import { effectiveSetlistDuration, effectiveSetlistTitle, formatRuntime, type SetlistBlock } from "@/domain/setlist";
 import { displayArtist, formatKey } from "@/domain/song-meta";
-import { graphemes } from "@/domain/text-segments";
+import { graphemes, lastWord } from "@/domain/text-segments";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
 import { BLOCK_TONES, PLAYING_CARD, type BlockKind } from "./block-tones";
 
@@ -37,26 +37,50 @@ function CardShell({ kind, editing, onRemove, current = false, className = "", c
 }
 
 /** 편집 모드 제목 끝의 ✎. 글자 크기를 따르고, 줄 높이 칸 가운데에 그려 제목 줄 가운데에 선다. */
-function EditMark() {
+function EditMark({ gap }: { gap: boolean }) {
   return (
-    <svg className="ml-1 inline h-lh w-[1em] align-top text-text-muted" fill="none" stroke="currentColor" strokeWidth={2} strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+    <svg className={`${gap ? "ml-1 " : ""}inline h-lh w-[1em] align-top text-text-muted`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
       <path d="M4 20l1-4.5L15.6 4.9a1.9 1.9 0 012.7 0l.8.8a1.9 1.9 0 010 2.7L8.5 19 4 20z" />
     </svg>
   );
 }
 
+const CJK = /[\p{Script=Hangul}\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u;
+
 /**
- * 줄이지 않은 제목의 마지막 글자와 뒤에 붙는 것(시간·✎)을 nowrap 으로 묶는다. 그림 앞은 브라우저가 늘 줄을 바꿀 수 있는
- * 자리이고, 띄어 쓰지 않은 긴 제목을 칸 끝에서 자를 때도 마찬가지라서, 묶지 않으면 ✎ 나 시간만 다음 줄로 내려간다.
+ * 줄이지 않은 제목과 끝에 붙는 시간·✎. 그림 앞은 브라우저가 늘 줄을 바꿀 수 있는 자리이고, 띄어 쓰지 않은 긴 제목을 칸 끝에서
+ * 자를 때도 마찬가지라서, 묶지 않으면 ✎ 나 시간만 다음 줄로 내려간다.
+ *
+ * 한글은 마지막 글자와 시간·✎ 를 nowrap 으로 묶는다. 라틴 문자는 마지막 단어와 시간·✎ 를 inline-block 으로 묶어 같이 다음 줄로
+ * 보내고, 한 줄에 다 들어가지 않을 때만 <wbr> 에서 나눈다. 마지막 글자만 묶으면 "Wonderwal / l ✎" 처럼 단어 가운데가 잘린다(#71).
+ * 그 사이 띄어쓰기는 <wbr> 뒤 nowrap 안에 둔다. 나뉘면 새 줄 앞의 띄어쓰기가 지워져서 시간·✎ 가 들여 써지지 않는다.
  */
-function GluedEnd({ text, children }: { text: string; children: ReactNode }) {
+function GluedEnd({ text, time, editing }: { text: string; time?: string | false; editing: boolean }) {
+  const word = lastWord(text);
+  if (word && !CJK.test(word)) {
+    return (
+      <>
+        {text.slice(0, text.length - word.length)}
+        <span className="inline-block max-w-full">
+          {word}
+          <wbr />
+          <span className="whitespace-nowrap">
+            {" "}
+            {time && <span className="font-normal tabular-nums">· {time}</span>}
+            {editing && <EditMark gap={!!time} />}
+          </span>
+        </span>
+      </>
+    );
+  }
   const last = graphemes(text).at(-1) ?? "";
   return (
     <>
       {text.slice(0, text.length - last.length)}
       <span className="whitespace-nowrap">
         {last}
-        {children}
+        {time && <span className="font-normal tabular-nums">{`\u00a0· ${time}`}</span>}
+        {editing && <EditMark gap />}
       </span>
     </>
   );
@@ -68,9 +92,7 @@ function BlockTitle({ text, editing, className }: { text: string; editing: boole
   if (!editing) return <span className={`line-clamp-2 ${style}`}>{text}</span>;
   return (
     <span className={`block ${style}`}>
-      <GluedEnd text={text}>
-        <EditMark />
-      </GluedEnd>
+      <GluedEnd text={text} editing />
     </span>
   );
 }
@@ -199,7 +221,7 @@ export function IntervalBlock({ item, editing, onEdit, onRemove }: BlockProps) {
   const label = item.label || "인터벌";
   const canExpand = !!item.description || (item.label?.length || 0) > 30;
   const open = expanded && !editing;
-  const time = item.duration_seconds > 0 && ` · ${formatRuntime(item.duration_seconds)}`;
+  const runtime = item.duration_seconds > 0 && formatRuntime(item.duration_seconds);
   const line = (
     <>
       <svg className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
@@ -207,15 +229,12 @@ export function IntervalBlock({ item, editing, onEdit, onRemove }: BlockProps) {
       </svg>
       {open || editing ? (
         <span className="min-w-0 break-keep-wrap py-1.5 text-sm font-medium">
-          <GluedEnd text={label}>
-            <span className="font-normal tabular-nums">{time}</span>
-            {editing && <EditMark />}
-          </GluedEnd>
+          <GluedEnd text={label} time={runtime} editing={editing} />
         </span>
       ) : (
         <span className="flex min-w-0 text-sm">
           <span className="truncate font-medium">{label}</span>
-          <span className="shrink-0 tabular-nums">{time}</span>
+          <span className="shrink-0 tabular-nums">{runtime && ` · ${runtime}`}</span>
         </span>
       )}
       {item.description && !open && <span className="min-w-0 grow basis-0 truncate text-caption text-text-subtle">{item.description}</span>}
