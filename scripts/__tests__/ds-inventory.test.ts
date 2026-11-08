@@ -35,6 +35,25 @@ describe("ds-inventory", () => {
     expect(await found(classes)).toEqual([]);
   });
 
+  it.each([
+    ["-mt-3", "negative-margin -mt-3"],
+    ["-mx-2", "negative-margin -mx-2"],
+    ["-m-1", "negative-margin -m-1"],
+    ["md:-ml-2.5", "negative-margin md:-ml-2.5"],
+    ["-mb-px", "negative-margin -mb-px"],
+  ])("lists the hand offset %s", async (classes, finding) => {
+    expect(await found(classes)).toEqual([finding]);
+  });
+
+  it.each(["mt-3 mx-auto", "-translate-y-1/2 -z-10 -inset-x-2 -rotate-90"])("does not count %s as a negative margin", async (classes) => {
+    expect(await found(classes)).toEqual([]);
+  });
+
+  it("leaves a primitive's own offset out, so the count is what callers still hand-tune", async () => {
+    expect(await found("-ml-2.5", "src/components/ui/Fixture.tsx")).toEqual([]);
+    expect(await found("-ml-2.5", "src/app/Fixture.tsx")).toEqual(["negative-margin -ml-2.5"]);
+  });
+
   it("lists token literals inside ui, where raw controls are allowed", async () => {
     const code = 'export const X = () => <button className="h-11 rounded-xl" />;';
     expect((await inventoryOf(code, "src/components/ui/Fixture.tsx")).map((f) => f.category)).toEqual(["non-token"]);

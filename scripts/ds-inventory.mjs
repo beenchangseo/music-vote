@@ -18,6 +18,7 @@ const CATEGORIES = {
   "raw-link": "ui 밖에서 바탕·테두리와 크기를 직접 칠한 <a>·<Link>",
   "non-token": "토큰이 아닌 모서리·글자 크기 (rounded-xl·text-lg 등)",
   arbitrary: "크기·여백·위치의 임의 값 [..]",
+  "negative-margin": "ui 밖의 음수 margin (-mt-3·-mx-2 등). 칸을 레이아웃 밖으로 당기는 손 보정",
 };
 
 function categoryOf(message) {
@@ -32,17 +33,25 @@ export function folderOf(file) {
 }
 
 // eslint.config.mjs registers the ds plugin and decides where ds/no-raw-control applies.
-// The inventory-only rules cover all of src, ui included.
+// non-token and arbitrary cover all of src, ui included. Negative margins skip ui: a primitive that lines a glyph up
+// with the content edge (RoundLink edge="start") owns that offset once, so its callers need none.
 const engine = () =>
   new ESLint({
     cwd: root,
-    overrideConfig: {
-      files: ["src/**/*.{ts,tsx}"],
-      ignores: ["src/**/__tests__/**"],
-      rules: { "ds/non-token": "warn", "ds/arbitrary": "warn" },
-      // An eslint-disable comment would otherwise hide a raw control from the ratchet as well as from lint.
-      linterOptions: { noInlineConfig: true },
-    },
+    overrideConfig: [
+      {
+        files: ["src/**/*.{ts,tsx}"],
+        ignores: ["src/**/__tests__/**"],
+        rules: { "ds/non-token": "warn", "ds/arbitrary": "warn" },
+        // An eslint-disable comment would otherwise hide a raw control from the ratchet as well as from lint.
+        linterOptions: { noInlineConfig: true },
+      },
+      {
+        files: ["src/**/*.{ts,tsx}"],
+        ignores: ["src/**/__tests__/**", "src/components/ui/**"],
+        rules: { "ds/negative-margin": "warn" },
+      },
+    ],
     ruleFilter: ({ ruleId }) => ruleId.startsWith("ds/"),
   });
 
@@ -177,17 +186,19 @@ export async function checkBaseline() {
 }
 
 function printTable(findings) {
+  const cols = Object.keys(CATEGORIES);
+  const catWidth = Math.max(...cols.map((c) => c.length));
   const width = Math.max(...findings.map((f) => `${f.file}:${f.line}`.length), 0);
-  for (const f of findings) console.log(`${f.category.padEnd(10)}  ${`${f.file}:${f.line}`.padEnd(width)}  ${f.detail}`);
+  for (const f of findings) console.log(`${f.category.padEnd(catWidth)}  ${`${f.file}:${f.line}`.padEnd(width)}  ${f.detail}`);
 
   const { byCategory, byFolder } = summarize(findings);
   console.log("\n분류별");
-  for (const [c, n] of Object.entries(byCategory)) console.log(`  ${String(n).padStart(4)}  ${c.padEnd(10)}  ${CATEGORIES[c]}`);
+  for (const [c, n] of Object.entries(byCategory)) console.log(`  ${String(n).padStart(4)}  ${c.padEnd(catWidth)}  ${CATEGORIES[c]}`);
 
-  const cols = Object.keys(CATEGORIES);
-  console.log(`\n폴더별\n  ${"folder".padEnd(22)}${cols.map((c) => c.padStart(11)).join("")}${"total".padStart(8)}`);
+  const col = (c) => Math.max(11, c.length + 2);
+  console.log(`\n폴더별\n  ${"folder".padEnd(22)}${cols.map((c) => c.padStart(col(c))).join("")}${"total".padStart(8)}`);
   for (const [folder, counts] of Object.entries(byFolder).sort((a, b) => b[1].total - a[1].total)) {
-    console.log(`  ${folder.padEnd(22)}${cols.map((c) => String(counts[c]).padStart(11)).join("")}${String(counts.total).padStart(8)}`);
+    console.log(`  ${folder.padEnd(22)}${cols.map((c) => String(counts[c]).padStart(col(c))).join("")}${String(counts.total).padStart(8)}`);
   }
 }
 
