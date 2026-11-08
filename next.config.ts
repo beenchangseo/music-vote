@@ -37,6 +37,11 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        // A later entry wins for the same key.
+        source: "/lab/recording",
+        headers: [{ key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=()" }],
+      },
     ];
   },
 };

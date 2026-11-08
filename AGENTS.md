@@ -41,6 +41,7 @@ src/
 │   ├── band/     밴드 홈·초대·밴드 시트 (다른 화면이 쓰는 밴드 부품 포함)
 │   ├── home/     랜딩·로그인 홈·새 플레이리스트 폼
 │   ├── auth/     카카오 로그인
+│   ├── recording/ 녹음 점검(/lab/recording). LAB_USER_IDS 에 든 계정 말고는 404
 │   └── share/    카카오 공유
 ├── hooks/        클라이언트 훅 (재생 큐·투표·실시간·메트로놈)
 └── proxy.ts      세션 갱신과 rate limit (Next 16 의 middleware)
