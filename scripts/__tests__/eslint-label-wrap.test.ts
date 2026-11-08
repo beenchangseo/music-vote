@@ -41,6 +41,19 @@ describe("eslint label-wrap rules", () => {
     // ** and [&_*] reach every descendant, so a button any depth down shrinks.
     '<div className="**:min-w-0"><section><Button>취소</Button></section></div>',
     '<div className="[&_*]:max-w-40"><p><span><Button>취소</Button></span></p></div>',
+    '<div className="flex max-sm:*:max-w-1/2"><Button>취소</Button></div>',
+    // A callback with a block body renders what it returns, and a fragment adds no box, so its children are the row's.
+    '<div className="flex *:min-w-0">{bands.map((band) => { return <Button key={band.id}>{band.name}</Button>; })}</div>',
+    '<div className="flex *:min-w-0">{bands.map(function (band) { return <Button key={band.id}>{band.name}</Button>; })}</div>',
+    '<div className="flex *:min-w-0"><><Button>취소</Button><Button>삭제</Button></></div>',
+    '<div className="flex *:min-w-0">{open && <><Button>취소</Button><Button>삭제</Button></>}</div>',
+    '<div className="flex *:min-w-0">{open ? <><Button>취소</Button><Button>삭제</Button></> : null}</div>',
+    '<div className="flex *:min-w-0">{bands.map((band) => <Fragment key={band.id}><Button>{band.name}</Button></Fragment>)}</div>',
+    // Components whose root is a Button with a one-line label.
+    '<div className="flex *:min-w-0"><KakaoShareButton shareCode={code} variant="playlist" title={title} /></div>',
+    '<div className="flex *:min-w-0"><LoginButton variant="tonal" size="sm" label="로그인" /></div>',
+    '<div className="flex *:min-w-0"><TapTempoButton onTempo={keep} onCommit={commit} /></div>',
+    '<div className="**:min-w-0"><section><LoginButton label="로그인" /></section></div>',
   ])("flags a row that lets its buttons shrink under their labels in %s", async (code) => {
     const errors = await syntaxErrors(code);
     expect(errors).toHaveLength(1);
@@ -52,6 +65,9 @@ describe("eslint label-wrap rules", () => {
   it.each([
     '<ButtonGroup><Link href="/" className={buttonClassName({ variant: "tonal" })}><span className="truncate">{band.name}</span>에 넣기</Link><Button>취소</Button></ButtonGroup>',
     '<ButtonGroup>{open && <Link href="/" className={buttonClassName()}><span className="block truncate">{band.name}</span></Link>}</ButtonGroup>',
+    '<ButtonGroup>{bands.map((band) => { return <Link key={band.id} href="/" className={buttonClassName()}><span className="truncate">{band.name}</span></Link>; })}</ButtonGroup>',
+    '<ButtonGroup><><Link href="/" className={buttonClassName()}><span className="truncate">{band.name}</span></Link><Button>취소</Button></></ButtonGroup>',
+    '<ButtonGroup>{open ? <><Link href="/" className={buttonClassName()}><span className="truncate">{band.name}</span></Link></> : null}</ButtonGroup>',
   ])("flags a truncating link in a ButtonGroup in %s", async (code) => {
     const errors = await syntaxErrors(code);
     expect(errors).toHaveLength(1);
@@ -75,6 +91,17 @@ describe("eslint label-wrap rules", () => {
     '<main className="grid *:min-w-0"><section><div><Button>취소</Button></div></section></main>',
     '<div className="flex [&>*]:min-w-0"><div className="flex gap-2"><Button>취소</Button></div></div>',
     '<p className="whitespace-pre-line text-sm">줄바꿈이 있는 안내</p>',
+    // Button already has max-w-full, so capping a cell at the row's width shrinks no label.
+    '<div className="flex *:max-w-full"><Button>취소</Button></div>',
+    '<div className="flex [&>*]:max-w-full"><Button>취소</Button></div>',
+    '<div className="flex max-sm:*:max-w-full"><Button>취소</Button></div>',
+    '<div className="**:max-w-full"><section><Button>취소</Button></section></div>',
+    '<div className="flex *:min-w-0">{bands.map((band) => { return <span key={band.id} className="truncate">{band.name}</span>; })}</div>',
+    '<div className="flex *:min-w-0">{bands.map((band) => { return <div key={band.id}><Button>{band.name}</Button></div>; })}</div>',
+    '<div className="flex *:min-w-0"><><span className="truncate">긴 제목</span><span>부제</span></></div>',
+    '<div className="flex *:min-w-0">{open && <><span className="truncate">긴 제목</span></>}</div>',
+    '<ButtonGroup>{bands.map((band) => { return <Button key={band.id}><span className="truncate">{band.name}</span></Button>; })}</ButtonGroup>',
+    '<ButtonGroup><><Button variant="tonal"><span className="truncate">{band.name}</span></Button><Button>취소</Button></></ButtonGroup>',
   ])("allows %s", async (code) => {
     expect(await syntaxErrors(code)).toEqual([]);
   });

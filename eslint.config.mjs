@@ -11,29 +11,40 @@ const CONTROL_SIZE_UTILITY =
 // white-space and text-wrap utilities that let a label wrap. Wrapped, "＋ 새 플레이리스트" spilled out of its 52px button (#79).
 const LABEL_WRAP_UTILITY = "/(^|[\\s:])!?(whitespace-(?!nowrap(?![\\w-]))[\\w-]+|text-(wrap|balance|pretty)(?![\\w-]))/";
 // A variant that lets the buttons of a row shrink under their one-line labels: ButtonGroup's old `*:min-w-0`.
-// `*:` and `[&>…]:` reach the direct children only; `**:` and `[&_…]:` reach every descendant.
-const CHILD_SHRINK_UTILITY = "/(^|[\\s:])!?(\\*|\\[&>[^\\]\\s]+\\]):!?(min-w-0|max-w-)/";
-const DESCENDANT_SHRINK_UTILITY = "/(^|[\\s:])!?(\\*\\*|\\[&_[^\\]\\s]+\\]):!?(min-w-0|max-w-)/";
-// A Button, a ToolbarButton or a link drawn with buttonClassName.
-const BUTTON_LIKE =
-  "JSXElement:matches([openingElement.name.name=/^(Button|ToolbarButton)$/], :has(> JSXOpeningElement:has(CallExpression[callee.name='buttonClassName'])))";
-// A direct child is written out, behind `&&` or `?:`, or returned from a `.map` arrow. esquery 1.7 matches nothing for a
-// chained `:has(> A > B)`, so each step is its own one-level `:has(> …)`.
-const ROW_OF_BUTTONS = `JSXElement:matches(${[
-  `:has(> ${BUTTON_LIKE})`,
-  `:has(> JSXExpressionContainer:has(> :matches(LogicalExpression, ConditionalExpression):has(> ${BUTTON_LIKE})))`,
-  `:has(> JSXExpressionContainer:has(> CallExpression:has(> ArrowFunctionExpression:has(> ${BUTTON_LIKE}))))`,
-].join(", ")})`;
+// `*:` and `[&>…]:` reach the direct children only; `**:` and `[&_…]:` reach every descendant. Button already has
+// max-w-full, so `max-w-full` shrinks no label.
+const CHILD_SHRINK_UTILITY = "/(^|[\\s:])!?(\\*|\\[&>[^\\]\\s]+\\]):!?(min-w-0|max-w-(?!full(?![\\w-])))/";
+const DESCENDANT_SHRINK_UTILITY = "/(^|[\\s:])!?(\\*\\*|\\[&_[^\\]\\s]+\\]):!?(min-w-0|max-w-(?!full(?![\\w-])))/";
+// Components whose root is a Button with a one-line label, and links drawn with buttonClassName.
+const BUTTON_COMPONENTS = ["Button", "ToolbarButton", "KakaoShareButton", "LoginButton", "TapTempoButton"];
+const BUTTON_LIKE = `JSXElement:matches([openingElement.name.name=/^(${BUTTON_COMPONENTS.join("|")})$/], :has(> JSXOpeningElement:has(CallExpression[callee.name='buttonClassName'])))`;
+// The AST steps between an element and a child it lays out are none, `{… && …}` or `{… ? … : …}`, or a `.map` callback
+// that returns the child from an expression or a block body. A fragment adds no box, so its children in any of those
+// places are the element's children too. Steps do not nest further: `.map((x) => x.ok && <Button/>)`,
+// `{open && xs.map(…)}`, a `return` inside an `if` and `<React.Fragment>` still slip past.
+const CALLBACK = ":matches(ArrowFunctionExpression, FunctionExpression)";
+const CHILD_STEPS = [
+  [],
+  ["JSXExpressionContainer", ":matches(LogicalExpression, ConditionalExpression)"],
+  ["JSXExpressionContainer", "CallExpression", CALLBACK],
+  ["JSXExpressionContainer", "CallExpression", CALLBACK, "BlockStatement", "ReturnStatement"],
+];
+const FRAGMENT = ":matches(JSXFragment, JSXElement[openingElement.name.name='Fragment'])";
+const CHILD_PATHS = [
+  ...CHILD_STEPS,
+  ...CHILD_STEPS.flatMap((outer) => CHILD_STEPS.map((inner) => [...outer, FRAGMENT, ...inner])),
+];
+// esquery 1.7 matches nothing for a chained `:has(> A > B)`, so each step is its own one-level `:has(> …)`.
+const ROW_OF_BUTTONS = `JSXElement:matches(${CHILD_PATHS.map((path) =>
+  [...path, BUTTON_LIKE].reduceRight((inner, step) => `:has(> ${step}${inner})`, ""),
+).join(", ")})`;
 const HOLDS_BUTTONS = `JSXElement:has(${BUTTON_LIKE})`;
-// A buttonClassName link that ButtonGroup lays out. Outside `:has`, chained child combinators work.
-const BUTTON_LINK = "JSXElement:has(> JSXOpeningElement:has(CallExpression[callee.name='buttonClassName']))";
-const LINK_IN_BUTTON_GROUP = `:matches(${[
-  "",
-  "JSXExpressionContainer > :matches(LogicalExpression, ConditionalExpression) >",
-  "JSXExpressionContainer > CallExpression > ArrowFunctionExpression >",
-]
-  .map((path) => `JSXElement[openingElement.name.name='ButtonGroup'] > ${path} ${BUTTON_LINK}`)
-  .join(", ")})`;
+// A buttonClassName link that ButtonGroup lays out. Outside `:has`, chained child combinators work. The ancestor paths
+// come before the `:has`: esquery checks a compound left to right, so the subtree walk runs only for an element already
+// in a ButtonGroup. With the `:has` first, every truncate literal walked every ancestor 20 times and lint took 2s longer.
+const LINK_IN_BUTTON_GROUP = `JSXElement:matches(${CHILD_PATHS.map((path) =>
+  ["JSXElement[openingElement.name.name='ButtonGroup']", ...path, "JSXElement"].join(" > "),
+).join(", ")}):has(> JSXOpeningElement:has(CallExpression[callee.name='buttonClassName']))`;
 
 const ROUND_SKIN_UTILITY = "/(^|[\\s:])!?(bg-|text-|font-|border|shadow|ring-|opacity-|scale-|-m[trblxyse]?-|[\\w-]*\\[)/";
 const GLYPH_PLACEMENT_UTILITY =

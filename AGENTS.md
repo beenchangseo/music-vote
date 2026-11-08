@@ -165,7 +165,7 @@ Variable(한국어) + Geist(영문) 폴백.
 - 글자가 있는 부품(`Button`·`buttonClassName`·`ToolbarButton`·`Chip`·`SegmentedControl`·`TabBar`·`ActionTab`·`MenuItem*`·`Badge`)의
   글자는 줄을 바꾸지 않는다. 부품에서 `whitespace-nowrap` 이 빠지면 `primitives.test.tsx` 가, 부르는 쪽 className 에
   `whitespace-normal`·`text-wrap`·`text-balance` 를 두거나 버튼을 바로 담은 줄에 `*:min-w-0`·`[&>button]:min-w-0`·`*:max-w-*`
-  를(`**:`·`[&_*]:` 는 어느 깊이든) 주면 eslint 가 막는다. 나란한 버튼 줄을 손으로 만들지 않고 `ButtonGroup` 을 쓴다.
+  를(`**:`·`[&_*]:` 는 어느 깊이든) 주면 eslint 가 막는다. `max-w-full` 은 `Button` 이 이미 가진 값이라 막지 않는다. 나란한 버튼 줄을 손으로 만들지 않고 `ButtonGroup` 을 쓴다.
 - **손으로 그린 컨트롤.** `src/components/ui` 밖에서 높이·여백·모서리·글자 크기를 칠한 `<button>` 과 바탕·테두리에 크기까지 칠한 `<a>`·`<Link>` 는
   eslint(`ds/no-raw-control`)가, `<input>`·`<textarea>` 는 `ds/no-raw-input` 이, 포커스 ring 없이 outline 을 지운 클래스는
   `ds/focus-ring` 이 막는다. 셋 다 봐주는 baseline 이 없는 그냥 에러다. 링크는 버튼 모양이면 `buttonClassName()`, 둥근 아이콘이면 `RoundLink`,
