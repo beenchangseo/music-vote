@@ -212,7 +212,7 @@ function Landing({ left }: { left: boolean }) {
         </div>
 
         {/* Phones: heading, poster, features. Wide: poster left, heading and features right. */}
-        <section aria-labelledby="setlist-title" className="mt-16 grid gap-y-5 lg:mt-28 lg:grid-cols-2 lg:gap-x-16">
+        <section aria-labelledby="setlist-title" className="mt-16 grid grid-cols-1 gap-y-5 lg:mt-28 lg:grid-cols-2 lg:gap-x-16">
           <div className="lg:col-start-2 lg:row-start-1 lg:self-end">
             <h2 id="setlist-title" className={SECTION_TITLE}>
               투표가 끝나면 셋리스트가 나와요
@@ -237,7 +237,7 @@ function Landing({ left }: { left: boolean }) {
         </section>
 
         {/* Phones: heading, chat, steps. Wide: heading and steps left, chat right. */}
-        <section aria-labelledby="share-title" className="mt-16 grid gap-y-5 lg:mt-28 lg:grid-cols-2 lg:gap-x-16">
+        <section aria-labelledby="share-title" className="mt-16 grid grid-cols-1 gap-y-5 lg:mt-28 lg:grid-cols-2 lg:gap-x-16">
           <div className="lg:col-start-1 lg:row-start-1 lg:self-end">
             <h2 id="share-title" className={SECTION_TITLE}>
               멤버는 카톡 카드만 누르면 돼요
