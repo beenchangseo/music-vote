@@ -6,6 +6,7 @@ import { track } from "@/lib/analytics";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
 import { bandShareDescription, roomSharePrefix, shareableShowDate } from "@/domain/team";
 import { kakaoShareQuery, type ShareVariant } from "@/domain/kakao-share";
+import { setlistShareCard, type SetlistCard, type SetlistStatus } from "@/domain/setlist-card";
 
 declare global {
   interface Window {
@@ -44,8 +45,8 @@ type KakaoShareButtonProps = ShareLink & {
   topSong?: string;
   topArtist?: string;
   topScore?: number;
-  /** Setlist card only: songs in the setlist (`isSetlistBlock`). Absent or null while unknown, and the card states no count. */
-  setlistCount?: number | null;
+  /** Setlist card only: the setlist as the card states it. Absent or null while unknown, and the card states no count. */
+  setlist?: SetlistStatus | null;
   /** UI */
   children?: React.ReactNode;
   className?: string;
@@ -62,7 +63,7 @@ const variantContent = (
   showDate: string | null,
   members: number,
   ownerName: string | null,
-  setlistCount: number | null | undefined,
+  setlistCard: SetlistCard | null,
 ): { title: string; description: string; cta: string } => {
   const now = new Date();
   switch (v) {
@@ -82,9 +83,8 @@ const variantContent = (
       };
     case "setlist":
       return {
-        title: `🎵 셋리스트 확정 — ${title}`,
-        description:
-          description || (setlistCount ? `${setlistCount}곡 셋리스트가 확정됐어요` : "셋리스트가 확정됐어요"),
+        title: setlistCard?.feedTitle ?? `🎵 셋리스트 확정 — ${title}`,
+        description: description || setlistCard?.feedDescription || "셋리스트가 확정됐어요",
         cta: "셋리스트 보기",
       };
     case "playlist":
@@ -114,7 +114,6 @@ const buildOgUrl = (
     | "topSong"
     | "topArtist"
     | "topScore"
-    | "setlistCount"
     | "members"
   > & { date?: string | null },
 ) => {
@@ -130,8 +129,6 @@ const buildOgUrl = (
   if (params.topSong) sp.set("topSong", params.topSong);
   if (params.topArtist) sp.set("topArtist", params.topArtist);
   if (params.topScore != null) sp.set("topScore", String(params.topScore));
-  if (params.setlistCount != null)
-    sp.set("setlistCount", String(params.setlistCount));
   return `${origin}/api/og?${sp.toString()}`;
 };
 
@@ -149,7 +146,7 @@ export default function KakaoShareButton({
   topSong,
   topArtist,
   topScore,
-  setlistCount,
+  setlist,
   children,
   className = "",
   ariaLabel,
@@ -167,17 +164,20 @@ export default function KakaoShareButton({
     track("kakao_shared", { variant });
     const origin = window.location.origin;
     const url = `${origin}${linkPath ?? `/playlist/${shareCode}`}?${kakaoShareQuery(variant)}`;
-    const ogUrl = buildOgUrl(origin, variant, {
-      title,
-      songs,
-      participants,
-      topSong,
-      topArtist,
-      topScore,
-      setlistCount,
-      ...(variant === "band" ? { members, date: shareableShowDate(showDate, new Date()) } : {}),
-    });
-    const c = variantContent(variant, title, description, songs, participants, showDate, members, ownerName, setlistCount);
+    const setlistCard =
+      variant === "setlist" && setlist ? setlistShareCard({ title, participants, candidateCount: songs }, setlist) : null;
+    const ogUrl = setlistCard
+      ? `${origin}/api/og?${setlistCard.imageQuery}`
+      : buildOgUrl(origin, variant, {
+          title,
+          songs,
+          participants,
+          topSong,
+          topArtist,
+          topScore,
+          ...(variant === "band" ? { members, date: shareableShowDate(showDate, new Date()) } : {}),
+        });
+    const c = variantContent(variant, title, description, songs, participants, showDate, members, ownerName, setlistCard);
 
     // Kakao Share path
     try {

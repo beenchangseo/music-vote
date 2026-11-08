@@ -10,6 +10,7 @@ import { inviteSongs, playlistShareCard } from "@/domain/invite-card";
 import { isArchivedPlaylist } from "@/domain/playlist-archive";
 import { hostDenial, isHostOrAdder } from "@/domain/playlist-host";
 import { initialPlaylistTab, PLAYLIST_TAB_PARAM } from "@/domain/playlist-tab";
+import { setlistShareCard, setlistStatus } from "@/domain/setlist-card";
 import { getMyTeams, type MyTeam } from "@/actions/team";
 import { readSetlistItems } from "@/lib/playlist-reads";
 import PlaylistClient from "@/components/playlist/PlaylistClient";
@@ -107,26 +108,51 @@ const getPlaylistSongs = cache(async (playlistId: string) =>
   createAdminClient().from("songs").select("*").eq("playlist_id", playlistId).order("created_at", { ascending: true }),
 );
 
+/** 링크 미리보기와 페이지가 같은 셋리스트를 쓴다. 못 읽으면 null 이고, 셋리스트 링크도 후보곡 탭으로 열린다. */
+const getSetlistItems = cache(async (playlistId: string, shareCode: string) =>
+  readSetlistItems(createAdminClient(), playlistId).catch((error: unknown) => {
+    // Logged because a 셋리스트 link then lands on 후보곡 with nothing else to show for it.
+    console.error(`[playlist] 셋리스트 조회 실패 (shareCode=${shareCode}):`, error instanceof Error ? error.message : error);
+    return null;
+  }),
+);
+
 interface PageProps {
   params: Promise<{ shareCode: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { shareCode } = await params;
   const playlist = await getPlaylistByShareCode(shareCode);
   if (!playlist) return { title: "Plypick", robots: { index: false } };
 
-  const [stats, songsResult] = await Promise.all([getPlaylistStats(playlist.id), getPlaylistSongs(playlist.id)]);
+  const [{ [PLAYLIST_TAB_PARAM]: requestedTab }, stats, songsResult, setlistItems] = await Promise.all([
+    searchParams,
+    getPlaylistStats(playlist.id),
+    getPlaylistSongs(playlist.id),
+    getSetlistItems(playlist.id, shareCode),
+  ]);
   const participantCount = stats?.participant_count ?? 0;
-  // A pasted link unfurls as the same card the share button sends.
-  const card = playlistShareCard(
-    { title: playlist.title, archived: isArchivedPlaylist(playlist) },
-    participantCount,
-    inviteSongs((songsResult.data ?? []) as Song[]),
-  );
+  const songs = (songsResult.data ?? []) as Song[];
 
-  const metaTitle = `${playlist.title} - Plypick`;
-  const description = card.description;
+  // A pasted link unfurls as the card of the tab it opens, the same card that tab's share button sends.
+  let preview: { title: string; description: string; imageQuery: string };
+  if (setlistItems && initialPlaylistTab(requestedTab, setlistItems) === "setlist") {
+    const card = setlistShareCard(
+      { title: playlist.title, participants: participantCount, candidateCount: songs.length },
+      setlistStatus(playlist.setlist_confirmed, setlistItems, songs),
+    );
+    preview = { title: card.linkTitle, description: card.linkDescription, imageQuery: card.imageQuery };
+  } else {
+    const card = playlistShareCard(
+      { title: playlist.title, archived: isArchivedPlaylist(playlist) },
+      participantCount,
+      inviteSongs(songs),
+    );
+    preview = { title: `${playlist.title} - Plypick`, description: card.description, imageQuery: card.query };
+  }
+  const { title: metaTitle, description } = preview;
 
   return {
     title: metaTitle,
@@ -137,7 +163,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ...BASE_OPEN_GRAPH,
       title: metaTitle,
       description,
-      images: [`/api/og?${card.query}`],
+      images: [`/api/og?${preview.imageQuery}`],
     },
     twitter: {
       card: "summary_large_image",
@@ -147,10 +173,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function PlaylistPage({
-  params,
-  searchParams,
-}: PageProps & { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+export default async function PlaylistPage({ params, searchParams }: PageProps) {
   const { shareCode } = await params;
   const { [PLAYLIST_TAB_PARAM]: requestedTab } = await searchParams;
   // Views that compute "my vote" from auth.uid() stay on the session client;
@@ -203,11 +226,7 @@ export default async function PlaylistPage({
         ? admin.from("playlist_members").select("user_id", { count: "exact", head: true }).eq("playlist_id", playlist.id)
         : Promise.resolve(null),
       // Candidate rows mark songs already in the setlist (디자인 C9). A failed read leaves it null, so the setlist tab loads it the old way.
-      readSetlistItems(admin, playlist.id).catch((error: unknown) => {
-        // Logged because a 셋리스트 link then lands on 후보곡 with nothing else to show for it.
-        console.error(`[playlist] 셋리스트 조회 실패 (shareCode=${shareCode}):`, error instanceof Error ? error.message : error);
-        return null;
-      }),
+      getSetlistItems(playlist.id, shareCode),
     ]);
 
   // Payload rules per field: the band link and name only reach members (the name also reaches the

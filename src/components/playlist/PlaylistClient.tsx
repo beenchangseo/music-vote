@@ -41,14 +41,15 @@ import type { CreatedBand } from "../band/CreateBandSheet";
 import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import type { ViewMode } from "./NavigationBar";
-import { setlistEditAccess, summarizeSetlist } from "@/domain/setlist";
+import { setlistEditAccess } from "@/domain/setlist";
+import { setlistStatus } from "@/domain/setlist-card";
 import { PLAYLIST_TAB_PARAM, type PlaylistLinkTab } from "@/domain/playlist-tab";
 import type { MyTeam } from "@/actions/team";
 import type { PlaylistView, RoomTeam, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/domain/types";
 import { displayTitle } from "@/domain/song-meta";
 import { inviteSongs } from "@/domain/invite-card";
 import { assignRanks } from "@/domain/vote";
-import { PLAYLIST_STAGE_LABEL, playlistStage } from "@/domain/playlist-stage";
+import { PLAYLIST_STAGE_LABEL } from "@/domain/playlist-stage";
 import { isPastDeadline } from "@/domain/deadline";
 
 interface PlaylistClientProps {
@@ -239,13 +240,10 @@ export default function PlaylistClient({
   // card print no count, since setlist_count is only the target and the candidates are not the setlist (#87). Counted
   // like the setlist tab and the exports: a block whose candidate the host just deleted stays in this screen's loaded
   // setlist until the next read, but it is no longer a song of the setlist.
-  const setlistSongCount = setlistItems === null ? null : summarizeSetlist(setlistItems, songsWithVotes).songCount;
+  const setlist = setlistItems === null ? null : setlistStatus(playlist.setlist_confirmed, setlistItems, songsWithVotes);
   // The cron also sets the confirm flag on an expired playlist with no songs, so the flag alone does not mean a setlist.
   // While the items are unknown the flag decides.
-  const showsConfirmedSetlist =
-    setlistSongCount === null
-      ? playlist.setlist_confirmed
-      : playlistStage({ setlistConfirmed: playlist.setlist_confirmed, setlistBlockCount: setlistSongCount }) === "confirmed";
+  const showsConfirmedSetlist = setlist === null ? playlist.setlist_confirmed : setlist.stage === "confirmed";
 
   // Setlist highlight: top N songs after deadline
   const setlistCount = playlist.setlist_count;
@@ -626,14 +624,15 @@ export default function PlaylistClient({
                 <Card className="mt-5 text-center animate-fade-in">
                   <Badge tone="primary">🎵 {PLAYLIST_STAGE_LABEL.confirmed}</Badge>
                   <p className="mt-3 mb-4 text-sm text-text">
-                    {setlistSongCount !== null && `총 ${setlistSongCount}곡 · `}다음 공연 준비 완료
+                    {setlist !== null && `총 ${setlist.songCount}곡 · `}다음 공연 준비 완료
                   </p>
                   <KakaoShareButton
                     shareCode={shareCode}
                     variant="setlist"
                     title={playlist.title}
+                    songs={songs.length}
                     participants={participantCount}
-                    setlistCount={setlistSongCount}
+                    setlist={setlist}
                     size="md"
                   >
                     셋리스트 카톡 공유

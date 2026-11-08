@@ -149,3 +149,31 @@ describe("GET /api/og setlist card (#87)", () => {
     expect(countLine()).toBe("다음 공연 준비 완료");
   });
 });
+
+describe("GET /api/og setlist card says the playlist's stage (#94)", () => {
+  const card = (fields: Record<string, string>) =>
+    new URLSearchParams({ variant: "setlist", title: "11월 정기공연", participants: "4", ...fields }).toString();
+
+  it.each([
+    ["voting", { stage: "voting", setlistCount: "0" }, "🎤 투표 중", "셋리스트는 아직 비어 있어요"],
+    ["building", { stage: "building", setlistCount: "6", minutes: "25" }, "🎵 셋리스트 짜는 중", "지금 6곡 · 25분"],
+    ["confirmed", { stage: "confirmed", setlistCount: "8", minutes: "33" }, "🎵 셋리스트 확정", "총 8곡 · 33분 · 다음 공연 준비 완료"],
+    ["closed", { stage: "closed", setlistCount: "0" }, "마감", "셋리스트 없이 마감됐어요"],
+    ["a length it does not carry", { stage: "building", setlistCount: "6" }, "🎵 셋리스트 짜는 중", "지금 6곡"],
+  ])("draws %s", async (_case, fields, badge, line) => {
+    await draw(card(fields));
+    expect(screen.getByText(badge)).toBeInTheDocument();
+    expect(screen.getByText(line)).toBeInTheDocument();
+    expect(screen.getByText("11월 정기공연")).toBeInTheDocument();
+  });
+
+  it.each([
+    ["without a stage, as cards sent before #94 did", {}],
+    ["with a stage it does not know", { stage: "shipped" }],
+    ["with a stage named like an object key", { stage: "toString" }],
+  ])("draws the confirmed card %s", async (_case, fields) => {
+    await draw(card({ setlistCount: "6", ...fields }));
+    expect(screen.getByText("🎵 셋리스트 확정")).toBeInTheDocument();
+    expect(screen.getByText("총 6곡 · 다음 공연 준비 완료")).toBeInTheDocument();
+  });
+});

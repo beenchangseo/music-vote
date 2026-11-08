@@ -223,8 +223,9 @@ describe("PlaylistClient confirmed banner", () => {
 
   function sharedSetlistCard() {
     fireEvent.click(screen.getByText("셋리스트 카톡 공유"));
-    const { content } = sendDefault.mock.calls[0][0] as { content: { description: string; imageUrl: string } };
-    return { description: content.description, imageCount: new URL(content.imageUrl).searchParams.get("setlistCount") };
+    const { content } = sendDefault.mock.calls[0][0] as { content: { title: string; description: string; imageUrl: string } };
+    const image = new URL(content.imageUrl).searchParams;
+    return { title: content.title, description: content.description, imageStage: image.get("stage"), imageCount: image.get("setlistCount") };
   }
 
   const fiveCandidates = ["a", "b", "c", "d", "e"].map(song);
@@ -238,7 +239,19 @@ describe("PlaylistClient confirmed banner", () => {
     renderConfirmed(fiveCandidates, handBuilt, setlistCount);
 
     expect(bannerLine()).toBe("총 4곡 · 다음 공연 준비 완료");
-    expect(sharedSetlistCard()).toEqual({ description: "4곡 셋리스트가 확정됐어요", imageCount: "4" });
+    expect(sharedSetlistCard()).toEqual({
+      title: "🎵 셋리스트 확정 — 10월 합주",
+      description: "총 4곡 · 다음 공연 준비 완료",
+      imageStage: "confirmed",
+      imageCount: "4",
+    });
+  });
+
+  it("states the show's length on the Kakao card once every block has one", () => {
+    renderConfirmed(fiveCandidates.map((candidate) => ({ ...candidate, duration_seconds: 200 })), handBuilt);
+
+    // Three songs of 200 s, the 멘트 and the 자작곡 of 60 s each: 12 minutes.
+    expect(sharedSetlistCard().description).toBe("총 4곡 · 12분 · 다음 공연 준비 완료");
   });
 
   // The host deletes a candidate from the 후보곡 tab: the server drops its setlist row, but this screen keeps the setlist
@@ -247,7 +260,7 @@ describe("PlaylistClient confirmed banner", () => {
     renderConfirmed(fiveCandidates.filter((candidate) => candidate.id !== "c"), handBuilt);
 
     expect(bannerLine()).toBe("총 3곡 · 다음 공연 준비 완료");
-    expect(sharedSetlistCard()).toEqual({ description: "3곡 셋리스트가 확정됐어요", imageCount: "3" });
+    expect(sharedSetlistCard()).toMatchObject({ description: "총 3곡 · 다음 공연 준비 완료", imageCount: "3" });
   });
 
   it("says the setlist is confirmed when it has blocks, 자작곡 included", () => {
@@ -266,6 +279,11 @@ describe("PlaylistClient confirmed banner", () => {
     renderConfirmed(fiveCandidates, null);
     expect(screen.getByText(/셋리스트 확정/)).toBeInTheDocument();
     expect(bannerLine()).toBe("다음 공연 준비 완료");
-    expect(sharedSetlistCard()).toEqual({ description: "셋리스트가 확정됐어요", imageCount: null });
+    expect(sharedSetlistCard()).toEqual({
+      title: "🎵 셋리스트 확정 — 10월 합주",
+      description: "셋리스트가 확정됐어요",
+      imageStage: null,
+      imageCount: null,
+    });
   });
 });
