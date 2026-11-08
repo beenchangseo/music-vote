@@ -156,10 +156,11 @@ Variable(한국어) + Geist(영문) 폴백.
   모은 줄은 `RoundRow` 다. 원은 줄지 않고 간격이 준다.
 - 크기는 prop 이 정한다. `Button`·`IconButton`·`Chip`·`RoundButton` 의 className 에 높이·폭·여백·모서리·글자 크기를 덧칠하면 eslint 가
   막는다. className 에는 바깥 배치(margin·`flex-1`·`shrink-0`·표시 여부)만 둔다.
-- **DS 래칫.** `src/components/ui` 밖에서 높이·여백·모서리·글자 크기를 칠한 `<button>` 과 바탕·테두리에 크기까지 칠한 `<a>`·`<Link>` 는
-  eslint(`ds/no-raw-control`)가 막는다. 링크는 버튼 모양이면 `buttonClassName()`, 둥근 아이콘이면 `RoundLink`, 줄이면 `ListRowLink`, 카드면 `Card` 안에 바탕 없는
-  링크로 그린다. 이미 있던 곳은 `eslint-suppressions.json` 이 파일별 개수로 봐주고, 이 파일은 줄기만 한다(고친 뒤
-  `npx eslint --prune-suppressions`). `npm run check` 가 이 파일을 main 의 것과 비교해서, 손으로 늘린 개수도 실패한다. 남은 곳과 토큰 밖 모서리·글자 크기·임의 값, ui 밖 음수 margin 은 `node scripts/ds-inventory.mjs` 가 파일·줄마다 보여 준다. 글리프를 내용 끝에 맞추는 자리(`RoundLink edge="start"`)처럼 어긋남을 보정하는 margin 은 부품이 한 번만 갖는다.
+- **손으로 그린 컨트롤.** `src/components/ui` 밖에서 높이·여백·모서리·글자 크기를 칠한 `<button>` 과 바탕·테두리에 크기까지 칠한 `<a>`·`<Link>` 는
+  eslint(`ds/no-raw-control`)가, 포커스 ring 없이 outline 을 지운 클래스는 `ds/focus-ring` 이 막는다. 둘 다 봐주는 baseline 이 없는
+  그냥 에러다. 링크는 버튼 모양이면 `buttonClassName()`, 둥근 아이콘이면 `RoundLink`, 줄이면 `ListRowLink`, 카드면 `Card` 안에 바탕 없는
+  링크로 그린다. `eslint-disable` 주석으로 넘겨도 `npm test` 의 `ds-inventory` 테스트가 잡는다. lint 가 막지 않는 토큰 밖 모서리·글자 크기·임의 값,
+  ui 밖 음수 margin 은 `node scripts/ds-inventory.mjs` 가 파일·줄마다 보여 준다. 글리프를 내용 끝에 맞추는 자리(`RoundLink edge="start"`)처럼 어긋남을 보정하는 margin 은 부품이 한 번만 갖는다.
 
 ## 데이터 흐름
 
@@ -226,7 +227,7 @@ hook(`.claude/settings.json`, `.claude/hooks/`):
 - 편집한 ts·tsx·mjs 파일을 eslint 로 바로 검사한다.
 - 커밋하지 않은 코드 변경이 있으면 턴을 끝내기 전에 `npm run check` 를 돌리고, 실패하면 끝내지 못하게 막는다.
 - `echo` 로 값을 넘기는 `vercel env add` 를 거부한다. main push 와 `vercel --prod` 는 확인을 묻는다.
-- eslint `--suppress-all`·`--suppress-rule` 과 `eslint-suppressions.json` 편집을 거부한다. DS 래칫 baseline 은 줄기만 한다.
+- eslint `--suppress-all`·`--suppress-rule` 을 거부한다. 봐주는 baseline 파일을 만들면 손으로 그린 컨트롤이 lint 를 지나간다.
 - main 에 들어간 마이그레이션 파일 편집을 거부한다.
 
 스킬(`.claude/skills/`): `server-action`, `db-migration`, `prod-deploy`, `verify-vote-quota`.

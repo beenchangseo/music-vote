@@ -31,8 +31,8 @@ if (at(String.raw`echo\b[^|\n]*\|\s*(?:npx\s+)?vercel\s+env\s+add\b`).test(code)
 if (/(?:^|\s)--suppress-(?:all|rule)\b/.test(code)) {
   decide(
     "deny",
-    "eslint-suppressions.json 은 DS 래칫이라 줄기만 한다. 새로 막힌 컨트롤은 src/components/ui primitive 로 고치고, " +
-      "고친 뒤에는 npx eslint --prune-suppressions 로 줄인다. baseline 은 main 보다 늘 수 없어서 늘린 브랜치는 check 가 실패한다.",
+    "eslint 규칙에는 봐주는 baseline 이 없다. --suppress-* 로 eslint-suppressions.json 을 만들면 손으로 그린 컨트롤이 lint 를 " +
+      "그대로 지나간다. 걸린 곳은 eslint 메시지가 알려 주는 src/components/ui 부품으로 고친다.",
   );
 }
 

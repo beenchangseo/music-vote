@@ -1,5 +1,5 @@
 // Design-system rules shared by eslint.config.mjs (lint) and scripts/ds-inventory.mjs (inventory).
-// One definition of "what breaks the design system" so the ratchet and the inventory never disagree.
+// One definition of "what breaks the design system" so lint and the inventory never disagree.
 
 const SIDES = "(?:[trblse]|tl|tr|bl|br|ss|se|es|ee)";
 

@@ -11,7 +11,7 @@ if (input.stop_hook_active) process.exit(0);
 
 const root = process.env.CLAUDE_PROJECT_DIR || input.cwd;
 const git = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
-const CODE = ["*.ts", "*.tsx", "*.mts", "*.mjs", "*.sql", "package.json", "eslint.config.mjs", "eslint-suppressions.json", "tsconfig.json"];
+const CODE = ["*.ts", "*.tsx", "*.mts", "*.mjs", "*.sql", "package.json", "eslint.config.mjs", "tsconfig.json"];
 
 const diff = git("diff", "HEAD", "--", ...CODE);
 const untracked = git("ls-files", "--others", "--exclude-standard", "--", ...CODE).split("\n").filter(Boolean);
