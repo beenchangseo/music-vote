@@ -140,7 +140,7 @@ export default function PrivacyPage() {
             <p className="mt-2">서비스 호스팅과 이용 통계는 아래처럼 국외로 옮겨져요.</p>
             <ul className="list-disc list-inside mt-2 space-y-1 text-text-muted">
               <li>
-                받는 곳: Vercel Inc. 연락처는 Vercel 개인정보처리방침(vercel.com/legal/privacy-policy)의 문의 경로예요.
+                받는 곳: Vercel Inc. 연락처는 Vercel 개인정보 고지(vercel.com/legal/privacy-notice)의 문의 경로예요.
               </li>
               <li>옮겨지는 나라: 미국</li>
               <li>
@@ -149,7 +149,7 @@ export default function PrivacyPage() {
               </li>
               <li>옮겨지는 때와 방법: 서비스를 쓸 때마다 네트워크로 보내요.</li>
               <li>쓰는 목적: 서비스 호스팅과 이용 통계</li>
-              <li>보관 기간: Vercel 이 정한 기간 (Vercel 개인정보처리방침)</li>
+              <li>보관 기간: Vercel 이 정한 기간 (Vercel 개인정보 고지)</li>
               <li>거부하는 방법: 서비스가 Vercel 위에서 돌아가서, 거부하면 서비스를 쓸 수 없어요.</li>
             </ul>
           </section>
