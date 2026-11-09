@@ -126,22 +126,51 @@ describe("KakaoShareButton links", () => {
   });
 });
 
-describe("KakaoShareButton setlist card (#87)", () => {
-  it("states the setlist's song count, not the candidate count, in the card and its image", () => {
-    render(<KakaoShareButton shareCode="abc123" variant="setlist" title="10월 합주" songs={8} setlistCount={6} participants={4} />);
+describe("KakaoShareButton setlist card (#87, #94)", () => {
+  it("says the stage and the setlist's songs and length, not the candidate count, in the card and its image", () => {
+    render(
+      <KakaoShareButton
+        shareCode="abc123"
+        variant="setlist"
+        title="10월 합주"
+        songs={8}
+        participants={4}
+        setlist={{ stage: "confirmed", songCount: 6, runtimeMinutes: 25 }}
+      />,
+    );
     click();
     const card = sentCard();
     expect(card.content.title).toBe("🎵 셋리스트 확정 — 10월 합주");
-    expect(card.content.description).toBe("6곡 셋리스트가 확정됐어요");
-    expect(new URL(card.content.imageUrl).searchParams.get("setlistCount")).toBe("6");
+    expect(card.content.description).toBe("총 6곡 · 25분 · 다음 공연 준비 완료");
+    const image = new URL(card.content.imageUrl);
+    expect(image.pathname).toBe("/api/og");
+    expect(Object.fromEntries(image.searchParams)).toEqual({
+      variant: "setlist",
+      title: "10월 합주",
+      stage: "confirmed",
+      setlistCount: "6",
+      minutes: "25",
+      participants: "4",
+    });
+  });
+
+  it("names the stage the setlist is in", () => {
+    render(<KakaoShareButton shareCode="abc123" variant="setlist" title="10월 합주" setlist={{ stage: "building", songCount: 6, runtimeMinutes: null }} />);
+    click();
+    const card = sentCard();
+    expect(card.content.title).toBe("🎵 셋리스트 짜는 중 — 10월 합주");
+    expect(card.content.description).toBe("지금 6곡");
   });
 
   it("leaves the count out while the setlist is unknown, instead of sending the candidate count", () => {
     render(<KakaoShareButton shareCode="abc123" variant="setlist" title="10월 합주" songs={8} participants={4} />);
     click();
     const card = sentCard();
+    expect(card.content.title).toBe("🎵 셋리스트 확정 — 10월 합주");
     expect(card.content.description).toBe("셋리스트가 확정됐어요");
-    expect(new URL(card.content.imageUrl).searchParams.get("setlistCount")).toBeNull();
+    const image = new URL(card.content.imageUrl).searchParams;
+    expect(image.get("setlistCount")).toBeNull();
+    expect(image.get("stage")).toBeNull();
   });
 });
 
