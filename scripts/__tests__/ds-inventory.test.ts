@@ -63,6 +63,7 @@ describe("ds-inventory", () => {
     ["raw-button", '// eslint-disable-next-line ds/no-raw-control\nexport const X = () => <button className="h-11 px-3" />;'],
     ["focus-ring", '// eslint-disable-next-line ds/focus-ring\nexport const c = "focus:outline-none";'],
     ["raw-input", '// eslint-disable-next-line ds/no-raw-input\nexport const X = () => <textarea rows={3} />;'],
+    ["tracked-caps", '// eslint-disable-next-line ds/tracked-caps\nexport const c = "uppercase";'],
   ])("still lists a %s under an inline eslint-disable, so the comment cannot hide it", async (category, code) => {
     expect((await inventoryOf(code, "src/components/playlist/Fixture.tsx")).map((f) => f.category)).toEqual([category]);
   });
@@ -81,8 +82,8 @@ describe("src", () => {
   // file runs beside it (main a28824d, 2026-11-08).
   const WHOLE_TREE_LINT_MS = 60_000;
 
-  it("has no raw control or text field and no outline removed without a focus ring, even under an inline eslint-disable", async () => {
-    const lintRules = ["raw-button", "raw-link", "raw-input", "focus-ring"];
+  it("has no raw control or text field, no outline removed without a focus ring and no tracked caps label, even under an inline eslint-disable", async () => {
+    const lintRules = ["raw-button", "raw-link", "raw-input", "focus-ring", "tracked-caps"];
     expect((await inventory()).filter((f) => lintRules.includes(f.category))).toEqual([]);
   }, WHOLE_TREE_LINT_MS);
 });

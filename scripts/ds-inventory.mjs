@@ -17,6 +17,7 @@ const CATEGORIES = {
   arbitrary: "크기·여백·위치의 임의 값 [..]",
   "negative-margin": "ui 밖의 음수 margin (-mt-3·-mx-2 등). 칸을 레이아웃 밖으로 당기는 손 보정",
   "focus-ring": "포커스 ring 없이 outline 을 지운 클래스",
+  "tracked-caps": "ui 밖 라벨의 uppercase·tracking-wide*",
 };
 
 function categoryOf(message) {

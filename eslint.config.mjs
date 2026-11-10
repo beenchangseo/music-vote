@@ -162,6 +162,13 @@ const eslintConfig = defineConfig([
     rules: { "ds/no-raw-control": "error", "ds/no-raw-input": "error" },
   },
   {
+    // Korean has no letter case: uppercase and wide tracking only spread a label's syllables apart, the look of an English
+    // template. Seven settings-sheet labels shipped that way. A primitive that sets Latin type (a keycap) may still.
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/components/ui/**", "src/**/__tests__/**"],
+    rules: { "ds/tracked-caps": "error" },
+  },
+  {
     // globals.css draws the keyboard focus outline in @layer base, so an outline-none utility beats it. A class list that
     // removes the outline draws its own focus ring, or Tab moves focus where nobody can see it.
     files: ["src/**/*.{ts,tsx}"],

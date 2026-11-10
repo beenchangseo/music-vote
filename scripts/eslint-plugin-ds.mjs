@@ -236,6 +236,37 @@ const focusRing = {
   },
 };
 
+/** Letter case and wide tracking: on a Korean label they only spread the syllables apart. */
+const TRACKED_CAPS = /^(uppercase|tracking-(wide|wider|widest))$/;
+
+const trackedCaps = {
+  meta: {
+    type: "problem",
+    docs: { description: "Labels outside src/components/ui are not set in uppercase or wide tracking." },
+    messages: {
+      found:
+        "{{token}} 은 한글 라벨에서 대소문자 없이 자간만 벌려 영문 템플릿처럼 보인다. 작은 라벨은 text-caption font-semibold 에 " +
+        "text-text-subtle·text-text-muted 로 둔다(방 설정 시트의 섹션 라벨).",
+    },
+    schema: [],
+  },
+  create(context) {
+    const check = (node, text) => {
+      for (const token of tokensOf([text])) {
+        if (TRACKED_CAPS.test(utilityOf(token))) context.report({ node, messageId: "found", data: { token } });
+      }
+    };
+    return {
+      Literal(node) {
+        if (typeof node.value === "string") check(node, node.value);
+      },
+      TemplateElement(node) {
+        check(node, node.value.cooked ?? node.value.raw);
+      },
+    };
+  },
+};
+
 /** Reports every class token in any string literal that `match` accepts. Inventory only: not enabled in eslint.config.mjs. */
 function classTokenRule(description, match) {
   return {
@@ -265,6 +296,7 @@ const plugin = {
     "no-raw-control": noRawControl,
     "no-raw-input": noRawInput,
     "focus-ring": focusRing,
+    "tracked-caps": trackedCaps,
     "non-token": classTokenRule(
       "Radius and font size outside the tokens (rounded-badge·control·card·sheet·pill, text-display·h1–h4·body·sm·caption).",
       (u) => NON_TOKEN_RADIUS.test(u) || NON_TOKEN_FONT_SIZE.test(u),
