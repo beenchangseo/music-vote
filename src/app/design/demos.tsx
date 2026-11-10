@@ -78,7 +78,7 @@ export function DialogDemo() {
   const dialog = useDialog();
   return (
     <div className="flex flex-wrap gap-2">
-      <Button variant="tonal" size="sm" onClick={() => void dialog.showAlert("모든 투표를 초기화했어요.")}>
+      <Button variant="tonal" size="sm" onClick={() => void dialog.showAlert("모든 투표를 초기화했어요")}>
         알림
       </Button>
       <Button variant="tonal" size="sm" onClick={() => void dialog.showConfirm("투표한 멤버 닉네임이 모두에게 보이게 돼요.", "기명 투표로 바꿀까요?")}>

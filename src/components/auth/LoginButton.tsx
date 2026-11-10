@@ -36,7 +36,7 @@ export default function LoginButton({ next, className, label = "카카오로 시
     });
     if (error) {
       setLoading(false);
-      alert("로그인에 실패했어요. 잠시 후 다시 시도해주세요.");
+      alert("로그인에 실패했어요. 잠시 후 다시 시도해 주세요.");
     }
   };
 

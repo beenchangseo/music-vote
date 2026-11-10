@@ -214,7 +214,7 @@ export default function RoomSettingsButton({
         await refresh();
         onVotesReset?.();
         router.refresh();
-        showAlert("모든 투표를 초기화했어요.");
+        showAlert("모든 투표를 초기화했어요");
       } catch (error) {
         showAlert(error instanceof Error ? error.message : "투표를 초기화하지 못했어요");
       }

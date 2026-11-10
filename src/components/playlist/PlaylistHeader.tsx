@@ -111,7 +111,7 @@ export default function PlaylistHeader({
       // Kakao SDK failed — fallback: copy to clipboard
       try {
         await navigator.clipboard.writeText(url);
-        showAlert("카카오톡 공유에 실패해 링크를 복사했어요.");
+        showAlert("카카오톡 공유에 실패해 링크를 복사했어요");
       } catch {
         showAlert(`링크를 복사해주세요:\n${url}`);
       }
