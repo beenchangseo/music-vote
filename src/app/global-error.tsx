@@ -43,7 +43,7 @@ export default function GlobalError({
               lineHeight: 1.6,
             }}
           >
-            잠시 후 다시 시도해주세요. 같은 문제가 반복되면 새로고침해주세요.
+            잠시 후 다시 시도해 주세요
           </p>
           <button
             type="button"

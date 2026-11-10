@@ -71,7 +71,7 @@ export function buttonClassName({
   pill = false,
   className = "",
 }: { variant?: Variant; size?: Size; fullWidth?: boolean; pill?: boolean; className?: string } = {}) {
-  return `inline-flex max-w-full items-center justify-center gap-2 whitespace-nowrap ${pill ? "rounded-pill" : "rounded-control"} font-semibold transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`;
+  return `inline-flex max-w-full items-center justify-center gap-2 whitespace-nowrap ${pill ? "rounded-pill" : "rounded-control"} font-semibold transition-[color,background-color,border-color,opacity,scale] active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`;
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(

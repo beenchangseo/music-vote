@@ -56,4 +56,19 @@ describe("AddSongForm when the server refuses the song", () => {
     expect(input).toHaveValue("");
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
   });
+
+  it("asks for the title, saying why, when the video's details could not be read", async () => {
+    actions.addSong.mockResolvedValue({ success: true, needsManualTitle: true, notEmbeddable: false, prefilledMeta: false });
+    const onAdded = vi.fn();
+
+    submitLink(onAdded);
+
+    const title = await screen.findByRole("textbox", { name: "곡 제목" });
+    expect(title).toHaveAccessibleDescription("영상 정보를 가져오지 못했어요");
+    expect(onAdded).not.toHaveBeenCalled();
+
+    fireEvent.change(title, { target: { value: "Hey Jude" } });
+    fireEvent.click(screen.getByRole("button", { name: "추가" }));
+    await vi.waitFor(() => expect(actions.addSong).toHaveBeenLastCalledWith("p1", LINK, "share", "Hey Jude"));
+  });
 });

@@ -111,7 +111,7 @@ describe("PlaylistClient setlist confirm", () => {
     await confirmAsHost();
     fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
 
-    expect(dialog.showConfirm).toHaveBeenCalledWith("상위 2곡으로 셋리스트를 확정하시겠습니까?");
+    expect(dialog.showConfirm).toHaveBeenCalledWith("상위 2곡으로 셋리스트를 확정할까요?");
     expect(confirmSetlist).toHaveBeenCalledWith("p", ["top", "second"], "abc123");
     expect(screen.getByTestId("setlist")).toHaveTextContent("top,second");
     expect(realtime.notifyChange).toHaveBeenCalled();
@@ -163,7 +163,7 @@ describe("PlaylistClient setlist confirm", () => {
 
     await confirmAsHost();
 
-    expect(dialog.showConfirm).toHaveBeenCalledWith("상위 2곡으로 셋리스트를 확정하시겠습니까?");
+    expect(dialog.showConfirm).toHaveBeenCalledWith("상위 2곡으로 셋리스트를 확정할까요?");
     expect(confirmSetlist).toHaveBeenCalledWith("p", ["top", "second"], "abc123");
   });
 

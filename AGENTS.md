@@ -116,7 +116,8 @@ scroll-padding 이 그만큼 비운다. 막대 밑으로 스크롤되는 여백�
 홈 인디케이터 자리는 `pb-safe-bottom` 이다. body 가 비우고, 그 자리를 스스로 칠하는 아래 막대는 `data-safe-bottom` 을 달아
 body 의 몫을 가져간다. `env(safe-area-inset-bottom)` 을 임의 값이나 음수 margin 으로 적지 않는다.
 타이포는 `text-display`·`text-h1`~`text-h4`·`text-body`·`text-sm`·`text-caption`, 한국어 줄간격 1.5 이상. 폰트는 Pretendard
-Variable(한국어) + Geist(영문) 폴백.
+Variable(한국어) + Geist(영문) 폴백. 한글에는 대소문자가 없어서 라벨에 `uppercase`·`tracking-wide*` 를 두면 자간만 벌어진다.
+작은 라벨은 `text-caption font-semibold` 이고, ui 밖에서는 eslint(`ds/tracked-caps`)가 막는다.
 
 **모션.** `duration-120`(누름) · `duration-200`(색·페이드) · `duration-300`(시트), 이징은 `ease-standard` 하나. transition
 기본값이 200ms 와 이 이징이다. 애니메이션은 `animate-fade-in`·`animate-slide-up`·`animate-vote-pop`·`animate-score-in`

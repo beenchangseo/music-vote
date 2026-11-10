@@ -10,13 +10,13 @@ interface InlineNoticeProps extends HTMLAttributes<HTMLDivElement> {
 
 const icons: Record<Tone, ReactNode> = {
   info: (
-    <svg className="mt-0.5 size-4.5 shrink-0 text-primary-fg" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
+    <svg className="mt-0.5 size-4.5 shrink-0 text-primary-fg" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
       <circle cx="12" cy="12" r="9" />
       <path d="M12 11v5M12 7.5v.5" />
     </svg>
   ),
   warning: (
-    <svg className="mt-0.5 size-4.5 shrink-0 text-warning" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+    <svg className="mt-0.5 size-4.5 shrink-0 text-warning" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
       <path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" />
     </svg>
   ),

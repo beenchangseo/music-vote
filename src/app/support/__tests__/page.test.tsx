@@ -50,11 +50,12 @@ describe("/support", () => {
     ["unset", ""],
     ["not a URL", "pf.kakao.com/_abcde/chat"],
     ["not https", "javascript:alert(1)"],
-  ])("says the channel is not ready, with no link, when the URL is %s", (_label, value) => {
+  ])("says the channel is not ready, with no link and no button to press, when the URL is %s", (_label, value) => {
     vi.stubEnv("NEXT_PUBLIC_KAKAO_CHANNEL_CHAT_URL", value);
     render(<SupportPage />);
 
-    expect(screen.getByRole("button", { name: /카카오톡 채널을 준비하고 있어요/ })).toBeDisabled();
+    expect(screen.getByText("채널이 열리면 여기서 바로 물어볼 수 있어요")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /카카오/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /카카오톡으로 문의하기/ })).not.toBeInTheDocument();
   });
 

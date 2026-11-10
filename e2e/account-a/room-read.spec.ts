@@ -49,19 +49,19 @@ test.describe("account-a: fixed test room screens", () => {
       await expect(page.locator('button[class~="bg-success-tint"], button[class~="bg-danger-tint"]').first()).toBeVisible();
     }
 
-    await expectNoAlert(page); // e.g. "참여자 등록에 실패했습니다"
+    await expectNoAlert(page); // e.g. "참여자로 등록하지 못했어요"
   });
 
   test("setlist tab shows the setlist", async ({ page }) => {
     await openTab(page, "셋리스트");
-    await expect(page.getByText("셋리스트 불러오는 중...")).toBeHidden({ timeout: LOAD_TIMEOUT });
+    await expect(page.getByText("셋리스트 불러오는 중…")).toBeHidden({ timeout: LOAD_TIMEOUT });
     await expect(page.getByText("셋리스트가 비어있어요")).toHaveCount(0);
     await expect(page.getByText(/^\d+곡$/).first()).not.toHaveText("0곡");
   });
 
   test("rehearsal tab shows the current song and its comment area", async ({ page }) => {
     await openTab(page, "합주");
-    await expect(page.getByText("합주 정보 불러오는 중...")).toBeHidden({ timeout: LOAD_TIMEOUT });
+    await expect(page.getByText("합주 정보 불러오는 중…")).toBeHidden({ timeout: LOAD_TIMEOUT });
     await expect(page.getByText("셋리스트에 곡을 넣으면 순서대로 진행할 수 있어요")).toHaveCount(0);
 
     await expect(page.getByText(/^1 \/ \d+$/)).toBeVisible(); // progress "1 / N"

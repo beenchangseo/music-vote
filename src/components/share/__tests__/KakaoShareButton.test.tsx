@@ -196,10 +196,10 @@ describe("KakaoShareButton without Kakao or the share sheet", () => {
     render(<KakaoShareButton shareCode="abc123" variant="playlist" title="합주" />);
     await copyLink();
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expect.stringContaining("/playlist/abc123"));
-    expect(screen.getByRole("button")).toHaveTextContent("링크 복사됨!");
+    expect(screen.getByRole("button")).toHaveTextContent("링크를 복사했어요");
 
     act(() => vi.advanceTimersByTime(1999));
-    expect(screen.getByRole("button")).toHaveTextContent("링크 복사됨!");
+    expect(screen.getByRole("button")).toHaveTextContent("링크를 복사했어요");
     act(() => vi.advanceTimersByTime(1));
     expect(screen.getByRole("button")).toHaveTextContent("카카오톡으로 공유");
   });

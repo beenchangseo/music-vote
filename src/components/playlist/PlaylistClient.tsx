@@ -143,7 +143,7 @@ export default function PlaylistClient({
   useEffect(() => {
     if (isArchived || !loggedIn) return;
     registerPlaylistMember(playlist.id).then(setAllowance).catch(() => {
-      showAlert("참여자 등록에 실패했습니다. 새로고침 후 다시 시도해주세요.");
+      showAlert("참여자로 등록하지 못했어요. 새로고침한 뒤 다시 시도해 주세요.");
     });
   }, [isArchived, loggedIn, playlist.id, showAlert]);
 
@@ -503,7 +503,7 @@ export default function PlaylistClient({
               className="mt-3 animate-fade-in"
               action={
                 <Link href="/" className="font-semibold text-primary-fg underline-offset-2 hover:underline">
-                  새 플레이리스트 만들기 →
+                  새 플레이리스트 만들기
                 </Link>
               }
             >
@@ -550,9 +550,12 @@ export default function PlaylistClient({
               {/* Result share banner — voting closed + has top song */}
               {isExpired && songsWithVotes.length > 0 && (
                 <div className="mt-5 p-5 rounded-card bg-success/10 border border-success/30 text-center animate-fade-in">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-success/20 text-success text-caption font-bold mb-3">
-                    🎉 곡 결정
-                  </div>
+                  <p className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-success">
+                    <svg className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    곡 결정
+                  </p>
                   <p className="text-h3 font-bold text-text leading-snug truncate px-2">
                     {songsWithVotes[0].title}
                   </p>
@@ -589,19 +592,19 @@ export default function PlaylistClient({
               {isExpired && setlistCount && !playlist.setlist_confirmed && (
                 <div className="mt-5 p-4 bg-primary/10 border border-primary/30 rounded-control text-center">
                   <p className="text-sm text-text mb-2">
-                    투표가 마감되었습니다. 상위 {setlistCount}곡이 하이라이트됩니다.
+                    투표가 마감됐어요. 상위 {setlistCount}곡을 표시했어요.
                   </p>
                   {isHost ? (
                     <Button
                       onClick={async () => {
                         const topSongIds = songsWithVotes.slice(0, setlistCount).map((s) => s.id);
                         const ok = await showConfirm(
-                          setlistItems?.length ? "지금 셋리스트로 확정할까요?" : `상위 ${setlistCount}곡으로 셋리스트를 확정하시겠습니까?`,
+                          setlistItems?.length ? "지금 셋리스트로 확정할까요?" : `상위 ${setlistCount}곡으로 셋리스트를 확정할까요?`,
                         );
                         if (!ok) return;
                         const result = await confirmSetlist(playlist.id, topSongIds, shareCode).catch(() => null);
                         if (!result?.success) {
-                          showAlert(result && result.reason !== "write_failed" ? setlistMessage(result.reason) : "셋리스트 확정에 실패했습니다.");
+                          showAlert(result && result.reason !== "write_failed" ? setlistMessage(result.reason) : "셋리스트를 확정하지 못했어요");
                           return;
                         }
                         track("setlist_confirmed", {
@@ -622,7 +625,7 @@ export default function PlaylistClient({
               {/* Setlist share banner — confirmed setlist */}
               {showsConfirmedSetlist && (
                 <Card className="mt-5 text-center animate-fade-in">
-                  <Badge tone="primary">🎵 {PLAYLIST_STAGE_LABEL.confirmed}</Badge>
+                  <Badge tone="primary">{PLAYLIST_STAGE_LABEL.confirmed}</Badge>
                   <p className="mt-3 mb-4 text-sm text-text">
                     {setlist !== null && `총 ${setlist.songCount}곡 · `}다음 공연 준비 완료
                   </p>
@@ -647,8 +650,8 @@ export default function PlaylistClient({
               >
                 {songsWithVotes.length === 0 ? (
                   <div className="mt-2">
-                    <p className="mb-3 flex items-center justify-center gap-2 text-sm font-semibold text-primary-fg animate-bounce-slow">
-                      <svg className="size-6" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+                    <p className="mb-3 flex items-center justify-center gap-2 text-sm font-semibold text-primary-fg">
+                      <svg className="size-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7" />
                       </svg>
                       위 입력창부터
@@ -661,10 +664,7 @@ export default function PlaylistClient({
                             YouTube 링크를 붙여넣으면<br />
                             제목·썸네일이 자동으로 들어가요.
                           </p>
-                          <div className="mt-6 flex flex-col gap-1.5 text-caption text-text-subtle">
-                            <p>곡 3개 이상 → 멤버에게 카톡으로 공유</p>
-                            <p>5분 안에 다음 합주곡 결정 끝.</p>
-                          </div>
+                          <p className="mt-6 text-caption text-text-subtle">곡이 3개 이상 모이면 단톡방에 공유해요</p>
                         </>
                       }
                     />
@@ -744,7 +744,7 @@ export default function PlaylistClient({
                 className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary-fg hover:text-on-primary-tint transition-colors"
               >
                 플레이리스트 만들기
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                 </svg>
               </Link>

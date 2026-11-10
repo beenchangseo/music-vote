@@ -77,14 +77,14 @@ export default function SongCard({
   const { showDanger, showAlert } = useDialog();
 
   async function handleRemove() {
-    const ok = await showDanger(`"${song.title}"을(를) 삭제하시겠습니까?`);
+    const ok = await showDanger(`"${song.title}"을(를) 삭제할까요?`);
     if (!ok) return;
 
     startTransition(async () => {
       try {
         await removeSong(song.id, playlistId, shareCode);
       } catch {
-        showAlert("곡 삭제에 실패했습니다.");
+        showAlert("곡을 삭제하지 못했어요");
       }
     });
   }
@@ -222,10 +222,10 @@ export default function SongCard({
               }`}
             >
               {isPlaying ? (
-                <span className="flex items-end gap-0.5" aria-hidden>
-                  <span className="h-2.5 w-0.5 animate-bounce rounded-pill bg-accent-play" style={{ animationDelay: "0ms" }} />
-                  <span className="h-4 w-0.5 animate-bounce rounded-pill bg-accent-play" style={{ animationDelay: "150ms" }} />
-                  <span className="h-3 w-0.5 animate-bounce rounded-pill bg-accent-play" style={{ animationDelay: "300ms" }} />
+                <span className="flex h-4 items-end gap-0.5" aria-hidden>
+                  {["0ms", "150ms", "300ms"].map((delay) => (
+                    <span key={delay} className="h-full w-0.5 origin-bottom animate-eq-bar rounded-pill bg-accent-play" style={{ animationDelay: delay }} />
+                  ))}
                 </span>
               ) : (
                 <svg
@@ -251,7 +251,7 @@ export default function SongCard({
               {artist && <span className="truncate">{artist}</span>}
               {song.commentCount > 0 && (
                 <span className="inline-flex shrink-0 items-center gap-0.5 tabular-nums">
-                  <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+                  <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a8 8 0 01-11.6 7.1L3 21l1.9-6.4A8 8 0 1121 12z" />
                   </svg>
                   <span className="sr-only">댓글</span>
@@ -260,7 +260,7 @@ export default function SongCard({
               )}
               {inSetlist && (
                 <span className="inline-flex shrink-0 items-center text-primary-fg">
-                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h12M4 12h12M4 18h6M14 18l2.5 2.5L21 16" />
                   </svg>
                   <span className="sr-only">셋리스트에 있음</span>
@@ -270,7 +270,7 @@ export default function SongCard({
                 className={`h-3.5 w-3.5 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`}
                 fill="none"
                 stroke="currentColor"
-                strokeWidth={2.5}
+                strokeWidth={2}
                 viewBox="0 0 24 24"
                 aria-hidden
               >
@@ -290,7 +290,7 @@ export default function SongCard({
 
   // Card (video) view
   return (
-    <div className={`bg-surface rounded-card border overflow-hidden transition-all hover:border-border-strong ${isCurrent ? "border-primary/50" : "border-border"} ${isPending ? "opacity-50" : ""}`}>
+    <div className={`bg-surface rounded-card border overflow-hidden transition-colors hover:border-border-strong ${isCurrent ? "border-primary/50" : "border-border"} ${isPending ? "opacity-50" : ""}`}>
       {/* 영상은 아래 플레이어에서 재생한다. 카드는 썸네일과 재생 상태만 보여준다. */}
       <button
         onClick={onTogglePlay}
@@ -307,7 +307,7 @@ export default function SongCard({
           />
         )}
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
-          <div className={`w-14 h-14 flex items-center justify-center rounded-pill shadow-lg transition-colors ${isCurrent ? "bg-primary text-on-primary group-hover:bg-primary-hover" : "bg-danger text-on-danger group-hover:bg-danger-hover"}`}>
+          <div className={`w-14 h-14 flex items-center justify-center rounded-pill transition-colors ${isCurrent ? "bg-primary text-on-primary group-hover:bg-primary-hover" : "bg-danger text-on-danger group-hover:bg-danger-hover"}`}>
             {isPlaying ? (
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
@@ -343,10 +343,10 @@ export default function SongCard({
   );
 }
 
-/** 탭 아이콘. 같은 굵기(1.75)의 선 아이콘으로 맞춘다. 크기는 ActionTab 이 정한다. */
-function TabIcon({ children, strokeWidth = 1.75 }: { children: ReactNode; strokeWidth?: number }) {
+/** 탭 아이콘. 같은 굵기(2)의 선 아이콘으로 맞춘다. 크기는 ActionTab 이 정한다. */
+function TabIcon({ children }: { children: ReactNode }) {
   return (
-    <svg fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+    <svg fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
       {children}
     </svg>
   );
@@ -379,7 +379,7 @@ function ListPlusIcon() {
 
 function ListCheckIcon() {
   return (
-    <TabIcon strokeWidth={2}>
+    <TabIcon>
       <path d="M4 6h12M4 12h12M4 18h6M14 18l2.5 2.5L21 16" />
     </TabIcon>
   );

@@ -101,7 +101,7 @@ export default function RehearsalView({
     return (
       <div className="mt-6 py-16 text-center text-text-subtle">
         <span className="inline-block h-8 w-8 animate-spin rounded-pill border-2 border-border-strong border-t-primary-fg" />
-        <p className="mt-3">합주 정보 불러오는 중...</p>
+        <p className="mt-3">합주 정보 불러오는 중…</p>
       </div>
     );
   }
@@ -427,7 +427,7 @@ function StepRow({ step, number, done, onSelect }: { step: Step; number: number;
           marker={
             done ? (
               <span className="grid size-full place-items-center rounded-pill bg-success-soft text-success">
-                <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+                <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
                   <path d="M5 13l4 4L19 7" />
                 </svg>
               </span>

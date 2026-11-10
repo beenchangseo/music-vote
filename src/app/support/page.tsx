@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Button, { KakaoMark, buttonClassName } from "@/components/ui/Button";
+import { KakaoMark, buttonClassName } from "@/components/ui/Button";
 import FaqList from "@/components/ui/FaqList";
 import { pageMetadata, type FaqEntry } from "@/lib/seo";
 
@@ -71,8 +71,8 @@ export default function SupportPage() {
   return (
     <main className="flex flex-1 flex-col bg-bg">
       <div className="mx-auto w-full max-w-2xl flex-1 px-4 pb-10 pt-12">
-        <h1 className="break-keep text-h1 font-bold text-text">무엇을 도와드릴까요?</h1>
-        <p className="mt-1 text-body text-text-muted">자주 묻는 질문부터 확인해 보세요.</p>
+        <h1 className="break-keep text-h1 font-bold text-text">문의하기</h1>
+        <p className="mt-1 text-body text-text-muted">자주 묻는 질문부터 확인해 보세요</p>
 
         <h2 className="mb-1 mt-8 text-caption font-semibold text-text-subtle">자주 묻는 질문</h2>
         <FaqList items={SUPPORT_FAQ} />
@@ -89,18 +89,16 @@ export default function SupportPage() {
       <div data-safe-bottom className="sticky bottom-0 border-t border-border bg-bg/95 pb-safe-bottom backdrop-blur-sm">
         <div className="mx-auto w-full max-w-2xl px-4 py-3">
           {chatUrl ? (
-            <a href={chatUrl} className={buttonClassName({ variant: "kakao", size: "lg", fullWidth: true })}>
-              <KakaoMark />
-              카카오톡으로 문의하기
-            </a>
+            <>
+              <a href={chatUrl} className={buttonClassName({ variant: "kakao", size: "lg", fullWidth: true })}>
+                <KakaoMark />
+                카카오톡으로 문의하기
+              </a>
+              <p className="mt-2 text-center text-caption text-text-subtle">운영자가 직접 답해요 · 보통 하루 안에 답장이 와요</p>
+            </>
           ) : (
-            <Button variant="kakao" size="lg" fullWidth disabled>
-              카카오톡 채널을 준비하고 있어요
-            </Button>
+            <p className="text-center text-caption text-text-subtle">채널이 열리면 여기서 바로 물어볼 수 있어요</p>
           )}
-          <p className="mt-2 text-center text-caption text-text-subtle">
-            {chatUrl ? "운영자가 직접 답해요 · 보통 하루 안에 답장이 와요" : "채널이 열리면 여기서 바로 물어볼 수 있어요"}
-          </p>
         </div>
       </div>
     </main>

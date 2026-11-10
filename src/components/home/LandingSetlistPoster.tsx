@@ -21,8 +21,8 @@ export default function LandingSetlistPoster() {
       <span aria-hidden className="absolute -right-14 -top-16 size-40 rounded-pill bg-primary opacity-50 lg:-right-10 lg:-top-12 lg:size-48" />
       <span aria-hidden className="absolute -top-12 right-6 size-28 rounded-pill bg-primary-hover opacity-85 lg:-top-2.5 lg:right-12 lg:size-36" />
       <div className="relative px-5 pt-5">
-        <p className="text-caption font-bold tracking-widest text-text">SETLIST</p>
-        <p className="mt-1.5 text-h1 font-black text-text">주말합주단</p>
+        <p className="text-caption font-semibold text-text">셋리스트</p>
+        <p className="mt-1.5 text-h1 font-bold text-text">주말합주단</p>
         <p className="mt-1 text-sm text-text">11월 23일(일) 홍대 라이브클럽</p>
       </div>
       <ol className="relative mt-5 px-5">
@@ -44,9 +44,9 @@ export default function LandingSetlistPoster() {
           ),
         )}
       </ol>
-      <figcaption className="relative mt-1 flex items-baseline justify-between bg-surface-hover px-5 pb-4 pt-3.5">
+      <figcaption className="relative mt-1 flex items-baseline justify-between bg-surface-hover px-5 py-4">
         <span className="text-sm text-text-muted">7곡 · 쉬는 시간 포함</span>
-        <span className="text-h3 font-extrabold tabular-nums text-text">32:55</span>
+        <span className="text-h3 font-bold tabular-nums text-text">32:55</span>
       </figcaption>
     </figure>
   );

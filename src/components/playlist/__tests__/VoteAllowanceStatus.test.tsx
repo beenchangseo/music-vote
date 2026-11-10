@@ -15,6 +15,6 @@ describe("VoteAllowanceStatus", () => {
     );
 
     expect(screen.getByText("투표권을 모두 사용했어요")).toBeInTheDocument();
-    expect(screen.getByText("기존 표를 취소하면 다시 투표할 수 있어요.")).toBeInTheDocument();
+    expect(screen.getByText("기존 표를 취소하면 다시 투표할 수 있어요")).toBeInTheDocument();
   });
 });

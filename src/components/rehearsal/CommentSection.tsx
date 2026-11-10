@@ -50,7 +50,7 @@ export default function CommentSection({ songId, comments, nickname, shareCode, 
         }
         setIsEditing(false);
       } catch (err) {
-        showAlert(err instanceof Error ? err.message : "댓글 저장에 실패했습니다.");
+        showAlert(err instanceof Error ? err.message : "댓글을 저장하지 못했어요");
       }
     });
   }
@@ -112,7 +112,7 @@ export default function CommentSection({ songId, comments, nickname, shareCode, 
                     </Button>
                   )}
                   <Button variant="tonal" size="sm" onClick={handleSubmit} disabled={!content.trim() || isPending}>
-                    {isPending ? "저장 중..." : myComment ? "수정" : "작성"}
+                    {isPending ? "저장 중…" : myComment ? "수정" : "작성"}
                   </Button>
                 </div>
               </div>

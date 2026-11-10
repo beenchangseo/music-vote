@@ -14,7 +14,7 @@ export default function VoteAllowanceStatus({ allowance }: { allowance: VoteAllo
       <span role="status" className="flex flex-wrap items-center gap-x-1.5">
         <strong className="text-warning">투표권을 모두 사용했어요</strong>
         <span aria-hidden className="text-text-subtle">·</span>
-        <span>기존 표를 취소하면 다시 투표할 수 있어요.</span>
+        <span>기존 표를 취소하면 다시 투표할 수 있어요</span>
       </span>
     );
   }

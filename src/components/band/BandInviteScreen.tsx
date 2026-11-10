@@ -124,11 +124,10 @@ export default function BandInviteScreen({
           밴드 초대
         </p>
 
-        <h1 className="mt-12 truncate text-h1 font-bold text-text motion-safe:animate-slide-up">{name}</h1>
-
-        {(dday.state === "upcoming" || dday.state === "today") && (
-          <ShowDateTile dday={dday} className="mt-5 motion-safe:animate-slide-up" />
-        )}
+        <div className="mt-12 motion-safe:animate-fade-in">
+          <h1 className="truncate text-h1 font-bold text-text">{name}</h1>
+          {(dday.state === "upcoming" || dday.state === "today") && <ShowDateTile dday={dday} className="mt-5" />}
+        </div>
 
         <div className="mt-6">
           <p className="text-body font-semibold text-text tabular-nums">멤버 {memberCount}명</p>

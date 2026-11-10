@@ -57,7 +57,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
           {[0, 1, 2, 3].map((i) => (
             <div
               key={i}
-              className={`size-6 rounded-pill transition-all duration-75 ${
+              className={`size-6 rounded-pill transition-[scale,background-color,box-shadow] duration-120 ${
                 isPlaying && beat === i
                   ? i === 0
                     ? "bg-primary scale-125 shadow-lg shadow-primary/50"
@@ -76,10 +76,10 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
 
         <RoundRow className="mb-6">
           <RoundButton tone="tonal" size="lg" onClick={() => setBpm((b) => Math.max(40, b - 5))} aria-label="BPM 5 내리기">
-            -5
+            −5
           </RoundButton>
-          <RoundButton tone="tonal" size="md" onClick={() => setBpm((b) => Math.max(40, b - 1))} aria-label="BPM 1 내리기">
-            -
+          <RoundButton tone="tonal" size="lg" onClick={() => setBpm((b) => Math.max(40, b - 1))} aria-label="BPM 1 내리기">
+            −
           </RoundButton>
           <RoundButton
             tone={isPlaying ? "danger" : "primary"}
@@ -89,7 +89,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
           >
             <PlayPauseIcon playing={isPlaying} />
           </RoundButton>
-          <RoundButton tone="tonal" size="md" onClick={() => setBpm((b) => Math.min(300, b + 1))} aria-label="BPM 1 올리기">
+          <RoundButton tone="tonal" size="lg" onClick={() => setBpm((b) => Math.min(300, b + 1))} aria-label="BPM 1 올리기">
             +
           </RoundButton>
           <RoundButton tone="tonal" size="lg" onClick={() => setBpm((b) => Math.min(300, b + 5))} aria-label="BPM 5 올리기">
@@ -105,7 +105,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
               onChange={(e) => handleSongChange(e.target.value)}
               className={`h-control-md rounded-control px-4 ${controlSkin(false)}`}
             >
-              <option value="">곡 선택...</option>
+              <option value="">곡 고르기</option>
               {songs.map((s) => (
                 <option key={s.id} value={s.id}>
                   {displayTitle(s.title)} ({s.tempo_bpm} BPM)

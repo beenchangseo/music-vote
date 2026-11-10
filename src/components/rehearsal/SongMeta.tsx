@@ -66,7 +66,7 @@ export default function SongMeta({ song, playlistId, shareCode, onClose }: SongM
       try {
         await updateSongMeta(song.id, playlistId, shareCode, patch);
       } catch {
-        showAlert("저장에 실패했습니다.");
+        showAlert("저장하지 못했어요");
       }
     });
   }
@@ -88,8 +88,8 @@ export default function SongMeta({ song, playlistId, shareCode, onClose }: SongM
     <div className="px-3 py-3 border-b border-border space-y-3 animate-fade-in">
       {/* 헤더: 닫기 + 저장 상태 */}
       <div className="flex items-center justify-between">
-        <span className="text-caption font-semibold text-text-muted uppercase tracking-wider">
-          메타 편집
+        <span className="text-caption font-semibold text-text-muted">
+          곡 정보
         </span>
         <div className="flex items-center gap-2">
           {isPending && (
@@ -274,7 +274,7 @@ function ChevronUpIcon() {
       className="size-3.5"
       fill="none"
       stroke="currentColor"
-      strokeWidth={2.5}
+      strokeWidth={2}
       viewBox="0 0 24 24"
       aria-hidden
     >
@@ -290,7 +290,7 @@ function MetronomeIcon() {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={2.5}
+      strokeWidth={2}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden

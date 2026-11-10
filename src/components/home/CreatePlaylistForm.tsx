@@ -149,7 +149,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
       });
     } catch (error) {
       if (targetBand) setFormError(teamMessage(error));
-      else showAlert("플레이리스트 생성에 실패했습니다. 다시 시도해주세요.");
+      else showAlert("플레이리스트를 만들지 못했어요. 다시 시도해 주세요.");
       setLoading(false);
     }
   }
@@ -223,7 +223,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
 
           {/* Secondary CTA — go add songs */}
           <Button variant="tonal" fullWidth onClick={handleGoToPlaylist}>
-            곡 추가하러 가기 →
+            곡 추가하러 가기
           </Button>
 
           {/* Tertiary — small ghost buttons */}
@@ -342,7 +342,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
       /* Options card. Outline for the same reason as the success card. */
       <Card variant="outline" padding="none" className="mt-4 overflow-hidden animate-fade-in">
         <div className="pl-4 pr-1 pt-2 pb-1 flex items-center justify-between">
-          <p className="text-caption text-text-subtle uppercase tracking-wider font-semibold">옵션</p>
+          <p className="text-caption text-text-subtle font-semibold">옵션</p>
           <Button
             type="button"
             variant="ghost"
@@ -356,7 +356,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
         <div className="border-t border-border px-4 py-3">
         <p id="voting-mode-label" className="text-sm font-semibold text-text">투표 방식</p>
         <p className="mt-1 text-caption text-text-muted">
-          플레이리스트를 만든 뒤에도 투표가 시작되기 전에는 바꿀 수 있어요.
+          플레이리스트를 만든 뒤에도 투표가 시작되기 전에는 바꿀 수 있어요
         </p>
         <SegmentedControl
           aria-labelledby="voting-mode-label"
@@ -371,7 +371,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
               <label htmlFor="default-vote-limit" className="text-sm font-medium text-text">
                 기본 투표권
               </label>
-              <p className="text-caption text-text-muted">새 참여자가 받는 표 수예요.</p>
+              <p className="text-caption text-text-muted">새 참여자가 받는 표 수예요</p>
             </div>
             <div className="w-20 shrink-0">
               <Input
@@ -437,11 +437,11 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
               <p className="text-caption text-text-muted mt-0.5 mb-2 text-left">투표 종료 후 상위 N곡이 셋리스트로 선정됩니다</p>
               <div className="flex items-center gap-1">
                 <IconButton onClick={() => setSetlistCount((c) => Math.max(0, c - 1))} disabled={setlistCount <= 0} aria-label="곡 수 줄이기">
-                  <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" d="M5 12h14" /></svg>
+                  <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" d="M5 12h14" /></svg>
                 </IconButton>
                 <span className={`min-w-20 text-center text-sm tabular-nums ${setlistCount > 0 ? "font-semibold text-text" : "text-text-subtle"}`}>{setlistCount > 0 ? `${setlistCount}곡` : "정하지 않음"}</span>
                 <IconButton onClick={() => setSetlistCount((c) => Math.min(30, c + 1))} disabled={setlistCount >= 30} aria-label="곡 수 늘리기">
-                  <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" d="M12 5v14M5 12h14" /></svg>
+                  <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" d="M12 5v14M5 12h14" /></svg>
                 </IconButton>
               </div>
             </div>

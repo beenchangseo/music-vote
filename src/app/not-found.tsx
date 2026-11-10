@@ -6,16 +6,16 @@ export default function NotFound() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 py-16 bg-bg text-text">
       <div className="max-w-sm text-center">
-        <p className="text-caption font-bold text-primary-fg uppercase tracking-wider mb-2">
+        <p className="text-caption font-semibold tabular-nums text-primary-fg mb-2">
           404
         </p>
-        <h1 className="text-h1 font-bold mb-2">페이지를 찾을 수 없어요</h1>
-        <p className="text-sm text-text-muted leading-relaxed mb-7">
+        <h1 className="text-h2 font-bold mb-2">페이지를 찾을 수 없어요</h1>
+        <p className="text-sm text-text-muted leading-relaxed break-keep mb-7">
           링크가 만료되었거나 잘못된 주소일 수 있어요.<br />
-          홈에서 플레이리스트를 새로 만들거나 멤버에게 받은 링크를 다시 확인해주세요.
+          홈에서 플레이리스트를 새로 만들거나 멤버에게 받은 링크를 다시 확인해 주세요.
         </p>
         <Link href="/" className={buttonClassName()}>
-          홈으로 →
+          홈으로
         </Link>
       </div>
     </main>

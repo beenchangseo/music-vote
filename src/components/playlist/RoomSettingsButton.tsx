@@ -93,7 +93,7 @@ export default function RoomSettingsButton({
       setDefaultLimit(next.defaultVoteLimit);
       setMemberLimits(Object.fromEntries(next.members.map((member) => [member.memberKey, String(member.vote_limit)])));
     } catch (error) {
-      showAlert(error instanceof Error ? error.message : "투표 설정을 불러오지 못했습니다.");
+      showAlert(error instanceof Error ? error.message : "투표 설정을 불러오지 못했어요");
       setOpen(false);
     }
   }
@@ -148,7 +148,7 @@ export default function RoomSettingsButton({
       } catch (error) {
         setVotesAnonymous(previousAnonymous);
         setMode(previousMode);
-        showAlert(error instanceof Error ? error.message : "투표 설정 변경에 실패했습니다.");
+        showAlert(error instanceof Error ? error.message : "투표 설정을 바꾸지 못했어요");
       }
     });
   }
@@ -175,7 +175,7 @@ export default function RoomSettingsButton({
         await updateSetlistEditMode(playlistId, next, shareCode);
         onSetlistEditModeChange(next);
       } catch (error) {
-        showAlert(error instanceof Error ? error.message : "편집 권한 변경에 실패했습니다.");
+        showAlert(error instanceof Error ? error.message : "편집 권한을 바꾸지 못했어요");
       }
     });
   }
@@ -196,7 +196,7 @@ export default function RoomSettingsButton({
         try { localStorage.setItem("myPlaylists", JSON.stringify(updated)); } catch { /* quota */ }
         router.push("/");
       } catch {
-        showAlert("삭제에 실패했습니다.");
+        showAlert("삭제하지 못했어요");
       }
     });
   }
@@ -214,9 +214,9 @@ export default function RoomSettingsButton({
         await refresh();
         onVotesReset?.();
         router.refresh();
-        showAlert("모든 투표를 초기화했어요.");
+        showAlert("모든 투표를 초기화했어요");
       } catch (error) {
-        showAlert(error instanceof Error ? error.message : "투표 초기화에 실패했습니다.");
+        showAlert(error instanceof Error ? error.message : "투표를 초기화하지 못했어요");
       }
     });
   }
@@ -244,7 +244,7 @@ export default function RoomSettingsButton({
     }
     const belowUsage = nextMemberLimits.find(({ voteLimit, usedVotes }) => voteLimit < usedVotes);
     if (belowUsage) {
-      showAlert(`${belowUsage.displayName}님이 이미 ${belowUsage.usedVotes}표를 사용 중이라 ${belowUsage.voteLimit}표로 줄일 수 없습니다.`);
+      showAlert(`${belowUsage.displayName}님이 이미 ${belowUsage.usedVotes}표를 사용 중이라 ${belowUsage.voteLimit}표로 줄일 수 없어요`);
       return;
     }
 
@@ -262,7 +262,7 @@ export default function RoomSettingsButton({
         await refresh();
         router.refresh();
       } catch (error) {
-        showAlert(error instanceof Error ? error.message : "투표 설정 변경에 실패했습니다.");
+        showAlert(error instanceof Error ? error.message : "투표 설정을 바꾸지 못했어요");
       }
     });
   }
@@ -309,7 +309,7 @@ export default function RoomSettingsButton({
     if (!ok) return;
     const blocked = settings?.members.find((member) => member.used_votes > defaultLimit);
     if (blocked) {
-      showAlert(`${blocked.display_name}님이 이미 ${blocked.used_votes}표를 사용 중이라 ${defaultLimit}표를 적용할 수 없습니다.`);
+      showAlert(`${blocked.display_name}님이 이미 ${blocked.used_votes}표를 사용 중이라 ${defaultLimit}표를 적용할 수 없어요`);
       return;
     }
     setMemberLimits(Object.fromEntries((settings?.members ?? []).map((member) => [member.memberKey, String(defaultLimit)])));
@@ -331,11 +331,11 @@ export default function RoomSettingsButton({
 
       <Modal open={open} onClose={() => setOpen(false)} title="플레이리스트 설정">
         {!settings ? (
-          <div className="py-10 text-center text-sm text-text-muted">불러오는 중...</div>
+          <div className="py-10 text-center text-sm text-text-muted">불러오는 중…</div>
         ) : (
           <div className={isPending ? "pointer-events-none opacity-70" : ""}>
             <section className="mb-6 border-b border-border pb-5">
-              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">밴드</p>
+              <p className="text-caption font-semibold text-text-subtle">밴드</p>
               {attached && (
                 <p role="status" className="mt-2 text-sm text-success">
                   밴드에 넣었어요
@@ -398,14 +398,14 @@ export default function RoomSettingsButton({
             </section>
 
             <section>
-              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 · 공개 범위</p>
+              <p className="text-caption font-semibold text-text-subtle">투표 · 공개 범위</p>
               <ListGroup className="mt-2">
                 <Switch
                   label="익명 투표"
                   description={
                     votesAnonymous
-                      ? "누가 어떻게 투표했는지 다른 참여자에게 보이지 않아요."
-                      : "투표한 멤버의 닉네임이 모든 참여자에게 보여요."
+                      ? "누가 어떻게 투표했는지 다른 참여자에게 보이지 않아요"
+                      : "투표한 멤버의 닉네임이 모든 참여자에게 보여요"
                   }
                   checked={votesAnonymous}
                   onCheckedChange={changeVoteVisibility}
@@ -415,7 +415,7 @@ export default function RoomSettingsButton({
 
             {supportsVoteAllocation && (
               <section className="mt-6 border-t border-border pt-5">
-                <p className="mb-2 text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 · 방식</p>
+                <p className="mb-2 text-caption font-semibold text-text-subtle">투표 · 방식</p>
                 <SegmentedControl
                   aria-label="투표 방식"
                   options={(["free", "allocated"] as VotingMode[]).map((value) => ({
@@ -427,7 +427,7 @@ export default function RoomSettingsButton({
                   onChange={(value) => persist({ mode: value })}
                 />
                 {settings.totalVotes > 0 && (
-                  <p className="mt-2 text-caption text-warning">투표가 시작되어 모드는 바꿀 수 없어요.</p>
+                  <p className="mt-2 text-caption text-warning">투표가 시작되어 모드는 바꿀 수 없어요</p>
                 )}
 
                 {mode === "allocated" && (
@@ -453,7 +453,7 @@ export default function RoomSettingsButton({
                       >
                         <p className="text-sm font-medium text-text">새 참여자 기본 투표권</p>
                         <p className="text-caption text-text-muted">
-                          {settings.mode === "allocated" ? "기존 참여자 값은 유지돼요." : "전환하면 현재 참여자에게도 적용돼요."}
+                          {settings.mode === "allocated" ? "기존 참여자 값은 유지돼요" : "전환하면 현재 참여자에게도 적용돼요"}
                         </p>
                       </ListRow>
                     </ListGroup>
@@ -462,7 +462,7 @@ export default function RoomSettingsButton({
                     </Button>
 
                     <div className="mt-5">
-                      <p className="mb-2 text-caption font-semibold uppercase tracking-wider text-text-subtle">참여자별 투표권</p>
+                      <p className="mb-2 text-caption font-semibold text-text-subtle">참여자별 투표권</p>
                       <ListGroup>
                         {settings.members.map((member) => {
                           const stagedLimit = Number(memberLimits[member.memberKey]);
@@ -478,7 +478,7 @@ export default function RoomSettingsButton({
                                     disabled={!Number.isInteger(stagedLimit) || stagedLimit <= member.used_votes}
                                     aria-label={`${member.display_name} 투표권 줄이기`}
                                   >
-                                    <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
+                                    <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
                                       <path d="M5 12h14" />
                                     </svg>
                                   </IconButton>
@@ -504,7 +504,7 @@ export default function RoomSettingsButton({
                                     disabled={!Number.isInteger(stagedLimit) || stagedLimit >= 99}
                                     aria-label={`${member.display_name} 투표권 늘리기`}
                                   >
-                                    <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
+                                    <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
                                       <path d="M12 5v14M5 12h14" />
                                     </svg>
                                   </IconButton>
@@ -528,7 +528,7 @@ export default function RoomSettingsButton({
             )}
 
             <section className="mt-6 border-t border-border pt-5">
-              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">셋리스트 · 편집 권한</p>
+              <p className="text-caption font-semibold text-text-subtle">셋리스트 · 편집 권한</p>
               <SegmentedControl<SetlistEditMode>
                 aria-label="셋리스트 편집 권한"
                 className="mt-2"
@@ -541,13 +541,13 @@ export default function RoomSettingsButton({
               />
               <p className="mt-2 text-caption text-text-muted">
                 {shownEditMode === "everyone"
-                  ? "참여자 누구나 곡을 추가·수정하고 순서를 바꿀 수 있어요."
-                  : "방장만 셋리스트를 바꿀 수 있어요."}
+                  ? "참여자 누구나 곡을 추가·수정하고 순서를 바꿀 수 있어요"
+                  : "방장만 셋리스트를 바꿀 수 있어요"}
               </p>
             </section>
 
             <section className="mt-6 border-t border-border pt-5">
-              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 초기화</p>
+              <p className="text-caption font-semibold text-text-subtle">투표 초기화</p>
               <p className="mt-1 text-caption leading-relaxed text-text-muted">
                 모든 참여자의 찬성·반대 투표를 삭제해요. 곡과 참여자 정보는 유지돼요.
               </p>
@@ -565,7 +565,7 @@ export default function RoomSettingsButton({
 
             {/* 되돌릴 수 없는 동작이다. 헤더에서 한 번 눌리던 자리에 두지 않는다. */}
             <section className="mt-6 border-t border-border pt-5">
-              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">플레이리스트 삭제</p>
+              <p className="text-caption font-semibold text-text-subtle">플레이리스트 삭제</p>
               <p className="mt-1 text-caption leading-relaxed text-text-muted">
                 곡·투표·셋리스트·코멘트가 모두 사라져요. 되돌릴 수 없어요.
               </p>

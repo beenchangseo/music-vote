@@ -45,7 +45,7 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconB
   { tone = "default", bare = false, size = "md", className = "", children, type = "button", ...rest },
   ref,
 ) {
-  const base = "inline-flex shrink-0 items-center justify-center rounded-control transition-all active:scale-95 disabled:opacity-50";
+  const base = "inline-flex shrink-0 items-center justify-center rounded-control transition-[color,background-color,border-color,opacity,scale] active:scale-[0.97] disabled:opacity-50";
   const skin = bare
     ? `border-transparent ${bareToneClasses[tone as Exclude<Tone, "brand">]}`
     : `border ${toneClasses[tone]}`;

@@ -50,7 +50,7 @@ export default function SetlistItemEditModal(props: Props) {
         props.onSaved(next);
         props.onClose();
       } catch (error) {
-        showAlert(error instanceof Error ? error.message : "수정에 실패했습니다.");
+        showAlert(error instanceof Error ? error.message : "수정하지 못했어요");
       }
     });
   }
@@ -64,7 +64,7 @@ export default function SetlistItemEditModal(props: Props) {
         props.onSaved(next);
         props.onClose();
       } catch (error) {
-        showAlert(error instanceof Error ? error.message : "초기화에 실패했습니다.");
+        showAlert(error instanceof Error ? error.message : "초기화하지 못했어요");
       }
     });
   }

@@ -171,7 +171,7 @@ const COMPARE_ROWS = [
 ] as const;
 
 const SECTION_TITLE = "break-keep text-h2 font-bold text-text lg:text-h1";
-const SECTION_LEAD = "mt-2.5 max-w-xl break-keep text-body text-text-muted lg:text-h4 lg:font-normal";
+const SECTION_LEAD = "mt-3 max-w-xl break-keep text-body text-text-muted lg:text-h4 lg:font-normal";
 
 // The screens the landing shows, which the web app's structured data also lists as its screenshots.
 const LANDING_SCREENS = [
@@ -197,7 +197,7 @@ function Landing({ left }: { left: boolean }) {
 
         <div className="mt-10 flex flex-col gap-16 lg:mt-16 lg:flex-row lg:items-center">
           <section aria-labelledby="hero-title" className="lg:flex-1">
-            <p className="text-caption font-semibold tracking-wider text-primary-fg">밴드 곡 투표</p>
+            <p className="text-caption font-semibold text-primary-fg">밴드 곡 투표</p>
             {/* The space before <br> keeps "합주곡, 투표로" two words for search engines. */}
             <h1 id="hero-title" className="mt-3 break-keep text-display font-bold text-text">
               밴드 합주곡,{" "}
@@ -205,7 +205,7 @@ function Landing({ left }: { left: boolean }) {
               투표로 5분 컷
             </h1>
             <p className="mt-5 max-w-lg break-keep text-body text-text-muted lg:text-h4 lg:font-normal">
-              단톡방에 흩어진 후보곡을 링크 하나에 모아 투표하고, 표 많이 받은 곡으로 공연 셋리스트까지 정해요.
+              단톡방에 흩어진 후보곡을 링크 하나에 모아 투표하고, 표 많이 받은 곡으로 공연 셋리스트까지 정해요
             </p>
             <div className="mt-8 lg:max-w-xs">
               <HeroCTA variant="landing" />
@@ -217,7 +217,7 @@ function Landing({ left }: { left: boolean }) {
             <h2 id="vote-title" className="break-keep text-h2 font-bold text-text">
               누르는 순간 순위가 바뀌어요
             </h2>
-            <p className="mt-2.5 break-keep text-body text-text-muted">
+            <p className="mt-3 break-keep text-body text-text-muted">
               밴드 멤버가 후보곡에 찬성·반대를 누르면 곡 목록이 점수순으로 바로 다시 정렬돼요. 멤버 넷이 이미 투표한
               예시예요. 직접 눌러 보세요.
             </p>
@@ -234,7 +234,7 @@ function Landing({ left }: { left: boolean }) {
             <h2 id="setlist-title" className={SECTION_TITLE}>
               투표가 끝나면 셋리스트가 나와요
             </h2>
-            <p className={SECTION_LEAD}>표 많이 받은 곡부터 공연 순서를 짜고, 곡 사이 쉬는 시간까지 더해 총 공연 길이를 맞춰요.</p>
+            <p className={SECTION_LEAD}>표 많이 받은 곡부터 공연 순서를 짜고, 곡 사이 쉬는 시간까지 더해 총 공연 길이를 맞춰요</p>
           </div>
           <div className="lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-center">
             <LandingSetlistPoster />
@@ -276,7 +276,7 @@ function Landing({ left }: { left: boolean }) {
           <h2 id="screens-title" className={SECTION_TITLE}>
             후보곡 투표부터 밴드 홈까지
           </h2>
-          <p className={SECTION_LEAD}>가상의 밴드로 만든 실제 화면이에요.</p>
+          <p className={SECTION_LEAD}>가상의 밴드로 만든 실제 화면이에요</p>
           <Shelf className="mt-5">
             {LANDING_SCREENS.map(({ shot, caption }) => (
               <li key={shot.src} className="w-60">
@@ -290,18 +290,18 @@ function Landing({ left }: { left: boolean }) {
           <h2 id="compare-title" className={SECTION_TITLE}>
             단톡방 vs 플레이리스트
           </h2>
-          <p className={SECTION_LEAD}>같은 합주곡 후보를 두 곳에서 정해 보면 이렇게 달라요.</p>
+          <p className={SECTION_LEAD}>같은 합주곡 후보를 두 곳에서 정해 보면 이렇게 달라요</p>
           <div className="mt-5 overflow-x-auto lg:max-w-3xl">
             <table className="w-full table-fixed border-separate border-spacing-0 overflow-hidden break-keep rounded-card border border-surface-hover text-sm">
               <thead>
                 <tr className="bg-surface text-caption text-text-muted">
-                  <th scope="col" className="px-3 py-2.5 text-left font-bold">
+                  <th scope="col" className="p-3 text-left font-bold">
                     <span className="sr-only">항목</span>
                   </th>
-                  <th scope="col" className="px-3 py-2.5 text-left font-bold">
+                  <th scope="col" className="p-3 text-left font-bold">
                     단톡방
                   </th>
-                  <th scope="col" className="px-3 py-2.5 text-left font-bold text-text">
+                  <th scope="col" className="p-3 text-left font-bold text-text">
                     플레이리스트
                   </th>
                 </tr>
@@ -340,7 +340,7 @@ function Landing({ left }: { left: boolean }) {
               <br />
               투표로 정해요
             </h2>
-            <p className="mt-2 break-keep text-sm text-text-muted">카카오 로그인 한 번이면 첫 플레이리스트를 바로 만들어요.</p>
+            <p className="mt-2 break-keep text-sm text-text-muted">카카오 로그인 한 번이면 첫 플레이리스트를 바로 만들어요</p>
             <div className="mt-5">
               <HeroCTA variant="landing" />
             </div>
@@ -392,7 +392,7 @@ function Landing({ left }: { left: boolean }) {
 
 function LandingFeature({ title, body, icon }: { title: string; body: string; icon: ReactNode }) {
   return (
-    <li className="flex items-start gap-3.5">
+    <li className="flex items-start gap-3">
       <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-control bg-primary-tint text-text">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
           {icon}
@@ -410,7 +410,7 @@ function BrandMark() {
   return (
     <div className="flex items-center gap-2">
       <div className="flex h-8 w-8 items-center justify-center rounded-control bg-gradient-to-br from-primary to-indigo-600 shadow-lg shadow-primary/30">
-        <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+        <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
