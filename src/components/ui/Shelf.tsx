@@ -8,7 +8,7 @@ import type { HTMLAttributes } from "react";
 export default function Shelf({ className = "", ...rest }: HTMLAttributes<HTMLUListElement>) {
   return (
     <ul
-      className={`-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] *:shrink-0 *:snap-start [&::-webkit-scrollbar]:hidden ${className}`}
+      className={`relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] *:shrink-0 *:snap-start [&::-webkit-scrollbar]:hidden ${className}`}
       {...rest}
     />
   );
