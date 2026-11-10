@@ -41,12 +41,12 @@ const STEPS = [
 
 export function LandingShareSteps() {
   return (
-    <ol aria-label="받은 멤버가 참여하는 순서" className="grid grid-cols-3 gap-2">
+    <ol aria-label="받은 멤버가 참여하는 순서" className="flex flex-col gap-3">
       {STEPS.map((step, i) => (
-        <li key={step.title} className="rounded-card bg-surface px-3 py-4 text-center">
+        <li key={step.title} className="flex items-center gap-3">
+          <span className="w-3 text-sm font-bold tabular-nums text-text-muted">{i + 1}</span>
           <StepIcon icon={step.icon} />
-          <p className="mt-3 text-caption font-bold text-text-muted">{i + 1}</p>
-          <h3 className="mt-0.5 text-sm font-bold text-text">{step.title}</h3>
+          <h3 className="text-body font-bold text-text">{step.title}</h3>
         </li>
       ))}
     </ol>
@@ -56,7 +56,7 @@ export function LandingShareSteps() {
 function StepIcon({ icon }: { icon: (typeof STEPS)[number]["icon"] }) {
   if (icon === "kakao") {
     return (
-      <span aria-hidden className="mx-auto flex size-11 items-center justify-center rounded-pill bg-kakao text-kakao-text">
+      <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-pill bg-kakao text-kakao-text">
         <svg width="20" height="20" viewBox="0 0 20 20">
           <path fill="currentColor" d="M10 3.2c-4.4 0-8 2.8-8 6.3 0 2.3 1.5 4.3 3.8 5.4l-.9 3.3c-.1.3.2.5.5.4l3.9-2.6c.2 0 .5 0 .7 0 4.4 0 8-2.8 8-6.3S14.4 3.2 10 3.2z" />
         </svg>
@@ -65,7 +65,7 @@ function StepIcon({ icon }: { icon: (typeof STEPS)[number]["icon"] }) {
   }
   if (icon === "vote") {
     return (
-      <span aria-hidden className="mx-auto flex size-11 items-center justify-center rounded-pill bg-success-soft text-success">
+      <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-pill bg-success-soft text-success">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
           <path d="M6 15l6-6 6 6" />
         </svg>
@@ -73,7 +73,7 @@ function StepIcon({ icon }: { icon: (typeof STEPS)[number]["icon"] }) {
     );
   }
   return (
-    <span aria-hidden className="mx-auto flex size-11 items-center justify-center rounded-pill bg-surface-hover text-text">
+    <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-pill bg-surface-hover text-text">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
         <path d="M9 11V5a2 2 0 114 0v5" />
         <path d="M13 10a2 2 0 114 0v2" />

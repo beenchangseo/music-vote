@@ -45,9 +45,7 @@ export default async function NewPlaylistPage({ searchParams }: PageProps) {
     <main className="min-h-full flex flex-col">
       <section className="flex-1 flex flex-col px-4 pt-6 pb-10">
         <div className="w-full max-w-md mx-auto">
-          {/* Top bar */}
-          {/* pr-14: on a phone the fixed account avatar (top-right, 44px) sits over this row's right end. */}
-          <div className="flex items-center justify-between mb-6 pr-14 sm:pr-0">
+          <div className="flex items-center mb-6">
             <Link
               href="/"
               className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors"
@@ -68,7 +66,6 @@ export default async function NewPlaylistPage({ searchParams }: PageProps) {
               </svg>
               홈으로
             </Link>
-            <span className="text-caption text-text-subtle">새 플레이리스트</span>
           </div>
 
           {bandProblem ? (
