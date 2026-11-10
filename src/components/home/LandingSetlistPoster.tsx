@@ -44,7 +44,7 @@ export default function LandingSetlistPoster() {
           ),
         )}
       </ol>
-      <figcaption className="relative mt-1 flex items-baseline justify-between bg-surface-hover px-5 pb-4 pt-3.5">
+      <figcaption className="relative mt-1 flex items-baseline justify-between bg-surface-hover px-5 py-4">
         <span className="text-sm text-text-muted">7곡 · 쉬는 시간 포함</span>
         <span className="text-h3 font-extrabold tabular-nums text-text">32:55</span>
       </figcaption>

@@ -171,7 +171,7 @@ const COMPARE_ROWS = [
 ] as const;
 
 const SECTION_TITLE = "break-keep text-h2 font-bold text-text lg:text-h1";
-const SECTION_LEAD = "mt-2.5 max-w-xl break-keep text-body text-text-muted lg:text-h4 lg:font-normal";
+const SECTION_LEAD = "mt-3 max-w-xl break-keep text-body text-text-muted lg:text-h4 lg:font-normal";
 
 // The screens the landing shows, which the web app's structured data also lists as its screenshots.
 const LANDING_SCREENS = [
@@ -217,7 +217,7 @@ function Landing({ left }: { left: boolean }) {
             <h2 id="vote-title" className="break-keep text-h2 font-bold text-text">
               누르는 순간 순위가 바뀌어요
             </h2>
-            <p className="mt-2.5 break-keep text-body text-text-muted">
+            <p className="mt-3 break-keep text-body text-text-muted">
               밴드 멤버가 후보곡에 찬성·반대를 누르면 곡 목록이 점수순으로 바로 다시 정렬돼요. 멤버 넷이 이미 투표한
               예시예요. 직접 눌러 보세요.
             </p>
@@ -295,13 +295,13 @@ function Landing({ left }: { left: boolean }) {
             <table className="w-full table-fixed border-separate border-spacing-0 overflow-hidden break-keep rounded-card border border-surface-hover text-sm">
               <thead>
                 <tr className="bg-surface text-caption text-text-muted">
-                  <th scope="col" className="px-3 py-2.5 text-left font-bold">
+                  <th scope="col" className="p-3 text-left font-bold">
                     <span className="sr-only">항목</span>
                   </th>
-                  <th scope="col" className="px-3 py-2.5 text-left font-bold">
+                  <th scope="col" className="p-3 text-left font-bold">
                     단톡방
                   </th>
-                  <th scope="col" className="px-3 py-2.5 text-left font-bold text-text">
+                  <th scope="col" className="p-3 text-left font-bold text-text">
                     플레이리스트
                   </th>
                 </tr>
@@ -392,7 +392,7 @@ function Landing({ left }: { left: boolean }) {
 
 function LandingFeature({ title, body, icon }: { title: string; body: string; icon: ReactNode }) {
   return (
-    <li className="flex items-start gap-3.5">
+    <li className="flex items-start gap-3">
       <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-control bg-primary-tint text-text">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
           {icon}

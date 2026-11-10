@@ -3,7 +3,7 @@
 
 export function LandingShareChat() {
   return (
-    <div className="rounded-card bg-surface px-4 py-4.5">
+    <div className="rounded-card bg-surface p-4">
       <p className="mb-3 text-center text-caption text-text-subtle">오후 9:41</p>
       <div className="flex items-start gap-2.5">
         <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-control bg-primary-tint text-sm font-extrabold text-text">
@@ -15,13 +15,13 @@ export function LandingShareChat() {
             이번 주 일요일까지 투표해 줘!
           </span>
           <div className="w-62 max-w-full overflow-hidden rounded-card border border-border bg-surface-hover">
-            <div className="relative h-31 overflow-hidden bg-primary-tint p-3.5">
+            <div className="relative h-31 overflow-hidden bg-primary-tint p-4">
               <span aria-hidden className="absolute -right-7 -top-10 size-35 rounded-pill bg-primary opacity-60" />
               <span aria-hidden className="absolute right-12 top-2.5 size-28 rounded-pill bg-primary-hover opacity-90" />
               <p className="relative text-caption font-bold text-text">PLYPICK</p>
               <p className="relative mt-7 text-h3 font-black text-text">10월 정기 합주</p>
             </div>
-            <div className="px-3.5 py-3">
+            <div className="px-4 py-3">
               <p className="text-sm font-bold text-text">10월 정기 합주</p>
               <p className="mt-0.5 text-caption text-text-muted">5곡 등록 · 카카오 로그인 한 번이면 투표 끝</p>
             </div>
@@ -43,9 +43,9 @@ export function LandingShareSteps() {
   return (
     <ol aria-label="받은 멤버가 참여하는 순서" className="grid grid-cols-3 gap-2">
       {STEPS.map((step, i) => (
-        <li key={step.title} className="rounded-card bg-surface px-2.5 py-3.5 text-center">
+        <li key={step.title} className="rounded-card bg-surface px-3 py-4 text-center">
           <StepIcon icon={step.icon} />
-          <p className="mt-2.5 text-caption font-bold text-text-muted">{i + 1}</p>
+          <p className="mt-3 text-caption font-bold text-text-muted">{i + 1}</p>
           <h3 className="mt-0.5 text-sm font-bold text-text">{step.title}</h3>
         </li>
       ))}

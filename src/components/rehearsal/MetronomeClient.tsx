@@ -78,7 +78,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
           <RoundButton tone="tonal" size="lg" onClick={() => setBpm((b) => Math.max(40, b - 5))} aria-label="BPM 5 내리기">
             -5
           </RoundButton>
-          <RoundButton tone="tonal" size="md" onClick={() => setBpm((b) => Math.max(40, b - 1))} aria-label="BPM 1 내리기">
+          <RoundButton tone="tonal" size="lg" onClick={() => setBpm((b) => Math.max(40, b - 1))} aria-label="BPM 1 내리기">
             -
           </RoundButton>
           <RoundButton
@@ -89,7 +89,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
           >
             <PlayPauseIcon playing={isPlaying} />
           </RoundButton>
-          <RoundButton tone="tonal" size="md" onClick={() => setBpm((b) => Math.min(300, b + 1))} aria-label="BPM 1 올리기">
+          <RoundButton tone="tonal" size="lg" onClick={() => setBpm((b) => Math.min(300, b + 1))} aria-label="BPM 1 올리기">
             +
           </RoundButton>
           <RoundButton tone="tonal" size="lg" onClick={() => setBpm((b) => Math.min(300, b + 5))} aria-label="BPM 5 올리기">
