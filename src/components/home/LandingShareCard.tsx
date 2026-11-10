@@ -66,7 +66,7 @@ function StepIcon({ icon }: { icon: (typeof STEPS)[number]["icon"] }) {
   if (icon === "vote") {
     return (
       <span aria-hidden className="mx-auto flex size-11 items-center justify-center rounded-pill bg-success-soft text-success">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
           <path d="M6 15l6-6 6 6" />
         </svg>
       </span>

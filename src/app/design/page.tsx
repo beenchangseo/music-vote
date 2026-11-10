@@ -437,7 +437,7 @@ export default function DesignPage() {
         <div className="mt-2 max-w-xs">
           <ButtonGroup>
             <Button size="lg">
-              <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
+              <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
                 <path d="M12 5v14M5 12h14" />
               </svg>
               플레이리스트 만들기

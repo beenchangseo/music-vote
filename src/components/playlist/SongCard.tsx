@@ -251,7 +251,7 @@ export default function SongCard({
               {artist && <span className="truncate">{artist}</span>}
               {song.commentCount > 0 && (
                 <span className="inline-flex shrink-0 items-center gap-0.5 tabular-nums">
-                  <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+                  <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a8 8 0 01-11.6 7.1L3 21l1.9-6.4A8 8 0 1121 12z" />
                   </svg>
                   <span className="sr-only">댓글</span>
@@ -260,7 +260,7 @@ export default function SongCard({
               )}
               {inSetlist && (
                 <span className="inline-flex shrink-0 items-center text-primary-fg">
-                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h12M4 12h12M4 18h6M14 18l2.5 2.5L21 16" />
                   </svg>
                   <span className="sr-only">셋리스트에 있음</span>
@@ -270,7 +270,7 @@ export default function SongCard({
                 className={`h-3.5 w-3.5 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`}
                 fill="none"
                 stroke="currentColor"
-                strokeWidth={2.5}
+                strokeWidth={2}
                 viewBox="0 0 24 24"
                 aria-hidden
               >
@@ -343,10 +343,10 @@ export default function SongCard({
   );
 }
 
-/** 탭 아이콘. 같은 굵기(1.75)의 선 아이콘으로 맞춘다. 크기는 ActionTab 이 정한다. */
-function TabIcon({ children, strokeWidth = 1.75 }: { children: ReactNode; strokeWidth?: number }) {
+/** 탭 아이콘. 같은 굵기(2)의 선 아이콘으로 맞춘다. 크기는 ActionTab 이 정한다. */
+function TabIcon({ children }: { children: ReactNode }) {
   return (
-    <svg fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+    <svg fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
       {children}
     </svg>
   );
@@ -379,7 +379,7 @@ function ListPlusIcon() {
 
 function ListCheckIcon() {
   return (
-    <TabIcon strokeWidth={2}>
+    <TabIcon>
       <path d="M4 6h12M4 12h12M4 18h6M14 18l2.5 2.5L21 16" />
     </TabIcon>
   );

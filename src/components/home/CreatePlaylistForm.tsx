@@ -223,7 +223,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
 
           {/* Secondary CTA — go add songs */}
           <Button variant="tonal" fullWidth onClick={handleGoToPlaylist}>
-            곡 추가하러 가기 →
+            곡 추가하러 가기
           </Button>
 
           {/* Tertiary — small ghost buttons */}
@@ -437,11 +437,11 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
               <p className="text-caption text-text-muted mt-0.5 mb-2 text-left">투표 종료 후 상위 N곡이 셋리스트로 선정됩니다</p>
               <div className="flex items-center gap-1">
                 <IconButton onClick={() => setSetlistCount((c) => Math.max(0, c - 1))} disabled={setlistCount <= 0} aria-label="곡 수 줄이기">
-                  <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" d="M5 12h14" /></svg>
+                  <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" d="M5 12h14" /></svg>
                 </IconButton>
                 <span className={`min-w-20 text-center text-sm tabular-nums ${setlistCount > 0 ? "font-semibold text-text" : "text-text-subtle"}`}>{setlistCount > 0 ? `${setlistCount}곡` : "정하지 않음"}</span>
                 <IconButton onClick={() => setSetlistCount((c) => Math.min(30, c + 1))} disabled={setlistCount >= 30} aria-label="곡 수 늘리기">
-                  <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" d="M12 5v14M5 12h14" /></svg>
+                  <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" d="M12 5v14M5 12h14" /></svg>
                 </IconButton>
               </div>
             </div>

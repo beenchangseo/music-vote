@@ -274,7 +274,7 @@ function ChevronUpIcon() {
       className="size-3.5"
       fill="none"
       stroke="currentColor"
-      strokeWidth={2.5}
+      strokeWidth={2}
       viewBox="0 0 24 24"
       aria-hidden
     >
@@ -290,7 +290,7 @@ function MetronomeIcon() {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={2.5}
+      strokeWidth={2}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden

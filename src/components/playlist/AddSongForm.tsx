@@ -140,7 +140,7 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
               className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle"
               fill="none"
               stroke="currentColor"
-              strokeWidth={2.25}
+              strokeWidth={2}
               viewBox="0 0 24 24"
               aria-hidden
             >

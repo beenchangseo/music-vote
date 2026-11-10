@@ -86,7 +86,7 @@ function ExternalIcon() {
       className="size-3"
       fill="none"
       stroke="currentColor"
-      strokeWidth={2.5}
+      strokeWidth={2}
       viewBox="0 0 24 24"
       aria-hidden
     >

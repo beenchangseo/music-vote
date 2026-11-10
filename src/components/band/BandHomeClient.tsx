@@ -176,7 +176,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
             {/* DR1: in the start area the success is one quiet line, not a banner with a member count. */}
             {starting && banner === "created" && (
               <p role="status" className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-success">
-                <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
+                <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
                 밴드를 만들었어요
@@ -201,7 +201,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
               <AvatarStack names={members.map((member) => member.displayName)} max={STACKED_AVATARS} />
             </a>
             <IconButton bare aria-label="멤버 초대" onClick={() => setInviteOpen(true)}>
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden>
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
               </svg>
             </IconButton>
@@ -223,7 +223,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
             className="mt-4"
             tone="success"
             icon={
-              <svg className="size-4.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <svg className="size-4.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
             }

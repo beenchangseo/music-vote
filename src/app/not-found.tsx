@@ -15,7 +15,7 @@ export default function NotFound() {
           홈에서 플레이리스트를 새로 만들거나 멤버에게 받은 링크를 다시 확인해주세요.
         </p>
         <Link href="/" className={buttonClassName()}>
-          홈으로 →
+          홈으로
         </Link>
       </div>
     </main>
