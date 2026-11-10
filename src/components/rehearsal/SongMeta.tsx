@@ -88,7 +88,7 @@ export default function SongMeta({ song, playlistId, shareCode, onClose }: SongM
     <div className="px-3 py-3 border-b border-border space-y-3 animate-fade-in">
       {/* 헤더: 닫기 + 저장 상태 */}
       <div className="flex items-center justify-between">
-        <span className="text-caption font-semibold text-text-muted uppercase tracking-wider">
+        <span className="text-caption font-semibold text-text-muted">
           곡 정보
         </span>
         <div className="flex items-center gap-2">

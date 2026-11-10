@@ -197,7 +197,7 @@ function Landing({ left }: { left: boolean }) {
 
         <div className="mt-10 flex flex-col gap-16 lg:mt-16 lg:flex-row lg:items-center">
           <section aria-labelledby="hero-title" className="lg:flex-1">
-            <p className="text-caption font-semibold tracking-wider text-primary-fg">밴드 곡 투표</p>
+            <p className="text-caption font-semibold text-primary-fg">밴드 곡 투표</p>
             {/* The space before <br> keeps "합주곡, 투표로" two words for search engines. */}
             <h1 id="hero-title" className="mt-3 break-keep text-display font-bold text-text">
               밴드 합주곡,{" "}

@@ -342,7 +342,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
       /* Options card. Outline for the same reason as the success card. */
       <Card variant="outline" padding="none" className="mt-4 overflow-hidden animate-fade-in">
         <div className="pl-4 pr-1 pt-2 pb-1 flex items-center justify-between">
-          <p className="text-caption text-text-subtle uppercase tracking-wider font-semibold">옵션</p>
+          <p className="text-caption text-text-subtle font-semibold">옵션</p>
           <Button
             type="button"
             variant="ghost"

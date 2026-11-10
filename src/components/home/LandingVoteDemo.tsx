@@ -75,7 +75,7 @@ export default function LandingVoteDemo() {
             <div className="flex shrink-0 items-center rounded-pill bg-surface-hover px-0.5">
               <VoteButton title={song.title} chosen={myVote === 1} dir="up" onClick={() => vote(song.id, 1)} />
               <span
-                className={`min-w-6 text-center text-body font-extrabold tabular-nums ${
+                className={`min-w-6 text-center text-body font-bold tabular-nums ${
                   score > 0 ? "text-success" : score < 0 ? "text-danger-fg" : "text-text-muted"
                 }`}
               >

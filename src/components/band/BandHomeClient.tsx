@@ -170,7 +170,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
               <GuitarIcon className="h-4 w-4" />
               밴드
             </p>
-            <h1 className="mt-1 line-clamp-2 break-keep text-display font-black text-white [text-shadow:0_2px_16px_rgb(0_0_0/0.35)]">
+            <h1 className="mt-1 line-clamp-2 break-keep text-display font-bold text-white [text-shadow:0_2px_16px_rgb(0_0_0/0.35)]">
               {team.name}
             </h1>
             {/* DR1: in the start area the success is one quiet line, not a banner with a member count. */}

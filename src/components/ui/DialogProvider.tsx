@@ -140,7 +140,7 @@ export default function DialogProvider({ children }: { children: ReactNode }) {
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4 animate-fade-in"
         >
           <div ref={panelRef} className="w-full max-w-xs bg-surface border border-border rounded-card p-5 animate-slide-up shadow-float">
-            <h3 id={titleId} className="text-base font-bold text-text text-center">{dialog.title}</h3>
+            <h3 id={titleId} className="text-body font-bold text-text text-center">{dialog.title}</h3>
             <p id={messageId} className="text-sm text-text-muted text-center mt-2 whitespace-pre-wrap leading-relaxed">{dialog.message}</p>
             <ButtonGroup className="mt-5">
               {dialog.buttons.map((btn, i) => {

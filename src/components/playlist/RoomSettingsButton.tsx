@@ -335,7 +335,7 @@ export default function RoomSettingsButton({
         ) : (
           <div className={isPending ? "pointer-events-none opacity-70" : ""}>
             <section className="mb-6 border-b border-border pb-5">
-              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">밴드</p>
+              <p className="text-caption font-semibold text-text-subtle">밴드</p>
               {attached && (
                 <p role="status" className="mt-2 text-sm text-success">
                   밴드에 넣었어요
@@ -398,7 +398,7 @@ export default function RoomSettingsButton({
             </section>
 
             <section>
-              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 · 공개 범위</p>
+              <p className="text-caption font-semibold text-text-subtle">투표 · 공개 범위</p>
               <ListGroup className="mt-2">
                 <Switch
                   label="익명 투표"
@@ -415,7 +415,7 @@ export default function RoomSettingsButton({
 
             {supportsVoteAllocation && (
               <section className="mt-6 border-t border-border pt-5">
-                <p className="mb-2 text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 · 방식</p>
+                <p className="mb-2 text-caption font-semibold text-text-subtle">투표 · 방식</p>
                 <SegmentedControl
                   aria-label="투표 방식"
                   options={(["free", "allocated"] as VotingMode[]).map((value) => ({
@@ -462,7 +462,7 @@ export default function RoomSettingsButton({
                     </Button>
 
                     <div className="mt-5">
-                      <p className="mb-2 text-caption font-semibold uppercase tracking-wider text-text-subtle">참여자별 투표권</p>
+                      <p className="mb-2 text-caption font-semibold text-text-subtle">참여자별 투표권</p>
                       <ListGroup>
                         {settings.members.map((member) => {
                           const stagedLimit = Number(memberLimits[member.memberKey]);
@@ -528,7 +528,7 @@ export default function RoomSettingsButton({
             )}
 
             <section className="mt-6 border-t border-border pt-5">
-              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">셋리스트 · 편집 권한</p>
+              <p className="text-caption font-semibold text-text-subtle">셋리스트 · 편집 권한</p>
               <SegmentedControl<SetlistEditMode>
                 aria-label="셋리스트 편집 권한"
                 className="mt-2"
@@ -547,7 +547,7 @@ export default function RoomSettingsButton({
             </section>
 
             <section className="mt-6 border-t border-border pt-5">
-              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">투표 초기화</p>
+              <p className="text-caption font-semibold text-text-subtle">투표 초기화</p>
               <p className="mt-1 text-caption leading-relaxed text-text-muted">
                 모든 참여자의 찬성·반대 투표를 삭제해요. 곡과 참여자 정보는 유지돼요.
               </p>
@@ -565,7 +565,7 @@ export default function RoomSettingsButton({
 
             {/* 되돌릴 수 없는 동작이다. 헤더에서 한 번 눌리던 자리에 두지 않는다. */}
             <section className="mt-6 border-t border-border pt-5">
-              <p className="text-caption font-semibold uppercase tracking-wider text-text-subtle">플레이리스트 삭제</p>
+              <p className="text-caption font-semibold text-text-subtle">플레이리스트 삭제</p>
               <p className="mt-1 text-caption leading-relaxed text-text-muted">
                 곡·투표·셋리스트·코멘트가 모두 사라져요. 되돌릴 수 없어요.
               </p>
