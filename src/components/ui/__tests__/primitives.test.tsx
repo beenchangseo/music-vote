@@ -16,6 +16,7 @@ import { MenuItemButton, MenuItemLink } from "../Menu";
 import RoundButton, { RoundLink } from "../RoundButton";
 import { ToolbarButton } from "../ScreenToolbar";
 import SegmentedControl from "../SegmentedControl";
+import Shelf from "../Shelf";
 import Switch from "../Switch";
 import TabBar from "../TabBar";
 
@@ -407,5 +408,22 @@ describe("SongRow surface", () => {
     const link = screen.getByRole("link", { name: /예뻤어/ });
     expect(link).toHaveAttribute("href", "/playlist/abc");
     expect(link).toHaveTextContent("3번");
+  });
+});
+
+describe("Shelf", () => {
+  it("holds the screen-reader-only text of its cards inside its own sideways scroll (#97)", () => {
+    render(
+      <Shelf>
+        <li>
+          <span>11월 정기합주</span>
+          <span className="sr-only">,</span> 후보곡
+        </li>
+      </Shelf>,
+    );
+    expect(
+      screen.getByRole("list").className.split(/\s+/),
+      "sr-only text is position:absolute, so a static Shelf does not clip it and a card past the right edge widens the page past a 390px screen",
+    ).toContain("relative");
   });
 });
