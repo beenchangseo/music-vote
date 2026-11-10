@@ -650,7 +650,7 @@ export default function PlaylistClient({
               >
                 {songsWithVotes.length === 0 ? (
                   <div className="mt-2">
-                    <p className="mb-3 flex items-center justify-center gap-2 text-sm font-semibold text-primary-fg animate-bounce-slow">
+                    <p className="mb-3 flex items-center justify-center gap-2 text-sm font-semibold text-primary-fg">
                       <svg className="size-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7" />
                       </svg>

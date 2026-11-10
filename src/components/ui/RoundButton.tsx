@@ -61,8 +61,8 @@ export type RoundButtonProps = Own & RoundLook & Omit<ButtonHTMLAttributes<HTMLB
 export type RoundLinkProps = Own & (BareLook | DiscLook) & Omit<ComponentProps<typeof Link>, Closed>;
 
 const BASE =
-  "relative inline-flex shrink-0 items-center justify-center rounded-pill font-bold leading-none tabular-nums transition-all " +
-  "active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100";
+  "relative inline-flex shrink-0 items-center justify-center rounded-pill font-bold leading-none tabular-nums transition-[color,background-color,border-color,opacity,scale] " +
+  "active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100";
 
 const isBare = (look: RoundLook): look is BareLook => look.tone !== undefined && look.tone in BARE_SKIN;
 

@@ -28,7 +28,7 @@ export default function MyBands({ teams }: { teams: MyTeam[] }) {
                 {/* The same violet as the band home hero (existing tokens only). */}
                 <span className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-control bg-gradient-to-br from-primary to-primary-tint text-white">
                   <span aria-hidden className="absolute -right-6 -top-6 h-20 w-20 rounded-pill bg-primary-hover opacity-70 mix-blend-screen" />
-                  <GuitarIcon className="relative h-10 w-10 transition-transform group-hover:scale-105" />
+                  <GuitarIcon className="relative h-10 w-10" />
                 </span>
                 <span className="mt-2 block truncate text-sm font-semibold text-text">{team.name}</span>
                 <span className="block truncate text-caption text-text-muted tabular-nums">

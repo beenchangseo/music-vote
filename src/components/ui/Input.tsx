@@ -4,7 +4,7 @@ import { InputHTMLAttributes, forwardRef } from "react";
 export function controlSkin(invalid: boolean) {
   return `w-full bg-surface-hover border text-text placeholder-text-subtle text-body
     focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent
-    disabled:opacity-50 disabled:cursor-not-allowed transition-all
+    disabled:opacity-50 disabled:cursor-not-allowed transition-colors
     ${invalid ? "border-danger-fg" : "border-border-input"}`;
 }
 

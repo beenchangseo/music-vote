@@ -57,7 +57,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
           {[0, 1, 2, 3].map((i) => (
             <div
               key={i}
-              className={`size-6 rounded-pill transition-all duration-75 ${
+              className={`size-6 rounded-pill transition-[scale,background-color,box-shadow] duration-120 ${
                 isPlaying && beat === i
                   ? i === 0
                     ? "bg-primary scale-125 shadow-lg shadow-primary/50"

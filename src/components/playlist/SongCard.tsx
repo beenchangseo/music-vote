@@ -222,10 +222,10 @@ export default function SongCard({
               }`}
             >
               {isPlaying ? (
-                <span className="flex items-end gap-0.5" aria-hidden>
-                  <span className="h-2.5 w-0.5 animate-bounce rounded-pill bg-accent-play" style={{ animationDelay: "0ms" }} />
-                  <span className="h-4 w-0.5 animate-bounce rounded-pill bg-accent-play" style={{ animationDelay: "150ms" }} />
-                  <span className="h-3 w-0.5 animate-bounce rounded-pill bg-accent-play" style={{ animationDelay: "300ms" }} />
+                <span className="flex h-4 items-end gap-0.5" aria-hidden>
+                  {["0ms", "150ms", "300ms"].map((delay) => (
+                    <span key={delay} className="h-full w-0.5 origin-bottom animate-eq-bar rounded-pill bg-accent-play" style={{ animationDelay: delay }} />
+                  ))}
                 </span>
               ) : (
                 <svg
@@ -290,7 +290,7 @@ export default function SongCard({
 
   // Card (video) view
   return (
-    <div className={`bg-surface rounded-card border overflow-hidden transition-all hover:border-border-strong ${isCurrent ? "border-primary/50" : "border-border"} ${isPending ? "opacity-50" : ""}`}>
+    <div className={`bg-surface rounded-card border overflow-hidden transition-colors hover:border-border-strong ${isCurrent ? "border-primary/50" : "border-border"} ${isPending ? "opacity-50" : ""}`}>
       {/* 영상은 아래 플레이어에서 재생한다. 카드는 썸네일과 재생 상태만 보여준다. */}
       <button
         onClick={onTogglePlay}
