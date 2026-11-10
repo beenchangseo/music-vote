@@ -153,7 +153,7 @@ export default function PlaylistHeader({
 
       {/* Centered cover + title + one meta line. */}
       <div className="mt-2 flex flex-col items-center text-center">
-        <RoomCover thumbs={coverThumbs} sizes="176px" className="h-44 w-44 shadow-xl shadow-black/40" />
+        <RoomCover thumbs={coverThumbs} sizes="176px" className="h-44 w-44" />
         <h1 className="mt-5 line-clamp-2 break-keep text-h2 font-bold leading-tight text-text">{title}</h1>
         {meta && <div className="mt-1.5 w-full">{meta}</div>}
       </div>

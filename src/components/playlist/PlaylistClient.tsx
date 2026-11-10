@@ -550,9 +550,12 @@ export default function PlaylistClient({
               {/* Result share banner — voting closed + has top song */}
               {isExpired && songsWithVotes.length > 0 && (
                 <div className="mt-5 p-5 rounded-card bg-success/10 border border-success/30 text-center animate-fade-in">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-success/20 text-success text-caption font-bold mb-3">
+                  <p className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-success">
+                    <svg className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
                     곡 결정
-                  </div>
+                  </p>
                   <p className="text-h3 font-bold text-text leading-snug truncate px-2">
                     {songsWithVotes[0].title}
                   </p>

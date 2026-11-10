@@ -307,7 +307,7 @@ export default function SongCard({
           />
         )}
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
-          <div className={`w-14 h-14 flex items-center justify-center rounded-pill shadow-lg transition-colors ${isCurrent ? "bg-primary text-on-primary group-hover:bg-primary-hover" : "bg-danger text-on-danger group-hover:bg-danger-hover"}`}>
+          <div className={`w-14 h-14 flex items-center justify-center rounded-pill transition-colors ${isCurrent ? "bg-primary text-on-primary group-hover:bg-primary-hover" : "bg-danger text-on-danger group-hover:bg-danger-hover"}`}>
             {isPlaying ? (
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
