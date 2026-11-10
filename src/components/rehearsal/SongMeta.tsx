@@ -66,7 +66,7 @@ export default function SongMeta({ song, playlistId, shareCode, onClose }: SongM
       try {
         await updateSongMeta(song.id, playlistId, shareCode, patch);
       } catch {
-        showAlert("저장에 실패했습니다.");
+        showAlert("저장하지 못했어요");
       }
     });
   }
@@ -89,7 +89,7 @@ export default function SongMeta({ song, playlistId, shareCode, onClose }: SongM
       {/* 헤더: 닫기 + 저장 상태 */}
       <div className="flex items-center justify-between">
         <span className="text-caption font-semibold text-text-muted uppercase tracking-wider">
-          메타 편집
+          곡 정보
         </span>
         <div className="flex items-center gap-2">
           {isPending && (

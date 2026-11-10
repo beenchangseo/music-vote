@@ -19,13 +19,13 @@ describe("AnnouncementButton", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "공지사항" }));
 
-    const field = screen.getByPlaceholderText("멤버들에게 전달할 공지사항을 작성하세요");
+    const field = screen.getByPlaceholderText("멤버에게 알릴 내용");
     expect(field).toBeInTheDocument();
     expect(container.contains(field)).toBe(false);
     expect(field).toHaveValue("합주 7시");
   });
 
-  const field = () => screen.getByPlaceholderText("멤버들에게 전달할 공지사항을 작성하세요");
+  const field = () => screen.getByPlaceholderText("멤버에게 알릴 내용");
 
   function editThenClose(announcement: string) {
     const utils = render(<AnnouncementButton playlistId="p" announcement={announcement} shareCode="abc" />);

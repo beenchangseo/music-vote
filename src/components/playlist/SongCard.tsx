@@ -77,14 +77,14 @@ export default function SongCard({
   const { showDanger, showAlert } = useDialog();
 
   async function handleRemove() {
-    const ok = await showDanger(`"${song.title}"을(를) 삭제하시겠습니까?`);
+    const ok = await showDanger(`"${song.title}"을(를) 삭제할까요?`);
     if (!ok) return;
 
     startTransition(async () => {
       try {
         await removeSong(song.id, playlistId, shareCode);
       } catch {
-        showAlert("곡 삭제에 실패했습니다.");
+        showAlert("곡을 삭제하지 못했어요");
       }
     });
   }

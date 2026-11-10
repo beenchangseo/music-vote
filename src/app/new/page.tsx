@@ -106,7 +106,7 @@ export default async function NewPlaylistPage({ searchParams }: PageProps) {
                     플레이리스트를 만들려면 로그인이 필요해요
                   </p>
                   <p className="text-sm text-text-muted mb-5 leading-relaxed">
-                    카카오 계정으로 1초만에 시작할 수 있어요.<br />
+                    카카오 계정으로 바로 시작해요.<br />
                     내가 만든 플레이리스트는 어디서든 다시 열 수 있어요.
                   </p>
                   {/* Keep ?band= through login, or the room is made outside the band without notice. */}

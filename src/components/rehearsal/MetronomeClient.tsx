@@ -105,7 +105,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
               onChange={(e) => handleSongChange(e.target.value)}
               className={`h-control-md rounded-control px-4 ${controlSkin(false)}`}
             >
-              <option value="">곡 선택...</option>
+              <option value="">곡 고르기</option>
               {songs.map((s) => (
                 <option key={s.id} value={s.id}>
                   {displayTitle(s.title)} ({s.tempo_bpm} BPM)

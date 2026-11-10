@@ -143,7 +143,7 @@ export default function PlaylistClient({
   useEffect(() => {
     if (isArchived || !loggedIn) return;
     registerPlaylistMember(playlist.id).then(setAllowance).catch(() => {
-      showAlert("참여자 등록에 실패했습니다. 새로고침 후 다시 시도해주세요.");
+      showAlert("참여자로 등록하지 못했어요. 새로고침한 뒤 다시 시도해 주세요.");
     });
   }, [isArchived, loggedIn, playlist.id, showAlert]);
 
@@ -589,19 +589,19 @@ export default function PlaylistClient({
               {isExpired && setlistCount && !playlist.setlist_confirmed && (
                 <div className="mt-5 p-4 bg-primary/10 border border-primary/30 rounded-control text-center">
                   <p className="text-sm text-text mb-2">
-                    투표가 마감되었습니다. 상위 {setlistCount}곡이 하이라이트됩니다.
+                    투표가 마감됐어요. 상위 {setlistCount}곡을 표시했어요.
                   </p>
                   {isHost ? (
                     <Button
                       onClick={async () => {
                         const topSongIds = songsWithVotes.slice(0, setlistCount).map((s) => s.id);
                         const ok = await showConfirm(
-                          setlistItems?.length ? "지금 셋리스트로 확정할까요?" : `상위 ${setlistCount}곡으로 셋리스트를 확정하시겠습니까?`,
+                          setlistItems?.length ? "지금 셋리스트로 확정할까요?" : `상위 ${setlistCount}곡으로 셋리스트를 확정할까요?`,
                         );
                         if (!ok) return;
                         const result = await confirmSetlist(playlist.id, topSongIds, shareCode).catch(() => null);
                         if (!result?.success) {
-                          showAlert(result && result.reason !== "write_failed" ? setlistMessage(result.reason) : "셋리스트 확정에 실패했습니다.");
+                          showAlert(result && result.reason !== "write_failed" ? setlistMessage(result.reason) : "셋리스트를 확정하지 못했어요");
                           return;
                         }
                         track("setlist_confirmed", {
@@ -661,10 +661,7 @@ export default function PlaylistClient({
                             YouTube 링크를 붙여넣으면<br />
                             제목·썸네일이 자동으로 들어가요.
                           </p>
-                          <div className="mt-6 flex flex-col gap-1.5 text-caption text-text-subtle">
-                            <p>곡 3개 이상 → 멤버에게 카톡으로 공유</p>
-                            <p>5분 안에 다음 합주곡 결정 끝.</p>
-                          </div>
+                          <p className="mt-6 text-caption text-text-subtle">곡이 3개 이상 모이면 단톡방에 공유해요</p>
                         </>
                       }
                     />

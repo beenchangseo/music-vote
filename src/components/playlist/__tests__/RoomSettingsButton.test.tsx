@@ -115,7 +115,7 @@ describe("RoomSettingsButton", () => {
     fireEvent.click(await screen.findByRole("radio", { name: "방장만 편집" }));
 
     expect(screen.getByRole("radio", { name: "방장만 편집" })).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByText("방장만 셋리스트를 바꿀 수 있어요.")).toBeInTheDocument();
+    expect(screen.getByText("방장만 셋리스트를 바꿀 수 있어요")).toBeInTheDocument();
     expect(updateSetlistEditMode).toHaveBeenCalledWith("playlist", "host_only", "share");
     expect(onChange).not.toHaveBeenCalled();
 
@@ -142,7 +142,7 @@ describe("RoomSettingsButton voting controls", () => {
     await openSettings();
     const anonymous = screen.getByRole("switch", { name: "익명 투표" });
     expect(anonymous).toBeChecked();
-    expect(anonymous).toHaveAccessibleDescription("누가 어떻게 투표했는지 다른 참여자에게 보이지 않아요.");
+    expect(anonymous).toHaveAccessibleDescription("누가 어떻게 투표했는지 다른 참여자에게 보이지 않아요");
 
     fireEvent.click(anonymous);
     await waitFor(() =>
@@ -167,7 +167,7 @@ describe("RoomSettingsButton voting controls", () => {
     await openSettings();
     const anonymous = screen.getByRole("switch", { name: "익명 투표" });
     expect(anonymous).not.toBeChecked();
-    expect(anonymous).toHaveAccessibleDescription("투표한 멤버의 닉네임이 모든 참여자에게 보여요.");
+    expect(anonymous).toHaveAccessibleDescription("투표한 멤버의 닉네임이 모든 참여자에게 보여요");
 
     fireEvent.click(anonymous);
     await waitFor(() =>
@@ -220,7 +220,7 @@ describe("RoomSettingsButton voting controls", () => {
     await openSettings();
     expect(screen.getByRole("radio", { name: "투표권 할당" })).toBeDisabled();
     expect(screen.getByRole("radio", { name: "자유 투표" })).toBeEnabled();
-    expect(screen.getByText("투표가 시작되어 모드는 바꿀 수 없어요.")).toBeInTheDocument();
+    expect(screen.getByText("투표가 시작되어 모드는 바꿀 수 없어요")).toBeInTheDocument();
   });
 
   it("steps a member's votes and saves the staged limits", async () => {

@@ -205,7 +205,7 @@ function Landing({ left }: { left: boolean }) {
               투표로 5분 컷
             </h1>
             <p className="mt-5 max-w-lg break-keep text-body text-text-muted lg:text-h4 lg:font-normal">
-              단톡방에 흩어진 후보곡을 링크 하나에 모아 투표하고, 표 많이 받은 곡으로 공연 셋리스트까지 정해요.
+              단톡방에 흩어진 후보곡을 링크 하나에 모아 투표하고, 표 많이 받은 곡으로 공연 셋리스트까지 정해요
             </p>
             <div className="mt-8 lg:max-w-xs">
               <HeroCTA variant="landing" />
@@ -234,7 +234,7 @@ function Landing({ left }: { left: boolean }) {
             <h2 id="setlist-title" className={SECTION_TITLE}>
               투표가 끝나면 셋리스트가 나와요
             </h2>
-            <p className={SECTION_LEAD}>표 많이 받은 곡부터 공연 순서를 짜고, 곡 사이 쉬는 시간까지 더해 총 공연 길이를 맞춰요.</p>
+            <p className={SECTION_LEAD}>표 많이 받은 곡부터 공연 순서를 짜고, 곡 사이 쉬는 시간까지 더해 총 공연 길이를 맞춰요</p>
           </div>
           <div className="lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-center">
             <LandingSetlistPoster />
@@ -276,7 +276,7 @@ function Landing({ left }: { left: boolean }) {
           <h2 id="screens-title" className={SECTION_TITLE}>
             후보곡 투표부터 밴드 홈까지
           </h2>
-          <p className={SECTION_LEAD}>가상의 밴드로 만든 실제 화면이에요.</p>
+          <p className={SECTION_LEAD}>가상의 밴드로 만든 실제 화면이에요</p>
           <Shelf className="mt-5">
             {LANDING_SCREENS.map(({ shot, caption }) => (
               <li key={shot.src} className="w-60">
@@ -290,7 +290,7 @@ function Landing({ left }: { left: boolean }) {
           <h2 id="compare-title" className={SECTION_TITLE}>
             단톡방 vs 플레이리스트
           </h2>
-          <p className={SECTION_LEAD}>같은 합주곡 후보를 두 곳에서 정해 보면 이렇게 달라요.</p>
+          <p className={SECTION_LEAD}>같은 합주곡 후보를 두 곳에서 정해 보면 이렇게 달라요</p>
           <div className="mt-5 overflow-x-auto lg:max-w-3xl">
             <table className="w-full table-fixed border-separate border-spacing-0 overflow-hidden break-keep rounded-card border border-surface-hover text-sm">
               <thead>
@@ -340,7 +340,7 @@ function Landing({ left }: { left: boolean }) {
               <br />
               투표로 정해요
             </h2>
-            <p className="mt-2 break-keep text-sm text-text-muted">카카오 로그인 한 번이면 첫 플레이리스트를 바로 만들어요.</p>
+            <p className="mt-2 break-keep text-sm text-text-muted">카카오 로그인 한 번이면 첫 플레이리스트를 바로 만들어요</p>
             <div className="mt-5">
               <HeroCTA variant="landing" />
             </div>

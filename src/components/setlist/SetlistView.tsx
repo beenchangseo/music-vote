@@ -137,7 +137,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
   }
 
   const remove = useCallback(async (itemId: string) => {
-    const ok = await showDanger("이 항목을 삭제하시겠습니까?");
+    const ok = await showDanger("이 항목을 삭제할까요?");
     if (!ok) return;
     startTransition(async () => {
       showItems((items) => items.filter((item) => item.id !== itemId));
@@ -167,7 +167,7 @@ export default function SetlistView({ setlistItems, songs, playlistId, shareCode
     return (
       <div className="mt-6 py-16 text-center text-text-subtle">
         <span className="inline-block h-8 w-8 animate-spin rounded-pill border-2 border-border-strong border-t-primary-fg" />
-        <p className="mt-3">셋리스트 불러오는 중...</p>
+        <p className="mt-3">셋리스트 불러오는 중…</p>
       </div>
     );
   }

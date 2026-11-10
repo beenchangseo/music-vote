@@ -54,14 +54,14 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
         setComments(data);
         setIsEditing(false);
       } catch (err) {
-        showAlert(err instanceof Error ? err.message : "댓글 저장에 실패했습니다.");
+        showAlert(err instanceof Error ? err.message : "댓글을 저장하지 못했어요");
       }
     });
   }
 
   async function handleDelete() {
     if (!nickname) return;
-    const ok = await showDanger("댓글을 삭제하시겠습니까?");
+    const ok = await showDanger("댓글을 삭제할까요?");
     if (!ok) return;
 
     startTransition(async () => {
@@ -71,7 +71,7 @@ export default function CommentModal({ songId, songTitle, nickname, shareCode, o
         setContent("");
         setIsEditing(false);
       } catch {
-        showAlert("댓글 삭제에 실패했습니다.");
+        showAlert("댓글을 삭제하지 못했어요");
       }
     });
   }

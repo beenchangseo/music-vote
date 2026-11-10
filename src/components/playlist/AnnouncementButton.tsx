@@ -37,7 +37,7 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
         setDraft(null);
         setShowModal(false);
       } catch {
-        showAlert("공지사항 저장에 실패했습니다.");
+        showAlert("공지사항을 저장하지 못했어요");
       }
     });
   }
@@ -75,7 +75,7 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
         <Textarea
           value={text}
           onChange={(e) => setDraft({ base: draft ? draft.base : announcement, text: e.target.value })}
-          placeholder="멤버들에게 전달할 공지사항을 작성하세요"
+          placeholder="멤버에게 알릴 내용"
           rows={4}
           maxLength={500}
         />

@@ -114,7 +114,7 @@ export default function AboutPage() {
               다음 합주곡, 투표로 정해요
             </p>
             <p className="text-sm text-text-muted mb-4">
-              무료예요. 카카오 로그인 한 번이면 30초 만에 플레이리스트를 만들 수 있어요.
+              무료예요. 카카오 로그인 한 번이면 플레이리스트를 만들 수 있어요.
             </p>
             <Link href="/" className={buttonClassName({ size: "lg" })}>
               플레이리스트 만들기

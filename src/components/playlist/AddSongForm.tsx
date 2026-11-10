@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Button from "../ui/Button";
+import Field from "../ui/Field";
 import Input from "../ui/Input";
 import Image from "next/image";
 import { useDialog } from "../ui/DialogProvider";
@@ -112,7 +113,7 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
           setSearchNotice("검색 결과가 없어요. 다른 말로 찾아보거나 링크를 붙여넣어 주세요.");
         }
       } catch (err) {
-        showAlert(err instanceof Error ? err.message : "곡 추가에 실패했습니다.");
+        showAlert(err instanceof Error ? err.message : "곡을 추가하지 못했어요");
       }
     });
   }
@@ -123,7 +124,7 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
       try {
         await submitUrl(`https://www.youtube.com/watch?v=${item.videoId}`);
       } catch (err) {
-        showAlert(err instanceof Error ? err.message : "곡 추가에 실패했습니다.");
+        showAlert(err instanceof Error ? err.message : "곡을 추가하지 못했어요");
       }
     });
   }
@@ -165,14 +166,9 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
         </div>
 
         {showManualTitle && (
-          <div className="mt-2 animate-fade-in">
-            <Input
-              type="text"
-              value={manualTitle}
-              onChange={(e) => setManualTitle(e.target.value)}
-              placeholder="곡 제목을 직접 입력해주세요 (메타데이터를 가져올 수 없습니다)"
-            />
-          </div>
+          <Field label="곡 제목" help="영상 정보를 가져오지 못했어요" className="mt-2 animate-fade-in">
+            <Input type="text" value={manualTitle} onChange={(e) => setManualTitle(e.target.value)} />
+          </Field>
         )}
       </form>
 

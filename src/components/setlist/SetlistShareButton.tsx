@@ -37,7 +37,7 @@ export default function SetlistShareButton({ shareCode, title }: Props) {
         await showAlert("셋리스트 링크를 복사했어요.");
         track("setlist_shared", { method: "link" });
       } catch {
-        showAlert("링크 공유에 실패했습니다.");
+        showAlert("링크를 공유하지 못했어요");
       }
     }
   }

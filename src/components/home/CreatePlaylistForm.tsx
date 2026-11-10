@@ -149,7 +149,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
       });
     } catch (error) {
       if (targetBand) setFormError(teamMessage(error));
-      else showAlert("플레이리스트 생성에 실패했습니다. 다시 시도해주세요.");
+      else showAlert("플레이리스트를 만들지 못했어요. 다시 시도해 주세요.");
       setLoading(false);
     }
   }
@@ -356,7 +356,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
         <div className="border-t border-border px-4 py-3">
         <p id="voting-mode-label" className="text-sm font-semibold text-text">투표 방식</p>
         <p className="mt-1 text-caption text-text-muted">
-          플레이리스트를 만든 뒤에도 투표가 시작되기 전에는 바꿀 수 있어요.
+          플레이리스트를 만든 뒤에도 투표가 시작되기 전에는 바꿀 수 있어요
         </p>
         <SegmentedControl
           aria-labelledby="voting-mode-label"
@@ -371,7 +371,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
               <label htmlFor="default-vote-limit" className="text-sm font-medium text-text">
                 기본 투표권
               </label>
-              <p className="text-caption text-text-muted">새 참여자가 받는 표 수예요.</p>
+              <p className="text-caption text-text-muted">새 참여자가 받는 표 수예요</p>
             </div>
             <div className="w-20 shrink-0">
               <Input

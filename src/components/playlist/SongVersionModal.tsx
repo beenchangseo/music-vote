@@ -39,7 +39,7 @@ export default function SongVersionModal(props: Props) {
         setVersions(rows);
         props.onCountChange?.(rows.length);
       })
-      .catch(() => showAlert("다른 버전을 불러오지 못했습니다."))
+      .catch(() => showAlert("다른 버전을 불러오지 못했어요"))
       .finally(() => setLoading(false));
     // 모달이 열릴 때 한 번만 불러옵니다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -58,7 +58,7 @@ export default function SongVersionModal(props: Props) {
 
     if (!result.success) {
       const duplicate = result.duplicateKind === "original" ? "원곡과 같은 링크예요." : "이미 등록된 다른 버전이에요.";
-      const ok = await showConfirm(`${duplicate} 그래도 ${editingId ? "변경" : "추가"}하시겠습니까?`);
+      const ok = await showConfirm(`${duplicate} 그래도 ${editingId ? "변경" : "추가"}할까요?`);
       if (ok) await persist(true);
       return;
     }
@@ -77,13 +77,13 @@ export default function SongVersionModal(props: Props) {
       try {
         await persist();
       } catch (error) {
-        showAlert(error instanceof Error ? error.message : "저장에 실패했습니다.");
+        showAlert(error instanceof Error ? error.message : "저장하지 못했어요");
       }
     });
   }
 
   async function remove(version: SongVersion) {
-    const ok = await showDanger("이 다른 버전 링크를 삭제하시겠습니까?");
+    const ok = await showDanger("이 다른 버전 링크를 삭제할까요?");
     if (!ok) return;
     startTransition(async () => {
       try {
@@ -93,7 +93,7 @@ export default function SongVersionModal(props: Props) {
         props.onCountChange?.(next.length);
         if (editingId === version.id) clearForm();
       } catch (error) {
-        showAlert(error instanceof Error ? error.message : "삭제에 실패했습니다.");
+        showAlert(error instanceof Error ? error.message : "삭제하지 못했어요");
       }
     });
   }
@@ -102,7 +102,7 @@ export default function SongVersionModal(props: Props) {
     <Modal open onClose={props.onClose} title={`다른 버전 · ${props.songTitle}`}>
       <div className="space-y-3">
         {loading ? (
-          <p className="py-8 text-center text-sm text-text-muted">불러오는 중...</p>
+          <p className="py-8 text-center text-sm text-text-muted">불러오는 중…</p>
         ) : versions.length === 0 ? (
           <EmptyState size="inline" description="아직 등록된 다른 버전이 없어요." />
         ) : versions.map((version) => (
