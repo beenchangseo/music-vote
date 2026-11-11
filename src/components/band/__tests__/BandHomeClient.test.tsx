@@ -545,7 +545,7 @@ describe("BandHomeClient member management (F1, 24B, R7)", () => {
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "내보내기" }));
 
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(screen.getByRole("heading", { name: /^멤버/ })).toHaveFocus();
+    expect(screen.getByRole("heading", { name: "멤버 1" })).toHaveFocus();
   });
 
   it("returns focus to the members title when the new invite link sheet closes", async () => {
@@ -559,10 +559,11 @@ describe("BandHomeClient member management (F1, 24B, R7)", () => {
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "내보내기" }));
 
     const sheet = await screen.findByRole("dialog", { name: "멤버 초대" });
+    expect(sheet).toContainElement(document.activeElement as HTMLElement);
     fireEvent.click(within(sheet).getByRole("button", { name: "닫기" }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /^멤버/ })).toHaveFocus();
+    expect(screen.getByRole("heading", { name: "멤버 1" })).toHaveFocus();
   });
 
   it("gives members no remove menu", () => {
