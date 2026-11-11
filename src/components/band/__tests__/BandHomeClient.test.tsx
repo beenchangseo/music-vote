@@ -535,6 +535,37 @@ describe("BandHomeClient member management (F1, 24B, R7)", () => {
     expect(screen.getByRole("button", { name: "기타 메뉴" })).toHaveFocus();
   });
 
+  it("moves focus to the members title once the removed member's menu button is gone", async () => {
+    actions.removeTeamMember.mockResolvedValue({ success: true, inviteCode: null });
+    renderHome(ownerView());
+    fireEvent.click(screen.getByRole("button", { name: "기타 메뉴" }));
+    const item = screen.getByRole("menuitem", { name: "내보내기" });
+    item.focus();
+    fireEvent.click(item);
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "내보내기" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByRole("heading", { name: "멤버 1" })).toHaveFocus();
+  });
+
+  it("returns focus to the members title when the new invite link sheet closes", async () => {
+    actions.removeTeamMember.mockResolvedValue({ success: true, inviteCode: "NEWcode_04" });
+    renderHome(ownerView());
+    fireEvent.click(screen.getByRole("button", { name: "기타 메뉴" }));
+    const item = screen.getByRole("menuitem", { name: "내보내기" });
+    item.focus();
+    fireEvent.click(item);
+    fireEvent.click(screen.getByRole("checkbox", { name: /초대 링크도 새로 만들기/ }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "내보내기" }));
+
+    const sheet = await screen.findByRole("dialog", { name: "멤버 초대" });
+    expect(sheet).toContainElement(document.activeElement as HTMLElement);
+    fireEvent.click(within(sheet).getByRole("button", { name: "닫기" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "멤버 1" })).toHaveFocus();
+  });
+
   it("gives members no remove menu", () => {
     renderHome(view());
     expect(screen.queryByRole("button", { name: /메뉴$/ })).not.toBeInTheDocument();
