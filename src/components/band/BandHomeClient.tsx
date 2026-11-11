@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type Ref } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Card from "../ui/Card";
@@ -84,6 +84,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
   const [attachOpen, setAttachOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [removing, setRemoving] = useState<{ memberKey: MemberKey; displayName: string } | null>(null);
+  const membersTitleRef = useRef<HTMLHeadingElement>(null);
   const [leaveError, setLeaveError] = useState<string | null>(null);
   const [leaving, startLeaving] = useTransition();
   // Same rule as BandPromptCard: hidden in the server render so a closed card never flashes.
@@ -283,7 +284,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
         {!(starting && played.length === 0) && <PlayedSongs songs={played} />}
 
         <section id="band-members" aria-labelledby="band-members-title" className="mt-10 scroll-mt-4">
-          <SectionTitle id="band-members-title" title="멤버" count={members.length} />
+          <SectionTitle ref={membersTitleRef} id="band-members-title" title="멤버" count={members.length} />
           <ul className="mt-4 grid grid-cols-4 gap-x-2 gap-y-5">
             {members.map((member) => (
               <MemberTile
@@ -359,6 +360,9 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
           member={removing}
           onClose={() => setRemoving(null)}
           onRemoved={(memberKey, rotated) => {
+            // The menu button that opened this sheet leaves with the member's tile, so the sheet has nowhere to hand
+            // focus back to. Moving it now also makes the title the opener of the invite sheet below.
+            membersTitleRef.current?.focus();
             setRemovedKeys((keys) => [...keys, memberKey]);
             // R7: the moment the link changes is the moment to send the new one.
             if (rotated) setInviteOpen(true);
@@ -469,9 +473,9 @@ function NowRoomCard({ room }: { room: TeamRoom }) {
   );
 }
 
-function SectionTitle({ id, title, count }: { id: string; title: string; count: number }) {
+function SectionTitle({ id, title, count, ref }: { id: string; title: string; count: number; ref?: Ref<HTMLHeadingElement> }) {
   return (
-    <h2 id={id} className="text-h3 font-bold text-text">
+    <h2 ref={ref} id={id} tabIndex={ref ? -1 : undefined} className="text-h3 font-bold text-text">
       {title} <span className="ml-0.5 text-sm font-medium text-text-subtle tabular-nums">{count}</span>
     </h2>
   );
