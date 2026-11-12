@@ -12,7 +12,6 @@ const DISC_SKIN = {
   inverse: "bg-text text-bg hover:bg-text/90",
   primary: variantClasses.primary,
   danger: variantClasses.danger,
-  kakao: variantClasses.kakao,
 };
 
 const TOGGLE_SKIN = { off: BARE_SKIN.ghost, on: "text-primary-fg hover:bg-surface-hover" };

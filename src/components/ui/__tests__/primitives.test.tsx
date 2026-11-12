@@ -14,7 +14,6 @@ import Input from "../Input";
 import { ListRowButton, ListRowIcon, ListRowLink, SongRow, SongRowLink } from "../ListRow";
 import { MenuItemButton, MenuItemLink } from "../Menu";
 import RoundButton, { RoundLink } from "../RoundButton";
-import { ToolbarButton } from "../ScreenToolbar";
 import SegmentedControl from "../SegmentedControl";
 import Shelf from "../Shelf";
 import Switch from "../Switch";
@@ -356,7 +355,6 @@ describe("control labels stay on one line (#79)", () => {
     ["Button lg", () => render(<Button size="lg">플레이리스트 만들기</Button>)],
     ["Button sm", () => render(<Button size="sm">플레이리스트 만들기</Button>)],
     ["a link drawn with buttonClassName", () => render(<Link href="/new" className={buttonClassName({ variant: "tonal" })}>플레이리스트 만들기</Link>)],
-    ["ToolbarButton", () => render(<ToolbarButton label="플레이리스트 만들기" />)],
     ["Chip", () => render(<Chip>플레이리스트 만들기</Chip>)],
     [
       "SegmentedControl",
