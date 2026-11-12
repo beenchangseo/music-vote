@@ -100,7 +100,7 @@
   --spacing-row-song: 4.5rem;
 
   /* Layout — 하단 고정 요소. 지금까지 매직 넘버로 흩어져 있었다. */
-  --spacing-dock: 4rem;       /* 64px — 하단 탭 (알약 세그먼트 44px + 위아래 여백) */
+  --spacing-dock: 4rem;       /* 64px — 하단 탭 (아이콘 위 글자 칸 56px + 위아래 여백) */
   --spacing-player: 3.5rem;   /* 56px — 플레이어 바 */
   --spacing-safe-bottom: env(safe-area-inset-bottom);
 
