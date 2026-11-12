@@ -14,7 +14,7 @@ import { ListRowButton, SongRowLink } from "../ui/ListRow";
 import { MenuItemButton, MenuPanel, useMenu } from "../ui/Menu";
 import Shelf from "../ui/Shelf";
 import { useDialog } from "../ui/DialogProvider";
-import { GuitarIcon } from "@/components/ui/icons";
+import { CalendarIcon, ChevronIcon, DoneIcon, FolderIcon, GuitarIcon, InviteIcon, MoreIcon, PlusIcon } from "@/components/ui/icons";
 import Badge from "../ui/Badge";
 import { showDateSpokenLabel } from "./ShowDateTile";
 import { BandArt, RoomCover, SongThumb } from "./BandArt";
@@ -161,9 +161,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
         <BandArt className="absolute inset-x-0 top-0 -z-10 h-88" />
         <div className="mx-auto max-w-md px-4 pt-4">
           <RoundLink href="/" tone="tonal" size="md" aria-label="홈으로">
-            <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronIcon direction="left" />
           </RoundLink>
 
           <div className="pt-28">
@@ -177,9 +175,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
             {/* DR1: in the start area the success is one quiet line, not a banner with a member count. */}
             {starting && banner === "created" && (
               <p role="status" className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-success">
-                <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
+                <DoneIcon className="size-4 shrink-0" />
                 밴드를 만들었어요
               </p>
             )}
@@ -202,9 +198,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
               <AvatarStack names={members.map((member) => member.displayName)} max={STACKED_AVATARS} />
             </a>
             <IconButton bare aria-label="멤버 초대" onClick={() => setInviteOpen(true)}>
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
-              </svg>
+              <InviteIcon className="size-6" />
             </IconButton>
           </div>
         )}
@@ -224,9 +218,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
             className="mt-4"
             tone="success"
             icon={
-              <svg className="size-4.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-              </svg>
+              <DoneIcon className="size-4.5" />
             }
             title={banner === "created" ? `밴드를 만들었어요. 멤버 ${members.length}명이 함께해요` : `${team.name} 밴드에 들어왔어요`}
             onDismiss={() => setBanner(null)}
@@ -301,9 +293,7 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
                   className="flex w-full flex-col items-center gap-2 text-text-muted transition-colors hover:text-text"
                 >
                   <span className="flex h-16 w-16 items-center justify-center rounded-pill border-2 border-dashed border-border-strong">
-                    <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
+                    <PlusIcon className="size-6" />
                   </span>
                   <span className="text-sm">더 부르기</span>
                 </button>
@@ -382,20 +372,12 @@ function Dot() {
   );
 }
 
-function CalendarIcon() {
-  return (
-    <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-    </svg>
-  );
-}
-
 /** 공연 날짜: D-day 칩(눌러서 바꾸기) / 지난 공연 인사 + 다음 날짜 / 날짜 정하기. */
 function ShowDateChip({ dday, onOpen }: { dday: ShowDday; onOpen: () => void }) {
   if (dday.state === "upcoming" || dday.state === "today") {
     return (
       <Button variant="tonal" pill onClick={onOpen} aria-label={showDateSpokenLabel(dday)} className="mt-4">
-        <CalendarIcon />
+        <CalendarIcon className="size-4 shrink-0" />
         <span className="tabular-nums">{dday.state === "today" ? "오늘 공연" : `D-${dday.days}`}</span>
         <span className="font-normal text-text-muted">{formatShowDate(dday.date)} 공연</span>
       </Button>
@@ -406,7 +388,7 @@ function ShowDateChip({ dday, onOpen }: { dday: ShowDday; onOpen: () => void }) 
       <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1">
         <p className="text-sm text-text">{formatShowDate(dday.date, false)} 공연 끝 · 수고했어요</p>
         <Button variant="tonal" pill onClick={onOpen}>
-          <CalendarIcon />
+          <CalendarIcon className="size-4 shrink-0" />
           다음 공연 날짜 정하기
         </Button>
       </div>
@@ -414,7 +396,7 @@ function ShowDateChip({ dday, onOpen }: { dday: ShowDday; onOpen: () => void }) 
   }
   return (
     <Button variant="tonal" pill onClick={onOpen} className="mt-4">
-      <CalendarIcon />
+      <CalendarIcon className="size-4 shrink-0" />
       공연 날짜 정하기
     </Button>
   );
@@ -465,9 +447,7 @@ function NowRoomCard({ room }: { room: TeamRoom }) {
             </>
           )}
         </span>
-        <svg className="size-5 shrink-0 text-text-subtle" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-        </svg>
+        <ChevronIcon direction="right" className="size-5 shrink-0 text-text-subtle" />
       </Link>
     </Card>
   );
@@ -499,9 +479,7 @@ function RoomsShelf({
         <li className="w-36">
           <Link href={newRoomHref} aria-label="플레이리스트 만들기" className="group block">
             <span className="flex aspect-square w-full items-center justify-center rounded-control border-2 border-dashed border-border-strong text-text-muted transition-colors group-hover:border-text-muted group-hover:text-text">
-              <svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
+              <PlusIcon className="size-8" />
             </span>
             <span className="mt-2 block text-sm font-semibold text-text">만들기</span>
           </Link>
@@ -510,9 +488,7 @@ function RoomsShelf({
           <li className="w-36">
             <button type="button" onClick={onAttach} className="group block w-full text-left">
               <span className="flex aspect-square w-full items-center justify-center rounded-control border-2 border-dashed border-border-strong text-text-muted transition-colors group-hover:border-text-muted group-hover:text-text">
-                <svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" />
-                </svg>
+                <FolderIcon className="size-8" />
               </span>
               <span className="mt-2 block text-sm font-semibold text-text">있던 플레이리스트 넣기</span>
             </button>
@@ -601,11 +577,7 @@ function MemberTile({ member, onRemove }: { member: TeamHomeMember; onRemove: ()
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
           >
-            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <circle cx="5" cy="12" r="1.75" />
-              <circle cx="12" cy="12" r="1.75" />
-              <circle cx="19" cy="12" r="1.75" />
-            </svg>
+            <MoreIcon className="size-5" />
           </IconButton>
           {menuOpen && (
             <MenuPanel role="menu" className="w-36">

@@ -6,7 +6,7 @@ import ButtonGroup from "@/components/ui/ButtonGroup";
 import Modal from "@/components/ui/Modal";
 import CreatePlaylistForm from "@/components/home/CreatePlaylistForm";
 import CreateBandSheet, { type BandCandidate } from "@/components/band/CreateBandSheet";
-import { GuitarIcon } from "@/components/ui/icons";
+import { GuitarIcon, PlusIcon } from "@/components/ui/icons";
 import { triggerKakaoLogin } from "@/lib/kakao-login";
 import type { MyTeam } from "@/actions/team";
 
@@ -67,9 +67,7 @@ function SignedInCTA({
       ) : (
         <ButtonGroup>
           <Button size="lg" onClick={() => setPlaylistOpen(true)}>
-            <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
-              <path d="M12 5v14M5 12h14" />
-            </svg>
+            <PlusIcon className="size-5" />
             플레이리스트 만들기
           </Button>
           <Button variant="tonal" size="lg" onClick={() => setBandOpen(true)}>

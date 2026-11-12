@@ -9,7 +9,7 @@ import { attachPlaylistToTeam, createBandPlaylist, type MyTeam } from "@/actions
 import { track } from "@/lib/analytics";
 import { teamMessage } from "@/lib/team-messages";
 import KakaoShareButton from "../share/KakaoShareButton";
-import { GuitarIcon } from "@/components/ui/icons";
+import { CalendarIcon, CloseIcon, DoneIcon, GuitarIcon, LinkIcon, MinusIcon, PlusIcon, QrCodeIcon, SetlistIcon } from "@/components/ui/icons";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
 import IconButton from "../ui/IconButton";
@@ -199,9 +199,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
             QR fills inside have to stay one step above either. */}
         <Card variant="outline" padding="lg" className="text-center">
           <div className="size-12 mx-auto mb-4 rounded-pill bg-success-tint flex items-center justify-center">
-            <svg className="w-6 h-6 text-success" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-            </svg>
+            <DoneIcon className="size-6 text-success" />
           </div>
 
           <h2 className="text-h3 font-bold text-text mb-1">{created.title}</h2>
@@ -229,16 +227,12 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
           {/* Tertiary — small ghost buttons */}
           <div className="flex items-center justify-center gap-1 mt-3">
             <Button variant="ghost" size="sm" onClick={handleCopy}>
-              <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h6a2 2 0 002-2M8 5a2 2 0 012-2h4a2 2 0 012 2m0 0h2a2 2 0 012 2v3" />
-              </svg>
+              <LinkIcon className="size-4" />
               {copied ? "복사됨" : "링크 복사"}
             </Button>
             <span className="text-text-subtle" aria-hidden>·</span>
             <Button variant="ghost" size="sm" onClick={() => setShowQR((v) => !v)} aria-expanded={showQR}>
-              <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.5h4.5v4.5h-4.5zM15.75 4.5h4.5v4.5h-4.5zM3.75 15h4.5v4.5h-4.5zM15.75 15v4.5M19.5 19.5h.75M15.75 12h4.5M12 3.75v4.5m0 3v4.5m0 3V21" />
-              </svg>
+              <QrCodeIcon className="size-4" />
               QR 코드 {showQR ? "숨기기" : "보기"}
             </Button>
           </div>
@@ -333,9 +327,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
       {/* Options toggle — collapsed by default */}
       {!showOptions ? (
         <Button type="button" variant="ghost" fullWidth className="mt-3" onClick={() => setShowOptions(true)}>
-          <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
+          <PlusIcon className="size-4" />
           옵션 추가 (투표 방식 · 마감일 · 곡 수)
         </Button>
       ) : (
@@ -397,9 +389,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
         <div className="px-4 py-3">
           <div className="flex items-start gap-3">
             <ListRowIcon className="shrink-0 mt-0.5 text-primary-fg">
-              <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-              </svg>
+              <CalendarIcon className="size-5" />
             </ListRowIcon>
             <div className="flex-1 min-w-0">
               <label className="block text-sm text-text font-medium text-left">투표 마감일</label>
@@ -413,7 +403,7 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
                 )}
                 {deadlineDate && (
                   <IconButton bare onClick={() => { setDeadlineDate(""); setDeadlineTime("23:59"); }} aria-label="마감일 삭제">
-                    <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    <CloseIcon className="size-4" />
                   </IconButton>
                 )}
               </div>
@@ -428,20 +418,18 @@ export default function CreatePlaylistForm({ band = null, myTeams = [] }: Create
           {/* The stepper sits under the text like the date input above; beside it, a 375px card had no room for the label. */}
           <div className="flex items-start gap-3">
             <ListRowIcon className="shrink-0 mt-0.5 text-primary-fg">
-              <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
-              </svg>
+              <SetlistIcon className="size-5" />
             </ListRowIcon>
             <div className="flex-1 min-w-0">
               <label className="block text-sm text-text font-medium text-left">셋리스트 곡 수</label>
               <p className="text-caption text-text-muted mt-0.5 mb-2 text-left">투표 종료 후 상위 N곡이 셋리스트로 선정됩니다</p>
               <div className="flex items-center gap-1">
                 <IconButton onClick={() => setSetlistCount((c) => Math.max(0, c - 1))} disabled={setlistCount <= 0} aria-label="곡 수 줄이기">
-                  <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" d="M5 12h14" /></svg>
+                  <MinusIcon className="size-4" />
                 </IconButton>
                 <span className={`min-w-20 text-center text-sm tabular-nums ${setlistCount > 0 ? "font-semibold text-text" : "text-text-subtle"}`}>{setlistCount > 0 ? `${setlistCount}곡` : "정하지 않음"}</span>
                 <IconButton onClick={() => setSetlistCount((c) => Math.min(30, c + 1))} disabled={setlistCount >= 30} aria-label="곡 수 늘리기">
-                  <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" d="M12 5v14M5 12h14" /></svg>
+                  <PlusIcon className="size-4" />
                 </IconButton>
               </div>
             </div>
