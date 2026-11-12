@@ -118,7 +118,7 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
       aria-label={expanded ? "재생 중인 곡" : undefined}
       className={
         expanded
-          ? "fixed inset-0 z-[60] flex flex-col overflow-y-auto bg-bg print:hidden"
+          ? "fixed inset-0 z-[60] flex flex-col overflow-y-auto bg-bg pb-safe-bottom print:hidden"
           : "fixed inset-x-0 bottom-(--tab-bar-height) z-50 bg-surface/95 backdrop-blur-md print:hidden"
       }
     >

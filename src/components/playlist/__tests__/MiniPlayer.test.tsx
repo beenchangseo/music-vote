@@ -108,6 +108,14 @@ describe("MiniPlayer dock", () => {
     expect(bar).toHaveClass("bottom-(--tab-bar-height)");
     expect(bar).not.toHaveClass("bottom-dock");
   });
+
+  // The open player covers the tab bar too, so nothing under it pads the home indicator area for the up-next list.
+  it("keeps the open player's last row clear of the home indicator", () => {
+    render(<Player source="candidates" />);
+    fireEvent.click(screen.getByRole("button", { name: "첫 곡 틀기" }));
+    fireEvent.click(screen.getByRole("button", { name: "예뻤어 플레이어 열기" }));
+    expect(screen.getByRole("dialog", { name: "재생 중인 곡" })).toHaveClass("pb-safe-bottom");
+  });
 });
 
 // jsdom has no layout, so this reads what CSS would. The body leaves room at the end of the page for the height the bar
