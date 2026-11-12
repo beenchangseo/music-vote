@@ -56,6 +56,21 @@ describe("TabBar", () => {
     expect(screen.getByRole("link", { name: "셋리스트" })).not.toHaveAttribute("aria-disabled");
   });
 
+  // A screen reader user on the keyboard tabs through the bar too, and should hear the tab is there but unavailable.
+  it("lets the keyboard reach a dimmed tab, which says it is unavailable", () => {
+    const items: TabBarItem<"band">[] = [
+      { id: "band", label: "밴드 홈", icon: Glyph },
+      { href: null, label: "후보곡", icon: Glyph },
+    ];
+    render(<TabBar aria-label="밴드 화면" items={items} value="band" onChange={() => {}} />);
+    const dimmed = screen.getByRole("link", { name: "후보곡" });
+
+    dimmed.focus();
+
+    expect(dimmed).toHaveFocus();
+    expect(dimmed).toHaveAttribute("aria-disabled", "true");
+  });
+
   // The bar is fixed to the bottom edge, so on iPhone its tabs sit under the home indicator unless it pads that area
   // itself. data-safe-bottom tells the body to drop its own inset padding, so the two never stack.
   it("pads the home indicator area under its tabs and takes it over from the body", () => {

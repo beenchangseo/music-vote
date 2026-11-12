@@ -19,7 +19,7 @@ interface TabBarView<T extends string> extends TabBarItemBase {
 
 /**
  * 이 화면을 떠나는 탭(플레이리스트의 밴드 홈, 밴드 홈의 후보곡·셋리스트·합주). 지금 화면이 될 수 없어 늘 꺼진 모양이다.
- * href 가 null 이면 아직 갈 곳이 없다(플레이리스트가 없는 밴드). 칸은 제자리에 흐리게 서고 aria-disabled 다.
+ * href 가 null 이면 아직 갈 곳이 없다(플레이리스트가 없는 밴드). 칸은 제자리에 흐리게 서고, 키보드로 닿되 aria-disabled 다.
  */
 interface TabBarLink extends TabBarItemBase {
   href: string | null;
@@ -67,7 +67,7 @@ export default function TabBar<T extends string>({ items, value, onChange, "aria
         {items.map((item) => {
           if (item.href === null) {
             return (
-              <span key={item.label} role="link" aria-disabled="true" className={itemClass("disabled")}>
+              <span key={item.label} role="link" aria-disabled="true" tabIndex={0} className={itemClass("disabled")}>
                 <item.icon />
                 {item.label}
               </span>
