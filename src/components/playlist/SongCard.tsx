@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, type ReactNode } from "react";
+import { useState, useTransition } from "react";
 import Image from "next/image";
 import VoteButtons from "./VoteButtons";
 import CommentModal from "./CommentModal";
@@ -15,6 +15,7 @@ import { removeSong } from "@/actions/song";
 import type { VoteDirection } from "@/domain/vote";
 import { displayArtist, displayTitle } from "@/domain/song-meta";
 import type { SongWithScore, VotingMode } from "@/domain/types";
+import { ChevronIcon, CommentIcon, InSetlistIcon, MoreIcon, PlayPauseIcon, SetlistAddIcon, TrashIcon, VersionsIcon } from "@/components/ui/icons";
 
 interface SongCardProps {
   song: SongWithScore;
@@ -118,30 +119,26 @@ export default function SongCard({
       <ActionTab icon={<CommentIcon />} onClick={() => setShowComments(true)}>
         {song.commentCount > 0 ? `댓글 ${song.commentCount}` : "댓글"}
       </ActionTab>
-      <ActionTab icon={<LayersIcon />} onClick={() => setShowVersions(true)}>
+      <ActionTab icon={<VersionsIcon />} onClick={() => setShowVersions(true)}>
         {versionCount > 0 ? `버전 ${versionCount}` : "버전"}
       </ActionTab>
       {/* 셋리스트는 ⋯ 안에 숨기면 못 찾는다. 상태를 글자로 보이고, 누르면 넣거나 뺀다. */}
       {inSetlist && onRemoveFromSetlist ? (
-        <ActionTab icon={<ListCheckIcon />} selected onClick={() => onRemoveFromSetlist(song.id)}>
+        <ActionTab icon={<InSetlistIcon />} selected onClick={() => onRemoveFromSetlist(song.id)}>
           셋리스트에 있음<span className="sr-only">, 빼기</span>
         </ActionTab>
       ) : inSetlist ? (
-        <ActionTab icon={<ListCheckIcon />} selected>
+        <ActionTab icon={<InSetlistIcon />} selected>
           셋리스트에 있음
         </ActionTab>
       ) : onAddToSetlist ? (
-        <ActionTab icon={<ListPlusIcon />} onClick={() => onAddToSetlist(song.id)}>
+        <ActionTab icon={<SetlistAddIcon />} onClick={() => onAddToSetlist(song.id)}>
           셋리스트에 추가
         </ActionTab>
       ) : null}
       {hasMenu && (
         <IconButton bare onClick={() => setShowMenu(true)} aria-label={`${title} 더보기`}>
-          <svg className="size-4.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-            <circle cx="5" cy="12" r="1.6" />
-            <circle cx="12" cy="12" r="1.6" />
-            <circle cx="19" cy="12" r="1.6" />
-          </svg>
+          <MoreIcon className="size-4.5" />
         </IconButton>
       )}
     </ActionTabBar>
@@ -164,9 +161,7 @@ export default function SongCard({
             disabled={isPending}
             className={song.added_by ? "mt-2" : ""}
             leading={
-              <svg className="size-5 text-danger-fg" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-                <path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V4h6v3" />
-              </svg>
+              <TrashIcon className="size-5 text-danger-fg" />
             }
           >
             <span className="text-body text-danger-fg">곡 삭제</span>
@@ -228,14 +223,7 @@ export default function SongCard({
                   ))}
                 </span>
               ) : (
-                <svg
-                  className={`ml-0.5 h-5 w-5 text-white ${isCurrent ? "" : "opacity-0 transition-opacity group-hover:opacity-100"}`}
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden
-                >
-                  <path d="M8 5v14l11-7z" />
-                </svg>
+                <PlayPauseIcon playing={false} className={`size-5 text-white ${isCurrent ? "" : "opacity-0 transition-opacity group-hover:opacity-100"}`} />
               )}
             </span>
           </button>
@@ -251,31 +239,18 @@ export default function SongCard({
               {artist && <span className="truncate">{artist}</span>}
               {song.commentCount > 0 && (
                 <span className="inline-flex shrink-0 items-center gap-0.5 tabular-nums">
-                  <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a8 8 0 01-11.6 7.1L3 21l1.9-6.4A8 8 0 1121 12z" />
-                  </svg>
+                  <CommentIcon className="size-3" />
                   <span className="sr-only">댓글</span>
                   {song.commentCount}
                 </span>
               )}
               {inSetlist && (
                 <span className="inline-flex shrink-0 items-center text-primary-fg">
-                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h12M4 12h12M4 18h6M14 18l2.5 2.5L21 16" />
-                  </svg>
+                  <InSetlistIcon className="size-3.5" />
                   <span className="sr-only">셋리스트에 있음</span>
                 </span>
               )}
-              <svg
-                className={`h-3.5 w-3.5 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
-                aria-hidden
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
-              </svg>
+              <ChevronIcon direction="down" className={`size-3.5 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`} />
             </span>
           </SongRowTitleButton>
           {/* Opened: the YouTube title before cleanup and the named voters sit under the title, in its column. */}
@@ -308,15 +283,7 @@ export default function SongCard({
         )}
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
           <div className={`w-14 h-14 flex items-center justify-center rounded-pill transition-colors ${isCurrent ? "bg-primary text-on-primary group-hover:bg-primary-hover" : "bg-danger text-on-danger group-hover:bg-danger-hover"}`}>
-            {isPlaying ? (
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            )}
+            <PlayPauseIcon playing={isPlaying} className="size-6" />
           </div>
         </div>
         {isCurrent && (
@@ -340,48 +307,6 @@ export default function SongCard({
       {actions}
       {sheets}
     </div>
-  );
-}
-
-/** 탭 아이콘. 같은 굵기(2)의 선 아이콘으로 맞춘다. 크기는 ActionTab 이 정한다. */
-function TabIcon({ children }: { children: ReactNode }) {
-  return (
-    <svg fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-      {children}
-    </svg>
-  );
-}
-
-function CommentIcon() {
-  return (
-    <TabIcon>
-      <path d="M21 12a8 8 0 01-11.6 7.1L3 21l1.9-6.4A8 8 0 1121 12z" />
-    </TabIcon>
-  );
-}
-
-function LayersIcon() {
-  return (
-    <TabIcon>
-      <path d="M12 3l9 5-9 5-9-5 9-5z" />
-      <path d="M3 13l9 5 9-5" />
-    </TabIcon>
-  );
-}
-
-function ListPlusIcon() {
-  return (
-    <TabIcon>
-      <path d="M4 6h12M4 12h12M4 18h7M18 15v6M15 18h6" />
-    </TabIcon>
-  );
-}
-
-function ListCheckIcon() {
-  return (
-    <TabIcon>
-      <path d="M4 6h12M4 12h12M4 18h6M14 18l2.5 2.5L21 16" />
-    </TabIcon>
   );
 }
 
@@ -419,18 +344,14 @@ function VoterStrip({
     <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-caption text-text-muted">
       {up.length > 0 && (
         <span className="inline-flex shrink-0 items-center gap-1">
-          <svg className="h-3 w-3 text-success" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-            <path d="M12 4l8 8h-5v8h-6v-8H4z" />
-          </svg>
+          <ChevronIcon direction="up" className="size-3 text-success" />
           <span className="sr-only">찬성</span>
           {up.length}
         </span>
       )}
       {down.length > 0 && (
         <span className="inline-flex shrink-0 items-center gap-1">
-          <svg className="h-3 w-3 text-danger-fg" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-            <path d="M12 20l-8-8h5V4h6v8h5z" />
-          </svg>
+          <ChevronIcon direction="down" className="size-3 text-danger-fg" />
           <span className="sr-only">반대</span>
           {down.length}
         </span>

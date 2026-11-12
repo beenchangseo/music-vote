@@ -6,6 +6,7 @@ import RoundButton, { type RoundLook, type RoundVoteTone } from "../ui/RoundButt
 import { triggerKakaoLogin } from "@/lib/kakao-login";
 import { applyVotePress, type VoteDirection } from "@/domain/vote";
 import type { VotingMode } from "@/domain/types";
+import { ChevronIcon, LockIcon } from "@/components/ui/icons";
 
 interface VoteButtonsProps {
   score: number;
@@ -72,9 +73,7 @@ export default function VoteButtons({
         className={popped === 1 ? "animate-vote-pop" : undefined}
         aria-label={upLabel}
       >
-        <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-        </svg>
+        <ChevronIcon direction="up" />
         {votingMode === "allocated" && direction === 1 && userVoteCount > 0 && (
           <VoteCountBadge count={userVoteCount} />
         )}
@@ -96,17 +95,7 @@ export default function VoteButtons({
       </span>
 
       {loginGate && (
-        <svg
-          className="size-3 shrink-0 text-text-subtle"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-          viewBox="0 0 24 24"
-          aria-hidden
-        >
-          <rect x="5" y="11" width="14" height="10" rx="2" />
-          <path strokeLinecap="round" d="M8 11V7a4 4 0 118 0v4" />
-        </svg>
+        <LockIcon className="size-3 shrink-0 text-text-subtle" />
       )}
 
       <RoundButton
@@ -117,9 +106,7 @@ export default function VoteButtons({
         className={popped === -1 ? "animate-vote-pop" : undefined}
         aria-label={downLabel}
       >
-        <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-        </svg>
+        <ChevronIcon direction="down" />
         {votingMode === "allocated" && direction === -1 && userVoteCount > 0 && (
           <VoteCountBadge count={userVoteCount} />
         )}
