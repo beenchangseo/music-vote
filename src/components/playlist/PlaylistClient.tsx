@@ -814,6 +814,7 @@ export default function PlaylistClient({
 
       {/* Navigation Bar */}
       <NavigationBar
+        band={memberBand}
         mode={navMode}
         onModeChange={handleModeChange}
       />

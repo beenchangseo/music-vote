@@ -22,24 +22,25 @@ afterEach(() => {
 });
 
 describe("PlaylistTopBar", () => {
-  it("takes a band member back to the band, with the show D-day", () => {
+  // The 밴드 홈 tab goes to the band (#106); a second way there in the top row would be a duplicate button.
+  it("names a band member's band and the show D-day as text, not a link", () => {
     render(<PlaylistTopBar band={BAND} loginGate={false} currentUserNickname="보컬" />);
-    const link = screen.getByRole("link", { name: /일코해제/ });
-    expect(link).toHaveAttribute("href", `/band/${BAND.id}`);
-    expect(link).toHaveTextContent("공연 D-12");
-    expect(screen.queryByRole("link", { name: "홈으로" })).not.toBeInTheDocument();
+    const top = screen.getByRole("banner");
+    expect(top).toHaveTextContent("일코해제·공연 D-12");
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "보컬 계정 메뉴" })).toBeInTheDocument();
   });
 
   it("hides the D-day once the show is over", () => {
     render(<PlaylistTopBar band={{ ...BAND, nextShowAt: "2026-10-03" }} loginGate={false} />);
-    expect(screen.getByRole("link", { name: /일코해제/ })).not.toHaveTextContent("공연");
+    expect(screen.getByRole("banner")).toHaveTextContent("일코해제");
+    expect(screen.getByRole("banner")).not.toHaveTextContent("공연");
   });
 
-  it("gives everyone else a bare back chevron to the app home", () => {
+  it("gives everyone else no back chevron: the 홈 tab goes home", () => {
     render(<PlaylistTopBar band={null} loginGate={false} currentUserNickname="보컬" />);
-    expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
-    expect(screen.queryByRole("link", { name: /일코해제/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "보컬 계정 메뉴" })).toBeInTheDocument();
   });
 
   it("puts the login button on the right for a logged-out viewer", () => {
