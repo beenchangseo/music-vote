@@ -28,7 +28,7 @@ import BandSwitcher, { type SwitchBand } from "./BandSwitcher";
 import { leaveTeam, type TeamHomeMember, type TeamHomeView, type TeamRoom } from "@/actions/team";
 import { track } from "@/lib/analytics";
 import { aggregatePlayedSongs, formatShowDate, showDday, type PlayedSong, type ShowDday } from "@/domain/team";
-import { PLAYLIST_STAGE_LABEL, playlistStage } from "@/domain/playlist-stage";
+import { PLAYLIST_STAGE_LABEL, playlistStage, type PlaylistStage } from "@/domain/playlist-stage";
 import type { MemberKey } from "@/domain/types";
 import { teamMessage } from "@/lib/team-messages";
 
@@ -48,6 +48,8 @@ function subscribeStorage(callback: () => void) {
 
 const LEAVE_MESSAGE =
   "홈의 '내 밴드'와 멤버 목록에서 빠져요. 이미 들어간 플레이리스트는 그대로 남아요. 초대 링크가 있으면 다시 들어올 수 있어요.";
+
+const RUNNING_STAGES: ReadonlySet<PlaylistStage> = new Set(["voting", "building"]);
 
 const roomDate = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", timeZone: "Asia/Seoul" });
 
@@ -125,8 +127,9 @@ export default function BandHomeClient({ view, bands, created, joined }: BandHom
   const dday = showDday(nextShowAt, new Date());
   // 1A: the latest band room whose setlist is not confirmed yet.
   const activeRoom = rooms[0] && !rooms[0].setlistConfirmed ? rooms[0] : null;
-  // The bottom tabs open the running playlist, else the latest one (#106).
-  const tabRoom = activeRoom ?? rooms[0] ?? null;
+  // The bottom tabs open the band's current playlist: the latest one still voting or building its setlist, which may be
+  // older than a confirmed one; else the latest one; else nothing (#106). The 지금 card above looks at the latest only.
+  const tabRoom = rooms.find((room) => RUNNING_STAGES.has(playlistStage(room))) ?? rooms[0] ?? null;
   const alone = members.length === 1;
   const newRoomHref = `/new?band=${team.id}`;
   // DR1: a band made at home starts as the owner alone with no playlist. One start area replaces

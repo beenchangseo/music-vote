@@ -641,6 +641,21 @@ describe("BandHomeClient tab bar (#106)", () => {
     expect(targets()).toEqual(["/playlist/now0001", "/playlist/now0001?tab=setlist", "/playlist/now0001?tab=rehearsal"]);
   });
 
+  // The 지금 card still features only the newest playlist (1A); the tabs look past a newer confirmed one.
+  it("opens an older playlist that is still voting over a newer confirmed one", () => {
+    renderHome(
+      view({
+        rooms: [
+          room({ shareCode: "done001", setlistConfirmed: true, setlistBlockCount: 8 }),
+          room({ id: "room-0", shareCode: "vote001" }),
+        ],
+      }),
+    );
+
+    expect(targets()).toEqual(["/playlist/vote001", "/playlist/vote001?tab=setlist", "/playlist/vote001?tab=rehearsal"]);
+    expect(screen.queryByRole("region", { name: "지금 플레이리스트" })).not.toBeInTheDocument();
+  });
+
   it("opens the most recent playlist when none is running", () => {
     renderHome(
       view({
