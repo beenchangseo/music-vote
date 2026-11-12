@@ -392,7 +392,7 @@ export default function PlaylistClient({
     });
   }
 
-  // Bottom padding: NavigationBar(52px) + MiniPlayer(~56px if active)
+  // Room for the fixed tab bar (dock, 64px) and, while a song plays, the MiniPlayer (56px) above it.
   const bottomPadding = playerState.currentSongId ? "pb-40" : "pb-20";
   const memberBand = team?.isMember && team.id && team.name ? { id: team.id, name: team.name, nextShowAt: team.nextShowAt } : null;
 

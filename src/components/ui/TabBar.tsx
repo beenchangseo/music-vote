@@ -33,7 +33,7 @@ interface TabBarProps<T extends string> {
 }
 
 const itemClass = (current: boolean) =>
-  `flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 whitespace-nowrap rounded-control text-caption font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+  `flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 whitespace-nowrap rounded-control text-caption font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
     current ? "text-text" : "text-text-muted hover:text-text"
   }`;
 
