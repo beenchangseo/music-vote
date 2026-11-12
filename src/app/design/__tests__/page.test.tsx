@@ -49,10 +49,10 @@ describe("/design", () => {
 
   it("shows every RoundButton tone at every size it has, and a hero only on a disc", () => {
     render(<DialogProvider>{DesignPage()}</DialogProvider>);
-    const sized = screen.getAllByRole("button", { name: /^(plain|ghost|tonal|inverse|primary|danger|kakao) (md|lg|hero)$/ });
+    const sized = screen.getAllByRole("button", { name: /^(plain|ghost|tonal|inverse|primary|danger) (md|lg|hero)$/ });
     expect(sized.map((b) => b.getAttribute("aria-label"))).toEqual([
       ...["plain", "ghost"].flatMap((tone) => [`${tone} md`, `${tone} lg`]),
-      ...["tonal", "inverse", "primary", "danger", "kakao"].flatMap((tone) => [`${tone} md`, `${tone} lg`, `${tone} hero`]),
+      ...["tonal", "inverse", "primary", "danger"].flatMap((tone) => [`${tone} md`, `${tone} lg`, `${tone} hero`]),
     ]);
   });
 });

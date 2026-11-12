@@ -111,7 +111,7 @@ verification/     TLA+ 형식 검증 (verify-vote-quota 스킬)
 **크기.** 모서리 `rounded-badge` 6 · `rounded-control` 12(버튼·입력·칩) · `rounded-card` 16 · `rounded-t-sheet` 24 ·
 `rounded-pill`. 높이 `h-control-sm` 36(누르는 영역은 44) · `h-control-md` 44 · `h-control-lg` 52 · `control-hero` 64(둥근 주 원판), 행 `min-h-row` 56(설정·멤버)
 · `min-h-row-song` 72(곡). 그림자는 `shadow-float` 하나이고 시트·토스트·FAB 에만 쓴다. 다른 층은 표면 색으로 만든다.
-화면에 붙는 막대(`ScreenToolbar`·`TabBar`·`MiniPlayer` 막대)는 `ui/chrome-inset.ts` 로 자기 높이를 알리고, `html` 의
+화면에 붙는 막대(`ScreenToolbar`·편집 중인 셋리스트 동작 줄·`TabBar`·`MiniPlayer` 막대)는 `ui/chrome-inset.ts` 로 자기 높이를 알리고, `html` 의
 scroll-padding 이 그만큼 비운다. 막대 밑으로 스크롤되는 여백을 `scroll-mt-*` 같은 숫자로 따로 적지 않는다.
 홈 인디케이터 자리는 `pb-safe-bottom` 이다. body 가 비우고, 그 자리를 스스로 칠하는 아래 막대는 `data-safe-bottom` 을 달아
 body 의 몫을 가져간다. `env(safe-area-inset-bottom)` 을 임의 값이나 음수 margin 으로 적지 않는다.
@@ -130,7 +130,7 @@ Variable(한국어) + Geist(영문) 폴백. 한글에는 대소문자가 없어�
   `Input pill`(검색 칸) 옆 버튼은 `pill` 로 모서리를 맞춘다. 글자는 어느 폭에서도 한 줄이고, 버튼은 담긴 칸보다 넓어지지
   않는다(#79). 고정 문구가 칸에 안 들어가면 문구를 줄인다. 밴드 이름처럼 길이를 모르는 글자는 그 부분만 `truncate` span 에
   담아 말줄임한다(방 설정의 「{밴드}에 넣기」).
-- 켜고 끄는 버튼은 `pressed` 다(켜지면 primary, `aria-pressed`). `ToolbarButton` 의 `pressed` 도 같은 것이다. 켜고 꺼도
+- 켜고 끄는 버튼은 `pressed` 다(켜지면 primary, `aria-pressed`). 켜고 꺼도
   폭이 그대로여야 한다. 폭이 바뀌면 좁은 화면에서 줄이 꺾여 카드가 길어진다. 글자는 두 상태에서 같게 두거나(메트로놈)
   같은 글자 수의 한글로만 바꾸고(편집 ↔ 완료. Pretendard 한글은 글자 폭이 같다), 켜졌을 때만 움직이는 표시(박자 점)도
   꺼졌을 때 자리를 둔다.
@@ -156,19 +156,25 @@ Variable(한국어) + Geist(영문) 폴백. 한글에는 대소문자가 없어�
   한 단계 올린다. 머리는 제자리에 있고 본문만 스크롤된다. 본문이 길어도 보여야 하는 아래 칸(댓글 입력)은 `footer` 다. `useDialog()`(`DialogProvider`): alert·confirm·danger 확인창.
 - `Card`: variant `default`·`elevated`·`outline`·`selected`(목록에서 지금 고른 한 장, `border-primary-fg`), 그림자 없음. 카드 끝까지
   닿는 아래 칸(펼친 코멘트)은 `footer` 다. 음수 margin 으로 padding 을 지우지 않는다. `IconButton`: tone `default`·`danger`·`brand`, `bare`, 44px,
-  `aria-label` 필수. `ScreenToolbar`: 후보곡·셋리스트·합주 상단의 숫자와 동작. 동작은 `ToolbarButton`(44px, `compact` 면
-  640px 아래에서 아이콘만)으로만 그린다. 플레이리스트 세 탭의 맨 윗줄은 `PlaylistTopBar` 하나다. 밴드 멤버는 「‹ 밴드 · 공연 D-n」
-  링크, 나머지는 맨 chevron `RoundLink` 이고 오른쪽에 계정 메뉴나 로그인 버튼이 선다. 탭마다 윗줄을 따로 그리지 않는다.
+  `aria-label` 필수. `ScreenToolbar`: 화면 위에 붙는 숫자 막대. 지금은 합주 탭의 진행만 쓴다.
+  플레이리스트 세 탭의 맨 윗줄은 `PlaylistTopBar` 하나다. 밴드 멤버는
+  「‹ 밴드 · 공연 D-n」 링크, 나머지는 맨 chevron `RoundLink` 이고 오른쪽에 계정 메뉴나 로그인 버튼이 선다. 탭마다 윗줄을 따로 그리지 않는다.
+- 플레이리스트 머리: 후보곡은 Spotify 앨범처럼 가운데 큰 커버(220) 아래 왼쪽 정렬 제목과 메타 줄, 셋리스트는 작은 커버(112)
+  옆에 제목과 「곡 수 · 총 시간 · 인터벌」. 둘 다 그 아래에 `PlaylistActionRow` 하나를 쓴다. 왼쪽은 맨 글리프
+  (`RoundButton` ghost md, 공유 → 편집 → ⋯, 공유는 `edge="start"`), 오른쪽은 공지(tonal lg)와 재생(primary lg) 원판이다.
+  재생이 이 화면에 하나뿐인 채운 primary 라 같은 화면의 다른 버튼은 tonal 이다. ⋯ 는 시트에 줄이 있을 때만 그린다.
+  셋리스트를 편집하는 동안에는 동작 줄이 화면 위에 붙어서, 긴 셋리스트 끝에서 끌어도 완료가 손에 남는다.
+  후보곡 공유는 회색 글리프여도 한 번 누르면 카톡 투표 초대가 간다.
 - 아이콘: 이 작업부터 손대는 아이콘은 `ui/icons.tsx` 에서 가져온다(24 격자, 2px 둥근 선, 하단 탭 아이콘은 `filled` 짝).
   Spotify 글리프를 따라 그리지 않는다. 아직 인라인 svg 인 곳은 따로 옮긴다.
 - `RoundButton`: 플레이어·플레이리스트 머리·메트로놈 줄의 둥근 아이콘 버튼. size `md` 44·`lg` 52·`hero` 64, tone `plain`(재생
-  컨트롤처럼 또렷한 글리프)·`ghost`(Button ghost 처럼 흐린 글리프)·`tonal`·`inverse`(흰 원판)·`primary`·`danger`·`kakao`, hero 는 원판
+  컨트롤처럼 또렷한 글리프)·`ghost`(Button ghost 처럼 흐린 글리프)·`tonal`·`inverse`(흰 원판)·`primary`·`danger`, hero 는 원판
   tone 만 된다. 켜고 끄기는 tone 대신 `pressed`(꺼지면 ghost, 켜지면 primary-fg 글리프). 투표 화살표는 tone `upvote`·`downvote` 에 `chosen` 이다(고른 쪽에 옅은 원판, aria-pressed 없음). 글리프 크기는 버튼이 정하니 svg 에 크기·margin 을
-  두지 않는다(eslint). 재생 삼각형은 `PlayPauseIcon`. 링크는 `RoundLink`, `edge="start"` 면 글리프가 내용 왼쪽 끝에 맞는다. 둥근 버튼을
+  두지 않는다(eslint). 재생 삼각형은 `ui/icons` 의 `PlayPauseIcon`. 링크는 `RoundLink`, `edge="start"` 면 글리프가 내용 왼쪽 끝에 맞는다. 둥근 버튼을
   모은 줄은 `RoundRow` 다. 원은 줄지 않고 간격이 준다.
 - 크기는 prop 이 정한다. `Button`·`ButtonGroup`·`IconButton`·`Chip`·`RoundButton`·`ListRowButton`·`ListRowLink` 의 className 에 높이·폭·여백·모서리·글자 크기를 덧칠하면 eslint 가
   막는다. className 에는 바깥 배치(margin·`flex-1`·`shrink-0`·표시 여부)만 둔다.
-- 글자가 있는 부품(`Button`·`buttonClassName`·`ToolbarButton`·`Chip`·`SegmentedControl`·`TabBar`·`ActionTab`·`MenuItem*`·`Badge`)의
+- 글자가 있는 부품(`Button`·`buttonClassName`·`Chip`·`SegmentedControl`·`TabBar`·`ActionTab`·`MenuItem*`·`Badge`)의
   글자는 줄을 바꾸지 않는다. 부품에서 `whitespace-nowrap` 이 빠지면 `primitives.test.tsx` 가, 부르는 쪽 className 에
   `whitespace-normal`·`text-wrap`·`text-balance` 를 두거나 버튼을 바로 담은 줄에 `*:min-w-0`·`[&>button]:min-w-0`·`*:max-w-*`
   를(`**:`·`[&_*]:` 는 어느 깊이든) 주면 eslint 가 막는다. `max-w-full` 은 `Button` 이 이미 가진 값이라 막지 않는다. 나란한 버튼 줄을 손으로 만들지 않고 `ButtonGroup` 을 쓴다.

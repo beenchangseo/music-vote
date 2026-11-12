@@ -29,7 +29,7 @@ describe("eslint label-wrap rules", () => {
   it.each([
     '<div className="flex gap-2 *:min-w-0 *:flex-1"><Button>취소</Button><Button>삭제</Button></div>',
     '<div className="flex [&>*]:min-w-0"><Button>취소</Button></div>',
-    '<div className="grid *:max-w-32"><ToolbarButton label="편집" /></div>',
+    '<div className="grid *:max-w-32"><Button>편집</Button></div>',
     '<div className="flex *:min-w-0"><Link href="/" className={buttonClassName({ variant: "tonal" })}>홈으로</Link></div>',
     '<div className="flex [&>button]:min-w-0"><Button>취소</Button></div>',
     '<div className="flex *:min-w-0">{open && <Button>취소</Button>}</div>',

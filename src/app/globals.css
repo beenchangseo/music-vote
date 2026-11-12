@@ -211,7 +211,7 @@
   overflow-wrap: break-word;
 }
 
-/* 붙어 있는 막대(위 ScreenToolbar, 아래 TabBar·MiniPlayer 막대)는 자기 높이를 알린다(components/ui/chrome-inset.ts).
+/* 붙어 있는 막대(위 ScreenToolbar·편집 중인 셋리스트 동작 줄, 아래 TabBar·MiniPlayer 막대)는 자기 높이를 알린다(components/ui/chrome-inset.ts).
  * scrollIntoView·포커스로 끌어온 내용이 막대 밑에 숨지 않게 그만큼 비운다. 막대가 없는 화면은 0 이다. */
 html {
   scroll-padding-top: var(--screen-toolbar-height, 0px);

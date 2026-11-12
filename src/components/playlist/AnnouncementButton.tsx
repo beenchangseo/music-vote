@@ -6,6 +6,7 @@ import { useDialog } from "../ui/DialogProvider";
 import Modal from "../ui/Modal";
 import RoundButton from "../ui/RoundButton";
 import Textarea from "../ui/Textarea";
+import { NoticeIcon } from "../ui/icons";
 import { updateAnnouncementPublic } from "@/actions/playlist";
 
 interface AnnouncementButtonProps {
@@ -51,23 +52,10 @@ export default function AnnouncementButton({ playlistId, announcement, shareCode
         aria-label="공지사항"
         title={announcement ? "공지사항 보기/수정" : "공지사항 작성"}
       >
-        <svg
-          className={announcement ? "text-primary-fg" : undefined}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden
-        >
-          <path d="M12 17v5" />
-          <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16h14v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1h.5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5H8a1 1 0 0 1 1 1z" />
-        </svg>
+        <NoticeIcon className={announcement ? "text-primary-fg" : undefined} />
         {announcement && <span className="absolute right-0.5 top-0.5 size-3 rounded-pill border-2 border-bg bg-primary" />}
       </RoundButton>
 
-      {/* Modal portals to body: RoundRow is a query container, and WebKit up to Safari 18.2 traps position: fixed inside one (WebKit bug 284945). */}
       <Modal open={showModal} onClose={() => setShowModal(false)} title="공지사항">
         {announcement && !text && (
           <p className="mb-3 whitespace-pre-wrap rounded-control bg-surface-hover/50 p-3 text-sm text-text-muted">{announcement}</p>

@@ -13,8 +13,11 @@ import EmptyState from "../ui/EmptyState";
 import InlineNotice from "../ui/InlineNotice";
 import { SongRow } from "../ui/ListRow";
 import Modal from "../ui/Modal";
-import RoundButton from "../ui/RoundButton";
+import Avatar from "../ui/Avatar";
+import { CardsIcon, ListIcon } from "../ui/icons";
 import PlaylistHeader from "./PlaylistHeader";
+import AnnouncementButton from "./AnnouncementButton";
+import type { PlaylistMenuItem } from "./PlaylistActionRow";
 import PlaylistTopBar from "./PlaylistTopBar";
 import AddSongForm from "./AddSongForm";
 import SongCard from "./SongCard";
@@ -365,7 +368,7 @@ export default function PlaylistClient({
     setSetlistConfirmSongId(null);
   }
 
-  // 한 줄 메타. 있는 것만 가운뎃점으로 잇는다. 곡 수가 맨 앞이다 (후보곡 툴바가 없어졌다).
+  // 제목 아래 첫 줄. 있는 것만 가운뎃점으로 잇는다. 곡 수가 맨 앞이다 (후보곡 툴바가 없어졌다).
   const metaParts: { key: string; text: string; className: string }[] = [
     { key: "songs", text: `${songs.length}곡`, className: "font-semibold text-text" },
   ];
@@ -388,9 +391,6 @@ export default function PlaylistClient({
       className: isExpired ? "text-danger-fg" : "",
     });
   }
-  if (nickname) {
-    metaParts.push({ key: "me", text: `${nickname}으로 참여 중`, className: "text-text-subtle" });
-  }
 
   // Room for the fixed tab bar (dock, 64px) and, while a song plays, the MiniPlayer (56px) above it.
   const bottomPadding = playerState.currentSongId ? "pb-40" : "pb-20";
@@ -402,6 +402,17 @@ export default function PlaylistClient({
     종전에는 후보곡·합주에 떠 있는 톱니, 셋리스트에 전체 폭 토글 박스로 흩어져 있었다.
   */
   const canOpenSettings = isAdmin && !isArchived;
+  const openSettings = canOpenSettings ? () => settingsRef.current?.open() : undefined;
+  // One node for both tabs' action rows: the 공지 disc sits left of 재생 on 후보곡 and on 셋리스트.
+  const notice = <AnnouncementButton playlistId={playlist.id} announcement={playlist.announcement ?? null} shareCode={shareCode} />;
+  const candidatesMenu: PlaylistMenuItem[] =
+    songsWithVotes.length > 0
+      ? [
+          viewMode === "compact"
+            ? { label: "카드 보기", icon: <CardsIcon className="size-5 text-text-muted" />, onSelect: () => setViewMode("card") }
+            : { label: "리스트 보기", icon: <ListIcon className="size-5 text-text-muted" />, onSelect: () => setViewMode("compact") },
+        ]
+      : [];
   const settingsButton = canOpenSettings ? (
     <RoomSettingsButton
       ref={settingsRef}
@@ -433,56 +444,41 @@ export default function PlaylistClient({
             currentUserAvatarUrl={currentUserAvatarUrl}
             loginGate={loginGate}
           />
-          {navMode !== "playlist" ? (
-            <h1 className="sr-only">{playlist.title}</h1>
-          ) : (
+          {/* 합주 has no visible title; 후보곡 and 셋리스트 name the playlist in their headers. */}
+          {navMode === "rehearsal" && <h1 className="sr-only">{playlist.title}</h1>}
+          {navMode === "playlist" && (
             <PlaylistHeader
-              playlistId={playlist.id}
               title={playlist.title}
               inviteSongs={invite}
               archived={isArchived}
               shareCode={shareCode}
               participantCount={participantCount}
-              announcement={playlist.announcement}
               showDate={team?.nextShowAt ?? null}
               coverThumbs={coverThumbs}
+              notice={notice}
+              menu={candidatesMenu}
               onPlayAll={songsWithVotes.length > 0 ? handlePlayAll : undefined}
               playing={playerState.isPlaying}
-              onOpenSettings={canOpenSettings ? () => settingsRef.current?.open() : undefined}
-              viewToggle={
-                songsWithVotes.length > 0 ? (
-                  <RoundButton
-                    tone="tonal"
-                    size="lg"
-                    onClick={() => setViewMode(viewMode === "compact" ? "card" : "compact")}
-                    aria-label={viewMode === "compact" ? "카드 보기" : "리스트 보기"}
-                  >
-                    {viewMode === "compact" ? (
-                      <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                        <rect x="3.5" y="4.5" width="17" height="10" rx="2" />
-                        <path strokeLinecap="round" d="M3.5 19h17" />
-                      </svg>
-                    ) : (
-                      <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                      </svg>
-                    )}
-                  </RoundButton>
-                ) : undefined
-              }
+              onOpenSettings={openSettings}
               meta={
-                /*
-                  참여자 수·마감·내 닉네임이 세 덩어리로 흩어져 있었다.
-                  정렬축이 계속 바뀌어 위계가 읽히지 않았으므로 제목 아래 한 줄로 합친다. 로그인 버튼은 맨 윗줄 오른쪽이다.
-                */
-                <p className="text-caption leading-relaxed text-text-muted tabular-nums">
-                  {metaParts.map((part, i) => (
-                    <span key={part.key}>
-                      {i > 0 && <span className="mx-1.5 text-text-subtle" aria-hidden>·</span>}
-                      <span className={part.className}>{part.text}</span>
-                    </span>
-                  ))}
-                </p>
+                <>
+                  <p className="mt-1 text-sm text-text-muted tabular-nums">
+                    {metaParts.map((part, i) => (
+                      <span key={part.key}>
+                        {i > 0 && <span className="mx-1.5 text-text-subtle" aria-hidden>·</span>}
+                        <span className={part.className}>{part.text}</span>
+                      </span>
+                    ))}
+                  </p>
+                  {nickname && (
+                    <p className="mt-2 flex min-w-0 items-center gap-2 text-sm">
+                      <Avatar name={nickname} src={currentUserAvatarUrl} />
+                      <span className="truncate text-text-muted">
+                        <span className="font-semibold text-text">{nickname}</span>으로 참여 중
+                      </span>
+                    </p>
+                  )}
+                </>
               }
             />
           )}
@@ -585,7 +581,9 @@ export default function PlaylistClient({
                     투표가 마감됐어요. 상위 {setlistCount}곡을 표시했어요.
                   </p>
                   {isHost ? (
+                    // Tonal: the header's 재생 is the one filled primary on this screen.
                     <Button
+                      variant="tonal"
                       onClick={async () => {
                         const topSongIds = songsWithVotes.slice(0, setlistCount).map((s) => s.id);
                         const ok = await showConfirm(
@@ -703,6 +701,9 @@ export default function PlaylistClient({
               onItemsChange={applySetlistItems}
               title={playlist.title}
               access={setlistAccess}
+              coverThumbs={coverThumbs}
+              notice={notice}
+              onOpenSettings={openSettings}
               onPlay={handlePlayFromSetlist}
               player={playerState}
             />
