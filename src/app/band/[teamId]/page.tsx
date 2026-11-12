@@ -6,7 +6,7 @@ import BandHomeClient from "@/components/band/BandHomeClient";
 import BandHomeSkeleton from "@/components/band/BandHomeSkeleton";
 import LoginButton from "@/components/auth/LoginButton";
 import { buttonClassName } from "@/components/ui/Button";
-import { getTeamHome, teamExists, type TeamHomeView } from "@/actions/team";
+import { getMyTeams, getTeamHome, teamExists, type MyTeamsResult, type TeamHomeView } from "@/actions/team";
 
 // generateMetadata and the page read the same band once per request.
 const loadTeamHome = cache((teamId: string) => getTeamHome(teamId));
@@ -31,22 +31,27 @@ export default async function BandPage({ params, searchParams }: PageProps) {
   // The full read starts now and runs while the existence check below decides the status code.
   const home = loadTeamHome(teamId);
   home.catch(() => {}); // Handled where it is awaited; this only keeps a 404 from logging an unhandled rejection.
+  // The band switcher's list, read alongside. A failed read comes back as `failed`; the catch is the 404 case, as above.
+  const myTeams = getMyTeams();
+  myTeams.catch(() => {});
   // A real 404 needs the answer before anything streams (Next: the status is sent with the first chunk).
   if (!(await teamExists(teamId))) notFound();
 
   return (
     <Suspense fallback={<BandHomeSkeleton />}>
-      <BandHome home={home} created={query.created === "1"} joined={query.joined === "1"} />
+      <BandHome home={home} myTeams={myTeams} created={query.created === "1"} joined={query.joined === "1"} />
     </Suspense>
   );
 }
 
 async function BandHome({
   home,
+  myTeams,
   created,
   joined,
 }: {
   home: Promise<TeamHomeView | null>;
+  myTeams: Promise<MyTeamsResult>;
   created: boolean;
   joined: boolean;
 }) {
@@ -58,7 +63,10 @@ async function BandHome({
     return <MembersOnly teamId={view.team.id} name={view.team.name} loggedIn={view.loggedIn} />;
   }
 
-  return <BandHomeClient view={view} created={created} joined={joined} />;
+  // Only what the switcher draws (docs/adr/0011). A failed read still lists this band, so the sheet is never empty.
+  const { teams, failed } = await myTeams;
+  const bands = failed ? [{ id: view.team.id, name: view.team.name }] : teams.map(({ id, name }) => ({ id, name }));
+  return <BandHomeClient view={view} bands={bands} created={created} joined={joined} />;
 }
 
 /**

@@ -72,8 +72,14 @@ const ownerView = (overrides: Partial<MemberView> = {}) =>
     ...overrides,
   });
 
+const OTHER_TEAM = "33333333-3333-4333-8333-333333333333";
+const MY_BANDS = [
+  { id: OTHER_TEAM, name: "목요일 잼" },
+  { id: TEAM, name: "일코해제" },
+];
+
 function renderHome(v: MemberView, flags: { created?: boolean; joined?: boolean } = {}) {
-  return render(<BandHomeClient view={v} created={!!flags.created} joined={!!flags.joined} />);
+  return render(<BandHomeClient view={v} bands={MY_BANDS} created={!!flags.created} joined={!!flags.joined} />);
 }
 
 beforeEach(() => {
@@ -593,6 +599,28 @@ describe("BandHomeClient member management (F1, 24B, R7)", () => {
     fireEvent.click(screen.getByRole("button", { name: "멤버 초대" }));
     expect(screen.queryByRole("button", { name: "링크 새로 만들기" })).not.toBeInTheDocument();
     expect(screen.getByText("이 링크를 받은 사람은 누구나 들어올 수 있어요")).toBeInTheDocument();
+  });
+});
+
+describe("BandHomeClient band switcher (#106)", () => {
+  it("puts the band name with a caret at the top left instead of a chevron that reads as back", () => {
+    renderHome(view());
+
+    expect(screen.getByRole("button", { name: "일코해제 밴드 바꾸기" })).toHaveAttribute("aria-haspopup", "dialog");
+    expect(screen.queryByRole("link", { name: "홈으로" })).not.toBeInTheDocument();
+  });
+
+  it("lists my bands in a sheet: this one checked, the others to their band home, then 전체 홈", () => {
+    renderHome(view());
+    fireEvent.click(screen.getByRole("button", { name: "일코해제 밴드 바꾸기" }));
+    const sheet = within(screen.getByRole("dialog", { name: "내 밴드" }));
+
+    expect(sheet.getAllByRole("link").map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
+      ["목요일 잼", `/band/${OTHER_TEAM}`],
+      ["전체 홈", "/"],
+    ]);
+    expect(sheet.getByText("일코해제").closest("[aria-current]")).toHaveAttribute("aria-current", "true");
+    expect(sheet.queryByRole("link", { name: "일코해제" })).not.toBeInTheDocument();
   });
 });
 
