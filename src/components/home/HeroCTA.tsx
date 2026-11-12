@@ -6,7 +6,7 @@ import ButtonGroup from "@/components/ui/ButtonGroup";
 import Modal from "@/components/ui/Modal";
 import CreatePlaylistForm from "@/components/home/CreatePlaylistForm";
 import CreateBandSheet, { type BandCandidate } from "@/components/band/CreateBandSheet";
-import GuitarIcon from "@/components/ui/GuitarIcon";
+import { GuitarIcon } from "@/components/ui/icons";
 import { triggerKakaoLogin } from "@/lib/kakao-login";
 import type { MyTeam } from "@/actions/team";
 

@@ -7,7 +7,7 @@ import Button from "../ui/Button";
 import Field from "../ui/Field";
 import Input from "../ui/Input";
 import { ListRowButton, ListRowIcon } from "../ui/ListRow";
-import GuitarIcon from "../ui/GuitarIcon";
+import { GuitarIcon } from "@/components/ui/icons";
 import { createTeam, createTeamFromPlaylist } from "@/actions/team";
 import { getVotingSettings } from "@/actions/member";
 import { track } from "@/lib/analytics";

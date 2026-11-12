@@ -14,7 +14,7 @@ import { ListRowButton, SongRowLink } from "../ui/ListRow";
 import { MenuItemButton, MenuPanel, useMenu } from "../ui/Menu";
 import Shelf from "../ui/Shelf";
 import { useDialog } from "../ui/DialogProvider";
-import GuitarIcon from "../ui/GuitarIcon";
+import { GuitarIcon } from "@/components/ui/icons";
 import Badge from "../ui/Badge";
 import { showDateSpokenLabel } from "./ShowDateTile";
 import { BandArt, RoomCover, SongThumb } from "./BandArt";

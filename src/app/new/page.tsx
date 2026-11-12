@@ -3,7 +3,7 @@ import Link from "next/link";
 import CreatePlaylistForm from "@/components/home/CreatePlaylistForm";
 import MyPlaylists from "@/components/home/MyPlaylists";
 import LoginButton from "@/components/auth/LoginButton";
-import GuitarIcon from "@/components/ui/GuitarIcon";
+import { GuitarIcon } from "@/components/ui/icons";
 import { buttonClassName } from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { getCurrentUser } from "@/lib/auth";

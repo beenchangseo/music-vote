@@ -9,7 +9,7 @@ import { attachPlaylistToTeam, createBandPlaylist, type MyTeam } from "@/actions
 import { track } from "@/lib/analytics";
 import { teamMessage } from "@/lib/team-messages";
 import KakaoShareButton from "../share/KakaoShareButton";
-import GuitarIcon from "../ui/GuitarIcon";
+import { GuitarIcon } from "@/components/ui/icons";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
 import IconButton from "../ui/IconButton";

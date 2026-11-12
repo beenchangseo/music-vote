@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { KakaoMark, buttonClassName } from "@/components/ui/Button";
+import { buttonClassName } from "@/components/ui/Button";
+import { KakaoIcon } from "@/components/ui/icons";
 import FaqList from "@/components/ui/FaqList";
 import { pageMetadata, type FaqEntry } from "@/lib/seo";
 
@@ -91,7 +92,7 @@ export default function SupportPage() {
           {chatUrl ? (
             <>
               <a href={chatUrl} className={buttonClassName({ variant: "kakao", size: "lg", fullWidth: true })}>
-                <KakaoMark />
+                <KakaoIcon className="size-4.5 shrink-0" />
                 카카오톡으로 문의하기
               </a>
               <p className="mt-2 text-center text-caption text-text-subtle">운영자가 직접 답해요 · 보통 하루 안에 답장이 와요</p>

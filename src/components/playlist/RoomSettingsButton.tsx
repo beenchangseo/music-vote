@@ -12,7 +12,7 @@ import Modal from "../ui/Modal";
 import SegmentedControl from "../ui/SegmentedControl";
 import Switch from "../ui/Switch";
 import { useDialog } from "../ui/DialogProvider";
-import GuitarIcon from "../ui/GuitarIcon";
+import { GuitarIcon } from "@/components/ui/icons";
 import CreateBandSheet from "../band/CreateBandSheet";
 import {
   getVotingSettings,

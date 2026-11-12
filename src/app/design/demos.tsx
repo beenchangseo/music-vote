@@ -9,7 +9,6 @@ import SegmentedControl from "@/components/ui/SegmentedControl";
 import Switch from "@/components/ui/Switch";
 import TabBar, { type TabBarItem } from "@/components/ui/TabBar";
 import * as icons from "@/components/ui/icons";
-import { CandidatesIcon, HomeIcon, RehearsalIcon, SetlistIcon } from "@/components/ui/icons";
 import Textarea from "@/components/ui/Textarea";
 import ListRow, {
   ListGroup,
@@ -22,7 +21,6 @@ import ListRow, {
 import { ActionTab, ActionTabBar } from "@/components/ui/ActionTab";
 import IconButton from "@/components/ui/IconButton";
 import Avatar from "@/components/ui/Avatar";
-import GuitarIcon from "@/components/ui/GuitarIcon";
 import { useDialog } from "@/components/ui/DialogProvider";
 import { COLORS, type ScaleToken } from "@/components/ui/tokens";
 
@@ -153,7 +151,7 @@ export function SwitchDemo() {
   return (
     <div className="rounded-card bg-surface px-4">
       <Switch label="익명 투표" description="누가 투표했는지 안 보여요." checked={anonymous} onCheckedChange={setAnonymous} />
-      <Switch label="일코해제에 만들기" icon={<GuitarIcon className="size-4" />} checked={inBand} onCheckedChange={setInBand} />
+      <Switch label="일코해제에 만들기" icon={<icons.GuitarIcon className="size-4" />} checked={inBand} onCheckedChange={setInBand} />
       <Switch label="비활성" checked={false} onCheckedChange={() => {}} disabled />
     </div>
   );
@@ -189,10 +187,10 @@ export function SegmentedDemo() {
 
 type DockTab = "playlist" | "setlist" | "rehearsal";
 const DOCK: TabBarItem<DockTab>[] = [
-  { href: "/design", label: "홈", icon: HomeIcon },
-  { id: "playlist", label: "후보곡", icon: CandidatesIcon },
-  { id: "setlist", label: "셋리스트", icon: SetlistIcon },
-  { id: "rehearsal", label: "합주", icon: RehearsalIcon },
+  { href: "/design", label: "홈", icon: icons.HomeIcon },
+  { id: "playlist", label: "후보곡", icon: icons.SongIcon },
+  { id: "setlist", label: "셋리스트", icon: icons.SetlistIcon },
+  { id: "rehearsal", label: "합주", icon: icons.MetronomeIcon },
 ];
 
 export function TabBarDemo() {
@@ -281,11 +279,11 @@ export function ListGroupDemo() {
       <p className="mt-4 text-caption font-semibold text-text-muted">시트의 고르기 줄 (ListRowButton + ListRowIcon, 셋리 넣기·내보내기)</p>
       <p className="mt-1 text-caption text-text-subtle">아이콘 칸은 줄보다 한 단계 위예요. 줄이 hover 로 surface-hover 가 되면 칸은 surface-elevated 로 올라가서 녹지 않아요.</p>
       <div className="mt-2 flex flex-col">
-        <ListRowButton leading={<ListRowIcon className="text-primary-fg"><GuitarIcon className="size-5" /></ListRowIcon>}>
+        <ListRowButton leading={<ListRowIcon className="text-primary-fg"><icons.GuitarIcon className="size-5" /></ListRowIcon>}>
           <span className="block text-body font-semibold text-text">자작곡</span>
           <span className="block text-caption text-text-muted">우리 곡 한 블록 · 기본 3:00</span>
         </ListRowButton>
-        <ListRowButton disabled leading={<ListRowIcon className="text-text"><GuitarIcon className="size-5" /></ListRowIcon>}>
+        <ListRowButton disabled leading={<ListRowIcon className="text-text"><icons.GuitarIcon className="size-5" /></ListRowIcon>}>
           <span className="block text-body font-semibold text-text">비활성</span>
           <span className="block text-caption text-text-muted">고를 것이 없으면 흐리게 두고 hover 하지 않아요</span>
         </ListRowButton>
@@ -319,13 +317,13 @@ export function SongRowActionsDemo() {
       </div>
       {open && (
         <ActionTabBar id="design-song-actions">
-          <ActionTab icon={<GuitarIcon />} onClick={() => undefined}>
+          <ActionTab icon={<icons.GuitarIcon />} onClick={() => undefined}>
             댓글 2
           </ActionTab>
-          <ActionTab icon={<GuitarIcon />} onClick={() => undefined}>
+          <ActionTab icon={<icons.GuitarIcon />} onClick={() => undefined}>
             버전
           </ActionTab>
-          <ActionTab icon={<GuitarIcon />} selected={inSetlist} onClick={() => setInSetlist((v) => !v)}>
+          <ActionTab icon={<icons.GuitarIcon />} selected={inSetlist} onClick={() => setInSetlist((v) => !v)}>
             {inSetlist ? "셋리스트에 있음" : "셋리스트에 추가"}
           </ActionTab>
           <IconButton bare aria-label="예뻤어 더보기">
@@ -344,13 +342,13 @@ export function SongRowActionsDemo() {
 const ICON_SAMPLES: [string, ReactNode][] = [
   ["Home", <icons.HomeIcon key="Home" />],
   ["Home filled", <icons.HomeIcon key="Home filled" filled />],
-  ["Candidates", <icons.CandidatesIcon key="Candidates" />],
-  ["Candidates filled", <icons.CandidatesIcon key="Candidates filled" filled />],
+  ["Song", <icons.SongIcon key="Song" />],
+  ["Song filled", <icons.SongIcon key="Song filled" filled />],
   ["Setlist", <icons.SetlistIcon key="Setlist" />],
   ["Setlist filled", <icons.SetlistIcon key="Setlist filled" filled />],
-  ["Rehearsal", <icons.RehearsalIcon key="Rehearsal" />],
-  ["Rehearsal filled", <icons.RehearsalIcon key="Rehearsal filled" filled />],
-  ["Back", <icons.BackIcon key="Back" />],
+  ["Metronome", <icons.MetronomeIcon key="Metronome" />],
+  ["Metronome filled", <icons.MetronomeIcon key="Metronome filled" filled />],
+  ["Chevron left", <icons.ChevronIcon key="Chevron left" direction="left" />],
   ["Chevron right", <icons.ChevronIcon key="Chevron right" direction="right" />],
   ["Chevron down", <icons.ChevronIcon key="Chevron down" direction="down" />],
   ["Chevron up", <icons.ChevronIcon key="Chevron up" direction="up" />],
@@ -395,6 +393,8 @@ const ICON_SAMPLES: [string, ReactNode][] = [
   ["Invite", <icons.InviteIcon key="Invite" />],
   ["Folder", <icons.FolderIcon key="Folder" />],
   ["Tap", <icons.TapIcon key="Tap" />],
+  ["Guitar", <icons.GuitarIcon key="Guitar" />],
+  ["Kakao", <icons.KakaoIcon key="Kakao" />],
 ];
 
 /** Every glyph of ui/icons at its default 24px, so a new one is drawn against the rest of the set. */

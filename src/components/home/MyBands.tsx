@@ -1,5 +1,5 @@
 import Link from "next/link";
-import GuitarIcon from "../ui/GuitarIcon";
+import { GuitarIcon } from "@/components/ui/icons";
 import Shelf from "../ui/Shelf";
 import type { MyTeam } from "@/actions/team";
 import { showDday, showDdayLabel } from "@/domain/team";

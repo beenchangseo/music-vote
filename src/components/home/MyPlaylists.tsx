@@ -4,7 +4,7 @@ import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
-import GuitarIcon from "../ui/GuitarIcon";
+import { GuitarIcon } from "@/components/ui/icons";
 import { RoomCover } from "../band/BandArt";
 
 interface SavedPlaylist {

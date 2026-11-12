@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Button from "../ui/Button";
-import GuitarIcon from "../ui/GuitarIcon";
+import { GuitarIcon } from "@/components/ui/icons";
 import LoginButton from "../auth/LoginButton";
 import ShowDateTile from "./ShowDateTile";
 import { joinTeam } from "@/actions/team";
