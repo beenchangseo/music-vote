@@ -3,7 +3,7 @@ import Link from "next/link";
 import CreatePlaylistForm from "@/components/home/CreatePlaylistForm";
 import MyPlaylists from "@/components/home/MyPlaylists";
 import LoginButton from "@/components/auth/LoginButton";
-import GuitarIcon from "@/components/ui/GuitarIcon";
+import { ChevronIcon, GuitarIcon } from "@/components/ui/icons";
 import { buttonClassName } from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { getCurrentUser } from "@/lib/auth";
@@ -50,20 +50,7 @@ export default async function NewPlaylistPage({ searchParams }: PageProps) {
               href="/"
               className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
-                aria-hidden
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
+              <ChevronIcon direction="left" className="size-4" />
               홈으로
             </Link>
           </div>

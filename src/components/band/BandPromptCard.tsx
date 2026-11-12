@@ -6,6 +6,7 @@ import Button, { buttonClassName } from "../ui/Button";
 import NoticeCard from "../ui/NoticeCard";
 import CreateBandSheet, { type BandCandidate, type CreatedBand } from "./CreateBandSheet";
 import { dismissBandPrompt, hasBandPromptDismissal, migrateLegacyDismissal } from "@/lib/prompt-dismissals";
+import { DoneIcon } from "@/components/ui/icons";
 
 function subscribeStorage(callback: () => void) {
   window.addEventListener("storage", callback);
@@ -139,9 +140,7 @@ export function BandCreatedCard({
       className="mb-3"
       tone="success"
       icon={
-        <svg className="size-4.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-        </svg>
+        <DoneIcon className="size-4.5" />
       }
       title="밴드를 만들었어요"
       onDismiss={onDismiss}

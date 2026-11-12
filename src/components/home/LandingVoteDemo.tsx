@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import RoundButton from "../ui/RoundButton";
+import { ChevronIcon } from "@/components/ui/icons";
 
 type Cover = "violet" | "slate" | "night";
 
@@ -111,9 +112,7 @@ function VoteButton({
       aria-label={chosen ? `${title} ${name} 취소` : `${title} ${name}`}
       onClick={onClick}
     >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <path d={dir === "up" ? "M4.5 15.75l7.5-7.5 7.5 7.5" : "M19.5 8.25l-7.5 7.5-7.5-7.5"} />
-      </svg>
+      <ChevronIcon direction={dir} />
     </RoundButton>
   );
 }

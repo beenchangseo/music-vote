@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { RoundLink } from "../ui/RoundButton";
-import { BackIcon } from "../ui/icons";
+import { ChevronIcon } from "../ui/icons";
 import AuthMenu from "../auth/AuthMenu";
 import LoginButton from "../auth/LoginButton";
 import { showDday, showDdayLabel } from "@/domain/team";
@@ -28,7 +28,7 @@ export default function PlaylistTopBar({ band, currentUserNickname, currentUserA
           href={`/band/${band.id}`}
           className="inline-flex min-h-11 min-w-0 items-center gap-1 text-body text-text-muted transition-colors hover:text-text"
         >
-          <BackIcon className="size-6 shrink-0 text-text" />
+          <ChevronIcon direction="left" className="size-6 shrink-0 text-text" />
           <span className="truncate">{band.name}</span>
           {dday && (
             <>
@@ -41,7 +41,7 @@ export default function PlaylistTopBar({ band, currentUserNickname, currentUserA
         </Link>
       ) : (
         <RoundLink href="/" tone="plain" size="md" edge="start" aria-label="홈으로">
-          <BackIcon />
+          <ChevronIcon direction="left" />
         </RoundLink>
       )}
       {currentUserNickname ? (

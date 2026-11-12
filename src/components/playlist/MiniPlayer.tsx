@@ -6,7 +6,7 @@ import type { PlayerState, PlayerActions } from "@/hooks/usePlayerQueue";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
 import { trapTabKey } from "../ui/focus-trap";
 import { publishMiniPlayerHeight } from "../ui/chrome-inset";
-import { PlayPauseIcon } from "../ui/icons";
+import { ChevronIcon, PlayPauseIcon, RepeatIcon, ShuffleIcon, SkipIcon } from "../ui/icons";
 import { ListRowButton } from "../ui/ListRow";
 import RoundButton from "../ui/RoundButton";
 import { displayArtist } from "@/domain/song-meta";
@@ -122,9 +122,7 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
       {expanded && (
         <div className="mx-auto flex w-full max-w-lg shrink-0 items-center justify-between px-2 pt-3">
           <RoundButton ref={collapseRef} tone="plain" size="md" onClick={() => setExpanded(false)} aria-label="플레이어 접기">
-            <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
+            <ChevronIcon direction="down" />
           </RoundButton>
           <p className="text-caption font-semibold text-text-muted">{source === "setlist" ? "셋리스트" : "후보곡"} 재생 중</p>
           <span className="size-control-md" aria-hidden />
@@ -177,22 +175,16 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
           {/* Transport controls. */}
           <div className="mt-4 flex items-center justify-between">
             <RoundButton size="md" pressed={shuffleMode} onClick={actions.toggleShuffle} aria-label={shuffleMode ? "셔플 끄기" : "셔플 켜기"}>
-              <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
-              </svg>
+              <ShuffleIcon />
             </RoundButton>
             <RoundButton tone="plain" size="lg" onClick={handlePrev} aria-label="이전 곡">
-              <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path d="M6 5h2v14H6zM20 6.5v11a1 1 0 01-1.53.85l-8.5-5.5a1 1 0 010-1.7l8.5-5.5A1 1 0 0120 6.5z" />
-              </svg>
+              <SkipIcon direction="previous" />
             </RoundButton>
             <RoundButton tone="inverse" size="hero" onClick={handlePlayPause} aria-label={isPlaying ? "일시정지" : "재생"}>
               <PlayPauseIcon playing={isPlaying} />
             </RoundButton>
             <RoundButton tone="plain" size="lg" onClick={() => actions.playNext(true)} aria-label="다음 곡">
-              <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path d="M16 5h2v14h-2zM4 6.5v11a1 1 0 001.53.85l8.5-5.5a1 1 0 000-1.7l-8.5-5.5A1 1 0 004 6.5z" />
-              </svg>
+              <SkipIcon direction="next" />
             </RoundButton>
             <RoundButton
               size="md"
@@ -200,17 +192,7 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
               onClick={actions.toggleRepeat}
               aria-label={repeatMode === "one" ? "반복 끄기" : "한곡 반복"}
             >
-              <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 1l4 4-4 4" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 11V9a4 4 0 014-4h14" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7 23l-4-4 4-4" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 13v2a4 4 0 01-4 4H3" />
-                {repeatMode === "one" && (
-                  <text x="12" y="12" dominantBaseline="central" textAnchor="middle" fontSize="9" fill="currentColor" stroke="none">
-                    1
-                  </text>
-                )}
-              </svg>
+              <RepeatIcon one={repeatMode === "one"} />
             </RoundButton>
           </div>
 
@@ -262,9 +244,7 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
                 <PlayPauseIcon playing={isPlaying} />
               </RoundButton>
               <RoundButton tone="plain" size="md" onClick={() => actions.playNext(true)} aria-label="다음 곡">
-                <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                  <path d="M16 5h2v14h-2zM4 6.5v11a1 1 0 001.53.85l8.5-5.5a1 1 0 000-1.7l-8.5-5.5A1 1 0 004 6.5z" />
-                </svg>
+                <SkipIcon direction="next" />
               </RoundButton>
             </div>
           </div>

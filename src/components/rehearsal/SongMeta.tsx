@@ -11,6 +11,7 @@ import { updateSongMeta } from "@/actions/song";
 import { track } from "@/lib/analytics";
 import { KEY_ROOTS, KEY_MODES, GENRES } from "@/domain/song-meta";
 import type { SongWithScore, KeyRoot, KeyMode, Genre } from "@/domain/types";
+import { ChevronIcon, MetronomeIcon } from "@/components/ui/icons";
 
 interface SongMetaProps {
   song: SongWithScore;
@@ -96,7 +97,7 @@ export default function SongMeta({ song, playlistId, shareCode, onClose }: SongM
             <span className="inline-block size-3.5 border-2 border-text-subtle border-t-primary-fg rounded-pill animate-spin" />
           )}
           <Button variant="ghost" size="sm" onClick={onClose}>
-            <ChevronUpIcon /> 접기
+            <ChevronIcon direction="up" className="size-3.5" /> 접기
           </Button>
         </div>
       </div>
@@ -205,7 +206,7 @@ export default function SongMeta({ song, playlistId, shareCode, onClose }: SongM
               href={`/playlist/${shareCode}/metronome?bpm=${tempoBpm}&songId=${song.id}`}
               className={buttonClassName({ variant: "tonal", size: "sm", className: "ml-auto" })}
             >
-              <MetronomeIcon /> 메트로놈
+              <MetronomeIcon className="size-3.5" /> 메트로놈
             </Link>
           )}
         </div>
@@ -265,38 +266,5 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
       </div>
       {children}
     </div>
-  );
-}
-
-function ChevronUpIcon() {
-  return (
-    <svg
-      className="size-3.5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
-      aria-hidden
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M19 15l-7-7-7 7" />
-    </svg>
-  );
-}
-
-function MetronomeIcon() {
-  return (
-    <svg
-      className="size-3.5"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M12 2L8 22h8L12 2z" />
-      <path d="M12 12l5-5" />
-    </svg>
   );
 }

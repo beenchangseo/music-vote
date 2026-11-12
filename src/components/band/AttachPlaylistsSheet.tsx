@@ -10,6 +10,7 @@ import { RoomCover } from "./BandArt";
 import { attachPlaylistToTeam, getAttachablePlaylists, type AttachablePlaylist } from "@/actions/team";
 import { track } from "@/lib/analytics";
 import { teamMessage } from "@/lib/team-messages";
+import { DoneIcon } from "@/components/ui/icons";
 
 const roomDate = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", timeZone: "Asia/Seoul" });
 
@@ -148,9 +149,7 @@ function SheetBody({ teamId, onAttached, onClose }: { teamId: string; onAttached
                     {row.status === "done" ? (
                       // Same check icon as the band home's success lines, not a text glyph.
                       <span className="inline-flex min-h-11 shrink-0 items-center gap-1 text-sm font-semibold text-success">
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                        </svg>
+                        <DoneIcon className="size-4" />
                         넣었어요
                       </span>
                     ) : (

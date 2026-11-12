@@ -1,5 +1,6 @@
 import { ListRowLink } from "@/components/ui/ListRow";
 import { GUIDE_ARTICLES } from "@/lib/seo";
+import { ChevronIcon } from "@/components/ui/icons";
 
 // Link text is the page's search phrase, which tells search engines what the page answers.
 const GUIDES = {
@@ -39,9 +40,7 @@ export default function RelatedGuides({ guides }: { guides: RelatedGuide[] }) {
             <ListRowLink
               href={GUIDES[key].href}
               trailing={
-                <svg className="size-5 text-text-subtle" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <ChevronIcon direction="right" className="size-5 text-text-subtle" />
               }
             >
               <span className="block break-keep text-body font-semibold text-primary-fg">{GUIDES[key].title}</span>

@@ -1,3 +1,4 @@
+import { ChevronIcon, KakaoIcon, TapIcon } from "@/components/ui/icons";
 // 랜딩의 카톡 공유 장면. 멤버 쪽에서 보는 카드와 세 단계를 보여 준다.
 // 카드 문구는 실제 공유 카드(KakaoShareButton 의 playlist 템플릿)와 같다.
 
@@ -57,28 +58,20 @@ function StepIcon({ icon }: { icon: (typeof STEPS)[number]["icon"] }) {
   if (icon === "kakao") {
     return (
       <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-pill bg-kakao text-kakao-text">
-        <svg width="20" height="20" viewBox="0 0 20 20">
-          <path fill="currentColor" d="M10 3.2c-4.4 0-8 2.8-8 6.3 0 2.3 1.5 4.3 3.8 5.4l-.9 3.3c-.1.3.2.5.5.4l3.9-2.6c.2 0 .5 0 .7 0 4.4 0 8-2.8 8-6.3S14.4 3.2 10 3.2z" />
-        </svg>
+        <KakaoIcon className="size-5" />
       </span>
     );
   }
   if (icon === "vote") {
     return (
       <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-pill bg-success-soft text-success">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-          <path d="M6 15l6-6 6 6" />
-        </svg>
+        <ChevronIcon direction="up" className="size-5" />
       </span>
     );
   }
   return (
     <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-pill bg-surface-hover text-text">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9 11V5a2 2 0 114 0v5" />
-        <path d="M13 10a2 2 0 114 0v2" />
-        <path d="M17 12a2 2 0 114 0v3a6 6 0 01-6 6h-2a7 7 0 01-5-2l-3.5-3.5a1.8 1.8 0 012.5-2.5L9 15" />
-      </svg>
+      <TapIcon className="size-5" />
     </span>
   );
 }

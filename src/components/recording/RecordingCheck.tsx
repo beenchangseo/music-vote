@@ -40,6 +40,7 @@ import {
 } from "@/domain/recording-check";
 import LevelMeters from "./LevelMeters";
 import RecordingResult from "./RecordingResult";
+import { DoneIcon } from "@/components/ui/icons";
 
 const TIMED_MS = 10_000;
 const TIMESLICE_MS = 1000;
@@ -208,9 +209,7 @@ function Step({ title, children }: { title: string; children: ReactNode }) {
 
 function CheckIcon() {
   return (
-    <svg className="size-5 text-primary-fg" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-      <path d="M5 13l4 4L19 7" />
-    </svg>
+    <DoneIcon className="size-5 text-primary-fg" />
   );
 }
 

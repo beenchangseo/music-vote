@@ -8,7 +8,7 @@ import NoticeCard from "@/components/ui/NoticeCard";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import Switch from "@/components/ui/Switch";
 import TabBar, { type TabBarItem } from "@/components/ui/TabBar";
-import { CandidatesIcon, HomeIcon, RehearsalIcon, SetlistIcon } from "@/components/ui/icons";
+import * as icons from "@/components/ui/icons";
 import Textarea from "@/components/ui/Textarea";
 import ListRow, {
   ListGroup,
@@ -21,7 +21,6 @@ import ListRow, {
 import { ActionTab, ActionTabBar } from "@/components/ui/ActionTab";
 import IconButton from "@/components/ui/IconButton";
 import Avatar from "@/components/ui/Avatar";
-import GuitarIcon from "@/components/ui/GuitarIcon";
 import { useDialog } from "@/components/ui/DialogProvider";
 import { COLORS, type ScaleToken } from "@/components/ui/tokens";
 
@@ -152,7 +151,7 @@ export function SwitchDemo() {
   return (
     <div className="rounded-card bg-surface px-4">
       <Switch label="익명 투표" description="누가 투표했는지 안 보여요." checked={anonymous} onCheckedChange={setAnonymous} />
-      <Switch label="일코해제에 만들기" icon={<GuitarIcon className="size-4" />} checked={inBand} onCheckedChange={setInBand} />
+      <Switch label="일코해제에 만들기" icon={<icons.GuitarIcon className="size-4" />} checked={inBand} onCheckedChange={setInBand} />
       <Switch label="비활성" checked={false} onCheckedChange={() => {}} disabled />
     </div>
   );
@@ -188,10 +187,10 @@ export function SegmentedDemo() {
 
 type DockTab = "playlist" | "setlist" | "rehearsal";
 const DOCK: TabBarItem<DockTab>[] = [
-  { href: "/design", label: "홈", icon: HomeIcon },
-  { id: "playlist", label: "후보곡", icon: CandidatesIcon },
-  { id: "setlist", label: "셋리스트", icon: SetlistIcon },
-  { id: "rehearsal", label: "합주", icon: RehearsalIcon },
+  { href: "/design", label: "홈", icon: icons.HomeIcon },
+  { id: "playlist", label: "후보곡", icon: icons.SongIcon },
+  { id: "setlist", label: "셋리스트", icon: icons.SetlistIcon },
+  { id: "rehearsal", label: "합주", icon: icons.MetronomeIcon },
 ];
 
 export function TabBarDemo() {
@@ -223,9 +222,7 @@ export function NoticeDemo() {
       <NoticeCard
         tone="success"
         icon={
-          <svg className="size-4.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
+          <icons.DoneIcon className="size-4.5" />
         }
         title="밴드를 만들었어요"
         onDismiss={() => setOpen(false)}
@@ -280,11 +277,11 @@ export function ListGroupDemo() {
       <p className="mt-4 text-caption font-semibold text-text-muted">시트의 고르기 줄 (ListRowButton + ListRowIcon, 셋리 넣기·내보내기)</p>
       <p className="mt-1 text-caption text-text-subtle">아이콘 칸은 줄보다 한 단계 위예요. 줄이 hover 로 surface-hover 가 되면 칸은 surface-elevated 로 올라가서 녹지 않아요.</p>
       <div className="mt-2 flex flex-col">
-        <ListRowButton leading={<ListRowIcon className="text-primary-fg"><GuitarIcon className="size-5" /></ListRowIcon>}>
+        <ListRowButton leading={<ListRowIcon className="text-primary-fg"><icons.GuitarIcon className="size-5" /></ListRowIcon>}>
           <span className="block text-body font-semibold text-text">자작곡</span>
           <span className="block text-caption text-text-muted">우리 곡 한 블록 · 기본 3:00</span>
         </ListRowButton>
-        <ListRowButton disabled leading={<ListRowIcon className="text-text"><GuitarIcon className="size-5" /></ListRowIcon>}>
+        <ListRowButton disabled leading={<ListRowIcon className="text-text"><icons.GuitarIcon className="size-5" /></ListRowIcon>}>
           <span className="block text-body font-semibold text-text">비활성</span>
           <span className="block text-caption text-text-muted">고를 것이 없으면 흐리게 두고 hover 하지 않아요</span>
         </ListRowButton>
@@ -318,24 +315,92 @@ export function SongRowActionsDemo() {
       </div>
       {open && (
         <ActionTabBar id="design-song-actions">
-          <ActionTab icon={<GuitarIcon />} onClick={() => undefined}>
+          <ActionTab icon={<icons.GuitarIcon />} onClick={() => undefined}>
             댓글 2
           </ActionTab>
-          <ActionTab icon={<GuitarIcon />} onClick={() => undefined}>
+          <ActionTab icon={<icons.GuitarIcon />} onClick={() => undefined}>
             버전
           </ActionTab>
-          <ActionTab icon={<GuitarIcon />} selected={inSetlist} onClick={() => setInSetlist((v) => !v)}>
+          <ActionTab icon={<icons.GuitarIcon />} selected={inSetlist} onClick={() => setInSetlist((v) => !v)}>
             {inSetlist ? "셋리스트에 있음" : "셋리스트에 추가"}
           </ActionTab>
           <IconButton bare aria-label="예뻤어 더보기">
-            <svg className="size-4.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <circle cx="5" cy="12" r="1.6" />
-              <circle cx="12" cy="12" r="1.6" />
-              <circle cx="19" cy="12" r="1.6" />
-            </svg>
+            <icons.MoreIcon className="size-4.5" />
           </IconButton>
         </ActionTabBar>
       )}
     </div>
+  );
+}
+
+const ICON_SAMPLES: [string, ReactNode][] = [
+  ["Home", <icons.HomeIcon key="Home" />],
+  ["Home filled", <icons.HomeIcon key="Home filled" filled />],
+  ["Song", <icons.SongIcon key="Song" />],
+  ["Song filled", <icons.SongIcon key="Song filled" filled />],
+  ["Setlist", <icons.SetlistIcon key="Setlist" />],
+  ["Setlist filled", <icons.SetlistIcon key="Setlist filled" filled />],
+  ["Metronome", <icons.MetronomeIcon key="Metronome" />],
+  ["Metronome filled", <icons.MetronomeIcon key="Metronome filled" filled />],
+  ["Chevron left", <icons.ChevronIcon key="Chevron left" direction="left" />],
+  ["Chevron right", <icons.ChevronIcon key="Chevron right" direction="right" />],
+  ["Chevron down", <icons.ChevronIcon key="Chevron down" direction="down" />],
+  ["Chevron up", <icons.ChevronIcon key="Chevron up" direction="up" />],
+  ["ArrowUp", <icons.ArrowUpIcon key="ArrowUp" />],
+  ["Plus", <icons.PlusIcon key="Plus" />],
+  ["Plus circled", <icons.PlusIcon key="Plus circled" circled />],
+  ["Minus", <icons.MinusIcon key="Minus" />],
+  ["Minus circled", <icons.MinusIcon key="Minus circled" circled />],
+  ["Close", <icons.CloseIcon key="Close" />],
+  ["Done", <icons.DoneIcon key="Done" />],
+  ["Edit", <icons.EditIcon key="Edit" />],
+  ["Trash", <icons.TrashIcon key="Trash" />],
+  ["More", <icons.MoreIcon key="More" />],
+  ["Settings", <icons.SettingsIcon key="Settings" />],
+  ["Search", <icons.SearchIcon key="Search" />],
+  ["Share", <icons.ShareIcon key="Share" />],
+  ["Link", <icons.LinkIcon key="Link" />],
+  ["ExternalLink", <icons.ExternalLinkIcon key="ExternalLink" />],
+  ["Play", <icons.PlayPauseIcon key="Play" playing={false} />],
+  ["Pause", <icons.PlayPauseIcon key="Pause" playing />],
+  ["Skip previous", <icons.SkipIcon key="Skip previous" direction="previous" />],
+  ["Skip next", <icons.SkipIcon key="Skip next" direction="next" />],
+  ["Shuffle", <icons.ShuffleIcon key="Shuffle" />],
+  ["Repeat", <icons.RepeatIcon key="Repeat" />],
+  ["Repeat one", <icons.RepeatIcon key="Repeat one" one />],
+  ["Comment", <icons.CommentIcon key="Comment" />],
+  ["Versions", <icons.VersionsIcon key="Versions" />],
+  ["SetlistAdd", <icons.SetlistAddIcon key="SetlistAdd" />],
+  ["InSetlist", <icons.InSetlistIcon key="InSetlist" />],
+  ["DragHandle", <icons.DragHandleIcon key="DragHandle" />],
+  ["Cards", <icons.CardsIcon key="Cards" />],
+  ["List", <icons.ListIcon key="List" />],
+  ["Clock", <icons.ClockIcon key="Clock" />],
+  ["Calendar", <icons.CalendarIcon key="Calendar" />],
+  ["Notice", <icons.NoticeIcon key="Notice" />],
+  ["Info", <icons.InfoIcon key="Info" />],
+  ["Warning", <icons.WarningIcon key="Warning" />],
+  ["Lock", <icons.LockIcon key="Lock" />],
+  ["Image", <icons.ImageIcon key="Image" />],
+  ["Document", <icons.DocumentIcon key="Document" />],
+  ["QrCode", <icons.QrCodeIcon key="QrCode" />],
+  ["Invite", <icons.InviteIcon key="Invite" />],
+  ["Folder", <icons.FolderIcon key="Folder" />],
+  ["Tap", <icons.TapIcon key="Tap" />],
+  ["Guitar", <icons.GuitarIcon key="Guitar" />],
+  ["Kakao", <icons.KakaoIcon key="Kakao" />],
+];
+
+/** Every glyph of ui/icons at its default 24px, so a new one is drawn against the rest of the set. */
+export function IconGallery() {
+  return (
+    <ul className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+      {ICON_SAMPLES.map(([name, icon]) => (
+        <li key={name} className="flex flex-col items-center gap-1.5 rounded-control bg-surface px-1 py-3 text-text">
+          {icon}
+          <span className="break-all text-center text-caption text-text-muted">{name}</span>
+        </li>
+      ))}
+    </ul>
   );
 }

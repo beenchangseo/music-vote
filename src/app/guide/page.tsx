@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { buttonClassName } from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import { DragHandleIcon } from "@/components/ui/icons";
 import ProductShot from "@/components/guide/ProductShot";
 import RelatedGuides from "@/components/guide/RelatedGuides";
 import { PRODUCT_SCREENSHOTS, pageMetadata } from "@/lib/seo";
@@ -92,7 +93,7 @@ export default function GuidePage() {
               자작곡 블록으로, 멘트·튜닝·악기 점검 시간은 인터벌 블록으로 넣어요.
             </p>
             <p className="mt-2">
-              편집을 누르면 ≡를 끌어 순서를 바꾸고, (+)로 원하는 자리에 블록을 넣어요. 위에는 총 공연 시간이, 블록마다 몇 분에
+              편집을 누르면 <DragHandleIcon className="inline-block size-4 align-middle" />를 끌어 순서를 바꾸고, (+)로 원하는 자리에 블록을 넣어요. 위에는 총 공연 시간이, 블록마다 몇 분에
               시작하는지가 붙어요. 시간이 비어 있는 곡이 있으면 몇 곡인지 따로 알려 줘요.
             </p>
             <p className="mt-2">

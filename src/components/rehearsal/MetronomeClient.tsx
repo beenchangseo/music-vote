@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMetronome } from "@/hooks/useMetronome";
 import { displayTitle } from "@/domain/song-meta";
 import { controlSkin } from "../ui/Input";
-import { PlayPauseIcon } from "../ui/icons";
+import { ChevronIcon, PlayPauseIcon } from "../ui/icons";
 import RoundButton, { RoundLink, RoundRow } from "../ui/RoundButton";
 import type { Song } from "@/domain/types";
 
@@ -38,9 +38,7 @@ export default function MetronomeClient({ shareCode, playlistTitle, songs, initi
       <div className="max-w-lg mx-auto w-full px-4 py-4">
         <div className="flex items-center gap-3">
           <RoundLink href={`/playlist/${shareCode}`} tone="ghost" size="md" edge="start" aria-label="플레이리스트로 돌아가기">
-            <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronIcon direction="left" />
           </RoundLink>
           <div>
             <h1 className="text-h4 font-bold text-text">메트로놈</h1>

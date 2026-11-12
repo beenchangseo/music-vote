@@ -8,6 +8,7 @@ import { ESLint } from "eslint";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const RAW_CONTROL_RULE = "ds/no-raw-control";
 const RAW_INPUT_RULE = "ds/no-raw-input";
+const INLINE_SVG_RULE = "ds/no-inline-svg";
 
 const CATEGORIES = {
   "raw-button": "ui 밖에서 크기·모서리·글자 크기를 직접 칠한 <button>",
@@ -18,17 +19,21 @@ const CATEGORIES = {
   "negative-margin": "ui 밖의 음수 margin (-mt-3·-mx-2 등). 칸을 레이아웃 밖으로 당기는 손 보정",
   "focus-ring": "포커스 ring 없이 outline 을 지운 클래스",
   "tracked-caps": "ui 밖 라벨의 uppercase·tracking-wide*",
+  "inline-svg": "ui/icons.tsx 밖에서 직접 그린 <svg> (Satori 이미지 route·로고는 빼고)",
+  "round-glyph": "RoundButton·RoundLink 안 아이콘에 덧칠한 크기·자리",
 };
 
 function categoryOf(message) {
   if (message.ruleId === RAW_CONTROL_RULE) return message.messageId === "rawLink" ? "raw-link" : "raw-button";
   if (message.ruleId === RAW_INPUT_RULE) return "raw-input";
+  if (message.ruleId === INLINE_SVG_RULE) return "inline-svg";
   return message.ruleId.slice("ds/".length);
 }
 
 function detailOf(message) {
   if (message.ruleId === RAW_CONTROL_RULE) return message.message.match(/className="([^"]*)"/)?.[1] ?? "";
   if (message.ruleId === RAW_INPUT_RULE) return message.message.match(/^<[^>]*>/)?.[0] ?? "";
+  if (message.ruleId === INLINE_SVG_RULE) return "<svg>";
   return message.message;
 }
 

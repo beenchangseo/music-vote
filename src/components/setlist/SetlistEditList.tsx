@@ -21,6 +21,7 @@ import { BlockCard } from "./BlockCards";
 import { BLOCK_TONES } from "./block-tones";
 import { setlistBlockTitle, setlistInsertSlots, type SetlistBlock, type SetlistInsertSlot } from "@/domain/setlist";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
+import { DragHandleIcon, PlusIcon } from "@/components/ui/icons";
 
 type Block = SetlistBlock<SongWithScore>;
 export type InsertTarget = SetlistInsertSlot<SongWithScore>;
@@ -57,7 +58,7 @@ const screenReaderInstructions = {
   draggable: "스페이스나 엔터로 블록을 들고, 위아래 화살표로 옮긴 뒤 다시 스페이스나 엔터로 놓아요. Esc 를 누르면 취소해요.",
 };
 
-/** 편집 모드의 셋리스트. 오른쪽 레일 칸의 ≡ 로 끌어 순서를 바꾸고, 카드 사이 (+) 로 그 자리에 넣는다. */
+/** 편집 모드의 셋리스트. 오른쪽 레일 칸의 손잡이로 끌어 순서를 바꾸고, 카드 사이 (+) 로 그 자리에 넣는다. */
 export default function SetlistEditList({ blocks, totalRuntime, saving, focusItemId, onReorder, onOpenSlot, onEdit, onRemove }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
   // Only the handle starts a drag and it is touch-action: none, so a touch elsewhere still scrolls and no long press is needed.
@@ -108,7 +109,7 @@ export default function SetlistEditList({ blocks, totalRuntime, saving, focusIte
               </div>
             </div>
             <span className="flex items-center justify-center text-text">
-              <GripIcon />
+              <DragHandleIcon className="size-5" />
             </span>
           </div>
         )}
@@ -166,7 +167,7 @@ function SortableBlockRow({ block, insert, dragging, autoFocus, onOpenSlot, onEd
             // Faded, not hidden: a keyboard drag keeps focus on this handle while the overlay draws the lifted one.
             className={`cursor-grab touch-none select-none active:cursor-grabbing ${isDragging ? "opacity-0" : ""}`}
           >
-            <GripIcon />
+            <DragHandleIcon className="size-5" />
           </IconButton>
         </span>
       </div>
@@ -185,21 +186,10 @@ function InsertRow({ target, hidden, onOpen }: { target: InsertTarget; hidden: b
       <div className="flex items-center gap-2">
         <span aria-hidden className="flex-1 border-t border-dashed border-border-strong" />
         <IconButton bare aria-label={label} onClick={() => onOpen(target)}>
-          <svg className="size-7" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden>
-            <circle cx="12" cy="12" r="10" />
-            <path strokeLinecap="round" d="M12 8v8M8 12h8" />
-          </svg>
+          <PlusIcon circled className="size-7" />
         </IconButton>
         <span aria-hidden className="flex-1 border-t border-dashed border-border-strong" />
       </div>
     </div>
-  );
-}
-
-function GripIcon() {
-  return (
-    <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
-      <path d="M5 8h14M5 12h14M5 16h14" />
-    </svg>
   );
 }

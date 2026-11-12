@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { SongIcon } from "@/components/ui/icons";
 
 /**
  * 밴드 홈 히어로 뒤 그림 (Spotify Blend 의 겹친 원). 모든 밴드가 같은 기존 토큰 색
@@ -14,14 +15,6 @@ export function BandArt({ className = "" }: { className?: string }) {
       {/* The lower half darkens so the band name stays readable over the art. */}
       <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-b from-transparent via-bg/70 to-bg" />
     </div>
-  );
-}
-
-function NoteIcon({ className }: { className: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
   );
 }
 
@@ -70,7 +63,7 @@ export function RoomCover({
       aria-hidden
       className={`${frame} flex items-center justify-center bg-gradient-to-br from-primary to-primary-tint text-white/80`}
     >
-      <NoteIcon className="h-1/3 w-1/3" />
+      <SongIcon className="h-1/3 w-1/3" />
     </div>
   );
 }
@@ -80,7 +73,7 @@ export function SongThumb({ src }: { src: string | null }) {
   if (src) return <Image src={src} alt="" fill sizes="48px" className="object-cover" />;
   return (
     <div aria-hidden className="flex size-full items-center justify-center text-text-subtle">
-      <NoteIcon className="h-1/2 w-1/2" />
+      <SongIcon className="h-1/2 w-1/2" />
     </div>
   );
 }

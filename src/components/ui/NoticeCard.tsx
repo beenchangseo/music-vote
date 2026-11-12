@@ -1,6 +1,7 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import Card from "./Card";
 import IconButton from "./IconButton";
+import { CloseIcon } from "./icons";
 
 export type NoticeTone = "primary" | "success" | "warning";
 
@@ -51,9 +52,7 @@ export default function NoticeCard({
       {actions && <div className="mt-3 flex flex-wrap gap-2">{actions}</div>}
       {/* Last in reading order so Tab reaches the actions before the close that hides the card for good. */}
       <IconButton bare aria-label={dismissLabel} onClick={onDismiss} className="absolute right-2 top-2">
-        <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
+        <CloseIcon className="size-5" />
       </IconButton>
     </Card>
   );

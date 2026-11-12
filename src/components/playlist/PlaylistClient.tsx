@@ -14,7 +14,7 @@ import InlineNotice from "../ui/InlineNotice";
 import { SongRow } from "../ui/ListRow";
 import Modal from "../ui/Modal";
 import Avatar from "../ui/Avatar";
-import { CardsIcon, ListIcon } from "../ui/icons";
+import { ArrowUpIcon, CardsIcon, ChevronIcon, DoneIcon, ListIcon } from "../ui/icons";
 import PlaylistHeader from "./PlaylistHeader";
 import AnnouncementButton from "./AnnouncementButton";
 import type { PlaylistMenuItem } from "./PlaylistActionRow";
@@ -537,9 +537,7 @@ export default function PlaylistClient({
               {isExpired && songsWithVotes.length > 0 && (
                 <div className="mt-5 p-5 rounded-card bg-success/10 border border-success/30 text-center animate-fade-in">
                   <p className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-success">
-                    <svg className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
+                    <DoneIcon className="size-4 shrink-0" />
                     곡 결정
                   </p>
                   <p className="text-h3 font-bold text-text leading-snug truncate px-2">
@@ -639,9 +637,7 @@ export default function PlaylistClient({
                 {songsWithVotes.length === 0 ? (
                   <div className="mt-2">
                     <p className="mb-3 flex items-center justify-center gap-2 text-sm font-semibold text-primary-fg">
-                      <svg className="size-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7" />
-                      </svg>
+                      <ArrowUpIcon className="size-6" />
                       위 입력창부터
                     </p>
                     <EmptyState
@@ -735,9 +731,7 @@ export default function PlaylistClient({
                 className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary-fg hover:text-on-primary-tint transition-colors"
               >
                 플레이리스트 만들기
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
+                <ChevronIcon direction="right" className="size-4" />
               </Link>
             </div>
           )}

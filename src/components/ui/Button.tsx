@@ -1,4 +1,5 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
+import { KakaoIcon } from "./icons";
 
 type Variant = "primary" | "tonal" | "ghost" | "danger" | "kakao";
 type Size = "sm" | "md" | "lg" | "icon";
@@ -102,7 +103,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
           shrink to the button (min-w-0, a minmax(0, 1fr) column, max-w-full) so a truncate span in the label gives way. */}
       <span className="inline-grid min-w-0 grid-cols-1 place-items-center">
         <span className={`col-start-1 row-start-1 inline-flex max-w-full items-center gap-2 ${loading ? "opacity-0" : ""}`}>
-          {kakaoMark && <KakaoMark />}
+          {kakaoMark && <KakaoIcon className="size-4.5 shrink-0" />}
           {children}
         </span>
         {loading && (
@@ -114,12 +115,3 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
 });
 
 export default Button;
-
-/** `buttonClassName({ variant: "kakao" })` 로 칠한 링크가 Button 과 같은 말풍선을 붙일 때 쓴다. */
-export function KakaoMark() {
-  return (
-    <svg aria-hidden className="size-4.5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 3C6.48 3 2 6.48 2 10.8c0 2.79 1.86 5.24 4.66 6.6l-1.18 4.32c-.1.36.31.64.61.43L11.2 19.4c.26.02.53.04.8.04 5.52 0 10-3.48 10-7.8S17.52 3 12 3z" />
-    </svg>
-  );
-}

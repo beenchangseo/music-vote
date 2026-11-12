@@ -4,6 +4,7 @@ import { ReactNode, RefObject, useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { dialogLayerOpen, getFocusable, trapTabKey } from "./focus-trap";
 import IconButton from "./IconButton";
+import { CloseIcon } from "./icons";
 
 interface ModalProps {
   open: boolean;
@@ -90,9 +91,7 @@ export default function Modal({ open, onClose, children, title, description, ini
           <div className="flex items-center justify-between">
             {title ? <h2 className="text-h3 font-bold text-text">{title}</h2> : <span />}
             <IconButton ref={closeRef} bare onClick={onClose} aria-label="닫기" className="-mr-2">
-              <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <CloseIcon className="size-5" />
             </IconButton>
           </div>
           {description && (

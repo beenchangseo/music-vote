@@ -12,6 +12,7 @@ import { extractVideoId } from "@/lib/youtube";
 import { track } from "@/lib/analytics";
 import { ARCHIVED_PLAYLIST_MESSAGE } from "@/domain/playlist-archive";
 import type { SearchResult } from "@/lib/youtube-data";
+import { PlayPauseIcon, SearchIcon } from "@/components/ui/icons";
 
 const ADD_SONG_REJECTED_MESSAGES: Record<AddSongReason, string> = {
   deadline_passed: "마감이 지나서 후보곡을 더 추가할 수 없어요.",
@@ -137,17 +138,7 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
         <div className="flex gap-2">
           {/* Spotify search bar: magnifier inside a pill. */}
           <div className="relative flex-1">
-            <svg
-              className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-              aria-hidden
-            >
-              <circle cx="11" cy="11" r="7" />
-              <path strokeLinecap="round" d="M20 20l-3.5-3.5" />
-            </svg>
+            <SearchIcon className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-text-subtle" />
             <Input
               pill
               value={input}
@@ -196,13 +187,7 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
                     >
                       <Image src={item.thumbnail} alt="" fill sizes="64px" className="object-cover" />
                       <span className="absolute inset-0 flex items-center justify-center bg-black/35">
-                        <svg className="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                          {isPreviewing ? (
-                            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                          ) : (
-                            <path d="M8 5v14l11-7z" />
-                          )}
-                        </svg>
+                        <PlayPauseIcon playing={isPreviewing} className="size-4 text-white" />
                       </span>
                     </button>
                   </div>

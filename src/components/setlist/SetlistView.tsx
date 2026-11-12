@@ -13,7 +13,7 @@ import Button from "../ui/Button";
 import EmptyState from "../ui/EmptyState";
 import IconButton from "../ui/IconButton";
 import RoundButton from "../ui/RoundButton";
-import { DoneIcon, EditIcon, SettingsIcon } from "../ui/icons";
+import { DoneIcon, DragHandleIcon, EditIcon, PlusIcon, SettingsIcon } from "../ui/icons";
 import { useDialog } from "../ui/DialogProvider";
 import { publishScreenToolbarHeight } from "../ui/chrome-inset";
 import { RoomCover } from "../band/BandArt";
@@ -264,7 +264,11 @@ export default function SetlistView({
           }
         />
       </div>
-      {showEditControls && <p className="mb-3 text-caption text-text-muted">≡ 를 끌어 순서를 바꾸고, (+) 로 그 자리에 넣어요</p>}
+      {showEditControls && (
+        <p className="mb-3 text-caption text-text-muted">
+          <DragHandleIcon className="inline-block size-3.5 align-middle" /> 를 끌어 순서를 바꾸고, (+) 로 그 자리에 넣어요
+        </p>
+      )}
 
       {loading ? (
         <div className="mt-6 py-16 text-center text-text-subtle">
@@ -319,15 +323,11 @@ export default function SetlistView({
           {canEdit && blocks.length === 0 && (
             <div className="mt-3 flex flex-wrap gap-2 print:hidden">
               <Button variant="tonal" onClick={() => openAtEnd("original")}>
-                <svg className="size-4 text-primary-fg" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
+                <PlusIcon className="size-4 text-primary-fg" />
                 자작곡 블록 추가
               </Button>
               <Button variant="tonal" onClick={() => openAtEnd("interval")}>
-                <svg className="size-4 text-text-muted" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
+                <PlusIcon className="size-4 text-text-muted" />
                 인터벌 블록 추가
               </Button>
             </div>
@@ -356,10 +356,7 @@ export default function SetlistView({
                       {addingSongId === song.id ? (
                         <span aria-hidden className="size-4 animate-spin rounded-pill border-2 border-border-strong border-t-primary-fg" />
                       ) : (
-                        <svg className="size-6" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden>
-                          <circle cx="12" cy="12" r="9" />
-                          <path strokeLinecap="round" d="M12 8v8M8 12h8" />
-                        </svg>
+                        <PlusIcon circled className="size-6" />
                       )}
                     </IconButton>
                   </li>

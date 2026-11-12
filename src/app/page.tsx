@@ -2,6 +2,7 @@ import { Suspense, type ReactNode } from "react";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
+import BrandMark from "@/components/home/BrandMark";
 import HeroCTA from "@/components/home/HeroCTA";
 import HomeSkeleton from "@/components/home/HomeSkeleton";
 import LandingVoteDemo from "@/components/home/LandingVoteDemo";
@@ -31,6 +32,7 @@ import {
   jsonLdScript,
   pageMetadata,
 } from "@/lib/seo";
+import { ChevronIcon, ClockIcon, DocumentIcon } from "@/components/ui/icons";
 
 // `?left=1` and other query variants are the same page.
 export const metadata: Metadata = pageMetadata({
@@ -243,12 +245,12 @@ function Landing({ left }: { left: boolean }) {
             <LandingFeature
               title="총 공연 시간을 자동으로 더해요"
               body="곡 시간에 멘트·악기 점검 같은 쉬는 시간을 더해서 보여 줘요. 30분 무대에 몇 곡이 들어가는지 바로 알 수 있어요."
-              icon={<path d="M12 9v4l2 2M9 2h6M20 13a8 8 0 11-16 0 8 8 0 0116 0z" />}
+              icon={<ClockIcon className="size-5" />}
             />
             <LandingFeature
               title="셋리스트 이미지 저장·PDF 인쇄"
               body="확정한 셋리스트는 한 장짜리 이미지로 단톡방에 올리거나, PDF로 뽑아 합주실과 무대에 들고 가요."
-              icon={<path d="M6 9V3h12v6M5 17H4a1 1 0 01-1-1v-6a1 1 0 011-1h16a1 1 0 011 1v6a1 1 0 01-1 1h-1M7 14h10v7H7z" />}
+              icon={<DocumentIcon className="size-5" />}
             />
           </ul>
         </section>
@@ -359,9 +361,7 @@ function Landing({ left }: { left: boolean }) {
                 className="flex min-h-12 items-center justify-between gap-3 border-b border-surface-hover text-body font-semibold text-primary-fg transition-colors last:border-b-0 hover:text-text"
               >
                 {link.label}
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <path d="M9 6l6 6-6 6" />
-                </svg>
+                <ChevronIcon direction="right" className="size-4.5" />
               </a>
             ))}
           </nav>
@@ -394,31 +394,12 @@ function LandingFeature({ title, body, icon }: { title: string; body: string; ic
   return (
     <li className="flex items-start gap-3">
       <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-control bg-primary-tint text-text">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-          {icon}
-        </svg>
+        {icon}
       </span>
       <div className="min-w-0">
         <h3 className="text-h4 font-bold text-text">{title}</h3>
         <p className="mt-1 break-keep text-sm text-text-muted">{body}</p>
       </div>
     </li>
-  );
-}
-
-function BrandMark() {
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex h-8 w-8 items-center justify-center rounded-control bg-gradient-to-br from-primary to-indigo-600 shadow-lg shadow-primary/30">
-        <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z"
-          />
-        </svg>
-      </div>
-      <span className="text-body font-bold text-text">Plypick</span>
-    </div>
   );
 }
