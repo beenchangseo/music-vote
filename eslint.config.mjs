@@ -47,8 +47,6 @@ const LINK_IN_BUTTON_GROUP = `JSXElement:matches(${CHILD_PATHS.map((path) =>
 ).join(", ")}):has(> JSXOpeningElement:has(CallExpression[callee.name='buttonClassName']))`;
 
 const ROUND_SKIN_UTILITY = "/(^|[\\s:])!?(bg-|text-|font-|border|shadow|ring-|opacity-|scale-|-m[trblxyse]?-|[\\w-]*\\[)/";
-const GLYPH_PLACEMENT_UTILITY =
-  "/(^|[\\s:])!?((min-|max-)?[hw]-|size-|-?m[trblxyse]?-|p[xytrblse]?-|scale-|translate-|absolute|relative|[\\w-]*\\[)/";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -142,12 +140,10 @@ const eslintConfig = defineConfig([
             message:
               "RoundButton·RoundLink 의 색·테두리·그림자·눌림은 tone 이, 글리프를 내용 끝에 맞추는 자리는 edge 가 정한다. className 에는 바깥 배치만 둔다.",
           },
-          {
-            selector: `JSXElement[openingElement.name.name=/^Round(Button|Link)$/] JSXOpeningElement[name.name=/^[A-Z]\\w*Icon$/] > JSXAttribute[name.name='className'] ${node}${GLYPH_PLACEMENT_UTILITY}]`,
-            message: "RoundButton 안 글리프의 크기와 자리는 버튼의 size 가 정한다. 아이콘에는 색만 둔다. 재생 삼각형은 PlayPauseIcon 을 쓴다.",
-          },
         ]),
       ],
+      // A selector sees only names, so `<Chev>` from `{ ChevronIcon as Chev }` slipped past; the rule follows the import.
+      "ds/round-glyph": "error",
     },
   },
   {
@@ -164,7 +160,8 @@ const eslintConfig = defineConfig([
     ignores: [
       "src/components/ui/icons.tsx",
       // Satori renders the OG and setlist images on the server; they cannot use the app's components.
-      "src/app/api/**",
+      "src/app/api/og/route.tsx",
+      "src/app/api/setlist-image/*/route.tsx",
       // The Plypick logo lockup is a brand mark, not an icon.
       "src/components/home/BrandMark.tsx",
       "src/**/__tests__/**",

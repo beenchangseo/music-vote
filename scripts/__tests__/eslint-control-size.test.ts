@@ -7,7 +7,7 @@ const eslint = new ESLint({ cwd });
 
 async function controlSizeErrors(code: string) {
   const [result] = await eslint.lintText(code, { filePath: `${cwd}/src/components/LintFixture.tsx` });
-  return result.messages.filter((m) => m.ruleId === "no-restricted-syntax").map((m) => m.message);
+  return result.messages.filter((m) => m.ruleId === "no-restricted-syntax" || m.ruleId === "ds/round-glyph").map((m) => m.message);
 }
 
 describe("eslint control-size rule", () => {
@@ -124,6 +124,10 @@ describe("eslint RoundButton rules", () => {
     [round("", '<MoreIcon className="p-1" />'), "글리프의 크기와 자리"],
     [round("", '<span><CloseIcon className="size-4" /></span>'), "글리프의 크기와 자리"],
     ['<RoundLink href="/" size="md" tone="ghost" aria-label="x"><ChevronIcon direction="left" className="-ml-1" /></RoundLink>', "글리프의 크기와 자리"],
+    [round("", '<icons.ChevronIcon direction="up" className="size-5" />'), "글리프의 크기와 자리"],
+    [`import * as glyphs from "@/components/ui/icons";\n${round("", '<glyphs.Chevron className="size-5" />')}`, "글리프의 크기와 자리"],
+    [`import { ChevronIcon as Chev } from "@/components/ui/icons";\n${round("", '<Chev direction="up" className="size-5" />')}`, "글리프의 크기와 자리"],
+    [`import { MoreIcon as More } from "../ui/icons";\n${round("", "<More className={`${on ? \"ml-1\" : \"\"}`} />")}`, "글리프의 크기와 자리"],
   ])("flags %s", async (code, says) => {
     const errors = await controlSizeErrors(code);
     expect(errors.length).toBeGreaterThan(0);
@@ -136,6 +140,7 @@ describe("eslint RoundButton rules", () => {
     round("", '<ShuffleIcon /><span className="absolute right-0.5 top-0.5 size-3 rounded-pill bg-primary" />'),
     '<RoundRow className="mt-5" />',
     '<ChevronIcon direction="up" className="h-5 w-5 ml-1" />',
+    `import { Chev } from "./Chev";\n${round("", '<Chev className="size-5" />')}`,
   ])("allows %s", async (code) => {
     expect(await controlSizeErrors(code)).toEqual([]);
   });

@@ -278,10 +278,67 @@ const noInlineSvg = {
     },
     schema: [],
   },
+  // A tag held in a variable (`const Svg = "svg"; <Svg />`) still slips past.
   create(context) {
     return {
       JSXOpeningElement(node) {
         if (node.name.type === "JSXIdentifier" && node.name.name === "svg") context.report({ node, messageId: "inline" });
+      },
+      CallExpression(node) {
+        const { callee } = node;
+        const name = callee.type === "Identifier" ? callee.name : callee.type === "MemberExpression" ? callee.property.name : null;
+        if (name !== "createElement") return;
+        const [tag] = node.arguments;
+        const value = tag?.type === "TemplateLiteral" && tag.expressions.length === 0 ? tag.quasis[0].value.cooked : tag?.value;
+        if (value === "svg") context.report({ node, messageId: "inline" });
+      },
+    };
+  },
+};
+
+const ROUND_CONTROL = /^Round(Button|Link)$/;
+const ICON_NAME = /^[A-Z]\w*Icon$/;
+/** `@/components/ui/icons` and the relative paths to it from ui and the folders beside it. */
+const ICONS_MODULE = /^(@\/components\/ui|\.{1,2}(\/\.\.)*(\/ui)?)\/icons$/;
+const GLYPH_PLACEMENT = /^((min-|max-)?[hw]-|size-|-?m[trblxyse]?-|p[xytrblse]?-|scale-|translate-|absolute|relative|[\w-]*\[)/;
+
+/** The import specifier `name` is bound to at `node`, when it imports from the icons module. */
+function iconsImport(node, name, sourceCode) {
+  const def = findVariable(sourceCode.getScope(node), name)?.defs[0];
+  return def?.type === "ImportBinding" && ICONS_MODULE.test(def.parent.source.value) ? def.node : null;
+}
+
+/** Named like an icon, or bound to the icons module under any name: `<Chev>` from `{ ChevronIcon as Chev }`, `<glyphs.X>`. */
+function isIcon(element, sourceCode) {
+  const { name } = element;
+  if (name.type === "JSXIdentifier") return ICON_NAME.test(name.name) || iconsImport(element, name.name, sourceCode) !== null;
+  if (name.type !== "JSXMemberExpression") return false;
+  let root = name.object;
+  while (root.type === "JSXMemberExpression") root = root.object;
+  return ICON_NAME.test(name.property.name) || iconsImport(element, root.name, sourceCode)?.type === "ImportNamespaceSpecifier";
+}
+
+const roundGlyph = {
+  meta: {
+    type: "problem",
+    docs: { description: "A glyph inside RoundButton or RoundLink takes its size and place from the button." },
+    messages: {
+      placed: "RoundButton 안 글리프의 크기와 자리는 버튼의 size 가 정한다. 아이콘에는 색만 둔다({{classes}}). 재생 삼각형은 PlayPauseIcon 을 쓴다.",
+    },
+    schema: [],
+  },
+  create(context) {
+    const { sourceCode } = context;
+    const inRound = (node) =>
+      sourceCode
+        .getAncestors(node)
+        .some((a) => a.type === "JSXElement" && a.openingElement.name.type === "JSXIdentifier" && ROUND_CONTROL.test(a.openingElement.name.name));
+    return {
+      JSXOpeningElement(node) {
+        const attr = node.attributes.find((a) => a.type === "JSXAttribute" && a.name.name === "className");
+        if (!attr?.value || !isIcon(node, sourceCode) || !inRound(node)) return;
+        const placed = tokensOf(classStrings(attr.value, sourceCode).strings).filter((t) => GLYPH_PLACEMENT.test(utilityOf(t)));
+        if (placed.length) context.report({ node: attr, messageId: "placed", data: { classes: placed.join(" ") } });
       },
     };
   },
@@ -318,6 +375,7 @@ const plugin = {
     "focus-ring": focusRing,
     "tracked-caps": trackedCaps,
     "no-inline-svg": noInlineSvg,
+    "round-glyph": roundGlyph,
     "non-token": classTokenRule(
       "Radius and font size outside the tokens (rounded-badge·control·card·sheet·pill, text-display·h1–h4·body·sm·caption).",
       (u) => NON_TOKEN_RADIUS.test(u) || NON_TOKEN_FONT_SIZE.test(u),

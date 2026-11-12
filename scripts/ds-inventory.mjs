@@ -19,7 +19,8 @@ const CATEGORIES = {
   "negative-margin": "ui 밖의 음수 margin (-mt-3·-mx-2 등). 칸을 레이아웃 밖으로 당기는 손 보정",
   "focus-ring": "포커스 ring 없이 outline 을 지운 클래스",
   "tracked-caps": "ui 밖 라벨의 uppercase·tracking-wide*",
-  "inline-svg": "ui/icons.tsx 밖에서 직접 그린 <svg> (OG route·로고는 빼고)",
+  "inline-svg": "ui/icons.tsx 밖에서 직접 그린 <svg> (Satori 이미지 route·로고는 빼고)",
+  "round-glyph": "RoundButton·RoundLink 안 아이콘에 덧칠한 크기·자리",
 };
 
 function categoryOf(message) {
