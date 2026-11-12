@@ -5,7 +5,7 @@ import Image from "next/image";
 import type { PlayerState, PlayerActions } from "@/hooks/usePlayerQueue";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
 import { trapTabKey } from "../ui/focus-trap";
-import { publishMiniPlayerHeight } from "../ui/chrome-inset";
+import { clearMiniPlayerHeight, measureMiniPlayerHeight } from "../ui/chrome-inset";
 import { ChevronIcon, PlayPauseIcon, RepeatIcon, ShuffleIcon, SkipIcon } from "../ui/icons";
 import { ListRowButton } from "../ui/ListRow";
 import RoundButton from "../ui/RoundButton";
@@ -47,6 +47,10 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
   const collapseRef = useRef<HTMLButtonElement>(null);
   const barRef = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef(false);
+
+  // The bar unmounts while the player is open, but the page behind keeps its room for it until the song goes away.
+  const hasSong = currentSong !== null;
+  useEffect(() => (hasSong ? clearMiniPlayerHeight : undefined), [hasSong]);
 
   // The YouTube iframe API has no time events: poll while something is loaded.
   useEffect(() => {
@@ -114,8 +118,8 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
       aria-label={expanded ? "재생 중인 곡" : undefined}
       className={
         expanded
-          ? "fixed inset-0 z-[60] flex flex-col overflow-y-auto bg-bg print:hidden"
-          : "fixed inset-x-0 bottom-dock z-50 bg-surface/95 backdrop-blur-md print:hidden"
+          ? "fixed inset-0 z-[60] flex flex-col overflow-y-auto bg-bg pb-safe-bottom print:hidden"
+          : "fixed inset-x-0 bottom-(--tab-bar-height) z-50 bg-surface/95 backdrop-blur-md print:hidden"
       }
     >
       {/* Expanded top bar (slot 0). Rendered with && so the video wrapper below never changes position. */}
@@ -222,7 +226,7 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
           </section>
         </div>
       ) : (
-        <div ref={publishMiniPlayerHeight}>
+        <div ref={measureMiniPlayerHeight}>
           {/* Thin progress line along the top edge (YouTube Music mini player). */}
           <div className="h-0.5 w-full bg-surface-hover" aria-hidden>
             <div className="h-0.5 bg-text transition-[width] duration-500 ease-linear" style={{ width: `${ratio * 100}%` }} />

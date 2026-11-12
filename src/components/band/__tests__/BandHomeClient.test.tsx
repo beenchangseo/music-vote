@@ -19,7 +19,7 @@ const showDanger = vi.fn();
 vi.mock("@/actions/team", () => actions);
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
 vi.mock("next/image", () => ({ default: () => null }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push, refresh: vi.fn() }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push, refresh: vi.fn() }), usePathname: () => "/band/team" }));
 vi.mock("../../ui/DialogProvider", () => ({ useDialog: () => ({ showDanger, showAlert: vi.fn(), showConfirm: vi.fn() }) }));
 // The sheet's own behaviour is in AttachPlaylistsSheet.test; here only who can open it.
 vi.mock("../AttachPlaylistsSheet", () => ({
@@ -72,8 +72,16 @@ const ownerView = (overrides: Partial<MemberView> = {}) =>
     ...overrides,
   });
 
+const OTHER_TEAM = "33333333-3333-4333-8333-333333333333";
+const MY_BANDS = [
+  { id: OTHER_TEAM, name: "목요일 잼" },
+  { id: TEAM, name: "일코해제" },
+];
+
 function renderHome(v: MemberView, flags: { created?: boolean; joined?: boolean } = {}) {
-  return render(<BandHomeClient view={v} created={!!flags.created} joined={!!flags.joined} />);
+  return render(
+    <BandHomeClient view={v} bands={MY_BANDS} account={{ nickname: "기타", avatarUrl: null }} created={!!flags.created} joined={!!flags.joined} />,
+  );
 }
 
 beforeEach(() => {
@@ -568,7 +576,7 @@ describe("BandHomeClient member management (F1, 24B, R7)", () => {
 
   it("gives members no remove menu", () => {
     renderHome(view());
-    expect(screen.queryByRole("button", { name: /메뉴$/ })).not.toBeInTheDocument();
+    expect(within(screen.getByRole("region", { name: /^멤버/ })).queryByRole("button", { name: /메뉴$/ })).not.toBeInTheDocument();
   });
 
   it("swaps the sheet link after 링크 새로 만들기 and keeps /band/{teamId}", async () => {
@@ -593,5 +601,94 @@ describe("BandHomeClient member management (F1, 24B, R7)", () => {
     fireEvent.click(screen.getByRole("button", { name: "멤버 초대" }));
     expect(screen.queryByRole("button", { name: "링크 새로 만들기" })).not.toBeInTheDocument();
     expect(screen.getByText("이 링크를 받은 사람은 누구나 들어올 수 있어요")).toBeInTheDocument();
+  });
+});
+
+describe("BandHomeClient band switcher (#106)", () => {
+  it("puts the band name with a caret at the top left instead of a chevron that reads as back", () => {
+    renderHome(view());
+
+    expect(screen.getByRole("button", { name: "일코해제 밴드 바꾸기" })).toHaveAttribute("aria-haspopup", "dialog");
+    expect(screen.queryByRole("link", { name: "홈으로" })).not.toBeInTheDocument();
+  });
+
+  it("lists my bands in a sheet: this one checked, the others to their band home, then 전체 홈", () => {
+    renderHome(view());
+    fireEvent.click(screen.getByRole("button", { name: "일코해제 밴드 바꾸기" }));
+    const sheet = within(screen.getByRole("dialog", { name: "내 밴드" }));
+
+    expect(sheet.getAllByRole("link").map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
+      ["목요일 잼", `/band/${OTHER_TEAM}`],
+      ["전체 홈", "/"],
+    ]);
+    expect(sheet.getByText("일코해제").closest("[aria-current]")).toHaveAttribute("aria-current", "true");
+    expect(sheet.queryByRole("link", { name: "일코해제" })).not.toBeInTheDocument();
+  });
+});
+
+describe("BandHomeClient top row (#106)", () => {
+  // The layout's account button is fixed at the top right, and a long band name in the switcher ran under it. Drawn in
+  // the row, the menu takes its own room and the fixed one steps aside (layout.tsx).
+  it("draws the account menu in the switcher's row, taking over from the fixed one", () => {
+    renderHome(view({}, { name: "토요일 오후 세 시 합정 연습실 밴드" }));
+
+    expect(screen.getByRole("button", { name: "토요일 오후 세 시 합정 연습실 밴드 밴드 바꾸기" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "기타 계정 메뉴" }).closest("[data-account-in-flow]")).not.toBeNull();
+  });
+});
+
+describe("BandHomeClient tab bar (#106)", () => {
+  const nav = () => screen.getByRole("navigation", { name: "밴드 화면" });
+  const targets = () => ["후보곡", "셋리스트", "합주"].map((name) => within(nav()).getByRole("link", { name }).getAttribute("href"));
+
+  it("puts the same four tabs at the bottom, with 밴드 홈 the current one", () => {
+    renderHome(view({ rooms: [room()] }));
+
+    expect([...nav().querySelectorAll("a, button, [role=link]")].map((tab) => tab.textContent)).toEqual(["밴드 홈", "후보곡", "셋리스트", "합주"]);
+    expect(within(nav()).getByRole("button", { name: "밴드 홈" })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("opens the band's current playlist on the tab that was tapped", () => {
+    renderHome(view({ rooms: [room({ shareCode: "now0001" }), room({ id: "room-0", shareCode: "old0001", setlistConfirmed: true })] }));
+
+    expect(targets()).toEqual(["/playlist/now0001", "/playlist/now0001?tab=setlist", "/playlist/now0001?tab=rehearsal"]);
+  });
+
+  // The 지금 card still features only the newest playlist (1A); the tabs look past a newer confirmed one.
+  it("opens an older playlist that is still voting over a newer confirmed one", () => {
+    renderHome(
+      view({
+        rooms: [
+          room({ shareCode: "done001", setlistConfirmed: true, setlistBlockCount: 8 }),
+          room({ id: "room-0", shareCode: "vote001" }),
+        ],
+      }),
+    );
+
+    expect(targets()).toEqual(["/playlist/vote001", "/playlist/vote001?tab=setlist", "/playlist/vote001?tab=rehearsal"]);
+    expect(screen.queryByRole("region", { name: "지금 플레이리스트" })).not.toBeInTheDocument();
+  });
+
+  it("opens the most recent playlist when none is running", () => {
+    renderHome(
+      view({
+        rooms: [
+          room({ shareCode: "last001", setlistConfirmed: true }),
+          room({ id: "room-0", shareCode: "old0001", setlistConfirmed: true }),
+        ],
+      }),
+    );
+
+    expect(targets()).toEqual(["/playlist/last001", "/playlist/last001?tab=setlist", "/playlist/last001?tab=rehearsal"]);
+  });
+
+  it("dims the three playlist tabs in place when the band has no playlist", () => {
+    renderHome(ownerView({ rooms: [] }));
+
+    for (const name of ["후보곡", "셋리스트", "합주"]) {
+      const tab = within(nav()).getByRole("link", { name });
+      expect(tab).toHaveAttribute("aria-disabled", "true");
+      expect(tab).not.toHaveAttribute("href");
+    }
   });
 });

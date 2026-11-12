@@ -185,12 +185,12 @@ export function SegmentedDemo() {
   );
 }
 
-type DockTab = "playlist" | "setlist" | "rehearsal";
+type DockTab = "playlist" | "setlist";
 const DOCK: TabBarItem<DockTab>[] = [
   { href: "/design", label: "홈", icon: icons.HomeIcon },
   { id: "playlist", label: "후보곡", icon: icons.SongIcon },
   { id: "setlist", label: "셋리스트", icon: icons.SetlistIcon },
-  { id: "rehearsal", label: "합주", icon: icons.MetronomeIcon },
+  { href: null, label: "합주", icon: icons.MetronomeIcon },
 ];
 
 export function TabBarDemo() {

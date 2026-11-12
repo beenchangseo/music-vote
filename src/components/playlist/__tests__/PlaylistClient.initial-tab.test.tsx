@@ -2,8 +2,8 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchSetlistItems } from "@/lib/playlist-refetch";
-import type { PlaylistView, SetlistItem } from "@/domain/types";
+import { fetchComments, fetchSetlistItems } from "@/lib/playlist-refetch";
+import type { Comment, PlaylistView, SetlistItem } from "@/domain/types";
 import PlaylistClient from "../PlaylistClient";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }), usePathname: () => "/playlist/abc123" }));
@@ -30,7 +30,10 @@ vi.mock("../SongCard", () => ({ default: () => null }));
 vi.mock("../MiniPlayer", () => ({ default: () => null }));
 vi.mock("../YouTubePlayer", () => ({ default: () => null }));
 vi.mock("../RoomSettingsButton", () => ({ default: () => null }));
-vi.mock("../../rehearsal/RehearsalView", () => ({ default: () => null }));
+vi.mock("../../rehearsal/RehearsalView", () => ({
+  default: ({ comments, setlistItems, loading }: { comments: Comment[]; setlistItems: SetlistItem[]; loading: boolean }) =>
+    loading ? <p>합주 불러오는 중</p> : <p>{`댓글 ${comments.length}개 · 셋리스트 ${setlistItems.length}줄`}</p>,
+}));
 vi.mock("../../auth/LoginButton", () => ({ default: () => null }));
 vi.mock("../../setlist/SetlistView", () => ({
   default: ({ setlistItems }: { setlistItems: SetlistItem[] }) => <ol aria-label="셋리스트">{setlistItems.map((item) => <li key={item.id}>{item.label}</li>)}</ol>,
@@ -55,6 +58,8 @@ const playlist = {
 } as PlaylistView;
 
 const opener = { id: "item-1", playlist_id: playlist.id, position: 0, item_type: "interval", song_id: null, label: "사운드 체크", description: null, duration_seconds: 120, title_override: null, duration_override_seconds: null, created_at: "" } as SetlistItem;
+
+const comment = { id: "c-1", song_id: "s-1", nickname: "보컬", content: "브릿지 반 박자 빨라요", created_at: "", updated_at: "", isMine: false } as Comment;
 
 type Props = Parameters<typeof PlaylistClient>[0];
 
@@ -86,6 +91,17 @@ describe("PlaylistClient first tab (#80)", () => {
 
     expect(currentTab()).toHaveTextContent("후보곡");
     expect(`${window.location.pathname}${window.location.search}`).toBe("/playlist/abc123?utm_source=kakao");
+  });
+
+  it("opens on 합주 when the link asks for it, and loads its comments the way a tap does", async () => {
+    vi.mocked(fetchComments).mockResolvedValue([comment]);
+    renderRoom({ initialTab: "rehearsal" });
+
+    expect(currentTab()).toHaveTextContent("합주");
+    expect(screen.getByRole("heading", { level: 1, name: "10월 합주" })).toHaveClass("sr-only");
+    expect(await screen.findByText("댓글 1개 · 셋리스트 1줄")).toBeInTheDocument();
+    expect(fetchComments).toHaveBeenCalledWith(playlist.id);
+    expect(fetchSetlistItems).not.toHaveBeenCalled();
   });
 
   it("opens on 후보곡 otherwise", () => {

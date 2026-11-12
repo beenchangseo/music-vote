@@ -48,9 +48,11 @@ const tags = tsxFiles(src).flatMap(jsxTags);
 describe("bottom safe area", () => {
   const body = tags.filter((t) => t.tag === "body" && t.at.startsWith("app/layout.tsx:"));
 
+  // A fixed bar (TabBar, and MiniPlayer above it) also covers the end of the page, so the body leaves room for the
+  // heights they publish. A sticky bar publishes none and gets 0.
   it("pads the inset on the root layout's body and hands it to a bar that paints it itself", () => {
     expect(body).toHaveLength(1);
-    for (const utility of ["pb-safe-bottom", "has-data-safe-bottom:pb-0"]) {
+    for (const utility of ["pb-safe-bottom", "has-data-safe-bottom:pb-(--bottom-chrome-height)"]) {
       expect(hasUtility(body[0].attrs.get("className"), utility), utility).toBe(true);
     }
   });

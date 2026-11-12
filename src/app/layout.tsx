@@ -58,12 +58,14 @@ export default function RootLayout({
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link rel="stylesheet" href={PRETENDARD_CSS} precedence="default" />
       </head>
-      {/* A bottom bar that paints the inset itself (data-safe-bottom) takes the padding over, so the two never stack. */}
-      <body className="min-h-full flex flex-col bg-bg text-text font-sans pb-safe-bottom has-data-safe-bottom:pb-0">
+      {/* A bottom bar that paints the inset itself (data-safe-bottom) takes the padding over, so the two never stack.
+          A fixed one (TabBar) covers the end of the page instead, so the body leaves room for the height it publishes. */}
+      <body className="min-h-full flex flex-col bg-bg text-text font-sans pb-safe-bottom has-data-safe-bottom:pb-(--bottom-chrome-height)">
         {/* First, so its layout effect also comes before any layout effect below that calls track(). */}
         <GoogleAnalytics />
         <DialogProvider>
-          <div className="fixed top-2 right-2 z-50">
+          {/* A screen that draws the account menu in its own row (data-account-in-flow) takes it over, so the two never stack. */}
+          <div className="fixed top-2 right-2 z-50 [body:has([data-account-in-flow])_&]:hidden">
             <Suspense fallback={null}>
               <AuthButton />
             </Suspense>

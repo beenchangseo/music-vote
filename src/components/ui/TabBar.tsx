@@ -17,9 +17,12 @@ interface TabBarView<T extends string> extends TabBarItemBase {
   href?: never;
 }
 
-/** 이 화면을 떠나는 탭(플레이리스트의 홈). 지금 화면이 될 수 없어 늘 꺼진 모양이다. */
+/**
+ * 이 화면을 떠나는 탭(플레이리스트의 밴드 홈, 밴드 홈의 후보곡·셋리스트·합주). 지금 화면이 될 수 없어 늘 꺼진 모양이다.
+ * href 가 null 이면 아직 갈 곳이 없다(플레이리스트가 없는 밴드). 칸은 제자리에 흐리게 서고, 키보드로 닿되 aria-disabled 다.
+ */
 interface TabBarLink extends TabBarItemBase {
-  href: string;
+  href: string | null;
   id?: never;
 }
 
@@ -32,13 +35,21 @@ interface TabBarProps<T extends string> {
   "aria-label": string;
 }
 
-const itemClass = (current: boolean) =>
-  `flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 whitespace-nowrap rounded-control text-caption font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
-    current ? "text-text" : "text-text-muted hover:text-text"
-  }`;
+type TabState = "current" | "idle" | "disabled";
+
+const TAB_TONE: Record<TabState, string> = {
+  current: "text-text",
+  idle: "text-text-muted hover:text-text",
+  disabled: "cursor-not-allowed text-text-muted opacity-50",
+};
+
+const itemClass = (state: TabState) =>
+  `flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 whitespace-nowrap rounded-control text-caption font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${TAB_TONE[state]}`;
 
 /**
- * 화면 아래에 붙는 탭 (dock). 높이는 --spacing-dock 이고 MiniPlayer 가 bottom-dock 으로 이 위에 붙는다.
+ * 화면 아래에 붙는 탭 (dock). 탭 줄은 h-dock 이고, 그 아래 홈 인디케이터 자리를 스스로 칠한다(data-safe-bottom).
+ * 그 자리까지 더한 높이를 --tab-bar-height 로 알리고, MiniPlayer 는 그 높이 위에, body 는 그만큼 비운다.
+ * 알리기 전(하이드레이션 전)에는 globals.css 가 data-tab-bar 를 보고 같은 높이를 미리 둔다.
  * Spotify 처럼 아이콘 위 글자이고 칸 상자가 없다. 지금 탭은 채운 아이콘과 text-text, 나머지는 선 아이콘과 text-muted 다.
  * 위로 24px 은 bg 로 옅어지는 막이라 목록이 탭 밑으로 갑자기 잘리지 않는다. 막은 높이에 들지 않아 MiniPlayer 가 덮는다.
  * 글자는 줄을 바꾸지 않는다. 칸 넷이면 320px 화면에서 칸이 72px 이고 "셋리스트" 네 글자가 한 줄에 선다.
@@ -48,13 +59,23 @@ export default function TabBar<T extends string>({ items, value, onChange, "aria
     <nav
       ref={publishTabBarHeight}
       aria-label={label}
-      className="fixed inset-x-0 bottom-0 z-40 bg-bg print:hidden before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-6 before:bg-linear-to-b before:from-bg/0 before:to-bg"
+      data-safe-bottom
+      data-tab-bar
+      className="fixed inset-x-0 bottom-0 z-40 bg-bg pb-safe-bottom print:hidden before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-6 before:bg-linear-to-b before:from-bg/0 before:to-bg"
     >
       <div className="mx-auto flex h-dock max-w-lg items-center px-2">
         {items.map((item) => {
+          if (item.href === null) {
+            return (
+              <span key={item.label} role="link" aria-disabled="true" tabIndex={0} className={itemClass("disabled")}>
+                <item.icon />
+                {item.label}
+              </span>
+            );
+          }
           if (item.href !== undefined) {
             return (
-              <Link key={item.href} href={item.href} className={itemClass(false)}>
+              <Link key={item.label} href={item.href} className={itemClass("idle")}>
                 <item.icon />
                 {item.label}
               </Link>
@@ -67,7 +88,7 @@ export default function TabBar<T extends string>({ items, value, onChange, "aria
               type="button"
               onClick={() => onChange(item.id)}
               aria-current={current ? "page" : undefined}
-              className={itemClass(current)}
+              className={itemClass(current ? "current" : "idle")}
             >
               <item.icon filled={current} />
               {item.label}

@@ -6,10 +6,11 @@
 export default function BandHomeSkeleton() {
   return (
     <main className="min-h-full bg-bg" aria-busy="true" aria-label="밴드를 불러오는 중">
-      <div className="mx-auto max-w-md px-4 py-6">
-        <div className="flex h-11 items-center justify-between pr-12 sm:pr-0">
-          <div className="h-11 w-11" />
-          <div className="h-11 w-11 rounded-control bg-surface animate-pulse-soft" />
+      <div className="mx-auto max-w-md px-4 pt-4 pb-6">
+        {/* The top row of the band home: the band switcher, and the account menu that takes over the fixed one. */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="h-control-md w-40 rounded-pill bg-surface animate-pulse-soft" />
+          <div data-account-in-flow className="size-control-md rounded-pill bg-surface animate-pulse-soft" />
         </div>
         <div className="mt-4 h-8 w-2/3 rounded-control bg-surface animate-pulse-soft" />
         <div className="mt-3 h-22 rounded-card bg-surface animate-pulse-soft" />

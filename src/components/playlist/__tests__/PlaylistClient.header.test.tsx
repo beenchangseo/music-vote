@@ -34,15 +34,6 @@ vi.mock("../../rehearsal/RehearsalView", () => ({ default: () => null }));
 vi.mock("../../auth/LoginButton", () => ({
   default: ({ label, variant }: { label?: string; variant?: string }) => <button type="button" data-variant={variant}>{label}</button>,
 }));
-vi.mock("../NavigationBar", () => ({
-  default: ({ onModeChange }: { onModeChange: (mode: string) => void }) => (
-    <nav>
-      <button type="button" onClick={() => onModeChange("playlist")}>후보곡</button>
-      <button type="button" onClick={() => onModeChange("setlist")}>셋리스트</button>
-      <button type="button" onClick={() => onModeChange("rehearsal")}>합주</button>
-    </nav>
-  ),
-}));
 
 const TEAM = "11111111-1111-4111-8111-111111111111";
 
@@ -93,24 +84,24 @@ function openTab(tab: (typeof TABS)[number]) {
 }
 
 describe("PlaylistClient top row (#101)", () => {
-  it.each(TABS)("gives a band member the same top row on the %s tab: back to the band with the D-day, account on the right", (tab) => {
+  // The 밴드 홈 tab is the way to the band now (#106), so the row only says where the playlist belongs.
+  it.each(TABS)("gives a band member the same top row on the %s tab: the band and its D-day as text, account on the right", (tab) => {
     renderRoom({ team: { ...band, nextShowAt: "2026-10-16" } });
     openTab(tab);
 
     const top = within(screen.getByRole("banner"));
-    const back = top.getByRole("link", { name: /일코해제/ });
-    expect(back).toHaveAttribute("href", `/band/${TEAM}`);
-    expect(back).toHaveTextContent("공연 D-12");
+    expect(top.getByText("일코해제")).toBeInTheDocument();
+    expect(top.getByText("공연 D-12")).toBeInTheDocument();
+    expect(top.queryByRole("link")).not.toBeInTheDocument();
     expect(top.getByRole("button", { name: "보컬 계정 메뉴" })).toBeInTheDocument();
-    expect(top.queryByRole("link", { name: "홈으로" })).not.toBeInTheDocument();
   });
 
-  it.each(TABS)("gives a logged-out viewer outside the band the bare back chevron and the login button on the %s tab", (tab) => {
+  it.each(TABS)("gives a logged-out viewer outside the band no back chevron, only the login button, on the %s tab", (tab) => {
     renderRoom({ team: null, loggedIn: false, isHost: false, userNickname: undefined });
     openTab(tab);
 
     const top = within(screen.getByRole("banner"));
-    expect(top.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
+    expect(top.queryByRole("link")).not.toBeInTheDocument();
     expect(top.getByRole("button", { name: "로그인" })).toHaveAttribute("data-variant", "tonal");
     expect(screen.getAllByRole("button", { name: "로그인" })).toHaveLength(1);
     expect(screen.queryByRole("button", { name: /계정 메뉴/ })).not.toBeInTheDocument();
@@ -129,6 +120,29 @@ describe("PlaylistClient top row (#101)", () => {
     fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
 
     expect(within(screen.getByRole("banner")).queryByRole("button", { name: "로그인" })).not.toBeInTheDocument();
+  });
+});
+
+describe("PlaylistClient first tab (#106)", () => {
+  const firstTab = () => within(screen.getByRole("navigation", { name: "플레이리스트 화면" })).getAllByRole("link")[0];
+
+  it("takes a band member to the band home", () => {
+    renderRoom();
+
+    expect(firstTab()).toHaveAccessibleName("밴드 홈");
+    expect(firstTab()).toHaveAttribute("href", `/band/${TEAM}`);
+  });
+
+  it.each([
+    ["the host of a band playlist who is not in the band", { team: { id: null, name: "일코해제", nextShowAt: null, isMember: false } }],
+    ["a member of the playlist outside its band", { isHost: false, team: { id: null, name: null, nextShowAt: null, isMember: false } }],
+    ["a logged-out visitor", { isHost: false, loggedIn: false, userNickname: undefined, team: { id: null, name: null, nextShowAt: null, isMember: false } }],
+    ["anyone on a playlist with no band", { team: null }],
+  ])("gives %s 홈, to the app home", (_who, overrides) => {
+    renderRoom(overrides);
+
+    expect(firstTab()).toHaveAccessibleName("홈");
+    expect(firstTab()).toHaveAttribute("href", "/");
   });
 });
 
