@@ -11,6 +11,7 @@ import { formatRuntime, setlistBlockTitle, type NewSetlistBlock } from "@/domain
 import { displayArtist, displayTitle } from "@/domain/song-meta";
 import type { SongWithScore } from "@/domain/types";
 import type { InsertTarget } from "./SetlistEditList";
+import { ChevronIcon, ClockIcon, ListIcon, PlusIcon, SongIcon } from "@/components/ui/icons";
 
 export type InsertStep = "choose" | "interval" | "original" | "song";
 
@@ -48,11 +49,11 @@ export default function InsertSheet({ target, initialStep = "choose", candidates
     <Modal open onClose={onClose} title="여기에 넣기" description={where}>
       {step === "choose" && (
         <div className="flex flex-col">
-          <Choice tone="text-text-muted" icon={<ClockIcon />} title="인터벌" description="셋업 변경·멘트 시간 · 기본 1:00" onClick={() => goTo("interval")} />
-          <Choice tone="text-primary-fg" icon={<NoteIcon />} title="자작곡" description="우리 곡 한 블록 · 기본 3:00" onClick={() => goTo("original")} />
+          <Choice tone="text-text-muted" icon={<ClockIcon className="size-5" />} title="인터벌" description="셋업 변경·멘트 시간 · 기본 1:00" onClick={() => goTo("interval")} />
+          <Choice tone="text-primary-fg" icon={<SongIcon className="size-5" />} title="자작곡" description="우리 곡 한 블록 · 기본 3:00" onClick={() => goTo("original")} />
           <Choice
             tone="text-text"
-            icon={<ListIcon />}
+            icon={<ListIcon className="size-5" />}
             title="후보곡에서 고르기"
             description={candidates.length > 0 ? `셋리에 아직 없는 후보곡 ${candidates.length}곡` : "후보곡이 모두 셋리에 있어요"}
             disabled={candidates.length === 0}
@@ -77,7 +78,7 @@ export default function InsertSheet({ target, initialStep = "choose", candidates
                       {pending === song.id ? (
                         <span aria-hidden className="size-4 animate-spin rounded-pill border-2 border-border-strong border-t-primary-fg" />
                       ) : (
-                        <PlusIcon />
+                        <PlusIcon circled />
                       )}
                     </IconButton>
                   }
@@ -112,46 +113,11 @@ function Choice({ tone, icon, title, description, disabled = false, onClick }: {
       disabled={disabled}
       leading={<ListRowIcon className={tone}>{icon}</ListRowIcon>}
       trailing={
-        <svg className="size-4 text-text-subtle" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-        </svg>
+        <ChevronIcon direction="right" className="size-4 text-text-subtle" />
       }
     >
       <span className="block text-body font-semibold text-text">{title}</span>
       <span className="block text-caption text-text-muted">{description}</span>
     </ListRowButton>
-  );
-}
-
-function ClockIcon() {
-  return (
-    <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  );
-}
-
-function NoteIcon() {
-  return (
-    <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-      <path d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-  );
-}
-
-function ListIcon() {
-  return (
-    <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
-      <path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" />
-    </svg>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg className="size-6" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden>
-      <circle cx="12" cy="12" r="9" />
-      <path strokeLinecap="round" d="M12 8v8M8 12h8" />
-    </svg>
   );
 }

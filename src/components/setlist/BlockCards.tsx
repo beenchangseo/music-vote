@@ -11,6 +11,7 @@ import { graphemes, lastWord } from "@/domain/text-segments";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
 import { useTruncated } from "@/hooks/useTruncated";
 import { BLOCK_TONES, PLAYING_CARD, type BlockKind } from "./block-tones";
+import { ChevronIcon, ClockIcon, EditIcon, MinusIcon, PlayPauseIcon, SongIcon } from "@/components/ui/icons";
 
 interface CardShellProps {
   kind: BlockKind;
@@ -26,10 +27,7 @@ function CardShell({ kind, editing, onRemove, current = false, className = "", c
     <div className={`flex items-center gap-3 ${BLOCK_TONES[kind].radius} ${current ? PLAYING_CARD : BLOCK_TONES[kind].card} ${className}`}>
       {editing && (
         <IconButton bare tone="danger" size="sm" onClick={onRemove} className="print:hidden" aria-label="삭제">
-          <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-            <circle cx="12" cy="12" r="9" />
-            <path strokeLinecap="round" d="M8 12h8" />
-          </svg>
+          <MinusIcon circled className="size-5" />
         </IconButton>
       )}
       {children}
@@ -40,9 +38,7 @@ function CardShell({ kind, editing, onRemove, current = false, className = "", c
 /** 편집 모드 제목 끝의 ✎. 글자 크기를 따르고, 줄 높이 칸 가운데에 그려 제목 줄 가운데에 선다. */
 function EditMark({ gap }: { gap: boolean }) {
   return (
-    <svg className={`${gap ? "ml-1 " : ""}inline h-lh w-[1em] align-top text-text-muted`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-      <path d="M4 20l1-4.5L15.6 4.9a1.9 1.9 0 012.7 0l.8.8a1.9 1.9 0 010 2.7L8.5 19 4 20z" />
-    </svg>
+    <EditIcon className={`${gap ? "ml-1 " : ""}inline h-lh w-[1em] align-top text-text-muted`} />
   );
 }
 
@@ -169,9 +165,7 @@ export function SongBlock({ item, song, editing, onEdit, onRemove, nowPlaying, o
               </span>
             ) : (
               <span className="flex size-7 items-center justify-center rounded-pill bg-black/60">
-                <svg className="ml-px size-3.5 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                  <path d="M8 5v14l11-7z" />
-                </svg>
+                <PlayPauseIcon playing={false} className="size-3.5 text-white" />
               </span>
             )}
           </span>
@@ -189,9 +183,7 @@ export function OriginalBlock({ item, editing, onEdit, onRemove }: BlockProps) {
   const body = (
     <>
       <span className={`flex items-center justify-center text-primary-fg ${coverBox(editing)}`}>
-        <svg className="size-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-          <path d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
+        <SongIcon className="size-6" />
       </span>
       <span className="min-w-0 flex-1 text-left">
         <BlockTitle text={label} editing={editing} className="text-text" />
@@ -227,9 +219,7 @@ export function IntervalBlock({ item, editing, onEdit, onRemove }: BlockProps) {
   const runtime = item.duration_seconds > 0 && formatRuntime(item.duration_seconds);
   const line = (
     <>
-      <svg className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
+      <ClockIcon className="size-4 shrink-0" />
       {open || editing ? (
         <span className="min-w-0 break-keep-wrap py-1.5 text-sm font-medium">
           <GluedEnd text={label} time={runtime} editing={editing} />
@@ -244,9 +234,7 @@ export function IntervalBlock({ item, editing, onEdit, onRemove }: BlockProps) {
       )}
       {item.description && !open && <span className="min-w-0 grow basis-0 truncate text-caption text-text-subtle">{item.description}</span>}
       {canExpand && !editing && (
-        <svg className={`ml-auto size-3 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
+        <ChevronIcon direction="down" className={`ml-auto size-3 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
       )}
     </>
   );

@@ -16,6 +16,7 @@ import { track } from "@/lib/analytics";
 import { displayArtist, formatKey } from "@/domain/song-meta";
 import { formatRuntime, rehearsalSteps, type RehearsalInterval, type RehearsalStep } from "@/domain/setlist";
 import type { SetlistItem, SongWithScore, Comment } from "@/domain/types";
+import { ClockIcon, DoneIcon, SkipIcon, SongIcon } from "@/components/ui/icons";
 
 type Step = RehearsalStep<SongWithScore>;
 
@@ -273,9 +274,7 @@ export default function RehearsalView({
           disabled={step === 0}
           onClick={() => goTo(step - 1, "prev")}
         >
-          <svg className="size-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-            <path d="M6 5h2v14H6zM20 6.5v11a1 1 0 01-1.53.85l-8.5-5.5a1 1 0 010-1.7l8.5-5.5A1 1 0 0120 6.5z" />
-          </svg>
+          <SkipIcon direction="previous" className="size-5" />
         </Button>
         <Button
           ref={nextRef}
@@ -287,9 +286,7 @@ export default function RehearsalView({
         >
           {hasNext ? "다음으로" : "마지막 곡이에요"}
           {hasNext && (
-            <svg className="size-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <path d="M16 5h2v14h-2zM4 6.5v11a1 1 0 001.53.85l8.5-5.5a1 1 0 000-1.7l-8.5-5.5A1 1 0 004 6.5z" />
-            </svg>
+            <SkipIcon direction="next" className="size-5" />
           )}
         </Button>
       </div>
@@ -385,9 +382,7 @@ function StepCover({ step, size }: { step: Step; size: "card" | "row" }) {
   if (step.kind === "original") {
     return (
       <span className={`grid ${box} shrink-0 place-items-center rounded-control bg-surface-elevated text-primary-fg`}>
-        <svg className={size === "card" ? "size-7" : "size-4"} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-          <path d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
+        <SongIcon className={size === "card" ? "size-7" : "size-4"} />
       </span>
     );
   }
@@ -427,9 +422,7 @@ function StepRow({ step, number, done, onSelect }: { step: Step; number: number;
           marker={
             done ? (
               <span className="grid size-full place-items-center rounded-pill bg-success-soft text-success">
-                <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-                  <path d="M5 13l4 4L19 7" />
-                </svg>
+                <DoneIcon className="size-4" />
               </span>
             ) : (
               <span className="grid size-full place-items-center rounded-pill border-2 border-border-strong text-caption font-semibold tabular-nums text-text-muted">
@@ -454,14 +447,6 @@ function StepRow({ step, number, done, onSelect }: { step: Step; number: number;
         <StepSubtitle step={step} />
       </span>
     </ListRowButton>
-  );
-}
-
-function ClockIcon({ className }: { className: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-      <path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
   );
 }
 
