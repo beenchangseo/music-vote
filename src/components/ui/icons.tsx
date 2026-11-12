@@ -101,3 +101,92 @@ export function BackIcon({ className }: IconProps) {
     </Glyph>
   );
 }
+
+export function ShareIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <path d="M12 14.5V3.5M7.5 8 12 3.5 16.5 8" />
+      <path d="M8.5 11H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1.5" />
+    </Glyph>
+  );
+}
+
+export function EditIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <path d="M4.5 19.5l.8-3.9L15.9 5a2.1 2.1 0 0 1 3 0l.1.1a2.1 2.1 0 0 1 0 3L8.4 18.7z" />
+      <path d="M13.8 7.1l3.1 3.1" />
+    </Glyph>
+  );
+}
+
+export function DoneIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </Glyph>
+  );
+}
+
+export function MoreIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <circle cx="5" cy="12" r="1.9" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.9" fill="currentColor" stroke="none" />
+      <circle cx="19" cy="12" r="1.9" fill="currentColor" stroke="none" />
+    </Glyph>
+  );
+}
+
+export function NoticeIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <path d="M4 10.2v3.6a1.5 1.5 0 0 0 1.5 1.5H7l8.5 4.7V4L7 8.7H5.5A1.5 1.5 0 0 0 4 10.2z" />
+      <path d="M7.5 15.5 9 20" />
+      <path d="M19 9.5a3.5 3.5 0 0 1 0 5" />
+    </Glyph>
+  );
+}
+
+/** 재생 ↔ 일시정지. 삼각형은 무게중심이 가운데라 원판 안에서 따로 옮기지 않는다. */
+export function PlayPauseIcon({ playing, className }: IconProps & { playing: boolean }) {
+  return (
+    <Glyph className={className}>
+      {playing ? (
+        <>
+          <rect x="6" y="5" width="4" height="14" rx="1.2" fill="currentColor" stroke="none" />
+          <rect x="14" y="5" width="4" height="14" rx="1.2" fill="currentColor" stroke="none" />
+        </>
+      ) : (
+        <path fill="currentColor" stroke="none" d="M8 5.6v12.8a1 1 0 0 0 1.5.86l10.4-6.4a1 1 0 0 0 0-1.72L9.5 4.74A1 1 0 0 0 8 5.6z" />
+      )}
+    </Glyph>
+  );
+}
+
+export function CardsIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <rect x="3.5" y="4.5" width="17" height="10" rx="2" />
+      <path d="M3.5 19h17" />
+    </Glyph>
+  );
+}
+
+export function ListIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </Glyph>
+  );
+}
+
+export function SettingsIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <path d="M4 7h9M18 7h2M4 17h2M11 17h9" />
+      <circle cx="15.5" cy="7" r="2.5" />
+      <circle cx="8.5" cy="17" r="2.5" />
+    </Glyph>
+  );
+}

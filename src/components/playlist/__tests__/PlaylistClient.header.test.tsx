@@ -72,6 +72,7 @@ function renderRoom(overrides: Partial<Props> = {}) {
 }
 
 const roomActions = () => ["카카오톡 공유", "공지", "플레이리스트 메뉴"].map((name) => screen.queryByRole("button", { name }));
+const SONG = { id: "s1", title: "벚꽃 엔딩", artist: "버스커 버스커", score: 2, thumbnail_url: null, youtube_video_id: "v1" } as unknown as Props["songs"][number];
 const TABS = ["후보곡", "셋리스트", "합주"] as const;
 
 beforeEach(() => {
@@ -115,7 +116,7 @@ describe("PlaylistClient top row (#101)", () => {
     expect(screen.queryByRole("button", { name: /계정 메뉴/ })).not.toBeInTheDocument();
   });
 
-  it.each(TABS)("names the playlist in the one h1 of the %s tab", (tab) => {
+  it.each(["후보곡", "합주"] as const)("names the playlist in the one h1 of the %s tab", (tab) => {
     renderRoom();
     openTab(tab);
 
@@ -131,15 +132,49 @@ describe("PlaylistClient top row (#101)", () => {
   });
 });
 
+describe("PlaylistClient candidates action row (#101)", () => {
+  it("puts the list/card view toggle in the ⋯ sheet, not in the row", () => {
+    renderRoom({ songs: [SONG] });
+    expect(screen.queryByRole("button", { name: "카드 보기" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "플레이리스트 메뉴" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "카드 보기" }));
+    fireEvent.click(screen.getByRole("button", { name: "플레이리스트 메뉴" }));
+
+    expect(within(screen.getByRole("dialog")).getByRole("button", { name: "리스트 보기" })).toBeInTheDocument();
+  });
+
+  it("draws no ⋯ before the first song, when there is no view to switch", () => {
+    renderRoom();
+    expect(screen.queryByRole("button", { name: "플레이리스트 메뉴" })).not.toBeInTheDocument();
+  });
+
+  it("gives the host an edit glyph that opens the playlist settings, and the menu no second way there", () => {
+    renderRoom({ songs: [SONG] });
+    expect(screen.getByRole("button", { name: "플레이리스트 설정" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "플레이리스트 메뉴" }));
+    expect(within(screen.getByRole("dialog")).queryByRole("button", { name: "플레이리스트 설정" })).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["a member who is not the host", { isHost: false }],
+    ["a logged-out visitor", { isHost: false, loggedIn: false, userNickname: undefined, team: null }],
+  ])("leaves the edit glyph out for %s", (_who, overrides) => {
+    renderRoom({ songs: [SONG], ...overrides });
+    expect(screen.queryByRole("button", { name: "플레이리스트 설정" })).not.toBeInTheDocument();
+  });
+});
+
 describe("PlaylistClient header per tab (#4)", () => {
   it("keeps the cover header with share, notice and menu on the candidates tab", () => {
-    renderRoom();
+    renderRoom({ songs: [SONG] });
 
     for (const action of roomActions()) expect(action).toBeInTheDocument();
   });
 
   it.each(["셋리스트", "합주"])("leaves the cover header's actions out of the %s tab", (tab) => {
-    renderRoom();
+    renderRoom({ songs: [SONG] });
     fireEvent.click(screen.getByRole("button", { name: tab }));
 
     for (const action of roomActions()) expect(action).not.toBeInTheDocument();
@@ -156,7 +191,7 @@ describe("PlaylistClient header per tab (#4)", () => {
   });
 
   it("brings the cover header back on the candidates tab", () => {
-    renderRoom();
+    renderRoom({ songs: [SONG] });
     fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
     fireEvent.click(screen.getByRole("button", { name: "후보곡" }));
 

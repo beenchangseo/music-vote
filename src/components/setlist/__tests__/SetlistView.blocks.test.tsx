@@ -113,7 +113,7 @@ describe("SetlistView with a song deleted from the candidates", () => {
 
     expect(setlistBlocks().map((block) => within(block).getByTestId("rail-start").textContent)).toEqual(["0:00", "4:44", "5:44"]);
     expect(screen.getByTestId("rail-end")).toHaveTextContent("10:40");
-    expect(screen.getByText("2곡").parentElement).toHaveTextContent(/^2곡· 인터벌 1$/);
+    expect(screen.getByText("2곡").closest("p")).toHaveTextContent(/^2곡·10:40·인터벌 1$/);
   });
 
   it("treats a setlist of deleted songs as empty", () => {

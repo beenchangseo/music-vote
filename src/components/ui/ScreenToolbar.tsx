@@ -16,12 +16,8 @@ interface ScreenToolbarProps {
 }
 
 /**
- * 후보곡·셋리스트·합주 세 화면의 상단을 같은 모양으로 맞춘다.
- *
- * 종전에는 화면마다 다른 물건이었다 — 후보곡은 본문 위에 떠 있는 원형 톱니,
- * 셋리스트는 전체 폭 토글 박스, 합주는 같은 톱니인데 내용이 투표 설정이었다.
- * 왼쪽은 그 화면의 핵심 숫자, 오른쪽은 그 화면의 동작으로 고정한다.
- * 스크롤해도 남는다. 세 화면 모두 같은 자리에 같은 높이로 붙는다.
+ * 화면 위에 붙는 숫자 막대. 왼쪽은 그 화면의 핵심 숫자, 오른쪽은 그 화면의 동작이고 스크롤해도 남는다.
+ * 지금은 합주 탭의 진행(1 / 6)만 쓴다. 후보곡·셋리스트는 앨범 머리와 PlaylistActionRow 로 옮겼다(#101).
  */
 export default function ScreenToolbar({ stat, caption, actions, children }: ScreenToolbarProps) {
   return (

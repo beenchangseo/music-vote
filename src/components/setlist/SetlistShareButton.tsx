@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { ListRowButton, ListRowIcon } from "../ui/ListRow";
 import Modal from "../ui/Modal";
-import { ToolbarButton } from "../ui/ScreenToolbar";
+import RoundButton from "../ui/RoundButton";
+import { ShareIcon } from "../ui/icons";
 import { useDialog } from "../ui/DialogProvider";
 import { track } from "@/lib/analytics";
 import { PLAYLIST_TAB_PARAM } from "@/domain/playlist-tab";
@@ -58,19 +59,9 @@ export default function SetlistShareButton({ shareCode, title }: Props) {
 
   return (
     <>
-      <ToolbarButton
-        label="내보내기"
-        icon={
-          <svg className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
-            <path d="M12 3v12" />
-            <path d="M8 7l4-4 4 4" />
-            <path d="M4 15v4a2 2 0 002 2h12a2 2 0 002-2v-4" />
-          </svg>
-        }
-        onClick={() => setOpen(true)}
-        aria-label="셋리스트 내보내기"
-        title="링크·이미지·PDF 로 내보내기"
-      />
+      <RoundButton tone="ghost" size="md" edge="start" onClick={() => setOpen(true)} aria-label="셋리스트 내보내기" title="링크·이미지·PDF 로 내보내기">
+        <ShareIcon />
+      </RoundButton>
 
       <Modal open={open} onClose={() => setOpen(false)} title="셋리스트 내보내기">
         <div className="flex flex-col">

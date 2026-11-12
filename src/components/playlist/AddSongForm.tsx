@@ -160,7 +160,8 @@ export default function AddSongForm({ playlistId, shareCode, loginGate = false, 
               enterKeyHint="search"
             />
           </div>
-          <Button type="submit" pill loading={isPending} disabled={!input.trim()} className="shrink-0">
+          {/* Tonal: the header's 재생 is the one filled primary on the 후보곡 tab. */}
+          <Button type="submit" variant="tonal" pill loading={isPending} disabled={!input.trim()} className="shrink-0">
             {looksLikeLink ? "추가" : "찾기"}
           </Button>
         </div>

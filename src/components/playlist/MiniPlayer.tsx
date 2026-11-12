@@ -6,7 +6,7 @@ import type { PlayerState, PlayerActions } from "@/hooks/usePlayerQueue";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
 import { trapTabKey } from "../ui/focus-trap";
 import { publishMiniPlayerHeight } from "../ui/chrome-inset";
-import PlayPauseIcon from "../ui/PlayPauseIcon";
+import { PlayPauseIcon } from "../ui/icons";
 import { ListRowButton } from "../ui/ListRow";
 import RoundButton from "../ui/RoundButton";
 import { displayArtist } from "@/domain/song-meta";

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import PlaylistHeader from "../PlaylistHeader";
 import type { InviteSongs } from "@/domain/invite-card";
@@ -15,7 +15,7 @@ const THREE_SONGS: InviteSongs = { cover: ["oSlqhkPa3no"], names: ["낭만고양
 
 function renderHeader(props: Partial<Parameters<typeof PlaylistHeader>[0]> = {}) {
   render(
-    <PlaylistHeader playlistId="p1" title="10월 합주" inviteSongs={THREE_SONGS} shareCode="abc123" participantCount={2} {...props} />,
+    <PlaylistHeader title="10월 합주" inviteSongs={THREE_SONGS} shareCode="abc123" participantCount={2} notice={null} menu={[]} {...props} />,
   );
 }
 
@@ -121,16 +121,14 @@ describe("PlaylistHeader share and menu", () => {
     expect(track).not.toHaveBeenCalledWith("kakao_shared", expect.anything());
   });
 
-  it("leaves the way home to the tab bar, so the menu has no 홈으로", () => {
-    renderHeader({ onOpenSettings: vi.fn() });
-    fireEvent.click(screen.getByRole("button", { name: "플레이리스트 메뉴" }));
-    const sheet = screen.getByRole("dialog");
-    expect(within(sheet).getByRole("button", { name: "플레이리스트 설정" })).toBeInTheDocument();
-    expect(within(sheet).queryByRole("link", { name: "홈으로" })).not.toBeInTheDocument();
-  });
+  it("opens the playlist settings from the edit glyph, which only a viewer who can open them gets", () => {
+    const onOpenSettings = vi.fn();
+    renderHeader({ onOpenSettings });
+    fireEvent.click(screen.getByRole("button", { name: "플레이리스트 설정" }));
+    expect(onOpenSettings).toHaveBeenCalledTimes(1);
 
-  it("offers no menu to a viewer who cannot open the settings, since the sheet would be empty", () => {
+    cleanup();
     renderHeader();
-    expect(screen.queryByRole("button", { name: "플레이리스트 메뉴" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "플레이리스트 설정" })).not.toBeInTheDocument();
   });
 });

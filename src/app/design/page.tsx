@@ -8,7 +8,7 @@ import Chip from "@/components/ui/Chip";
 import GuitarIcon from "@/components/ui/GuitarIcon";
 import IconButton from "@/components/ui/IconButton";
 import Input from "@/components/ui/Input";
-import PlayPauseIcon from "@/components/ui/PlayPauseIcon";
+import { PlayPauseIcon } from "@/components/ui/icons";
 import RoundButton, { ROUND_BARE_TONES, ROUND_DISC_TONES, ROUND_VOTE_TONES, RoundLink, RoundRow } from "@/components/ui/RoundButton";
 import ScreenToolbar, { ToolbarButton } from "@/components/ui/ScreenToolbar";
 import { COLOR_GROUPS, COLORS, HEIGHTS, INSETS, MOTION, RADII, SHADOWS, TYPE, contrastRatio, type ColorToken, type Pairing } from "@/components/ui/tokens";
