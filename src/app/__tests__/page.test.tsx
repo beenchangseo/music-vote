@@ -201,6 +201,15 @@ describe("home with a login cookie", () => {
     expect(screen.getByRole("link", { name: "문의하기" })).toHaveAttribute("href", "/support");
   });
 
+  // The bottom tab bar belongs to a band and its playlists (#106); the home that lists every band has none.
+  it("has no bottom tab bar, even for a member of a band with playlists", async () => {
+    state.getMyTeams.mockResolvedValue({ teams: [TEAM], failed: false });
+    state.getMyPlaylists.mockResolvedValue({ playlists: [playlist("p-1", { teamId: TEAM.id, teamName: TEAM.name })], failed: false });
+    await renderHome();
+    expect(screen.getAllByRole("navigation").map((nav) => nav.getAttribute("aria-label"))).toEqual(["Plypick 안내"]);
+    expect(document.querySelector("[data-safe-bottom]")).toBeNull();
+  });
+
   it("stays in state B right after leaving a band, even with nothing left (DR15b)", async () => {
     await renderHome(true);
     expect(hero().variant).toBe("row");
