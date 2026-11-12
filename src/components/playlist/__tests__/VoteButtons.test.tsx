@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import VoteButtons from "../VoteButtons";
 import { COLORS } from "@/components/ui/tokens";
+import { chevronPointing } from "@/components/ui/__tests__/chevron-pointing";
 
 // jsdom has no AnimationEvent, so react-dom would listen for webkitAnimationEnd instead of the animationend browsers fire.
 // The stand-in keeps animationName, which jsdom's plain Event would drop.
@@ -78,6 +79,16 @@ describe("VoteButtons pop", () => {
     unmount();
 
     expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe("VoteButtons arrows", () => {
+  it.each([
+    ["찬성표 추가", "up"],
+    ["반대표 추가", "down"],
+  ] as const)("draws the %s button's chevron pointing %s", (name, direction) => {
+    renderButtons();
+    expect(chevronPointing(screen.getByRole("button", { name }).querySelector("svg")!)).toBe(direction);
   });
 });
 
