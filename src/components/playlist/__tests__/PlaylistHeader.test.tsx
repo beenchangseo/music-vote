@@ -4,9 +4,11 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import PlaylistHeader from "../PlaylistHeader";
 import type { InviteSongs } from "@/domain/invite-card";
+import { track } from "@/lib/analytics";
 
 vi.mock("../AnnouncementButton", () => ({ default: () => null }));
 vi.mock("../../ui/DialogProvider", () => ({ useDialog: () => ({ showAlert: vi.fn() }) }));
+vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
 
 const sendDefault = vi.fn();
 const BAND = { id: "11111111-1111-4111-8111-111111111111", name: "일코해제", nextShowAt: "2026-10-16" };
@@ -37,6 +39,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-10-04T03:00:00Z"));
   sendDefault.mockReset();
+  vi.mocked(track).mockClear();
   window.Kakao = { isInitialized: () => true, Share: { sendDefault } };
 });
 
@@ -117,5 +120,22 @@ describe("PlaylistHeader band room", () => {
   it("hides the D-day once the show is over", () => {
     renderHeader({ band: { ...BAND, nextShowAt: "2026-10-03" } });
     expect(screen.getByRole("link", { name: /일코해제/ })).not.toHaveTextContent("공연");
+  });
+});
+
+describe("PlaylistHeader share tracking", () => {
+  it("counts a sent invite as kakao_shared, like the other Kakao share buttons", () => {
+    renderHeader();
+    sharedCard();
+    expect(track).toHaveBeenCalledWith("kakao_shared", { variant: "playlist" });
+  });
+
+  it("does not count an invite the Kakao SDK failed to send", () => {
+    sendDefault.mockImplementation(() => {
+      throw new Error("kakao down");
+    });
+    renderHeader();
+    fireEvent.click(screen.getByRole("button", { name: "카카오톡 공유" }));
+    expect(track).not.toHaveBeenCalledWith("kakao_shared", expect.anything());
   });
 });
