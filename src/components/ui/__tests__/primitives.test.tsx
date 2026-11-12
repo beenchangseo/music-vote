@@ -20,6 +20,7 @@ import Shelf from "../Shelf";
 import Switch from "../Switch";
 import TabBar from "../TabBar";
 import { HomeIcon } from "../icons";
+import { HEIGHTS } from "../tokens";
 
 afterEach(cleanup);
 
@@ -317,6 +318,26 @@ describe("controls drawn smaller than 44px", () => {
     draw();
     const control = screen.getByRole(name === "익명 투표" ? "switch" : "button", { name });
     expect(control.className.split(/\s+/)).toEqual(expect.arrayContaining(touchTarget44.split(" ")));
+  });
+});
+
+// A control without the shared tap area is pressed only where it is drawn, so its own min-h is the tap height. Read it
+// as CSS would: Tailwind's n × 4px, or a height token.
+function minHeightPx(el: HTMLElement): number | undefined {
+  const value = el.className.match(/(?:^|\s)min-h-(\S+)/)?.[1];
+  if (value === undefined) return undefined;
+  if (/^\d+(\.\d+)?$/.test(value)) return Number(value) * 4;
+  const token = HEIGHTS.find((t) => t.name === value);
+  return token && parseFloat(token.value) * 16;
+}
+
+describe("controls drawn at their own height", () => {
+  it.each([
+    ["TabBar tab", { id: "a", label: "후보곡", icon: HomeIcon }, "button"],
+    ["TabBar link", { href: "/", label: "홈", icon: HomeIcon }, "link"],
+  ] as const)("%s is at least 44px tall", (_name, item, role) => {
+    render(<TabBar aria-label="화면" items={[item]} value="a" onChange={() => {}} />);
+    expect(minHeightPx(screen.getByRole(role, { name: item.label }))).toBeGreaterThanOrEqual(44);
   });
 });
 
