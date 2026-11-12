@@ -72,14 +72,63 @@ function renderRoom(overrides: Partial<Props> = {}) {
 }
 
 const roomActions = () => ["카카오톡 공유", "공지", "플레이리스트 메뉴"].map((name) => screen.queryByRole("button", { name }));
+const TABS = ["후보곡", "셋리스트", "합주"] as const;
 
 beforeEach(() => {
   vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
+  // 2026-10-04 12:00 KST
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-10-04T03:00:00Z"));
 });
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.restoreAllMocks();
+});
+
+function openTab(tab: (typeof TABS)[number]) {
+  if (tab !== "후보곡") fireEvent.click(screen.getByRole("button", { name: tab }));
+}
+
+describe("PlaylistClient top row (#101)", () => {
+  it.each(TABS)("gives a band member the same top row on the %s tab: back to the band with the D-day, account on the right", (tab) => {
+    renderRoom({ team: { ...band, nextShowAt: "2026-10-16" } });
+    openTab(tab);
+
+    const top = within(screen.getByRole("banner"));
+    const back = top.getByRole("link", { name: /일코해제/ });
+    expect(back).toHaveAttribute("href", `/band/${TEAM}`);
+    expect(back).toHaveTextContent("공연 D-12");
+    expect(top.getByRole("button", { name: "보컬 계정 메뉴" })).toBeInTheDocument();
+    expect(top.queryByRole("link", { name: "홈으로" })).not.toBeInTheDocument();
+  });
+
+  it.each(TABS)("gives a logged-out viewer outside the band the bare back chevron and the login button on the %s tab", (tab) => {
+    renderRoom({ team: null, loggedIn: false, isHost: false, userNickname: undefined });
+    openTab(tab);
+
+    const top = within(screen.getByRole("banner"));
+    expect(top.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
+    expect(top.getByRole("button", { name: "로그인" })).toHaveAttribute("data-variant", "tonal");
+    expect(screen.getAllByRole("button", { name: "로그인" })).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: /계정 메뉴/ })).not.toBeInTheDocument();
+  });
+
+  it.each(TABS)("names the playlist in the one h1 of the %s tab", (tab) => {
+    renderRoom();
+    openTab(tab);
+
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole("heading", { level: 1, name: "10월 합주" })).toBeInTheDocument();
+  });
+
+  it("leaves the login button out of the top row for a logged-in member", () => {
+    renderRoom();
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
+
+    expect(within(screen.getByRole("banner")).queryByRole("button", { name: "로그인" })).not.toBeInTheDocument();
+  });
 });
 
 describe("PlaylistClient header per tab (#4)", () => {
@@ -87,41 +136,13 @@ describe("PlaylistClient header per tab (#4)", () => {
     renderRoom();
 
     for (const action of roomActions()) expect(action).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 1, name: "10월 합주" })).toBeInTheDocument();
   });
 
-  it.each(["셋리스트", "합주"])("folds the %s tab header into one line: back to the band, title, account", (tab) => {
+  it.each(["셋리스트", "합주"])("leaves the cover header's actions out of the %s tab", (tab) => {
     renderRoom();
     fireEvent.click(screen.getByRole("button", { name: tab }));
 
     for (const action of roomActions()) expect(action).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /일코해제/ })).toHaveAttribute("href", `/band/${TEAM}`);
-    expect(screen.getByRole("heading", { level: 1, name: "10월 합주" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "보컬 계정 메뉴" })).toBeInTheDocument();
-  });
-
-  it("points the one-line header home when the viewer is not in the band", () => {
-    renderRoom({ team: null, loggedIn: false, isHost: false, userNickname: undefined });
-    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
-
-    expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
-    expect(screen.getByRole("heading", { level: 1, name: "10월 합주" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /계정 메뉴/ })).not.toBeInTheDocument();
-  });
-
-  it.each(["셋리스트", "합주"])("gives a logged-out viewer the candidates tab's login button on the %s tab", (tab) => {
-    renderRoom({ team: null, loggedIn: false, isHost: false, userNickname: undefined });
-    fireEvent.click(screen.getByRole("button", { name: tab }));
-
-    const login = within(screen.getByRole("banner")).getByRole("button", { name: "로그인" });
-    expect(login).toHaveAttribute("data-variant", "tonal");
-  });
-
-  it("leaves the login button out of the one-line header for a logged-in member", () => {
-    renderRoom();
-    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
-
-    expect(within(screen.getByRole("banner")).queryByRole("button", { name: "로그인" })).not.toBeInTheDocument();
   });
 
   it("opens every tab at its top, so the shorter header does not drop the reader mid-list", () => {

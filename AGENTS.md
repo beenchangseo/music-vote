@@ -157,7 +157,8 @@ Variable(한국어) + Geist(영문) 폴백. 한글에는 대소문자가 없어�
 - `Card`: variant `default`·`elevated`·`outline`·`selected`(목록에서 지금 고른 한 장, `border-primary-fg`), 그림자 없음. 카드 끝까지
   닿는 아래 칸(펼친 코멘트)은 `footer` 다. 음수 margin 으로 padding 을 지우지 않는다. `IconButton`: tone `default`·`danger`·`brand`, `bare`, 44px,
   `aria-label` 필수. `ScreenToolbar`: 후보곡·셋리스트·합주 상단의 숫자와 동작. 동작은 `ToolbarButton`(44px, `compact` 면
-  640px 아래에서 아이콘만)으로만 그린다.
+  640px 아래에서 아이콘만)으로만 그린다. 플레이리스트 세 탭의 맨 윗줄은 `PlaylistTopBar` 하나다. 밴드 멤버는 「‹ 밴드 · 공연 D-n」
+  링크, 나머지는 맨 chevron `RoundLink` 이고 오른쪽에 계정 메뉴나 로그인 버튼이 선다. 탭마다 윗줄을 따로 그리지 않는다.
 - 아이콘: 이 작업부터 손대는 아이콘은 `ui/icons.tsx` 에서 가져온다(24 격자, 2px 둥근 선, 하단 탭 아이콘은 `filled` 짝).
   Spotify 글리프를 따라 그리지 않는다. 아직 인라인 svg 인 곳은 따로 옮긴다.
 - `RoundButton`: 플레이어·플레이리스트 머리·메트로놈 줄의 둥근 아이콘 버튼. size `md` 44·`lg` 52·`hero` 64, tone `plain`(재생

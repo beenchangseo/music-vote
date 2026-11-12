@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import PlaylistHeader from "../PlaylistHeader";
 import type { InviteSongs } from "@/domain/invite-card";
@@ -11,7 +11,6 @@ vi.mock("../../ui/DialogProvider", () => ({ useDialog: () => ({ showAlert: vi.fn
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
 
 const sendDefault = vi.fn();
-const BAND = { id: "11111111-1111-4111-8111-111111111111", name: "일코해제", nextShowAt: "2026-10-16" };
 const THREE_SONGS: InviteSongs = { cover: ["oSlqhkPa3no"], names: ["낭만고양이", "벚꽃 엔딩"], count: 3 };
 
 function renderHeader(props: Partial<Parameters<typeof PlaylistHeader>[0]> = {}) {
@@ -104,26 +103,9 @@ describe("PlaylistHeader band room", () => {
     renderHeader({ showDate: "2026-10-03" });
     expect(sharedDescription()).toBe("낭만고양이·벚꽃 엔딩 외 1곡 · 2명 참여 중");
   });
-
-  it("shows the band path line with the D-day to members only", () => {
-    renderHeader({ band: BAND, showDate: BAND.nextShowAt });
-    const link = screen.getByRole("link", { name: /일코해제/ });
-    expect(link).toHaveAttribute("href", `/band/${BAND.id}`);
-    expect(link).toHaveTextContent("공연 D-12");
-  });
-
-  it("renders no band link without band info (non-members)", () => {
-    renderHeader({ band: null, showDate: BAND.nextShowAt });
-    expect(screen.queryByRole("link", { name: /일코해제/ })).not.toBeInTheDocument();
-  });
-
-  it("hides the D-day once the show is over", () => {
-    renderHeader({ band: { ...BAND, nextShowAt: "2026-10-03" } });
-    expect(screen.getByRole("link", { name: /일코해제/ })).not.toHaveTextContent("공연");
-  });
 });
 
-describe("PlaylistHeader share tracking", () => {
+describe("PlaylistHeader share and menu", () => {
   it("counts a sent invite as kakao_shared, like the other Kakao share buttons", () => {
     renderHeader();
     sharedCard();
@@ -137,5 +119,18 @@ describe("PlaylistHeader share tracking", () => {
     renderHeader();
     fireEvent.click(screen.getByRole("button", { name: "카카오톡 공유" }));
     expect(track).not.toHaveBeenCalledWith("kakao_shared", expect.anything());
+  });
+
+  it("leaves the way home to the tab bar, so the menu has no 홈으로", () => {
+    renderHeader({ onOpenSettings: vi.fn() });
+    fireEvent.click(screen.getByRole("button", { name: "플레이리스트 메뉴" }));
+    const sheet = screen.getByRole("dialog");
+    expect(within(sheet).getByRole("button", { name: "플레이리스트 설정" })).toBeInTheDocument();
+    expect(within(sheet).queryByRole("link", { name: "홈으로" })).not.toBeInTheDocument();
+  });
+
+  it("offers no menu to a viewer who cannot open the settings, since the sheet would be empty", () => {
+    renderHeader();
+    expect(screen.queryByRole("button", { name: "플레이리스트 메뉴" })).not.toBeInTheDocument();
   });
 });

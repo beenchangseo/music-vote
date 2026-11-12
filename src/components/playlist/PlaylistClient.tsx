@@ -14,9 +14,8 @@ import InlineNotice from "../ui/InlineNotice";
 import { SongRow } from "../ui/ListRow";
 import Modal from "../ui/Modal";
 import RoundButton from "../ui/RoundButton";
-import LoginButton from "../auth/LoginButton";
 import PlaylistHeader from "./PlaylistHeader";
-import PlaylistTitleBar from "./PlaylistTitleBar";
+import PlaylistTopBar from "./PlaylistTopBar";
 import AddSongForm from "./AddSongForm";
 import SongCard from "./SongCard";
 import VoteButtons from "./VoteButtons";
@@ -427,16 +426,15 @@ export default function PlaylistClient({
   return (
     <>
       <div className="min-h-full bg-bg">
-        {/* The one-line title bar of the setlist and rehearsal tabs starts nearer the top than the 후보곡 header. */}
-        <div className={`max-w-lg mx-auto px-4 ${navMode !== "playlist" ? "pt-3" : "pt-6"} ${bottomPadding}`}>
+        <div className={`max-w-lg mx-auto px-4 pt-3 ${bottomPadding}`}>
+          <PlaylistTopBar
+            band={memberBand}
+            currentUserNickname={userNickname}
+            currentUserAvatarUrl={currentUserAvatarUrl}
+            loginGate={loginGate}
+          />
           {navMode !== "playlist" ? (
-            <PlaylistTitleBar
-              title={playlist.title}
-              band={memberBand}
-              currentUserNickname={userNickname}
-              currentUserAvatarUrl={currentUserAvatarUrl}
-              loginGate={loginGate}
-            />
+            <h1 className="sr-only">{playlist.title}</h1>
           ) : (
             <PlaylistHeader
               playlistId={playlist.id}
@@ -446,9 +444,6 @@ export default function PlaylistClient({
               shareCode={shareCode}
               participantCount={participantCount}
               announcement={playlist.announcement}
-              currentUserNickname={userNickname}
-              currentUserAvatarUrl={currentUserAvatarUrl}
-              band={memberBand}
               showDate={team?.nextShowAt ?? null}
               coverThumbs={coverThumbs}
               onPlayAll={songsWithVotes.length > 0 ? handlePlayAll : undefined}
@@ -477,22 +472,17 @@ export default function PlaylistClient({
               }
               meta={
                 /*
-                  참여자 수·마감·내 닉네임·로그인이 세 덩어리로 흩어져 있었다.
-                  정렬축이 계속 바뀌어 위계가 읽히지 않았으므로 제목 아래 한 줄로 합친다.
+                  참여자 수·마감·내 닉네임이 세 덩어리로 흩어져 있었다.
+                  정렬축이 계속 바뀌어 위계가 읽히지 않았으므로 제목 아래 한 줄로 합친다. 로그인 버튼은 맨 윗줄 오른쪽이다.
                 */
-                <div className="flex flex-wrap items-center justify-center gap-x-2">
-                  <p className="min-w-0 text-caption leading-relaxed text-text-muted tabular-nums">
-                    {metaParts.map((part, i) => (
-                      <span key={part.key}>
-                        {i > 0 && <span className="mx-1.5 text-text-subtle" aria-hidden>·</span>}
-                        <span className={part.className}>{part.text}</span>
-                      </span>
-                    ))}
-                  </p>
-                  {loginGate && (
-                    <LoginButton variant="tonal" size="sm" label="로그인" className="shrink-0" />
-                  )}
-                </div>
+                <p className="text-caption leading-relaxed text-text-muted tabular-nums">
+                  {metaParts.map((part, i) => (
+                    <span key={part.key}>
+                      {i > 0 && <span className="mx-1.5 text-text-subtle" aria-hidden>·</span>}
+                      <span className={part.className}>{part.text}</span>
+                    </span>
+                  ))}
+                </p>
               }
             />
           )}

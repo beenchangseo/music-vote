@@ -76,7 +76,7 @@ vi.mock("../PlaylistHeader", () => ({
       </button>
     ) : null,
 }));
-vi.mock("../PlaylistTitleBar", () => ({ default: () => null }));
+vi.mock("../PlaylistTopBar", () => ({ default: () => null }));
 vi.mock("../NavigationBar", () => ({
   default: ({ onModeChange }: { onModeChange: (mode: string) => void }) => (
     <nav>

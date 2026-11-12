@@ -1,19 +1,16 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import Link from "next/link";
-import { ListRowButton, ListRowLink } from "../ui/ListRow";
+import { ListRowButton } from "../ui/ListRow";
 import Modal from "../ui/Modal";
 import { useDialog } from "../ui/DialogProvider";
 import { RoomCover } from "../band/BandArt";
 import AnnouncementButton from "./AnnouncementButton";
-import AuthMenu from "../auth/AuthMenu";
-import GuitarIcon from "../ui/GuitarIcon";
 import PlayPauseIcon from "../ui/PlayPauseIcon";
-import RoundButton, { RoundLink, RoundRow } from "../ui/RoundButton";
+import RoundButton, { RoundRow } from "../ui/RoundButton";
 import { track } from "@/lib/analytics";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
-import { roomSharePrefix, showDday, showDdayLabel } from "@/domain/team";
+import { roomSharePrefix } from "@/domain/team";
 import { playlistShareCard, type InviteSongs } from "@/domain/invite-card";
 import { kakaoShareQuery } from "@/domain/kakao-share";
 
@@ -38,13 +35,6 @@ interface PlaylistHeaderProps {
   shareCode: string;
   participantCount?: number;
   announcement?: string | null;
-  currentUserNickname?: string;
-  currentUserAvatarUrl?: string | null;
-  /**
-   * Band path line above the title (5A). Band members only: the link would otherwise
-   * hand the band to anyone holding the room link.
-   */
-  band?: { id: string; name: string; nextShowAt: string | null } | null;
   /** Next show date of the room's band (public value, R10 payload table). Prefixes the card (25A). */
   showDate?: string | null;
   /** 커버 모자이크 (Spotify 플레이리스트). 점수 높은 곡부터 최대 4개. */
@@ -69,9 +59,6 @@ export default function PlaylistHeader({
   shareCode,
   participantCount = 0,
   announcement,
-  currentUserNickname,
-  currentUserAvatarUrl,
-  band,
   showDate,
   coverThumbs = [],
   meta,
@@ -82,7 +69,6 @@ export default function PlaylistHeader({
 }: PlaylistHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { showAlert } = useDialog();
-  const bandDday = band ? showDdayLabel(showDday(band.nextShowAt, new Date())) : null;
 
   async function handleKakaoShare() {
     const url = `${window.location.origin}/playlist/${shareCode}?${kakaoShareQuery("playlist")}`;
@@ -121,38 +107,7 @@ export default function PlaylistHeader({
   }
 
   return (
-    <header>
-      {/* Top row: band path (members only, 5A) or back to home, account on the right. */}
-      <div className="flex min-h-11 items-center justify-between gap-3">
-        {band ? (
-          <Link
-            href={`/band/${band.id}`}
-            className="inline-flex min-h-11 min-w-0 items-center gap-1 text-caption text-text-muted transition-colors hover:text-text"
-          >
-            <svg className="size-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            <GuitarIcon className="h-4 w-4 shrink-0" />
-            <span className="truncate">{band.name}</span>
-            {bandDday && (
-              <>
-                <span className="text-text-subtle" aria-hidden>·</span>
-                <span className="shrink-0 tabular-nums">{bandDday}</span>
-              </>
-            )}
-          </Link>
-        ) : (
-          <RoundLink href="/" tone="ghost" size="md" edge="start" aria-label="홈으로">
-            <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </RoundLink>
-        )}
-        {currentUserNickname && (
-          <AuthMenu nickname={currentUserNickname} avatarUrl={currentUserAvatarUrl ?? null} embedded />
-        )}
-      </div>
-
+    <div>
       {/* Centered cover + title + one meta line. */}
       <div className="mt-2 flex flex-col items-center text-center">
         <RoomCover thumbs={coverThumbs} sizes="176px" className="h-44 w-44" />
@@ -174,45 +129,36 @@ export default function PlaylistHeader({
           </RoundButton>
         )}
         {viewToggle}
-        <RoundButton tone="tonal" size="lg" onClick={() => setMenuOpen(true)} aria-label="플레이리스트 메뉴">
-          <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-            <circle cx="12" cy="5" r="1.8" />
-            <circle cx="12" cy="12" r="1.8" />
-            <circle cx="12" cy="19" r="1.8" />
-          </svg>
-        </RoundButton>
+        {/* The sheet holds only the host's settings, and an empty sheet is a dead end. */}
+        {onOpenSettings && (
+          <RoundButton tone="tonal" size="lg" onClick={() => setMenuOpen(true)} aria-label="플레이리스트 메뉴">
+            <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <circle cx="12" cy="5" r="1.8" />
+              <circle cx="12" cy="12" r="1.8" />
+              <circle cx="12" cy="19" r="1.8" />
+            </svg>
+          </RoundButton>
+        )}
       </RoundRow>
 
       {/* ⋮ sheet (Spotify / YouTube Music "more" sheet): what used to crowd the header. */}
-      <Modal open={menuOpen} onClose={() => setMenuOpen(false)} title={title}>
-        <div className="flex flex-col">
-          {onOpenSettings && (
-            <ListRowButton
-              onClick={() => {
-                setMenuOpen(false);
-                onOpenSettings();
-              }}
-              leading={
-                <svg className="size-5 text-text-muted" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
-                </svg>
-              }
-            >
-              <span className="text-body text-text">플레이리스트 설정</span>
-            </ListRowButton>
-          )}
-          <ListRowLink
-            href="/"
+      {onOpenSettings && (
+        <Modal open={menuOpen} onClose={() => setMenuOpen(false)} title={title}>
+          <ListRowButton
+            onClick={() => {
+              setMenuOpen(false);
+              onOpenSettings();
+            }}
             leading={
               <svg className="size-5 text-text-muted" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12L12 3l9.75 9M4.5 10.5V21h5.25v-6h4.5v6H19.5V10.5" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
               </svg>
             }
           >
-            <span className="text-body text-text">홈으로</span>
-          </ListRowLink>
-        </div>
-      </Modal>
-    </header>
+            <span className="text-body text-text">플레이리스트 설정</span>
+          </ListRowButton>
+        </Modal>
+      )}
+    </div>
   );
 }
