@@ -2,8 +2,9 @@
 
 import TabBar, { type TabBarItem } from "../ui/TabBar";
 import { HomeIcon, MetronomeIcon, SetlistIcon, SongIcon } from "../ui/icons";
+import type { PlaylistLinkTab } from "@/domain/playlist-tab";
 
-export type ViewMode = "playlist" | "setlist" | "rehearsal";
+export type ViewMode = PlaylistLinkTab;
 
 /** 탭 이름은 CONTEXT.md 의 도메인 용어를 따른다. 홈은 화면을 바꾸지 않고 앱 홈으로 나간다. */
 const tabs: TabBarItem<ViewMode>[] = [
