@@ -220,6 +220,12 @@ html {
   scroll-padding-bottom: var(--bottom-chrome-height);
 }
 
+/* TabBar 는 하이드레이션 뒤에야 높이를 알린다. 그 전 첫 화면에서 body 가 페이지 끝을 비우지 않다가 늘어나지 않게,
+ * TabBar 가 그리는 높이(탭 줄 dock + 홈 인디케이터 자리)를 미리 둔다. 알린 값(<html> 의 style)이 오면 그것이 이긴다. */
+html:has([data-tab-bar]) {
+  --tab-bar-height: calc(var(--spacing-dock) + var(--spacing-safe-bottom));
+}
+
 /* Body 기본 한국어 가독성 */
 body {
   font-feature-settings: "ss01", "ss02", "cv01", "cv09";
