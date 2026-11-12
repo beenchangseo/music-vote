@@ -392,8 +392,6 @@ export default function PlaylistClient({
     });
   }
 
-  // Room for the fixed tab bar (dock, 64px) and, while a song plays, the MiniPlayer (56px) above it.
-  const bottomPadding = playerState.currentSongId ? "pb-40" : "pb-20";
   const memberBand = team?.isMember && team.id && team.name ? { id: team.id, name: team.name, nextShowAt: team.nextShowAt } : null;
 
   /*
@@ -437,7 +435,8 @@ export default function PlaylistClient({
   return (
     <>
       <div className="min-h-full bg-bg">
-        <div className={`max-w-lg mx-auto px-4 pt-3 ${bottomPadding}`}>
+        {/* The body leaves room for the tab bar and the MiniPlayer (layout.tsx); pb-4 is the gap above them. */}
+        <div className="max-w-lg mx-auto px-4 pt-3 pb-4">
           <PlaylistTopBar
             band={memberBand}
             currentUserNickname={userNickname}
@@ -773,7 +772,6 @@ export default function PlaylistClient({
         />
       )}
 
-      {/* Mini Player (positioned above NavigationBar via CSS bottom-[52px]) */}
       <MiniPlayer
         state={playerState}
         actions={playerActions}

@@ -18,7 +18,7 @@ interface NavigationBarProps {
   onModeChange: (mode: ViewMode) => void;
 }
 
-/** 플레이리스트 하단 탭. MiniPlayer 가 bottom-dock 으로 이 위에 붙는다. */
+/** 플레이리스트 하단 탭. MiniPlayer 가 이 탭이 알린 높이 위에 붙는다. */
 export default function NavigationBar({ mode, onModeChange }: NavigationBarProps) {
   return <TabBar items={tabs} value={mode} onChange={onModeChange} aria-label="플레이리스트 화면" />;
 }

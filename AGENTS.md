@@ -114,7 +114,9 @@ verification/     TLA+ 형식 검증 (verify-vote-quota 스킬)
 화면에 붙는 막대(`ScreenToolbar`·편집 중인 셋리스트 동작 줄·`TabBar`·`MiniPlayer` 막대)는 `ui/chrome-inset.ts` 로 자기 높이를 알리고, `html` 의
 scroll-padding 이 그만큼 비운다. 막대 밑으로 스크롤되는 여백을 `scroll-mt-*` 같은 숫자로 따로 적지 않는다.
 홈 인디케이터 자리는 `pb-safe-bottom` 이다. body 가 비우고, 그 자리를 스스로 칠하는 아래 막대는 `data-safe-bottom` 을 달아
-body 의 몫을 가져간다. `env(safe-area-inset-bottom)` 을 임의 값이나 음수 margin 으로 적지 않는다.
+body 의 몫을 가져간다. `TabBar` 처럼 fixed 로 붙는 막대가 있으면 body 는 대신 아래 막대들이 알린 높이(`--bottom-chrome-height`)만큼
+페이지 끝을 비우고, `MiniPlayer` 는 `--tab-bar-height` 위에 붙는다. 두 높이에 홈 인디케이터 자리가 들어 있다.
+`env(safe-area-inset-bottom)` 을 임의 값이나 음수 margin 으로 적지 않는다.
 타이포는 `text-display`·`text-h1`~`text-h4`·`text-body`·`text-sm`·`text-caption`, 한국어 줄간격 1.5 이상. 폰트는 Pretendard
 Variable(한국어) + Geist(영문) 폴백. 한글에는 대소문자가 없어서 라벨에 `uppercase`·`tracking-wide*` 를 두면 자간만 벌어진다.
 작은 라벨은 `text-caption font-semibold` 이고, ui 밖에서는 eslint(`ds/tracked-caps`)가 막는다.

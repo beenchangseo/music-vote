@@ -38,7 +38,8 @@ const itemClass = (current: boolean) =>
   }`;
 
 /**
- * 화면 아래에 붙는 탭 (dock). 높이는 --spacing-dock 이고 MiniPlayer 가 bottom-dock 으로 이 위에 붙는다.
+ * 화면 아래에 붙는 탭 (dock). 탭 줄은 h-dock 이고, 그 아래 홈 인디케이터 자리를 스스로 칠한다(data-safe-bottom).
+ * 그 자리까지 더한 높이를 --tab-bar-height 로 알리고, MiniPlayer 는 그 높이 위에, body 는 그만큼 비운다.
  * Spotify 처럼 아이콘 위 글자이고 칸 상자가 없다. 지금 탭은 채운 아이콘과 text-text, 나머지는 선 아이콘과 text-muted 다.
  * 위로 24px 은 bg 로 옅어지는 막이라 목록이 탭 밑으로 갑자기 잘리지 않는다. 막은 높이에 들지 않아 MiniPlayer 가 덮는다.
  * 글자는 줄을 바꾸지 않는다. 칸 넷이면 320px 화면에서 칸이 72px 이고 "셋리스트" 네 글자가 한 줄에 선다.
@@ -48,7 +49,8 @@ export default function TabBar<T extends string>({ items, value, onChange, "aria
     <nav
       ref={publishTabBarHeight}
       aria-label={label}
-      className="fixed inset-x-0 bottom-0 z-40 bg-bg print:hidden before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-6 before:bg-linear-to-b before:from-bg/0 before:to-bg"
+      data-safe-bottom
+      className="fixed inset-x-0 bottom-0 z-40 bg-bg pb-safe-bottom print:hidden before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-6 before:bg-linear-to-b before:from-bg/0 before:to-bg"
     >
       <div className="mx-auto flex h-dock max-w-lg items-center px-2">
         {items.map((item) => {

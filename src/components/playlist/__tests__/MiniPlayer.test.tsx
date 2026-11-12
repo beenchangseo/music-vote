@@ -99,6 +99,17 @@ describe("MiniPlayer controls", () => {
   });
 });
 
+describe("MiniPlayer dock", () => {
+  // The tab bar is taller than its 64px row by the home indicator inset, so a static bottom-dock hides the bar's tabs.
+  it("sits on the height the tab bar publishes, home indicator included", () => {
+    render(<Player source="candidates" />);
+    fireEvent.click(screen.getByRole("button", { name: "첫 곡 틀기" }));
+    const bar = screen.getByRole("button", { name: "예뻤어 플레이어 열기" }).closest(".fixed");
+    expect(bar).toHaveClass("bottom-(--tab-bar-height)");
+    expect(bar).not.toHaveClass("bottom-dock");
+  });
+});
+
 describe("MiniPlayer focus", () => {
   it("hands focus back to the bar when the expanded player closes", () => {
     render(<Player source="candidates" />);

@@ -115,7 +115,7 @@ export default function MiniPlayer({ state, actions, playerRef, songActions, chi
       className={
         expanded
           ? "fixed inset-0 z-[60] flex flex-col overflow-y-auto bg-bg print:hidden"
-          : "fixed inset-x-0 bottom-dock z-50 bg-surface/95 backdrop-blur-md print:hidden"
+          : "fixed inset-x-0 bottom-(--tab-bar-height) z-50 bg-surface/95 backdrop-blur-md print:hidden"
       }
     >
       {/* Expanded top bar (slot 0). Rendered with && so the video wrapper below never changes position. */}

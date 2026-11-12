@@ -212,10 +212,12 @@
 }
 
 /* 붙어 있는 막대(위 ScreenToolbar·편집 중인 셋리스트 동작 줄, 아래 TabBar·MiniPlayer 막대)는 자기 높이를 알린다(components/ui/chrome-inset.ts).
- * scrollIntoView·포커스로 끌어온 내용이 막대 밑에 숨지 않게 그만큼 비운다. 막대가 없는 화면은 0 이다. */
+ * scrollIntoView·포커스로 끌어온 내용이 막대 밑에 숨지 않게 그만큼 비운다. 막대가 없는 화면은 0 이다.
+ * 아래 막대 높이에는 홈 인디케이터 자리가 들어 있다. body 도 이 값만큼 페이지 끝을 비운다(layout.tsx). */
 html {
+  --bottom-chrome-height: calc(var(--tab-bar-height, 0px) + var(--mini-player-height, 0px));
   scroll-padding-top: var(--screen-toolbar-height, 0px);
-  scroll-padding-bottom: calc(var(--tab-bar-height, 0px) + var(--mini-player-height, 0px));
+  scroll-padding-bottom: var(--bottom-chrome-height);
 }
 
 /* Body 기본 한국어 가독성 */

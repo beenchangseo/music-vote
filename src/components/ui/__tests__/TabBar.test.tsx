@@ -40,6 +40,15 @@ describe("TabBar", () => {
     expect(screen.queryByRole("button", { name: "홈" })).not.toBeInTheDocument();
   });
 
+  // The bar is fixed to the bottom edge, so on iPhone its tabs sit under the home indicator unless it pads that area
+  // itself. data-safe-bottom tells the body to drop its own inset padding, so the two never stack.
+  it("pads the home indicator area under its tabs and takes it over from the body", () => {
+    render(<TabBar aria-label="플레이리스트 화면" items={TABS} value="playlist" onChange={() => {}} />);
+    const nav = screen.getByRole("navigation", { name: "플레이리스트 화면" });
+    expect(nav).toHaveAttribute("data-safe-bottom");
+    expect(nav).toHaveClass("pb-safe-bottom");
+  });
+
   it("fills the icon of the current tab only", () => {
     render(<TabBar aria-label="플레이리스트 화면" items={TABS} value="setlist" onChange={() => {}} />);
     const filled = (name: string) => screen.getByRole(name === "홈" ? "link" : "button", { name }).querySelector("svg")?.getAttribute("data-filled");
