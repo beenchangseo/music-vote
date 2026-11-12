@@ -167,8 +167,8 @@ Variable(한국어) + Geist(영문) 폴백. 한글에는 대소문자가 없어�
 - `Card`: variant `default`·`elevated`·`outline`·`selected`(목록에서 지금 고른 한 장, `border-primary-fg`), 그림자 없음. 카드 끝까지
   닿는 아래 칸(펼친 코멘트)은 `footer` 다. 음수 margin 으로 padding 을 지우지 않는다. `IconButton`: tone `default`·`danger`·`brand`, `bare`, 44px,
   `aria-label` 필수. `ScreenToolbar`: 화면 위에 붙는 숫자 막대. 지금은 합주 탭의 진행만 쓴다.
-  플레이리스트 세 탭의 맨 윗줄은 `PlaylistTopBar` 하나다. 밴드 멤버는
-  「‹ 밴드 · 공연 D-n」 링크, 나머지는 맨 chevron `RoundLink` 이고 오른쪽에 계정 메뉴나 로그인 버튼이 선다. 탭마다 윗줄을 따로 그리지 않는다.
+  플레이리스트 세 탭의 맨 윗줄은 `PlaylistTopBar` 하나다. 밴드 멤버에게는
+  「밴드 · 공연 D-n」을 링크 없는 글자로 보이고, 오른쪽에 계정 메뉴나 로그인 버튼이 선다. 밴드 홈과 앱 홈으로 가는 길은 아래 탭의 맨 앞 칸 하나라서 윗줄에 같은 일을 하는 링크를 두지 않는다(#106). 탭마다 윗줄을 따로 그리지 않는다.
 - 플레이리스트 머리: 후보곡은 Spotify 앨범처럼 가운데 큰 커버(220) 아래 왼쪽 정렬 제목과 메타 줄, 셋리스트는 작은 커버(112)
   옆에 제목과 「곡 수 · 총 시간 · 인터벌」. 둘 다 그 아래에 `PlaylistActionRow` 하나를 쓴다. 왼쪽은 맨 글리프
   (`RoundButton` ghost md, 공유 → 편집 → ⋯, 공유는 `edge="start"`), 오른쪽은 공지(tonal lg)와 재생(primary lg) 원판이다.
