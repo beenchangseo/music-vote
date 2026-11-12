@@ -51,7 +51,7 @@ export const COLOR_GROUPS: readonly { title: string; note: string; tokens: reado
         name: "primary-tint",
         hex: "#221d47",
         layer: "bg",
-        use: "선택 칩·세그먼트·하단 탭·tonal 보라 바탕. 선택 칸은 primary-fg 테두리를 같이 쓴다",
+        use: "선택 칩·세그먼트·tonal 보라 바탕. 선택 칸은 primary-fg 테두리를 같이 쓴다",
         pairs: [
           { against: "on-primary-tint", min: 4.5 },
           { against: "text", min: 4.5 },

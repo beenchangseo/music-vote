@@ -19,6 +19,7 @@ import SegmentedControl from "../SegmentedControl";
 import Shelf from "../Shelf";
 import Switch from "../Switch";
 import TabBar from "../TabBar";
+import { HomeIcon } from "../icons";
 
 afterEach(cleanup);
 
@@ -340,7 +341,8 @@ describe("control labels stay on one line (#79)", () => {
       "SegmentedControl",
       () => render(<SegmentedControl aria-label="방식" options={[{ value: "a", label: "플레이리스트 만들기" }, { value: "b", label: "밴드" }]} value="a" onChange={() => {}} />),
     ],
-    ["TabBar", () => render(<TabBar aria-label="화면" items={[{ id: "a", label: "플레이리스트 만들기", icon: null }]} value="a" onChange={() => {}} />)],
+    ["TabBar", () => render(<TabBar aria-label="화면" items={[{ id: "a", label: "플레이리스트 만들기", icon: HomeIcon }]} value="a" onChange={() => {}} />)],
+    ["TabBar link", () => render(<TabBar aria-label="화면" items={[{ href: "/", label: "플레이리스트 만들기", icon: HomeIcon }]} value="a" onChange={() => {}} />)],
     ["ActionTab", () => render(<ActionTab icon={null} onClick={() => {}}>플레이리스트 만들기</ActionTab>)],
     ["MenuItemButton", () => render(<MenuItemButton>플레이리스트 만들기</MenuItemButton>)],
     ["MenuItemLink", () => render(<MenuItemLink href="/new">플레이리스트 만들기</MenuItemLink>)],

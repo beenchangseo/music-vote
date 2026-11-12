@@ -2,15 +2,18 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import TabBar from "../TabBar";
+import TabBar, { type TabBarItem } from "../TabBar";
 
 afterEach(cleanup);
 
-const TABS = [
-  { id: "playlist", label: "후보곡", icon: null },
-  { id: "setlist", label: "셋리스트", icon: null },
-  { id: "rehearsal", label: "합주", icon: null },
-] as const;
+const Glyph = ({ filled = false }: { filled?: boolean }) => <svg data-filled={filled} aria-hidden />;
+
+const TABS: TabBarItem<"playlist" | "setlist" | "rehearsal">[] = [
+  { href: "/", label: "홈", icon: Glyph },
+  { id: "playlist", label: "후보곡", icon: Glyph },
+  { id: "setlist", label: "셋리스트", icon: Glyph },
+  { id: "rehearsal", label: "합주", icon: Glyph },
+];
 
 describe("TabBar", () => {
   it("is named navigation that marks the current screen", () => {
@@ -26,5 +29,20 @@ describe("TabBar", () => {
     render(<TabBar aria-label="플레이리스트 화면" items={TABS} value="playlist" onChange={onChange} />);
     fireEvent.click(screen.getByRole("button", { name: "합주" }));
     expect(onChange).toHaveBeenCalledWith("rehearsal");
+  });
+
+  it("takes a link tab that leaves the screen instead of switching it", () => {
+    const onChange = vi.fn();
+    render(<TabBar aria-label="플레이리스트 화면" items={TABS} value="playlist" onChange={onChange} />);
+    const home = screen.getByRole("link", { name: "홈" });
+    expect(home).toHaveAttribute("href", "/");
+    expect(home).not.toHaveAttribute("aria-current");
+    expect(screen.queryByRole("button", { name: "홈" })).not.toBeInTheDocument();
+  });
+
+  it("fills the icon of the current tab only", () => {
+    render(<TabBar aria-label="플레이리스트 화면" items={TABS} value="setlist" onChange={() => {}} />);
+    const filled = (name: string) => screen.getByRole(name === "홈" ? "link" : "button", { name }).querySelector("svg")?.getAttribute("data-filled");
+    expect(["홈", "후보곡", "셋리스트", "합주"].map(filled)).toEqual(["false", "false", "true", "false"]);
   });
 });

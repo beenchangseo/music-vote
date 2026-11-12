@@ -7,7 +7,8 @@ import Modal from "@/components/ui/Modal";
 import NoticeCard from "@/components/ui/NoticeCard";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import Switch from "@/components/ui/Switch";
-import TabBar from "@/components/ui/TabBar";
+import TabBar, { type TabBarItem } from "@/components/ui/TabBar";
+import { CandidatesIcon, HomeIcon, RehearsalIcon, SetlistIcon } from "@/components/ui/icons";
 import Textarea from "@/components/ui/Textarea";
 import ListRow, {
   ListGroup,
@@ -185,14 +186,16 @@ export function SegmentedDemo() {
   );
 }
 
-const DOCK = [
-  { id: "playlist", label: "후보곡", icon: null },
-  { id: "setlist", label: "셋리스트", icon: null },
-  { id: "rehearsal", label: "합주", icon: null },
-] as const;
+type DockTab = "playlist" | "setlist" | "rehearsal";
+const DOCK: TabBarItem<DockTab>[] = [
+  { href: "/design", label: "홈", icon: HomeIcon },
+  { id: "playlist", label: "후보곡", icon: CandidatesIcon },
+  { id: "setlist", label: "셋리스트", icon: SetlistIcon },
+  { id: "rehearsal", label: "합주", icon: RehearsalIcon },
+];
 
 export function TabBarDemo() {
-  const [tab, setTab] = useState<(typeof DOCK)[number]["id"]>("playlist");
+  const [tab, setTab] = useState<DockTab>("playlist");
   return <TabBar aria-label="디자인 시스템 하단 탭 예시" items={DOCK} value={tab} onChange={setTab} />;
 }
 

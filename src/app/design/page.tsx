@@ -458,7 +458,7 @@ export default function DesignPage() {
         <SegmentedDemo />
       </Section>
 
-      <Section title="TabBar" note="화면 아래 dock. SegmentedControl 과 같은 모양이고 화면 전환이라 aria-current 로 말해요. 이 페이지 맨 아래에 붙어 있어요.">
+      <Section title="TabBar" note="화면 아래 dock. 아이콘 위 글자이고 칸 상자가 없어요. 지금 탭은 채운 아이콘에 aria-current 예요. href 를 준 탭(홈)은 화면을 떠나는 링크예요. 이 페이지 맨 아래에 붙어 있어요.">
         <TabBarDemo />
       </Section>
 

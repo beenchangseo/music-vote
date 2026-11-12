@@ -1,14 +1,29 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { segmentItemClass } from "./SegmentedControl";
+import Link from "next/link";
+import type { ComponentType } from "react";
 import { publishTabBarHeight } from "./chrome-inset";
+import type { TabIconProps } from "./icons";
 
-export interface TabBarItem<T extends string> {
-  id: T;
+interface TabBarItemBase {
   label: string;
-  icon: ReactNode;
+  /** ui/icons 의 탭 아이콘. 지금 화면의 탭이면 filled 로 그린다. */
+  icon: ComponentType<TabIconProps>;
 }
+
+/** 이 화면 안에서 보기를 바꾸는 탭. */
+interface TabBarView<T extends string> extends TabBarItemBase {
+  id: T;
+  href?: never;
+}
+
+/** 이 화면을 떠나는 탭(플레이리스트의 홈). 지금 화면이 될 수 없어 늘 꺼진 모양이다. */
+interface TabBarLink extends TabBarItemBase {
+  href: string;
+  id?: never;
+}
+
+export type TabBarItem<T extends string> = TabBarView<T> | TabBarLink;
 
 interface TabBarProps<T extends string> {
   items: readonly TabBarItem<T>[];
@@ -17,32 +32,48 @@ interface TabBarProps<T extends string> {
   "aria-label": string;
 }
 
+const itemClass = (current: boolean) =>
+  `flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 whitespace-nowrap rounded-control text-caption font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+    current ? "text-text" : "text-text-muted hover:text-text"
+  }`;
+
 /**
  * 화면 아래에 붙는 탭 (dock). 높이는 --spacing-dock 이고 MiniPlayer 가 bottom-dock 으로 이 위에 붙는다.
- * 모양은 SegmentedControl 과 같고, 뜻은 화면 전환이라 aria-current 로 말한다.
- * 글자는 줄을 바꾸지 않는다. 칸이 320px 화면의 1/3(91px)이라 칸 여백을 4px 로 줄여서, 칸 셋이면 "셋리스트" 같은 네 글자까지 아이콘 옆 한 줄에 선다.
+ * Spotify 처럼 아이콘 위 글자이고 칸 상자가 없다. 지금 탭은 채운 아이콘과 text-text, 나머지는 선 아이콘과 text-muted 다.
+ * 위로 24px 은 bg 로 옅어지는 막이라 목록이 탭 밑으로 갑자기 잘리지 않는다. 막은 높이에 들지 않아 MiniPlayer 가 덮는다.
+ * 글자는 줄을 바꾸지 않는다. 칸 넷이면 320px 화면에서 칸이 72px 이고 "셋리스트" 네 글자가 한 줄에 선다.
  */
 export default function TabBar<T extends string>({ items, value, onChange, "aria-label": label }: TabBarProps<T>) {
   return (
-    <nav ref={publishTabBarHeight} aria-label={label} className="fixed inset-x-0 bottom-0 z-40 bg-bg print:hidden">
-      <div className="mx-auto flex h-dock max-w-lg items-center px-4">
-        <div className="flex w-full gap-1 rounded-card bg-surface p-1">
-          {items.map((item) => {
-            const active = item.id === value;
+    <nav
+      ref={publishTabBarHeight}
+      aria-label={label}
+      className="fixed inset-x-0 bottom-0 z-40 bg-bg print:hidden before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-6 before:bg-linear-to-b before:from-bg/0 before:to-bg"
+    >
+      <div className="mx-auto flex h-dock max-w-lg items-center px-2">
+        {items.map((item) => {
+          if (item.href !== undefined) {
             return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onChange(item.id)}
-                aria-current={active ? "page" : undefined}
-                className={`${segmentItemClass(active, "px-1")} [&_svg]:shrink-0`}
-              >
-                {item.icon}
-                <span className="whitespace-nowrap">{item.label}</span>
-              </button>
+              <Link key={item.href} href={item.href} className={itemClass(false)}>
+                <item.icon />
+                {item.label}
+              </Link>
             );
-          })}
-        </div>
+          }
+          const current = item.id === value;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onChange(item.id)}
+              aria-current={current ? "page" : undefined}
+              className={itemClass(current)}
+            >
+              <item.icon filled={current} />
+              {item.label}
+            </button>
+          );
+        })}
       </div>
     </nav>
   );

@@ -94,7 +94,7 @@ verification/     TLA+ 형식 검증 (verify-vote-quota 스킬)
 |---|---|
 | 주 버튼·켜진 스위치 바탕 | `bg-primary` + `text-on-primary`, hover `primary-hover`, 눌림 `primary-pressed` |
 | 어두운 표면 위 보라 글자·아이콘·순위 | `text-primary-fg` (hover 는 `on-primary-tint`) |
-| 선택 칩·세그먼트·하단 탭·tonal 보라 바탕 | `bg-primary-tint` + `text-on-primary-tint` |
+| 선택 칩·세그먼트·tonal 보라 바탕 | `bg-primary-tint` + `text-on-primary-tint` |
 | 선택 상태 테두리 | `border-primary-fg` (`border-primary` 는 tint 위에서 3:1 이 안 나온다) |
 | 위험 버튼 바탕 | `bg-danger` + `text-on-danger`, hover `danger-hover` |
 | 주의 배지 바탕 | `bg-warning-tint` + `text-warning` (`warning-soft` 위 warning 글자는 4.22:1 이라 금지) |
@@ -140,7 +140,9 @@ Variable(한국어) + Geist(영문) 폴백. 한글에는 대소문자가 없어�
   390px 에서도 쌓인다. 줄보다 긴 `truncate` 이름은 `Button` 안에서 줄 폭으로 말줄임되지만, `buttonClassName` 링크는 글자 칸이
   줄지 않아 넘치므로 `ButtonGroup` 안 링크에는 truncate 글자를 두지 않는다(eslint).
 - 고르기: 필터·켜고 끄는 선택지는 `Chip`(36px, 누르는 영역 44px), 한 화면 안 보기·방식 하나는 `SegmentedControl`
-  (radiogroup), 켜고 끄기는 `Switch`(label 을 주면 줄 전체가 눌린다), 화면 아래 탭은 `TabBar`.
+  (radiogroup), 켜고 끄기는 `Switch`(label 을 주면 줄 전체가 눌린다), 화면 아래 탭은 `TabBar`. 탭은 아이콘 위 글자이고
+  칸 상자가 없다. 지금 탭은 채운 아이콘과 `text-text`, 나머지는 선 아이콘과 `text-text-muted` 다. `href` 를 준 칸은 화면을
+  떠나는 링크다(플레이리스트의 홈).
 - 목록: 곡은 `SongRow`(카드 없이 72px, 48px 커버, 고정 폭 `RankNumber`), 설정·멤버는 `ListRow`(56px)를 시트 안에서
   `ListGroup` 으로 묶는다. 줄 전체가 눌리면 `ListRowButton`, 줄 전체가 링크면 `ListRowLink` 다. 둘은 `SongRow` 처럼 내용을 열 가장자리에 두고 hover 바탕만 양옆 8px 밖까지 편다. 그래서 시트 제목·위 글자와 같은 세로줄에 서고, 옆에 다른 칸을 두면 8px 이상 띄운다. 버튼 안에 div 를 둘 수 없어 칸이 span 이다.
   펼치는 곡 행의 제목 줄은 `SongRowTitleButton`, 펼친 아래 동작은 `ActionTab` 을 `ActionTabBar` 에 담는다(바탕 없는 44px 탭, 끝에 ⋯ `IconButton`). 사람은 `Avatar`·`AvatarStack`, 메타·상태는 `Badge`(neutral·primary·warning).
@@ -156,6 +158,8 @@ Variable(한국어) + Geist(영문) 폴백. 한글에는 대소문자가 없어�
   닿는 아래 칸(펼친 코멘트)은 `footer` 다. 음수 margin 으로 padding 을 지우지 않는다. `IconButton`: tone `default`·`danger`·`brand`, `bare`, 44px,
   `aria-label` 필수. `ScreenToolbar`: 후보곡·셋리스트·합주 상단의 숫자와 동작. 동작은 `ToolbarButton`(44px, `compact` 면
   640px 아래에서 아이콘만)으로만 그린다.
+- 아이콘: 이 작업부터 손대는 아이콘은 `ui/icons.tsx` 에서 가져온다(24 격자, 2px 둥근 선, 하단 탭 아이콘은 `filled` 짝).
+  Spotify 글리프를 따라 그리지 않는다. 아직 인라인 svg 인 곳은 따로 옮긴다.
 - `RoundButton`: 플레이어·플레이리스트 머리·메트로놈 줄의 둥근 아이콘 버튼. size `md` 44·`lg` 52·`hero` 64, tone `plain`(재생
   컨트롤처럼 또렷한 글리프)·`ghost`(Button ghost 처럼 흐린 글리프)·`tonal`·`inverse`(흰 원판)·`primary`·`danger`·`kakao`, hero 는 원판
   tone 만 된다. 켜고 끄기는 tone 대신 `pressed`(꺼지면 ghost, 켜지면 primary-fg 글리프). 투표 화살표는 tone `upvote`·`downvote` 에 `chosen` 이다(고른 쪽에 옅은 원판, aria-pressed 없음). 글리프 크기는 버튼이 정하니 svg 에 크기·margin 을
