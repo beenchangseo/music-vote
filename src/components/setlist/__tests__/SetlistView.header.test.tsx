@@ -21,11 +21,15 @@ const at = (position: number, fields: Partial<SetlistItem>) =>
 
 const ITEMS = [at(0, { song_id: "a" }), at(1, { item_type: "interval", label: "인사" }), at(2, { song_id: "b" })];
 
-function renderSetlist({ access = "edit", onOpenSettings }: { access?: SetlistEditAccess; onOpenSettings?: () => void } = {}) {
+function renderSetlist({
+  access = "edit",
+  onOpenSettings,
+  candidates = songs,
+}: { access?: SetlistEditAccess; onOpenSettings?: () => void; candidates?: SongWithScore[] } = {}) {
   render(
     <SetlistView
       setlistItems={ITEMS}
-      songs={songs}
+      songs={candidates}
       playlistId="p"
       shareCode="abc123"
       loading={false}
@@ -74,6 +78,14 @@ describe("SetlistView header (#101)", () => {
     fireEvent.click(screen.getByRole("button", { name: "플레이리스트 메뉴" }));
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "플레이리스트 설정" }));
     expect(onOpenSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips no heading level below the title, down to 후보곡에서 넣기", () => {
+    renderSetlist({ candidates: [...songs, song("c", "새벽 세 시", 200)] });
+    const levels = screen.getAllByRole("heading").map((heading) => Number(heading.tagName.slice(1)));
+    expect(levels[0]).toBe(1);
+    expect(screen.getByRole("heading", { name: "후보곡에서 넣기" })).toBeInTheDocument();
+    levels.slice(1).forEach((level, i) => expect(level).toBeLessThanOrEqual(levels[i] + 1));
   });
 
   it("shows no ⋯ to anyone else, since its sheet would be empty", () => {
