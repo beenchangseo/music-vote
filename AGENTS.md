@@ -111,7 +111,7 @@ verification/     TLA+ 형식 검증 (verify-vote-quota 스킬)
 **크기.** 모서리 `rounded-badge` 6 · `rounded-control` 12(버튼·입력·칩) · `rounded-card` 16 · `rounded-t-sheet` 24 ·
 `rounded-pill`. 높이 `h-control-sm` 36(누르는 영역은 44) · `h-control-md` 44 · `h-control-lg` 52 · `control-hero` 64(둥근 주 원판), 행 `min-h-row` 56(설정·멤버)
 · `min-h-row-song` 72(곡). 그림자는 `shadow-float` 하나이고 시트·토스트·FAB 에만 쓴다. 다른 층은 표면 색으로 만든다.
-화면에 붙는 막대(`ScreenToolbar`·`TabBar`·`MiniPlayer` 막대)는 `ui/chrome-inset.ts` 로 자기 높이를 알리고, `html` 의
+화면에 붙는 막대(`ScreenToolbar`·편집 중인 셋리스트 동작 줄·`TabBar`·`MiniPlayer` 막대)는 `ui/chrome-inset.ts` 로 자기 높이를 알리고, `html` 의
 scroll-padding 이 그만큼 비운다. 막대 밑으로 스크롤되는 여백을 `scroll-mt-*` 같은 숫자로 따로 적지 않는다.
 홈 인디케이터 자리는 `pb-safe-bottom` 이다. body 가 비우고, 그 자리를 스스로 칠하는 아래 막대는 `data-safe-bottom` 을 달아
 body 의 몫을 가져간다. `env(safe-area-inset-bottom)` 을 임의 값이나 음수 margin 으로 적지 않는다.
@@ -163,6 +163,7 @@ Variable(한국어) + Geist(영문) 폴백. 한글에는 대소문자가 없어�
   옆에 제목과 「곡 수 · 총 시간 · 인터벌」. 둘 다 그 아래에 `PlaylistActionRow` 하나를 쓴다. 왼쪽은 맨 글리프
   (`RoundButton` ghost md, 공유 → 편집 → ⋯, 공유는 `edge="start"`), 오른쪽은 공지(tonal lg)와 재생(primary lg) 원판이다.
   재생이 이 화면에 하나뿐인 채운 primary 라 같은 화면의 다른 버튼은 tonal 이다. ⋯ 는 시트에 줄이 있을 때만 그린다.
+  셋리스트를 편집하는 동안에는 동작 줄이 화면 위에 붙어서, 긴 셋리스트 끝에서 끌어도 완료가 손에 남는다.
   후보곡 공유는 회색 글리프여도 한 번 누르면 카톡 투표 초대가 간다.
 - 아이콘: 이 작업부터 손대는 아이콘은 `ui/icons.tsx` 에서 가져온다(24 격자, 2px 둥근 선, 하단 탭 아이콘은 `filled` 짝).
   Spotify 글리프를 따라 그리지 않는다. 아직 인라인 svg 인 곳은 따로 옮긴다.

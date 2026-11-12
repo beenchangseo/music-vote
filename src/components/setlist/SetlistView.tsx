@@ -15,6 +15,7 @@ import IconButton from "../ui/IconButton";
 import RoundButton from "../ui/RoundButton";
 import { DoneIcon, EditIcon, SettingsIcon } from "../ui/icons";
 import { useDialog } from "../ui/DialogProvider";
+import { publishScreenToolbarHeight } from "../ui/chrome-inset";
 import { RoomCover } from "../band/BandArt";
 import PlaylistActionRow, { type PlaylistMenuItem } from "../playlist/PlaylistActionRow";
 import { insertSetlistBlock, removeSetlistItem, updateSetlistOrder } from "@/actions/setlist";
@@ -218,7 +219,12 @@ export default function SetlistView({
         </div>
       </div>
 
-      <div className="mt-2 mb-4">
+      {/* Pinned while editing, as the old toolbar was, so 완료 stays in reach while dragging at the end of a long setlist.
+          The padding trades places with the margin, so the row does not move when it pins. */}
+      <div
+        ref={showEditControls ? publishScreenToolbarHeight : undefined}
+        className={showEditControls ? "sticky top-0 z-20 -mx-4 mb-2 bg-bg px-4 py-2" : "mt-2 mb-4"}
+      >
         <PlaylistActionRow
           title={title}
           share={<SetlistShareButton shareCode={shareCode} title={title} />}
