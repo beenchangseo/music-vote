@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import TabBar, { type TabBarItem } from "../TabBar";
 
 afterEach(cleanup);
@@ -69,5 +69,38 @@ describe("TabBar", () => {
     render(<TabBar aria-label="플레이리스트 화면" items={TABS} value="setlist" onChange={() => {}} />);
     const filled = (name: string) => screen.getByRole(name === "홈" ? "link" : "button", { name }).querySelector("svg")?.getAttribute("data-filled");
     expect(["홈", "후보곡", "셋리스트", "합주"].map(filled)).toEqual(["false", "false", "true", "false"]);
+  });
+});
+
+// jsdom has no layout, so this reads what CSS would. The MiniPlayer sits on the height the bar publishes and the body
+// leaves that much room at the end of the page (layout.tsx), so a bar that stops publishing hides both under itself.
+describe("TabBar published height", () => {
+  const publishedHeight = () => document.documentElement.style.getPropertyValue("--tab-bar-height");
+
+  beforeEach(() => {
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(private readonly measure: () => void) {}
+        observe() {
+          this.measure();
+        }
+        disconnect() {}
+      },
+    );
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(98);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("publishes its height, home indicator included, while it is on screen", () => {
+    const { unmount } = render(<TabBar aria-label="플레이리스트 화면" items={TABS} value="playlist" onChange={() => {}} />);
+    expect(publishedHeight()).toBe("98px");
+
+    unmount();
+    expect(publishedHeight()).toBe("");
   });
 });
