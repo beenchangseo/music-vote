@@ -7,7 +7,7 @@ import Card from "@/components/ui/Card";
 import Chip from "@/components/ui/Chip";
 import IconButton from "@/components/ui/IconButton";
 import Input from "@/components/ui/Input";
-import { GuitarIcon, PlayPauseIcon } from "@/components/ui/icons";
+import { GuitarIcon, MinusIcon, PlayPauseIcon, PlusIcon } from "@/components/ui/icons";
 import RoundButton, { ROUND_BARE_TONES, ROUND_DISC_TONES, ROUND_VOTE_TONES, RoundLink, RoundRow } from "@/components/ui/RoundButton";
 import ScreenToolbar from "@/components/ui/ScreenToolbar";
 import { COLOR_GROUPS, COLORS, HEIGHTS, INSETS, MOTION, RADII, SHADOWS, TYPE, contrastRatio, type ColorToken, type Pairing } from "@/components/ui/tokens";
@@ -215,29 +215,29 @@ export default function DesignPage() {
         </StateRow>
         <StateRow label="bare danger (빨강 글리프)">
           <IconButton bare tone="danger" aria-label="bare danger 기본">
-            <MinusCircleIcon />
+            <MinusIcon circled className="size-5" />
           </IconButton>
           <HoverSample>
             <IconButton bare tone="danger" aria-label="bare danger hover" tabIndex={-1}>
-              <MinusCircleIcon />
+              <MinusIcon circled className="size-5" />
             </IconButton>
           </HoverSample>
           <IconButton bare tone="danger" aria-label="bare danger 비활성" disabled>
-            <MinusCircleIcon />
+            <MinusIcon circled className="size-5" />
           </IconButton>
         </StateRow>
         <h3 className="mt-6 text-sm font-semibold text-text-muted">크기</h3>
         <StateHeader labels={["md 44", "sm 36", "인터벌 카드 안 sm"]} />
         <StateRow label="bare danger">
           <IconButton bare tone="danger" aria-label="md 삭제">
-            <MinusCircleIcon />
+            <MinusIcon circled className="size-5" />
           </IconButton>
           <IconButton bare tone="danger" size="sm" aria-label="sm 삭제">
-            <MinusCircleIcon />
+            <MinusIcon circled className="size-5" />
           </IconButton>
           <span className="col-span-2 flex min-h-control-sm items-center gap-3 whitespace-nowrap rounded-control bg-surface-hover px-3 text-sm text-text-muted">
             <IconButton bare tone="danger" size="sm" aria-label="카드 안 sm 삭제">
-              <MinusCircleIcon />
+              <MinusIcon circled className="size-5" />
             </IconButton>
             인터벌
           </span>
@@ -425,9 +425,7 @@ export default function DesignPage() {
         <div className="mt-2 max-w-xs">
           <ButtonGroup>
             <Button size="lg">
-              <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
-                <path d="M12 5v14M5 12h14" />
-              </svg>
+              <PlusIcon className="size-5" />
               플레이리스트 만들기
             </Button>
             <Button variant="tonal" size="lg">
@@ -571,15 +569,6 @@ export default function DesignPage() {
         </div>
       </Section>
     </main>
-  );
-}
-
-function MinusCircleIcon() {
-  return (
-    <svg className="size-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-      <circle cx="12" cy="12" r="9" />
-      <path strokeLinecap="round" d="M8 12h8" />
-    </svg>
   );
 }
 

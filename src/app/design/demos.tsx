@@ -222,9 +222,7 @@ export function NoticeDemo() {
       <NoticeCard
         tone="success"
         icon={
-          <svg className="size-4.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
+          <icons.DoneIcon className="size-4.5" />
         }
         title="밴드를 만들었어요"
         onDismiss={() => setOpen(false)}
@@ -327,11 +325,7 @@ export function SongRowActionsDemo() {
             {inSetlist ? "셋리스트에 있음" : "셋리스트에 추가"}
           </ActionTab>
           <IconButton bare aria-label="예뻤어 더보기">
-            <svg className="size-4.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <circle cx="5" cy="12" r="1.6" />
-              <circle cx="12" cy="12" r="1.6" />
-              <circle cx="19" cy="12" r="1.6" />
-            </svg>
+            <icons.MoreIcon className="size-4.5" />
           </IconButton>
         </ActionTabBar>
       )}
