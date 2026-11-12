@@ -24,6 +24,7 @@ import AttachPlaylistsSheet from "./AttachPlaylistsSheet";
 import BandDateSheet from "./BandDateSheet";
 import RemoveMemberModal from "./RemoveMemberModal";
 import { LEFT_BAND_STORAGE_KEY } from "./LeftBandNotice";
+import { BandNavigationBar } from "../playlist/NavigationBar";
 import { leaveTeam, type TeamHomeMember, type TeamHomeView, type TeamRoom } from "@/actions/team";
 import { track } from "@/lib/analytics";
 import { aggregatePlayedSongs, formatShowDate, showDday, type PlayedSong, type ShowDday } from "@/domain/team";
@@ -122,6 +123,8 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
   const dday = showDday(nextShowAt, new Date());
   // 1A: the latest band room whose setlist is not confirmed yet.
   const activeRoom = rooms[0] && !rooms[0].setlistConfirmed ? rooms[0] : null;
+  // The bottom tabs open the running playlist, else the latest one (#106).
+  const tabRoom = activeRoom ?? rooms[0] ?? null;
   const alone = members.length === 1;
   const newRoomHref = `/new?band=${team.id}`;
   // DR1: a band made at home starts as the owner alone with no playlist. One start area replaces
@@ -316,6 +319,8 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
           </div>
         )}
       </div>
+
+      <BandNavigationBar shareCode={tabRoom?.shareCode ?? null} />
 
       <BandInviteSheet
         open={inviteOpen}

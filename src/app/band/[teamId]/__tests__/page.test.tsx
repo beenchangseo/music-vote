@@ -90,6 +90,15 @@ describe("/band/[teamId]", () => {
     expect(screen.queryByText(/join/)).not.toBeInTheDocument();
   });
 
+  it.each([
+    ["a logged-out visitor", false],
+    ["a logged-in non-member", true],
+  ])("gives %s no tab bar (#106)", async (_who, loggedIn) => {
+    state.getTeamHome.mockResolvedValue({ access: "guest", loggedIn, team: { id: TEAM, name: "일코해제" } });
+    render((await page()).content);
+    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+  });
+
   it("passes the one-time banner flags to the member screen", async () => {
     state.getTeamHome.mockResolvedValue({ access: "member", myRole: "owner", team: { id: TEAM, name: "일코해제" } });
     const element = (await page({ created: "1" })).content as ReactElement<{ created: boolean; joined: boolean }>;

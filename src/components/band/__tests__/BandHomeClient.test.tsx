@@ -595,3 +595,44 @@ describe("BandHomeClient member management (F1, 24B, R7)", () => {
     expect(screen.getByText("이 링크를 받은 사람은 누구나 들어올 수 있어요")).toBeInTheDocument();
   });
 });
+
+describe("BandHomeClient tab bar (#106)", () => {
+  const nav = () => screen.getByRole("navigation", { name: "밴드 화면" });
+  const targets = () => ["후보곡", "셋리스트", "합주"].map((name) => within(nav()).getByRole("link", { name }).getAttribute("href"));
+
+  it("puts the same four tabs at the bottom, with 밴드 홈 the current one", () => {
+    renderHome(view({ rooms: [room()] }));
+
+    expect([...nav().querySelectorAll("a, button, [role=link]")].map((tab) => tab.textContent)).toEqual(["밴드 홈", "후보곡", "셋리스트", "합주"]);
+    expect(within(nav()).getByRole("button", { name: "밴드 홈" })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("opens the band's current playlist on the tab that was tapped", () => {
+    renderHome(view({ rooms: [room({ shareCode: "now0001" }), room({ id: "room-0", shareCode: "old0001", setlistConfirmed: true })] }));
+
+    expect(targets()).toEqual(["/playlist/now0001", "/playlist/now0001?tab=setlist", "/playlist/now0001?tab=rehearsal"]);
+  });
+
+  it("opens the most recent playlist when none is running", () => {
+    renderHome(
+      view({
+        rooms: [
+          room({ shareCode: "last001", setlistConfirmed: true }),
+          room({ id: "room-0", shareCode: "old0001", setlistConfirmed: true }),
+        ],
+      }),
+    );
+
+    expect(targets()).toEqual(["/playlist/last001", "/playlist/last001?tab=setlist", "/playlist/last001?tab=rehearsal"]);
+  });
+
+  it("dims the three playlist tabs in place when the band has no playlist", () => {
+    renderHome(ownerView({ rooms: [] }));
+
+    for (const name of ["후보곡", "셋리스트", "합주"]) {
+      const tab = within(nav()).getByRole("link", { name });
+      expect(tab).toHaveAttribute("aria-disabled", "true");
+      expect(tab).not.toHaveAttribute("href");
+    }
+  });
+});
