@@ -8,6 +8,7 @@ import NoticeCard from "@/components/ui/NoticeCard";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import Switch from "@/components/ui/Switch";
 import TabBar, { type TabBarItem } from "@/components/ui/TabBar";
+import * as icons from "@/components/ui/icons";
 import { CandidatesIcon, HomeIcon, RehearsalIcon, SetlistIcon } from "@/components/ui/icons";
 import Textarea from "@/components/ui/Textarea";
 import ListRow, {
@@ -337,5 +338,75 @@ export function SongRowActionsDemo() {
         </ActionTabBar>
       )}
     </div>
+  );
+}
+
+const ICON_SAMPLES: [string, ReactNode][] = [
+  ["Home", <icons.HomeIcon key="Home" />],
+  ["Home filled", <icons.HomeIcon key="Home filled" filled />],
+  ["Candidates", <icons.CandidatesIcon key="Candidates" />],
+  ["Candidates filled", <icons.CandidatesIcon key="Candidates filled" filled />],
+  ["Setlist", <icons.SetlistIcon key="Setlist" />],
+  ["Setlist filled", <icons.SetlistIcon key="Setlist filled" filled />],
+  ["Rehearsal", <icons.RehearsalIcon key="Rehearsal" />],
+  ["Rehearsal filled", <icons.RehearsalIcon key="Rehearsal filled" filled />],
+  ["Back", <icons.BackIcon key="Back" />],
+  ["Chevron right", <icons.ChevronIcon key="Chevron right" direction="right" />],
+  ["Chevron down", <icons.ChevronIcon key="Chevron down" direction="down" />],
+  ["Chevron up", <icons.ChevronIcon key="Chevron up" direction="up" />],
+  ["ArrowUp", <icons.ArrowUpIcon key="ArrowUp" />],
+  ["Plus", <icons.PlusIcon key="Plus" />],
+  ["Plus circled", <icons.PlusIcon key="Plus circled" circled />],
+  ["Minus", <icons.MinusIcon key="Minus" />],
+  ["Minus circled", <icons.MinusIcon key="Minus circled" circled />],
+  ["Close", <icons.CloseIcon key="Close" />],
+  ["Done", <icons.DoneIcon key="Done" />],
+  ["Edit", <icons.EditIcon key="Edit" />],
+  ["Trash", <icons.TrashIcon key="Trash" />],
+  ["More", <icons.MoreIcon key="More" />],
+  ["Settings", <icons.SettingsIcon key="Settings" />],
+  ["Search", <icons.SearchIcon key="Search" />],
+  ["Share", <icons.ShareIcon key="Share" />],
+  ["Link", <icons.LinkIcon key="Link" />],
+  ["ExternalLink", <icons.ExternalLinkIcon key="ExternalLink" />],
+  ["Play", <icons.PlayPauseIcon key="Play" playing={false} />],
+  ["Pause", <icons.PlayPauseIcon key="Pause" playing />],
+  ["Skip previous", <icons.SkipIcon key="Skip previous" direction="previous" />],
+  ["Skip next", <icons.SkipIcon key="Skip next" direction="next" />],
+  ["Shuffle", <icons.ShuffleIcon key="Shuffle" />],
+  ["Repeat", <icons.RepeatIcon key="Repeat" />],
+  ["Repeat one", <icons.RepeatIcon key="Repeat one" one />],
+  ["Comment", <icons.CommentIcon key="Comment" />],
+  ["Versions", <icons.VersionsIcon key="Versions" />],
+  ["SetlistAdd", <icons.SetlistAddIcon key="SetlistAdd" />],
+  ["InSetlist", <icons.InSetlistIcon key="InSetlist" />],
+  ["DragHandle", <icons.DragHandleIcon key="DragHandle" />],
+  ["Cards", <icons.CardsIcon key="Cards" />],
+  ["List", <icons.ListIcon key="List" />],
+  ["Clock", <icons.ClockIcon key="Clock" />],
+  ["Calendar", <icons.CalendarIcon key="Calendar" />],
+  ["Notice", <icons.NoticeIcon key="Notice" />],
+  ["Info", <icons.InfoIcon key="Info" />],
+  ["Warning", <icons.WarningIcon key="Warning" />],
+  ["Lock", <icons.LockIcon key="Lock" />],
+  ["Image", <icons.ImageIcon key="Image" />],
+  ["Document", <icons.DocumentIcon key="Document" />],
+  ["QrCode", <icons.QrCodeIcon key="QrCode" />],
+  ["Invite", <icons.InviteIcon key="Invite" />],
+  ["Folder", <icons.FolderIcon key="Folder" />],
+  ["Tap", <icons.TapIcon key="Tap" />],
+];
+
+/** Every glyph of ui/icons at its default 24px, so a new one is drawn against the rest of the set. */
+export function IconGallery() {
+  return (
+    <ul className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+      {ICON_SAMPLES.map(([name, icon]) => (
+        <li key={name} className="flex flex-col items-center gap-1.5 rounded-control bg-surface px-1 py-3 text-text">
+          {icon}
+          <span className="break-all text-center text-caption text-text-muted">{name}</span>
+        </li>
+      ))}
+    </ul>
   );
 }

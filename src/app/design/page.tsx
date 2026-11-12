@@ -22,7 +22,7 @@ import { RankNumber, SongRow } from "@/components/ui/ListRow";
 import { MenuItemButton, MenuItemLink, MenuPanel } from "@/components/ui/Menu";
 import Shelf from "@/components/ui/Shelf";
 import Textarea from "@/components/ui/Textarea";
-import { DialogDemo, HoverSample, ListGroupDemo, ModalDemo, MotionDemo, NoticeDemo, SegmentedDemo, SongRowActionsDemo, SwitchDemo, TabBarDemo } from "./demos";
+import { DialogDemo, HoverSample, IconGallery, ListGroupDemo, ModalDemo, MotionDemo, NoticeDemo, SegmentedDemo, SongRowActionsDemo, SwitchDemo, TabBarDemo } from "./demos";
 
 export const metadata: Metadata = {
   title: "디자인 시스템 · Plypick",
@@ -108,6 +108,13 @@ export default function DesignPage() {
             </li>
           ))}
         </ul>
+      </Section>
+
+      <Section
+        title="아이콘"
+        note="모두 ui/icons.tsx 에 있고 24 격자·2px 둥근 선이에요. 뜻 하나에 그림 하나라서 꺾쇠는 ChevronIcon 하나를 돌려 써요. 크기는 className 이 정하고, RoundButton·ActionTab·TabBar 안에서는 부품이 정해요."
+      >
+        <IconGallery />
       </Section>
 
       <Section title="Button" note="채운 보라 버튼은 화면에 하나. 나란한 보조 동작은 tonal, 덜 중요한 동작은 ghost. 같은 일을 하는 버튼을 두 개 두지 않아요.">
