@@ -156,15 +156,20 @@ Variable(한국어) + Geist(영문) 폴백. 한글에는 대소문자가 없어�
   한 단계 올린다. 머리는 제자리에 있고 본문만 스크롤된다. 본문이 길어도 보여야 하는 아래 칸(댓글 입력)은 `footer` 다. `useDialog()`(`DialogProvider`): alert·confirm·danger 확인창.
 - `Card`: variant `default`·`elevated`·`outline`·`selected`(목록에서 지금 고른 한 장, `border-primary-fg`), 그림자 없음. 카드 끝까지
   닿는 아래 칸(펼친 코멘트)은 `footer` 다. 음수 margin 으로 padding 을 지우지 않는다. `IconButton`: tone `default`·`danger`·`brand`, `bare`, 44px,
-  `aria-label` 필수. `ScreenToolbar`: 후보곡·셋리스트·합주 상단의 숫자와 동작. 동작은 `ToolbarButton`(44px, `compact` 면
-  640px 아래에서 아이콘만)으로만 그린다. 플레이리스트 세 탭의 맨 윗줄은 `PlaylistTopBar` 하나다. 밴드 멤버는 「‹ 밴드 · 공연 D-n」
-  링크, 나머지는 맨 chevron `RoundLink` 이고 오른쪽에 계정 메뉴나 로그인 버튼이 선다. 탭마다 윗줄을 따로 그리지 않는다.
+  `aria-label` 필수. `ScreenToolbar`: 화면 위에 붙는 숫자 막대. 지금은 합주 탭의 진행만 쓴다. 동작은 `ToolbarButton`(44px,
+  `compact` 면 640px 아래에서 아이콘만)으로만 그린다. 플레이리스트 세 탭의 맨 윗줄은 `PlaylistTopBar` 하나다. 밴드 멤버는
+  「‹ 밴드 · 공연 D-n」 링크, 나머지는 맨 chevron `RoundLink` 이고 오른쪽에 계정 메뉴나 로그인 버튼이 선다. 탭마다 윗줄을 따로 그리지 않는다.
+- 플레이리스트 머리: 후보곡은 Spotify 앨범처럼 가운데 큰 커버(220) 아래 왼쪽 정렬 제목과 메타 줄, 셋리스트는 작은 커버(112)
+  옆에 제목과 「곡 수 · 총 시간 · 인터벌」. 둘 다 그 아래에 `PlaylistActionRow` 하나를 쓴다. 왼쪽은 맨 글리프
+  (`RoundButton` ghost md, 공유 → 편집 → ⋯, 공유는 `edge="start"`), 오른쪽은 공지(tonal lg)와 재생(primary lg) 원판이다.
+  재생이 이 화면에 하나뿐인 채운 primary 라 같은 화면의 다른 버튼은 tonal 이다. ⋯ 는 시트에 줄이 있을 때만 그린다.
+  후보곡 공유는 회색 글리프여도 한 번 누르면 카톡 투표 초대가 간다.
 - 아이콘: 이 작업부터 손대는 아이콘은 `ui/icons.tsx` 에서 가져온다(24 격자, 2px 둥근 선, 하단 탭 아이콘은 `filled` 짝).
   Spotify 글리프를 따라 그리지 않는다. 아직 인라인 svg 인 곳은 따로 옮긴다.
 - `RoundButton`: 플레이어·플레이리스트 머리·메트로놈 줄의 둥근 아이콘 버튼. size `md` 44·`lg` 52·`hero` 64, tone `plain`(재생
   컨트롤처럼 또렷한 글리프)·`ghost`(Button ghost 처럼 흐린 글리프)·`tonal`·`inverse`(흰 원판)·`primary`·`danger`·`kakao`, hero 는 원판
   tone 만 된다. 켜고 끄기는 tone 대신 `pressed`(꺼지면 ghost, 켜지면 primary-fg 글리프). 투표 화살표는 tone `upvote`·`downvote` 에 `chosen` 이다(고른 쪽에 옅은 원판, aria-pressed 없음). 글리프 크기는 버튼이 정하니 svg 에 크기·margin 을
-  두지 않는다(eslint). 재생 삼각형은 `PlayPauseIcon`. 링크는 `RoundLink`, `edge="start"` 면 글리프가 내용 왼쪽 끝에 맞는다. 둥근 버튼을
+  두지 않는다(eslint). 재생 삼각형은 `ui/icons` 의 `PlayPauseIcon`. 링크는 `RoundLink`, `edge="start"` 면 글리프가 내용 왼쪽 끝에 맞는다. 둥근 버튼을
   모은 줄은 `RoundRow` 다. 원은 줄지 않고 간격이 준다.
 - 크기는 prop 이 정한다. `Button`·`ButtonGroup`·`IconButton`·`Chip`·`RoundButton`·`ListRowButton`·`ListRowLink` 의 className 에 높이·폭·여백·모서리·글자 크기를 덧칠하면 eslint 가
   막는다. className 에는 바깥 배치(margin·`flex-1`·`shrink-0`·표시 여부)만 둔다.
