@@ -11,6 +11,7 @@ import AuthMenu from "../auth/AuthMenu";
 import GuitarIcon from "../ui/GuitarIcon";
 import PlayPauseIcon from "../ui/PlayPauseIcon";
 import RoundButton, { RoundLink, RoundRow } from "../ui/RoundButton";
+import { track } from "@/lib/analytics";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
 import { roomSharePrefix, showDday, showDdayLabel } from "@/domain/team";
 import { playlistShareCard, type InviteSongs } from "@/domain/invite-card";
@@ -105,6 +106,7 @@ export default function PlaylistHeader({
             { title: "투표 참여하기", link: { mobileWebUrl: url, webUrl: url } },
           ],
         });
+        track("kakao_shared", { variant: "playlist" });
         return;
       }
     } catch {
