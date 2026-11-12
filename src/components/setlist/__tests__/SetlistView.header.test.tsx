@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SetlistEditAccess } from "@/domain/setlist";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
 import SetlistView from "../SetlistView";
@@ -80,5 +80,47 @@ describe("SetlistView header (#101)", () => {
     renderSetlist({ access: "locked_to_host" });
     expect(screen.queryByRole("button", { name: "플레이리스트 메뉴" })).not.toBeInTheDocument();
     expect(screen.getByText("방장만 편집할 수 있어요")).toBeInTheDocument();
+  });
+});
+
+// jsdom has no layout, so this reads what CSS would. A pinned row is sticky on bg, and it publishes its height for the
+// html scroll-padding-top in globals.css, so a block scrolled into view does not land under it.
+describe("SetlistView action row while editing (#101)", () => {
+  const publishedHeight = () => document.documentElement.style.getPropertyValue("--screen-toolbar-height");
+
+  beforeEach(() => {
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(private readonly measure: () => void) {}
+        observe() {
+          this.measure();
+        }
+        disconnect() {}
+      },
+    );
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(60);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("stays at the top while editing, so 완료 is in reach at the end of a long setlist, and scrolls away otherwise", async () => {
+    renderSetlist();
+    const toggle = screen.getByRole("button", { name: "편집" });
+    expect(toggle.closest(".sticky")).toBeNull();
+    expect(publishedHeight()).toBe("");
+
+    fireEvent.click(toggle);
+    await screen.findByRole("button", { name: "완료" });
+    expect(toggle.closest(".sticky")).toHaveClass("top-0", "bg-bg");
+    expect(publishedHeight()).toBe("60px");
+
+    fireEvent.click(toggle);
+    await screen.findByRole("button", { name: "편집" });
+    expect(toggle.closest(".sticky")).toBeNull();
+    expect(publishedHeight()).toBe("");
   });
 });
