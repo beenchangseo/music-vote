@@ -47,7 +47,7 @@ const DELETE_FAILED: Record<Exclude<DeleteFailure, "not_logged_in">, string> = {
 interface AuthMenuProps {
   nickname: string;
   avatarUrl: string | null;
-  /** PlaylistHeader 내부 등 명시적 배치 시 true. fixed 글로벌 슬롯과 별개. */
+  /** PlaylistTopBar 내부 등 명시적 배치 시 true. fixed 글로벌 슬롯과 별개. */
   embedded?: boolean;
 }
 
@@ -103,7 +103,7 @@ export default function AuthMenu({ nickname, avatarUrl, embedded = false }: Auth
     else void showAlert(DELETE_FAILED[result.reason]);
   }
 
-  // 플리 페이지는 PlaylistHeader 가 embedded AuthMenu 를 자체 렌더 → 글로벌 fixed 슬롯은 숨김.
+  // 플리 페이지는 PlaylistTopBar 가 embedded AuthMenu 를 자체 렌더 → 글로벌 fixed 슬롯은 숨김.
   // (early return 은 모든 훅 호출 뒤에 — rules-of-hooks 준수)
   if (!embedded && pathname?.startsWith("/playlist/")) return null;
 

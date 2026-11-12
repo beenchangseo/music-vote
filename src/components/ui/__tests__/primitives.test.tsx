@@ -14,11 +14,12 @@ import Input from "../Input";
 import { ListRowButton, ListRowIcon, ListRowLink, SongRow, SongRowLink } from "../ListRow";
 import { MenuItemButton, MenuItemLink } from "../Menu";
 import RoundButton, { RoundLink } from "../RoundButton";
-import { ToolbarButton } from "../ScreenToolbar";
 import SegmentedControl from "../SegmentedControl";
 import Shelf from "../Shelf";
 import Switch from "../Switch";
 import TabBar from "../TabBar";
+import { HomeIcon } from "../icons";
+import { HEIGHTS } from "../tokens";
 
 afterEach(cleanup);
 
@@ -319,6 +320,26 @@ describe("controls drawn smaller than 44px", () => {
   });
 });
 
+// A control without the shared tap area is pressed only where it is drawn, so its own min-h is the tap height. Read it
+// as CSS would: Tailwind's n × 4px, or a height token.
+function minHeightPx(el: HTMLElement): number | undefined {
+  const value = el.className.match(/(?:^|\s)min-h-(\S+)/)?.[1];
+  if (value === undefined) return undefined;
+  if (/^\d+(\.\d+)?$/.test(value)) return Number(value) * 4;
+  const token = HEIGHTS.find((t) => t.name === value);
+  return token && parseFloat(token.value) * 16;
+}
+
+describe("controls drawn at their own height", () => {
+  it.each([
+    ["TabBar tab", { id: "a", label: "후보곡", icon: HomeIcon }, "button"],
+    ["TabBar link", { href: "/", label: "홈", icon: HomeIcon }, "link"],
+  ] as const)("%s is at least 44px tall", (_name, item, role) => {
+    render(<TabBar aria-label="화면" items={[item]} value="a" onChange={() => {}} />);
+    expect(minHeightPx(screen.getByRole(role, { name: item.label }))).toBeGreaterThanOrEqual(44);
+  });
+});
+
 // #79: a label that wraps inside a fixed-height control spills out of it. jsdom has no layout, so this reads what CSS
 // would: the nearest white-space class between the label's text and the control must be nowrap.
 function labelWhiteSpace(text: HTMLElement): string | undefined {
@@ -334,13 +355,13 @@ describe("control labels stay on one line (#79)", () => {
     ["Button lg", () => render(<Button size="lg">플레이리스트 만들기</Button>)],
     ["Button sm", () => render(<Button size="sm">플레이리스트 만들기</Button>)],
     ["a link drawn with buttonClassName", () => render(<Link href="/new" className={buttonClassName({ variant: "tonal" })}>플레이리스트 만들기</Link>)],
-    ["ToolbarButton", () => render(<ToolbarButton label="플레이리스트 만들기" />)],
     ["Chip", () => render(<Chip>플레이리스트 만들기</Chip>)],
     [
       "SegmentedControl",
       () => render(<SegmentedControl aria-label="방식" options={[{ value: "a", label: "플레이리스트 만들기" }, { value: "b", label: "밴드" }]} value="a" onChange={() => {}} />),
     ],
-    ["TabBar", () => render(<TabBar aria-label="화면" items={[{ id: "a", label: "플레이리스트 만들기", icon: null }]} value="a" onChange={() => {}} />)],
+    ["TabBar", () => render(<TabBar aria-label="화면" items={[{ id: "a", label: "플레이리스트 만들기", icon: HomeIcon }]} value="a" onChange={() => {}} />)],
+    ["TabBar link", () => render(<TabBar aria-label="화면" items={[{ href: "/", label: "플레이리스트 만들기", icon: HomeIcon }]} value="a" onChange={() => {}} />)],
     ["ActionTab", () => render(<ActionTab icon={null} onClick={() => {}}>플레이리스트 만들기</ActionTab>)],
     ["MenuItemButton", () => render(<MenuItemButton>플레이리스트 만들기</MenuItemButton>)],
     ["MenuItemLink", () => render(<MenuItemLink href="/new">플레이리스트 만들기</MenuItemLink>)],

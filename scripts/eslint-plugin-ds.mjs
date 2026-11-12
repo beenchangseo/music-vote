@@ -114,7 +114,7 @@ const noRawControl = {
     messages: {
       rawButton:
         '<button className="{{classes}}"> 처럼 높이·여백·모서리·글자 크기를 직접 정하지 않는다. src/components/ui 의 Button·IconButton·Chip·' +
-        "ListRowButton·ToolbarButton·RoundButton 으로 그린다. 둥근 아이콘 버튼은 RoundButton 이다. 누르는 영역만 필요한 감싸개라면 배치 클래스(flex·w-full·absolute)만 둔다.",
+        "ListRowButton·RoundButton 으로 그린다. 둥근 아이콘 버튼은 RoundButton 이다. 누르는 영역만 필요한 감싸개라면 배치 클래스(flex·w-full·absolute)만 둔다.",
       rawLink:
         '바탕·테두리와 크기를 직접 칠한 <{{tag}} className="{{classes}}"> 는 src/components/ui 로 그린다. 버튼 모양은 ' +
         "buttonClassName({ variant, size }), 둥근 아이콘은 RoundLink, 줄은 ListRowLink, 카드는 Card 안에 바탕 없는 링크(block)를 둔다. 글자 링크라면 바탕과 테두리를 뺀다.",

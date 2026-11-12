@@ -17,6 +17,7 @@ function publishHeight(name: string) {
 }
 
 // ref 는 여기서 한 번만 만든다. 렌더마다 새 함수를 넘기면 React 가 매번 떼었다 다시 붙인다.
+// 위에 붙는 막대는 한 화면에 하나라(합주의 ScreenToolbar, 편집 중인 셋리스트의 동작 줄) 한 변수를 같이 쓴다.
 export const publishScreenToolbarHeight = publishHeight("--screen-toolbar-height");
 export const publishTabBarHeight = publishHeight("--tab-bar-height");
 export const publishMiniPlayerHeight = publishHeight("--mini-player-height");

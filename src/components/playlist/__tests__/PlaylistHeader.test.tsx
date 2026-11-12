@@ -11,12 +11,11 @@ vi.mock("../../ui/DialogProvider", () => ({ useDialog: () => ({ showAlert: vi.fn
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
 
 const sendDefault = vi.fn();
-const BAND = { id: "11111111-1111-4111-8111-111111111111", name: "일코해제", nextShowAt: "2026-10-16" };
 const THREE_SONGS: InviteSongs = { cover: ["oSlqhkPa3no"], names: ["낭만고양이", "벚꽃 엔딩"], count: 3 };
 
 function renderHeader(props: Partial<Parameters<typeof PlaylistHeader>[0]> = {}) {
   render(
-    <PlaylistHeader playlistId="p1" title="10월 합주" inviteSongs={THREE_SONGS} shareCode="abc123" participantCount={2} {...props} />,
+    <PlaylistHeader title="10월 합주" inviteSongs={THREE_SONGS} shareCode="abc123" participantCount={2} notice={null} menu={[]} {...props} />,
   );
 }
 
@@ -104,26 +103,9 @@ describe("PlaylistHeader band room", () => {
     renderHeader({ showDate: "2026-10-03" });
     expect(sharedDescription()).toBe("낭만고양이·벚꽃 엔딩 외 1곡 · 2명 참여 중");
   });
-
-  it("shows the band path line with the D-day to members only", () => {
-    renderHeader({ band: BAND, showDate: BAND.nextShowAt });
-    const link = screen.getByRole("link", { name: /일코해제/ });
-    expect(link).toHaveAttribute("href", `/band/${BAND.id}`);
-    expect(link).toHaveTextContent("공연 D-12");
-  });
-
-  it("renders no band link without band info (non-members)", () => {
-    renderHeader({ band: null, showDate: BAND.nextShowAt });
-    expect(screen.queryByRole("link", { name: /일코해제/ })).not.toBeInTheDocument();
-  });
-
-  it("hides the D-day once the show is over", () => {
-    renderHeader({ band: { ...BAND, nextShowAt: "2026-10-03" } });
-    expect(screen.getByRole("link", { name: /일코해제/ })).not.toHaveTextContent("공연");
-  });
 });
 
-describe("PlaylistHeader share tracking", () => {
+describe("PlaylistHeader share and menu", () => {
   it("counts a sent invite as kakao_shared, like the other Kakao share buttons", () => {
     renderHeader();
     sharedCard();
@@ -137,5 +119,16 @@ describe("PlaylistHeader share tracking", () => {
     renderHeader();
     fireEvent.click(screen.getByRole("button", { name: "카카오톡 공유" }));
     expect(track).not.toHaveBeenCalledWith("kakao_shared", expect.anything());
+  });
+
+  it("opens the playlist settings from the edit glyph, which only a viewer who can open them gets", () => {
+    const onOpenSettings = vi.fn();
+    renderHeader({ onOpenSettings });
+    fireEvent.click(screen.getByRole("button", { name: "플레이리스트 설정" }));
+    expect(onOpenSettings).toHaveBeenCalledTimes(1);
+
+    cleanup();
+    renderHeader();
+    expect(screen.queryByRole("button", { name: "플레이리스트 설정" })).not.toBeInTheDocument();
   });
 });

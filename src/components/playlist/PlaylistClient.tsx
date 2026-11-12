@@ -13,10 +13,12 @@ import EmptyState from "../ui/EmptyState";
 import InlineNotice from "../ui/InlineNotice";
 import { SongRow } from "../ui/ListRow";
 import Modal from "../ui/Modal";
-import RoundButton from "../ui/RoundButton";
-import LoginButton from "../auth/LoginButton";
+import Avatar from "../ui/Avatar";
+import { CardsIcon, ListIcon } from "../ui/icons";
 import PlaylistHeader from "./PlaylistHeader";
-import PlaylistTitleBar from "./PlaylistTitleBar";
+import AnnouncementButton from "./AnnouncementButton";
+import type { PlaylistMenuItem } from "./PlaylistActionRow";
+import PlaylistTopBar from "./PlaylistTopBar";
 import AddSongForm from "./AddSongForm";
 import SongCard from "./SongCard";
 import VoteButtons from "./VoteButtons";
@@ -366,7 +368,7 @@ export default function PlaylistClient({
     setSetlistConfirmSongId(null);
   }
 
-  // 한 줄 메타. 있는 것만 가운뎃점으로 잇는다. 곡 수가 맨 앞이다 (후보곡 툴바가 없어졌다).
+  // 제목 아래 첫 줄. 있는 것만 가운뎃점으로 잇는다. 곡 수가 맨 앞이다 (후보곡 툴바가 없어졌다).
   const metaParts: { key: string; text: string; className: string }[] = [
     { key: "songs", text: `${songs.length}곡`, className: "font-semibold text-text" },
   ];
@@ -389,11 +391,8 @@ export default function PlaylistClient({
       className: isExpired ? "text-danger-fg" : "",
     });
   }
-  if (nickname) {
-    metaParts.push({ key: "me", text: `${nickname}으로 참여 중`, className: "text-text-subtle" });
-  }
 
-  // Bottom padding: NavigationBar(52px) + MiniPlayer(~56px if active)
+  // Room for the fixed tab bar (dock, 64px) and, while a song plays, the MiniPlayer (56px) above it.
   const bottomPadding = playerState.currentSongId ? "pb-40" : "pb-20";
   const memberBand = team?.isMember && team.id && team.name ? { id: team.id, name: team.name, nextShowAt: team.nextShowAt } : null;
 
@@ -403,6 +402,17 @@ export default function PlaylistClient({
     종전에는 후보곡·합주에 떠 있는 톱니, 셋리스트에 전체 폭 토글 박스로 흩어져 있었다.
   */
   const canOpenSettings = isAdmin && !isArchived;
+  const openSettings = canOpenSettings ? () => settingsRef.current?.open() : undefined;
+  // One node for both tabs' action rows: the 공지 disc sits left of 재생 on 후보곡 and on 셋리스트.
+  const notice = <AnnouncementButton playlistId={playlist.id} announcement={playlist.announcement ?? null} shareCode={shareCode} />;
+  const candidatesMenu: PlaylistMenuItem[] =
+    songsWithVotes.length > 0
+      ? [
+          viewMode === "compact"
+            ? { label: "카드 보기", icon: <CardsIcon className="size-5 text-text-muted" />, onSelect: () => setViewMode("card") }
+            : { label: "리스트 보기", icon: <ListIcon className="size-5 text-text-muted" />, onSelect: () => setViewMode("compact") },
+        ]
+      : [];
   const settingsButton = canOpenSettings ? (
     <RoomSettingsButton
       ref={settingsRef}
@@ -427,61 +437,32 @@ export default function PlaylistClient({
   return (
     <>
       <div className="min-h-full bg-bg">
-        {/* The one-line title bar of the setlist and rehearsal tabs starts nearer the top than the 후보곡 header. */}
-        <div className={`max-w-lg mx-auto px-4 ${navMode !== "playlist" ? "pt-3" : "pt-6"} ${bottomPadding}`}>
-          {navMode !== "playlist" ? (
-            <PlaylistTitleBar
-              title={playlist.title}
-              band={memberBand}
-              currentUserNickname={userNickname}
-              currentUserAvatarUrl={currentUserAvatarUrl}
-              loginGate={loginGate}
-            />
-          ) : (
+        <div className={`max-w-lg mx-auto px-4 pt-3 ${bottomPadding}`}>
+          <PlaylistTopBar
+            band={memberBand}
+            currentUserNickname={userNickname}
+            currentUserAvatarUrl={currentUserAvatarUrl}
+            loginGate={loginGate}
+          />
+          {/* 합주 has no visible title; 후보곡 and 셋리스트 name the playlist in their headers. */}
+          {navMode === "rehearsal" && <h1 className="sr-only">{playlist.title}</h1>}
+          {navMode === "playlist" && (
             <PlaylistHeader
-              playlistId={playlist.id}
               title={playlist.title}
               inviteSongs={invite}
               archived={isArchived}
               shareCode={shareCode}
               participantCount={participantCount}
-              announcement={playlist.announcement}
-              currentUserNickname={userNickname}
-              currentUserAvatarUrl={currentUserAvatarUrl}
-              band={memberBand}
               showDate={team?.nextShowAt ?? null}
               coverThumbs={coverThumbs}
+              notice={notice}
+              menu={candidatesMenu}
               onPlayAll={songsWithVotes.length > 0 ? handlePlayAll : undefined}
               playing={playerState.isPlaying}
-              onOpenSettings={canOpenSettings ? () => settingsRef.current?.open() : undefined}
-              viewToggle={
-                songsWithVotes.length > 0 ? (
-                  <RoundButton
-                    tone="tonal"
-                    size="lg"
-                    onClick={() => setViewMode(viewMode === "compact" ? "card" : "compact")}
-                    aria-label={viewMode === "compact" ? "카드 보기" : "리스트 보기"}
-                  >
-                    {viewMode === "compact" ? (
-                      <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                        <rect x="3.5" y="4.5" width="17" height="10" rx="2" />
-                        <path strokeLinecap="round" d="M3.5 19h17" />
-                      </svg>
-                    ) : (
-                      <svg fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                      </svg>
-                    )}
-                  </RoundButton>
-                ) : undefined
-              }
+              onOpenSettings={openSettings}
               meta={
-                /*
-                  참여자 수·마감·내 닉네임·로그인이 세 덩어리로 흩어져 있었다.
-                  정렬축이 계속 바뀌어 위계가 읽히지 않았으므로 제목 아래 한 줄로 합친다.
-                */
-                <div className="flex flex-wrap items-center justify-center gap-x-2">
-                  <p className="min-w-0 text-caption leading-relaxed text-text-muted tabular-nums">
+                <>
+                  <p className="mt-1 text-sm text-text-muted tabular-nums">
                     {metaParts.map((part, i) => (
                       <span key={part.key}>
                         {i > 0 && <span className="mx-1.5 text-text-subtle" aria-hidden>·</span>}
@@ -489,10 +470,15 @@ export default function PlaylistClient({
                       </span>
                     ))}
                   </p>
-                  {loginGate && (
-                    <LoginButton variant="tonal" size="sm" label="로그인" className="shrink-0" />
+                  {nickname && (
+                    <p className="mt-2 flex min-w-0 items-center gap-2 text-sm">
+                      <Avatar name={nickname} src={currentUserAvatarUrl} />
+                      <span className="truncate text-text-muted">
+                        <span className="font-semibold text-text">{nickname}</span>으로 참여 중
+                      </span>
+                    </p>
                   )}
-                </div>
+                </>
               }
             />
           )}
@@ -595,7 +581,9 @@ export default function PlaylistClient({
                     투표가 마감됐어요. 상위 {setlistCount}곡을 표시했어요.
                   </p>
                   {isHost ? (
+                    // Tonal: the header's 재생 is the one filled primary on this screen.
                     <Button
+                      variant="tonal"
                       onClick={async () => {
                         const topSongIds = songsWithVotes.slice(0, setlistCount).map((s) => s.id);
                         const ok = await showConfirm(
@@ -713,6 +701,9 @@ export default function PlaylistClient({
               onItemsChange={applySetlistItems}
               title={playlist.title}
               access={setlistAccess}
+              coverThumbs={coverThumbs}
+              notice={notice}
+              onOpenSettings={openSettings}
               onPlay={handlePlayFromSetlist}
               player={playerState}
             />

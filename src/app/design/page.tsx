@@ -8,9 +8,9 @@ import Chip from "@/components/ui/Chip";
 import GuitarIcon from "@/components/ui/GuitarIcon";
 import IconButton from "@/components/ui/IconButton";
 import Input from "@/components/ui/Input";
-import PlayPauseIcon from "@/components/ui/PlayPauseIcon";
+import { PlayPauseIcon } from "@/components/ui/icons";
 import RoundButton, { ROUND_BARE_TONES, ROUND_DISC_TONES, ROUND_VOTE_TONES, RoundLink, RoundRow } from "@/components/ui/RoundButton";
-import ScreenToolbar, { ToolbarButton } from "@/components/ui/ScreenToolbar";
+import ScreenToolbar from "@/components/ui/ScreenToolbar";
 import { COLOR_GROUPS, COLORS, HEIGHTS, INSETS, MOTION, RADII, SHADOWS, TYPE, contrastRatio, type ColorToken, type Pairing } from "@/components/ui/tokens";
 import Avatar, { AvatarStack } from "@/components/ui/Avatar";
 import Badge, { BADGE_TONES } from "@/components/ui/Badge";
@@ -330,7 +330,7 @@ export default function DesignPage() {
         {(["w-72", "w-80"] as const).map((width) => (
           <div key={width} className={`mt-3 ${width} max-w-full outline-1 outline-dashed outline-border`}>
             <RoundRow>
-              <RoundButton tone="kakao" size="lg" aria-label={`${width} 카카오`}>
+              <RoundButton tone="tonal" size="lg" aria-label={`${width} 공유`}>
                 <GuitarIcon />
               </RoundButton>
               <RoundButton tone="tonal" size="lg" aria-label={`${width} 공지`}>
@@ -401,27 +401,9 @@ export default function DesignPage() {
         </div>
       </Section>
 
-      <Section title="ScreenToolbar" note="오른쪽 동작은 ToolbarButton 이에요. 모두 44px 이고, compact 는 640px 아래에서 아이콘만 남아요.">
+      <Section title="ScreenToolbar" note="화면 위에 붙는 숫자 막대예요. 지금은 합주 탭의 진행만 써요.">
         <div className="relative">
-          <ScreenToolbar
-            stat="48:10"
-            caption="12곡 · 인터벌 2"
-            actions={
-              <>
-                <ToolbarButton
-                  label="셋리 전체 듣기"
-                  compact
-                  icon={
-                    <svg className="size-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  }
-                />
-                <ToolbarButton label="편집" />
-                <ToolbarButton label="내보내기" />
-              </>
-            }
-          />
+          <ScreenToolbar stat="2 / 6" caption="남은 12:30" />
         </div>
       </Section>
 
@@ -458,7 +440,7 @@ export default function DesignPage() {
         <SegmentedDemo />
       </Section>
 
-      <Section title="TabBar" note="화면 아래 dock. SegmentedControl 과 같은 모양이고 화면 전환이라 aria-current 로 말해요. 이 페이지 맨 아래에 붙어 있어요.">
+      <Section title="TabBar" note="화면 아래 dock. 아이콘 위 글자이고 칸 상자가 없어요. 지금 탭은 채운 아이콘에 aria-current 예요. href 를 준 탭(홈)은 화면을 떠나는 링크예요. 이 페이지 맨 아래에 붙어 있어요.">
         <TabBarDemo />
       </Section>
 

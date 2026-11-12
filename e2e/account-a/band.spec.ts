@@ -42,8 +42,7 @@ test.describe("account-a + account-b: band flow", () => {
     await page.waitForURL(/\/playlist\/[\w-]+$/);
 
     // 2. Room settings → "이 멤버로 밴드 만들기" → band home with the one-time banner.
-    // Settings live in the header's ⋮ sheet.
-    await page.getByRole("button", { name: "플레이리스트 메뉴" }).click();
+    // Settings open from the header's edit glyph (host only).
     await page.getByRole("button", { name: "플레이리스트 설정" }).click();
     await page.getByRole("button", { name: "이 멤버로 밴드 만들기" }).click();
     await expect(page.getByLabel("밴드 이름")).toBeFocused();

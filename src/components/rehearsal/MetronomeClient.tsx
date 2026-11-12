@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMetronome } from "@/hooks/useMetronome";
 import { displayTitle } from "@/domain/song-meta";
 import { controlSkin } from "../ui/Input";
-import PlayPauseIcon from "../ui/PlayPauseIcon";
+import { PlayPauseIcon } from "../ui/icons";
 import RoundButton, { RoundLink, RoundRow } from "../ui/RoundButton";
 import type { Song } from "@/domain/types";
 

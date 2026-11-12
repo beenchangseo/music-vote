@@ -31,7 +31,7 @@ vi.mock("@/hooks/usePlayerQueue", () => ({
   }),
 }));
 vi.mock("../PlaylistHeader", () => ({ default: () => null }));
-vi.mock("../PlaylistTitleBar", () => ({ default: () => null }));
+vi.mock("../PlaylistTopBar", () => ({ default: () => null }));
 vi.mock("../AddSongForm", () => ({ default: () => null }));
 vi.mock("../SongCard", () => ({ default: () => null }));
 vi.mock("../MiniPlayer", () => ({ default: () => null }));
