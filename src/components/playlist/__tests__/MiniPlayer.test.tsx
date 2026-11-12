@@ -2,7 +2,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { createRef } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SetlistItem, SongWithScore } from "@/domain/types";
 import { usePlayerQueue, type QueueSource } from "@/hooks/usePlayerQueue";
 import MiniPlayer from "../MiniPlayer";
@@ -107,6 +107,62 @@ describe("MiniPlayer dock", () => {
     const bar = screen.getByRole("button", { name: "예뻤어 플레이어 열기" }).closest(".fixed");
     expect(bar).toHaveClass("bottom-(--tab-bar-height)");
     expect(bar).not.toHaveClass("bottom-dock");
+  });
+});
+
+// jsdom has no layout, so this reads what CSS would. The body leaves room at the end of the page for the height the bar
+// publishes (layout.tsx). Dropping it while the player is open shrinks the page, the browser pulls the scroll position
+// up, and after closing the player the last song sits under the bar.
+describe("MiniPlayer published height", () => {
+  const publishedHeight = () => document.documentElement.style.getPropertyValue("--mini-player-height");
+
+  function Queue({ songs: playable }: { songs: SongWithScore[] }) {
+    const { state, actions } = usePlayerQueue(playable, []);
+    return (
+      <>
+        <button type="button" onClick={() => actions.playSong("a", "candidates")}>
+          첫 곡 틀기
+        </button>
+        <MiniPlayer state={state} actions={actions} playerRef={createRef<YouTubePlayerHandle>()} />
+      </>
+    );
+  }
+
+  beforeEach(() => {
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(private readonly measure: () => void) {}
+        observe() {
+          this.measure();
+        }
+        disconnect() {}
+      },
+    );
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(58);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("keeps the page's room for the bar while the player is open, and gives it back once no song is playing", () => {
+    const { rerender } = render(<Queue songs={songs} />);
+    expect(publishedHeight()).toBe("");
+
+    fireEvent.click(screen.getByRole("button", { name: "첫 곡 틀기" }));
+    expect(publishedHeight()).toBe("58px");
+
+    fireEvent.click(screen.getByRole("button", { name: "예뻤어 플레이어 열기" }));
+    expect(publishedHeight()).toBe("58px");
+
+    fireEvent.click(screen.getByRole("button", { name: "플레이어 접기" }));
+    expect(publishedHeight()).toBe("58px");
+
+    rerender(<Queue songs={[]} />);
+    expect(screen.queryByRole("button", { name: /플레이어 열기/ })).not.toBeInTheDocument();
+    expect(publishedHeight()).toBe("");
   });
 });
 
