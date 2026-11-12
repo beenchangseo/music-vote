@@ -173,11 +173,20 @@ describe("PlaylistClient header per tab (#4)", () => {
     for (const action of roomActions()) expect(action).toBeInTheDocument();
   });
 
-  it.each(["셋리스트", "합주"])("leaves the cover header's actions out of the %s tab", (tab) => {
+  it("leaves the cover header's share, notice and menu out of the 합주 tab", () => {
     renderRoom({ songs: [SONG] });
-    fireEvent.click(screen.getByRole("button", { name: tab }));
+    fireEvent.click(screen.getByRole("button", { name: "합주" }));
 
     for (const action of roomActions()) expect(action).not.toBeInTheDocument();
+  });
+
+  // The 셋리스트 tab has a notice and ⋯ of its own, in SetlistView's row (SetlistView.header.test). Only the vote invite
+  // belongs to the candidates header alone.
+  it("leaves the candidates' 카카오톡 공유 vote invite off the 셋리스트 tab", () => {
+    renderRoom({ songs: [SONG] });
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
+
+    expect(screen.queryByRole("button", { name: "카카오톡 공유" })).not.toBeInTheDocument();
   });
 
   it("opens every tab at its top, so the shorter header does not drop the reader mid-list", () => {
