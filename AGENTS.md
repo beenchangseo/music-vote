@@ -169,9 +169,10 @@ Variable(한국어) + Geist(영문) 폴백. 한글에는 대소문자가 없어�
   Spotify 글리프를 따라 그리지 않는다. 아직 인라인 svg 인 곳은 따로 옮긴다.
 - `RoundButton`: 플레이어·플레이리스트 머리·메트로놈 줄의 둥근 아이콘 버튼. size `md` 44·`lg` 52·`hero` 64, tone `plain`(재생
   컨트롤처럼 또렷한 글리프)·`ghost`(Button ghost 처럼 흐린 글리프)·`tonal`·`inverse`(흰 원판)·`primary`·`danger`, hero 는 원판
-  tone 만 된다. 켜고 끄기는 tone 대신 `pressed`(꺼지면 ghost, 켜지면 primary-fg 글리프). 투표 화살표는 tone `upvote`·`downvote` 에 `chosen` 이다(고른 쪽에 옅은 원판, aria-pressed 없음). 글리프 크기는 버튼이 정하니 svg 에 크기·margin 을
+  tone 만 된다. 켜고 끄기는 tone 대신 `pressed`(꺼지면 ghost, 켜지면 primary-fg 글리프). 투표 화살표는 tone `upvote`·`downvote` 에 `chosen` 이다(고른 쪽에 옅은 원판, aria-pressed 없음). 글리프 크기는 버튼이 정하니 아이콘에 크기·margin 을
   두지 않는다(eslint). 재생 삼각형은 `ui/icons` 의 `PlayPauseIcon`. 링크는 `RoundLink`, `edge="start"` 면 글리프가 내용 왼쪽 끝에 맞는다. 둥근 버튼을
   모은 줄은 `RoundRow` 다. 원은 줄지 않고 간격이 준다.
+- 아이콘은 `ui/icons.tsx` 에서만 24 격자·2px 둥근 선으로 그리고 뜻 하나에 그림 하나다(꺾쇠는 `ChevronIcon` 의 `direction`). 없으면 그 모듈에 더하고, 밖에서 `<svg>` 를 그리면 eslint(`ds/no-inline-svg`)가 막는다. 예외는 Satori 이미지 route 와 로고(`home/BrandMark.tsx`)다.
 - 크기는 prop 이 정한다. `Button`·`ButtonGroup`·`IconButton`·`Chip`·`RoundButton`·`ListRowButton`·`ListRowLink` 의 className 에 높이·폭·여백·모서리·글자 크기를 덧칠하면 eslint 가
   막는다. className 에는 바깥 배치(margin·`flex-1`·`shrink-0`·표시 여부)만 둔다.
 - 글자가 있는 부품(`Button`·`buttonClassName`·`Chip`·`SegmentedControl`·`TabBar`·`ActionTab`·`MenuItem*`·`Badge`)의

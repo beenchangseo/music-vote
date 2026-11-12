@@ -93,10 +93,6 @@ const eslintConfig = defineConfig([
       "no-restricted-syntax": [
         "error",
         {
-          selector: "JSXElement[openingElement.name.name=/^Round(Button|Link)$/] JSXOpeningElement[name.name='svg'] > JSXAttribute[name.name=/^(width|height|style)$/]",
-          message: "RoundButton 안 svg 의 크기는 버튼의 size 가 정한다. width·height·style 을 두지 않는다.",
-        },
-        {
           selector: "Literal[value='postgres_changes']",
           message: "실시간은 내용 없는 broadcast 알림 + 재조회로 한다(docs/adr/0010). postgres_changes 로 votes 를 구독하면 익명 모드가 뚫린다.",
         },
@@ -147,8 +143,8 @@ const eslintConfig = defineConfig([
               "RoundButton·RoundLink 의 색·테두리·그림자·눌림은 tone 이, 글리프를 내용 끝에 맞추는 자리는 edge 가 정한다. className 에는 바깥 배치만 둔다.",
           },
           {
-            selector: `JSXElement[openingElement.name.name=/^Round(Button|Link)$/] JSXOpeningElement[name.name='svg'] > JSXAttribute[name.name='className'] ${node}${GLYPH_PLACEMENT_UTILITY}]`,
-            message: "RoundButton 안 svg 의 크기와 자리는 버튼의 size 가 정한다. svg 에는 색만 둔다. 재생 삼각형은 PlayPauseIcon 을 쓴다.",
+            selector: `JSXElement[openingElement.name.name=/^Round(Button|Link)$/] JSXOpeningElement[name.name=/^[A-Z]\\w*Icon$/] > JSXAttribute[name.name='className'] ${node}${GLYPH_PLACEMENT_UTILITY}]`,
+            message: "RoundButton 안 글리프의 크기와 자리는 버튼의 size 가 정한다. 아이콘에는 색만 둔다. 재생 삼각형은 PlayPauseIcon 을 쓴다.",
           },
         ]),
       ],
@@ -160,6 +156,20 @@ const eslintConfig = defineConfig([
     files: ["src/**/*.tsx"],
     ignores: ["src/components/ui/**", "src/**/__tests__/**"],
     rules: { "ds/no-raw-control": "error", "ds/no-raw-input": "error" },
+  },
+  {
+    // Icons come from ui/icons.tsx, drawn on one 24 grid with 2px round strokes (#101). Drawn inline, the app had three
+    // chevrons, a heroicons gear beside the module's settings glyph and a play triangle nudged by hand in four places.
+    files: ["src/**/*.tsx"],
+    ignores: [
+      "src/components/ui/icons.tsx",
+      // Satori renders the OG and setlist images on the server; they cannot use the app's components.
+      "src/app/api/**",
+      // The Plypick logo lockup is a brand mark, not an icon.
+      "src/components/home/BrandMark.tsx",
+      "src/**/__tests__/**",
+    ],
+    rules: { "ds/no-inline-svg": "error" },
   },
   {
     // Korean has no letter case: uppercase and wide tracking only spread a label's syllables apart, the look of an English

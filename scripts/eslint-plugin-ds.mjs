@@ -267,6 +267,26 @@ const trackedCaps = {
   },
 };
 
+const noInlineSvg = {
+  meta: {
+    type: "problem",
+    docs: { description: "Icons come from src/components/ui/icons.tsx, drawn in one style." },
+    messages: {
+      inline:
+        "아이콘은 src/components/ui/icons.tsx 에서 가져온다. 거기 없는 아이콘은 그 모듈에 같은 선(24 격자, 2px 둥근 선)으로 더하고, " +
+        "이미 있는 뜻이면 그 그림을 쓴다(꺾쇠는 ChevronIcon 의 direction). 아이콘이 아닌 그림·브랜드 마크는 eslint.config.mjs 의 예외 목록에 파일을 더한다.",
+    },
+    schema: [],
+  },
+  create(context) {
+    return {
+      JSXOpeningElement(node) {
+        if (node.name.type === "JSXIdentifier" && node.name.name === "svg") context.report({ node, messageId: "inline" });
+      },
+    };
+  },
+};
+
 /** Reports every class token in any string literal that `match` accepts. Inventory only: not enabled in eslint.config.mjs. */
 function classTokenRule(description, match) {
   return {
@@ -297,6 +317,7 @@ const plugin = {
     "no-raw-input": noRawInput,
     "focus-ring": focusRing,
     "tracked-caps": trackedCaps,
+    "no-inline-svg": noInlineSvg,
     "non-token": classTokenRule(
       "Radius and font size outside the tokens (rounded-badge·control·card·sheet·pill, text-display·h1–h4·body·sm·caption).",
       (u) => NON_TOKEN_RADIUS.test(u) || NON_TOKEN_FONT_SIZE.test(u),

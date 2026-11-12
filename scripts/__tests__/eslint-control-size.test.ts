@@ -117,13 +117,13 @@ describe("eslint RoundButton rules", () => {
     [round(' className="ml-[3px]"'), "edge"],
     [round(' className="font-normal"'), "tone"],
     ['<RoundLink href="/" size="lg" tone="tonal" aria-label="x" className="hover:bg-surface-elevated" />', "tone"],
-    [round("", '<svg className="h-5 w-5" />'), "svg 의 크기와 자리"],
-    [round("", '<svg className="ml-1" />'), "PlayPauseIcon"],
-    [round("", '{on ? <svg className="size-5" /> : <span>-</span>}'), "svg 의 크기와 자리"],
-    [round("", '<svg width="20" height="20" />'), "width·height·style"],
-    [round("", '<svg className="scale-125" />'), "svg 의 크기와 자리"],
-    [round("", '<svg className="p-1" />'), "svg 의 크기와 자리"],
-    [round("", '<span><svg className="size-4" /></span>'), "svg 의 크기와 자리"],
+    [round("", '<ChevronIcon direction="up" className="h-5 w-5" />'), "글리프의 크기와 자리"],
+    [round("", '<PlayPauseIcon playing={false} className="ml-1" />'), "PlayPauseIcon"],
+    [round("", '{on ? <ShuffleIcon className="size-5" /> : <span>-</span>}'), "글리프의 크기와 자리"],
+    [round("", '<SkipIcon direction="next" className="scale-125" />'), "글리프의 크기와 자리"],
+    [round("", '<MoreIcon className="p-1" />'), "글리프의 크기와 자리"],
+    [round("", '<span><CloseIcon className="size-4" /></span>'), "글리프의 크기와 자리"],
+    ['<RoundLink href="/" size="md" tone="ghost" aria-label="x"><ChevronIcon direction="left" className="-ml-1" /></RoundLink>', "글리프의 크기와 자리"],
   ])("flags %s", async (code, says) => {
     const errors = await controlSizeErrors(code);
     expect(errors.length).toBeGreaterThan(0);
@@ -132,10 +132,10 @@ describe("eslint RoundButton rules", () => {
 
   it.each([
     round(' className="mt-3 shrink-0"'),
-    round("", '<svg className="text-primary-fg" viewBox="0 0 24 24" />'),
-    round("", '<svg viewBox="0 0 24 24" /><span className="absolute right-0.5 top-0.5 size-3 rounded-pill bg-primary" />'),
+    round("", '<NoticeIcon className="text-primary-fg" />'),
+    round("", '<ShuffleIcon /><span className="absolute right-0.5 top-0.5 size-3 rounded-pill bg-primary" />'),
     '<RoundRow className="mt-5" />',
-    '<svg className="h-5 w-5 ml-1" />',
+    '<ChevronIcon direction="up" className="h-5 w-5 ml-1" />',
   ])("allows %s", async (code) => {
     expect(await controlSizeErrors(code)).toEqual([]);
   });

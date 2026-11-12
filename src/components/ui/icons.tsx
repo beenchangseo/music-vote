@@ -4,6 +4,7 @@ import { useId, type ReactNode } from "react";
  * Plypick 이 직접 그린 아이콘 (#101 시안의 세트 a). 24 격자, 2px 둥근 선, 하단 탭 아이콘은 채운 짝이 있다.
  * Spotify 글리프를 따라 그리지 않는다. 그 자산을 베끼면 클론처럼 보인다.
  * 크기는 className 이 정하고 기본은 24px 다. RoundButton·TabBar 안에서는 부품이 정한 크기가 이긴다.
+ * 앱의 아이콘은 모두 여기서 그린다. 뜻 하나에 그림 하나이고, 밖에서 <svg> 를 그리면 eslint(ds/no-inline-svg)가 막는다.
  */
 export interface IconProps {
   className?: string;
