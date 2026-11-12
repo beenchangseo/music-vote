@@ -117,6 +117,8 @@ scroll-padding 이 그만큼 비운다. 막대 밑으로 스크롤되는 여백�
 body 의 몫을 가져간다. `TabBar` 처럼 fixed 로 붙는 막대가 있으면 body 는 대신 아래 막대들이 알린 높이(`--bottom-chrome-height`)만큼
 페이지 끝을 비우고, `MiniPlayer` 는 `--tab-bar-height` 위에 붙는다. 두 높이에 홈 인디케이터 자리가 들어 있다.
 `env(safe-area-inset-bottom)` 을 임의 값이나 음수 margin 으로 적지 않는다.
+계정 메뉴는 layout 의 오른쪽 위 고정 칸에 있다. 윗줄을 스스로 그리는 화면(플레이리스트·밴드 홈)은 그 줄에 `AuthMenu embedded` 를 두고,
+그러면 `data-account-in-flow` 를 본 고정 칸이 비켜선다. 고정 버튼을 피하려는 `pr-14` 같은 여백을 두지 않는다.
 타이포는 `text-display`·`text-h1`~`text-h4`·`text-body`·`text-sm`·`text-caption`, 한국어 줄간격 1.5 이상. 폰트는 Pretendard
 Variable(한국어) + Geist(영문) 폴백. 한글에는 대소문자가 없어서 라벨에 `uppercase`·`tracking-wide*` 를 두면 자간만 벌어진다.
 작은 라벨은 `text-caption font-semibold` 이고, ui 밖에서는 eslint(`ds/tracked-caps`)가 막는다.

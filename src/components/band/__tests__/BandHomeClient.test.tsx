@@ -19,7 +19,7 @@ const showDanger = vi.fn();
 vi.mock("@/actions/team", () => actions);
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
 vi.mock("next/image", () => ({ default: () => null }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push, refresh: vi.fn() }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push, refresh: vi.fn() }), usePathname: () => "/band/team" }));
 vi.mock("../../ui/DialogProvider", () => ({ useDialog: () => ({ showDanger, showAlert: vi.fn(), showConfirm: vi.fn() }) }));
 // The sheet's own behaviour is in AttachPlaylistsSheet.test; here only who can open it.
 vi.mock("../AttachPlaylistsSheet", () => ({
@@ -79,7 +79,9 @@ const MY_BANDS = [
 ];
 
 function renderHome(v: MemberView, flags: { created?: boolean; joined?: boolean } = {}) {
-  return render(<BandHomeClient view={v} bands={MY_BANDS} created={!!flags.created} joined={!!flags.joined} />);
+  return render(
+    <BandHomeClient view={v} bands={MY_BANDS} account={{ nickname: "기타", avatarUrl: null }} created={!!flags.created} joined={!!flags.joined} />,
+  );
 }
 
 beforeEach(() => {
@@ -574,7 +576,7 @@ describe("BandHomeClient member management (F1, 24B, R7)", () => {
 
   it("gives members no remove menu", () => {
     renderHome(view());
-    expect(screen.queryByRole("button", { name: /메뉴$/ })).not.toBeInTheDocument();
+    expect(within(screen.getByRole("region", { name: /^멤버/ })).queryByRole("button", { name: /메뉴$/ })).not.toBeInTheDocument();
   });
 
   it("swaps the sheet link after 링크 새로 만들기 and keeps /band/{teamId}", async () => {
@@ -621,6 +623,17 @@ describe("BandHomeClient band switcher (#106)", () => {
     ]);
     expect(sheet.getByText("일코해제").closest("[aria-current]")).toHaveAttribute("aria-current", "true");
     expect(sheet.queryByRole("link", { name: "일코해제" })).not.toBeInTheDocument();
+  });
+});
+
+describe("BandHomeClient top row (#106)", () => {
+  // The layout's account button is fixed at the top right, and a long band name in the switcher ran under it. Drawn in
+  // the row, the menu takes its own room and the fixed one steps aside (layout.tsx).
+  it("draws the account menu in the switcher's row, taking over from the fixed one", () => {
+    renderHome(view({}, { name: "토요일 오후 세 시 합정 연습실 밴드" }));
+
+    expect(screen.getByRole("button", { name: "토요일 오후 세 시 합정 연습실 밴드 밴드 바꾸기" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "기타 계정 메뉴" }).closest("[data-account-in-flow]")).not.toBeNull();
   });
 });
 

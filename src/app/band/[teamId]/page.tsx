@@ -7,6 +7,7 @@ import BandHomeSkeleton from "@/components/band/BandHomeSkeleton";
 import LoginButton from "@/components/auth/LoginButton";
 import { buttonClassName } from "@/components/ui/Button";
 import { getMyTeams, getTeamHome, teamExists, type MyTeamsResult, type TeamHomeView } from "@/actions/team";
+import { getCurrentUser } from "@/lib/auth";
 
 // generateMetadata and the page read the same band once per request.
 const loadTeamHome = cache((teamId: string) => getTeamHome(teamId));
@@ -63,10 +64,12 @@ async function BandHome({
     return <MembersOnly teamId={view.team.id} name={view.team.name} loggedIn={view.loggedIn} />;
   }
 
-  // Only what the switcher draws (docs/adr/0011). A failed read still lists this band, so the sheet is never empty.
-  const { teams, failed } = await myTeams;
+  // Only what the switcher and the account menu draw (docs/adr/0011). A failed read still lists this band, so the sheet
+  // is never empty.
+  const [{ teams, failed }, user] = await Promise.all([myTeams, getCurrentUser()]);
   const bands = failed ? [{ id: view.team.id, name: view.team.name }] : teams.map(({ id, name }) => ({ id, name }));
-  return <BandHomeClient view={view} bands={bands} created={created} joined={joined} />;
+  const account = user && { nickname: user.nickname, avatarUrl: user.avatarUrl };
+  return <BandHomeClient view={view} bands={bands} account={account} created={created} joined={joined} />;
 }
 
 /**

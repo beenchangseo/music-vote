@@ -47,7 +47,7 @@ const DELETE_FAILED: Record<Exclude<DeleteFailure, "not_logged_in">, string> = {
 interface AuthMenuProps {
   nickname: string;
   avatarUrl: string | null;
-  /** PlaylistTopBar 내부 등 명시적 배치 시 true. fixed 글로벌 슬롯과 별개. */
+  /** 화면이 자기 줄에 그릴 때 true (PlaylistTopBar, 밴드 홈). 그러면 layout 의 고정 슬롯이 비켜선다(data-account-in-flow). */
   embedded?: boolean;
 }
 
@@ -108,7 +108,7 @@ export default function AuthMenu({ nickname, avatarUrl, embedded = false }: Auth
   if (!embedded && pathname?.startsWith("/playlist/")) return null;
 
   return (
-    <div ref={ref} className="relative flex">
+    <div ref={ref} data-account-in-flow={embedded || undefined} className="relative flex">
       <RoundButton
         ref={triggerRef}
         tone="plain"

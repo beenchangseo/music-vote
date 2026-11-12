@@ -25,6 +25,7 @@ import RemoveMemberModal from "./RemoveMemberModal";
 import { LEFT_BAND_STORAGE_KEY } from "./LeftBandNotice";
 import { BandNavigationBar } from "../playlist/NavigationBar";
 import BandSwitcher, { type SwitchBand } from "./BandSwitcher";
+import AuthMenu from "../auth/AuthMenu";
 import { leaveTeam, type TeamHomeMember, type TeamHomeView, type TeamRoom } from "@/actions/team";
 import { track } from "@/lib/analytics";
 import { aggregatePlayedSongs, formatShowDate, showDday, type PlayedSong, type ShowDday } from "@/domain/team";
@@ -57,6 +58,8 @@ interface BandHomeClientProps {
   view: MemberView;
   /** 왼쪽 위 밴드 바꾸기 시트에 놓을 내 밴드 (이 밴드 포함). */
   bands: SwitchBand[];
+  /** 오른쪽 위 계정 메뉴. 이름과 사진만 받는다(docs/adr/0011). */
+  account: { nickname: string; avatarUrl: string | null } | null;
   /** ?created=1 (방 설정이나 홈에서 만들고 왔다). 배너는 한 번만, 쿼리는 첫 마운트에 지운다 (11A·Codex 6). */
   created: boolean;
   /** ?joined=1 (초대 링크로 막 들어왔다). */
@@ -68,7 +71,7 @@ interface BandHomeClientProps {
  * 위에서부터 히어로(밴드 색 그림 + 이름 + 공연 날짜) / 액션 줄(멤버 아바타·초대·큰 재생 버튼) /
  * 지금 합주방 카드 / 합주방 가로 선반 / 우리가 했던 곡 / 멤버 / 맨 아래 "밴드 나가기"(owner 제외).
  */
-export default function BandHomeClient({ view, bands, created, joined }: BandHomeClientProps) {
+export default function BandHomeClient({ view, bands, account, created, joined }: BandHomeClientProps) {
   const router = useRouter();
   const { showDanger } = useDialog();
   const { team, myRole, rooms } = view;
@@ -168,9 +171,11 @@ export default function BandHomeClient({ view, bands, created, joined }: BandHom
       <header className="relative isolate">
         <BandArt className="absolute inset-x-0 top-0 -z-10 h-88" />
         <div className="mx-auto max-w-md px-4 pt-4">
-          {/* pr-14 keeps a long band name clear of the account button fixed at the top right (layout.tsx). */}
-          <div className="flex pr-14">
-            <BandSwitcher current={{ id: team.id, name: team.name }} bands={bands} />
+          <div className="flex items-center gap-3">
+            <div className="flex min-w-0 flex-1">
+              <BandSwitcher current={{ id: team.id, name: team.name }} bands={bands} />
+            </div>
+            {account && <AuthMenu nickname={account.nickname} avatarUrl={account.avatarUrl} embedded />}
           </div>
 
           <div className="pt-28">
