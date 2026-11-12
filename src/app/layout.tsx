@@ -64,7 +64,8 @@ export default function RootLayout({
         {/* First, so its layout effect also comes before any layout effect below that calls track(). */}
         <GoogleAnalytics />
         <DialogProvider>
-          <div className="fixed top-2 right-2 z-50">
+          {/* A screen that draws the account menu in its own row (data-account-in-flow) takes it over, so the two never stack. */}
+          <div className="fixed top-2 right-2 z-50 [body:has([data-account-in-flow])_&]:hidden">
             <Suspense fallback={null}>
               <AuthButton />
             </Suspense>

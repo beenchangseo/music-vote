@@ -4,9 +4,10 @@ import { Suspense, type ReactElement } from "react";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const state = vi.hoisted(() => ({ getTeamHome: vi.fn(), teamExists: vi.fn() }));
+const state = vi.hoisted(() => ({ getTeamHome: vi.fn(), teamExists: vi.fn(), getMyTeams: vi.fn(), getCurrentUser: vi.fn() }));
 
-vi.mock("@/actions/team", () => ({ getTeamHome: state.getTeamHome, teamExists: state.teamExists }));
+vi.mock("@/actions/team", () => ({ getTeamHome: state.getTeamHome, teamExists: state.teamExists, getMyTeams: state.getMyTeams }));
+vi.mock("@/lib/auth", () => ({ getCurrentUser: state.getCurrentUser }));
 vi.mock("@/components/band/BandHomeClient", () => ({ default: () => null }));
 vi.mock("@/components/auth/LoginButton", () => ({
   default: ({ label, next }: { label: string; next: string }) => (
@@ -25,6 +26,7 @@ import BandPage, { generateMetadata } from "../page";
 import BandHomeSkeleton from "@/components/band/BandHomeSkeleton";
 
 const TEAM = "11111111-1111-4111-8111-111111111111";
+const OTHER = "33333333-3333-4333-8333-333333333333";
 const props = (query: Record<string, string> = {}) => ({
   params: Promise.resolve({ teamId: TEAM }),
   searchParams: Promise.resolve(query),
@@ -33,6 +35,8 @@ const props = (query: Record<string, string> = {}) => ({
 beforeEach(() => {
   state.getTeamHome.mockReset();
   state.teamExists.mockReset().mockResolvedValue(true);
+  state.getMyTeams.mockReset().mockResolvedValue({ teams: [], failed: false });
+  state.getCurrentUser.mockReset().mockResolvedValue({ id: "9c1f6a2e-2222-4222-8222-000000000002", nickname: "기타", avatarUrl: null });
 });
 afterEach(cleanup);
 
@@ -88,6 +92,47 @@ describe("/band/[teamId]", () => {
     expect(screen.getByText("들어가려면 밴드 멤버에게 초대 링크를 받아 주세요")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
     expect(screen.queryByText(/join/)).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["a logged-out visitor", false],
+    ["a logged-in non-member", true],
+  ])("gives %s no tab bar (#106)", async (_who, loggedIn) => {
+    state.getTeamHome.mockResolvedValue({ access: "guest", loggedIn, team: { id: TEAM, name: "일코해제" } });
+    render((await page()).content);
+    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+  });
+
+  // docs/adr/0011: the switcher sheet draws a name and a band link, so that is all that reaches the browser.
+  it("hands the member screen my bands as ids and names only", async () => {
+    state.getTeamHome.mockResolvedValue({ access: "member", myRole: "member", team: { id: TEAM, name: "일코해제" } });
+    state.getMyTeams.mockResolvedValue({
+      teams: [
+        { id: OTHER, name: "목요일 잼", nextShowAt: "2026-11-23", role: "owner", roomCount: 2 },
+        { id: TEAM, name: "일코해제", nextShowAt: null, role: "member", roomCount: 1 },
+      ],
+      failed: false,
+    });
+    const element = (await page()).content as ReactElement<{ bands: unknown }>;
+    expect(element.props.bands).toStrictEqual([
+      { id: OTHER, name: "목요일 잼" },
+      { id: TEAM, name: "일코해제" },
+    ]);
+  });
+
+  // The account menu in the top row draws a name and a picture, so the account id stays on the server.
+  it("hands the member screen the account menu's name and picture only", async () => {
+    state.getTeamHome.mockResolvedValue({ access: "member", myRole: "member", team: { id: TEAM, name: "일코해제" } });
+    state.getCurrentUser.mockResolvedValue({ id: "9c1f6a2e-2222-4222-8222-000000000002", nickname: "기타", avatarUrl: "https://k.kakaocdn.net/a.jpg" });
+    const element = (await page()).content as ReactElement<{ account: unknown }>;
+    expect(element.props.account).toStrictEqual({ nickname: "기타", avatarUrl: "https://k.kakaocdn.net/a.jpg" });
+  });
+
+  it("still lists this band when my bands could not be read", async () => {
+    state.getTeamHome.mockResolvedValue({ access: "member", myRole: "member", team: { id: TEAM, name: "일코해제" } });
+    state.getMyTeams.mockResolvedValue({ teams: [], failed: true });
+    const element = (await page()).content as ReactElement<{ bands: unknown }>;
+    expect(element.props.bands).toStrictEqual([{ id: TEAM, name: "일코해제" }]);
   });
 
   it("passes the one-time banner flags to the member screen", async () => {

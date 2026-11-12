@@ -17,9 +17,12 @@ interface TabBarView<T extends string> extends TabBarItemBase {
   href?: never;
 }
 
-/** 이 화면을 떠나는 탭(플레이리스트의 홈). 지금 화면이 될 수 없어 늘 꺼진 모양이다. */
+/**
+ * 이 화면을 떠나는 탭(플레이리스트의 밴드 홈, 밴드 홈의 후보곡·셋리스트·합주). 지금 화면이 될 수 없어 늘 꺼진 모양이다.
+ * href 가 null 이면 아직 갈 곳이 없다(플레이리스트가 없는 밴드). 칸은 제자리에 흐리게 서고, 키보드로 닿되 aria-disabled 다.
+ */
 interface TabBarLink extends TabBarItemBase {
-  href: string;
+  href: string | null;
   id?: never;
 }
 
@@ -32,10 +35,16 @@ interface TabBarProps<T extends string> {
   "aria-label": string;
 }
 
-const itemClass = (current: boolean) =>
-  `flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 whitespace-nowrap rounded-control text-caption font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
-    current ? "text-text" : "text-text-muted hover:text-text"
-  }`;
+type TabState = "current" | "idle" | "disabled";
+
+const TAB_TONE: Record<TabState, string> = {
+  current: "text-text",
+  idle: "text-text-muted hover:text-text",
+  disabled: "cursor-not-allowed text-text-muted opacity-50",
+};
+
+const itemClass = (state: TabState) =>
+  `flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 whitespace-nowrap rounded-control text-caption font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${TAB_TONE[state]}`;
 
 /**
  * 화면 아래에 붙는 탭 (dock). 탭 줄은 h-dock 이고, 그 아래 홈 인디케이터 자리를 스스로 칠한다(data-safe-bottom).
@@ -56,9 +65,17 @@ export default function TabBar<T extends string>({ items, value, onChange, "aria
     >
       <div className="mx-auto flex h-dock max-w-lg items-center px-2">
         {items.map((item) => {
+          if (item.href === null) {
+            return (
+              <span key={item.label} role="link" aria-disabled="true" tabIndex={0} className={itemClass("disabled")}>
+                <item.icon />
+                {item.label}
+              </span>
+            );
+          }
           if (item.href !== undefined) {
             return (
-              <Link key={item.href} href={item.href} className={itemClass(false)}>
+              <Link key={item.label} href={item.href} className={itemClass("idle")}>
                 <item.icon />
                 {item.label}
               </Link>
@@ -71,7 +88,7 @@ export default function TabBar<T extends string>({ items, value, onChange, "aria
               type="button"
               onClick={() => onChange(item.id)}
               aria-current={current ? "page" : undefined}
-              className={itemClass(current)}
+              className={itemClass(current ? "current" : "idle")}
             >
               <item.icon filled={current} />
               {item.label}

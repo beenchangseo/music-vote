@@ -114,7 +114,8 @@ export default function PlaylistClient({
   const [expandedSongId, setExpandedSongId] = useState<string | null>(null);
   const [comments, setComments] = useState<Comment[] | null>(null);
   const [loadingSetlist, setLoadingSetlist] = useState(false);
-  const [loadingComments, setLoadingComments] = useState(false);
+  // A link that opens 합주 (?tab=rehearsal) is loading its comments from the first paint.
+  const [loadingComments, setLoadingComments] = useState(initialTab === "rehearsal");
 
   const { showConfirm, showAlert, showDanger } = useDialog();
   const router = useRouter();
@@ -148,6 +149,15 @@ export default function PlaylistClient({
       showAlert("참여자로 등록하지 못했어요. 새로고침한 뒤 다시 시도해 주세요.");
     });
   }, [isArchived, loggedIn, playlist.id, showAlert]);
+
+  // A link that opens 합주 skips the tap that loads its comments. The page opens it only with the setlist read.
+  useEffect(() => {
+    if (initialTab !== "rehearsal") return;
+    fetchComments(playlist.id)
+      .then(setComments)
+      .catch(() => { /* ignore, like a tap: tapping 합주 again retries */ })
+      .finally(() => setLoadingComments(false));
+  }, [initialTab, playlist.id]);
 
   // Lazy load setlist items on first mode switch
   const handleModeChange = useCallback(async (mode: ViewMode) => {
@@ -804,6 +814,7 @@ export default function PlaylistClient({
 
       {/* Navigation Bar */}
       <NavigationBar
+        band={memberBand}
         mode={navMode}
         onModeChange={handleModeChange}
       />

@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import Card from "../ui/Card";
 import IconButton from "../ui/IconButton";
 import Button, { buttonClassName } from "../ui/Button";
-import { RoundLink } from "../ui/RoundButton";
 import NoticeCard from "../ui/NoticeCard";
 import Avatar, { AvatarStack } from "../ui/Avatar";
 import EmptyState from "../ui/EmptyState";
@@ -24,10 +23,13 @@ import AttachPlaylistsSheet from "./AttachPlaylistsSheet";
 import BandDateSheet from "./BandDateSheet";
 import RemoveMemberModal from "./RemoveMemberModal";
 import { LEFT_BAND_STORAGE_KEY } from "./LeftBandNotice";
+import { BandNavigationBar } from "../playlist/NavigationBar";
+import BandSwitcher, { type SwitchBand } from "./BandSwitcher";
+import AuthMenu from "../auth/AuthMenu";
 import { leaveTeam, type TeamHomeMember, type TeamHomeView, type TeamRoom } from "@/actions/team";
 import { track } from "@/lib/analytics";
 import { aggregatePlayedSongs, formatShowDate, showDday, type PlayedSong, type ShowDday } from "@/domain/team";
-import { PLAYLIST_STAGE_LABEL, playlistStage } from "@/domain/playlist-stage";
+import { PLAYLIST_STAGE_LABEL, playlistStage, type PlaylistStage } from "@/domain/playlist-stage";
 import type { MemberKey } from "@/domain/types";
 import { teamMessage } from "@/lib/team-messages";
 
@@ -48,10 +50,16 @@ function subscribeStorage(callback: () => void) {
 const LEAVE_MESSAGE =
   "홈의 '내 밴드'와 멤버 목록에서 빠져요. 이미 들어간 플레이리스트는 그대로 남아요. 초대 링크가 있으면 다시 들어올 수 있어요.";
 
+const RUNNING_STAGES: ReadonlySet<PlaylistStage> = new Set(["voting", "building"]);
+
 const roomDate = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", timeZone: "Asia/Seoul" });
 
 interface BandHomeClientProps {
   view: MemberView;
+  /** 왼쪽 위 밴드 바꾸기 시트에 놓을 내 밴드 (이 밴드 포함). */
+  bands: SwitchBand[];
+  /** 오른쪽 위 계정 메뉴. 이름과 사진만 받는다(docs/adr/0011). */
+  account: { nickname: string; avatarUrl: string | null } | null;
   /** ?created=1 (방 설정이나 홈에서 만들고 왔다). 배너는 한 번만, 쿼리는 첫 마운트에 지운다 (11A·Codex 6). */
   created: boolean;
   /** ?joined=1 (초대 링크로 막 들어왔다). */
@@ -63,7 +71,7 @@ interface BandHomeClientProps {
  * 위에서부터 히어로(밴드 색 그림 + 이름 + 공연 날짜) / 액션 줄(멤버 아바타·초대·큰 재생 버튼) /
  * 지금 합주방 카드 / 합주방 가로 선반 / 우리가 했던 곡 / 멤버 / 맨 아래 "밴드 나가기"(owner 제외).
  */
-export default function BandHomeClient({ view, created, joined }: BandHomeClientProps) {
+export default function BandHomeClient({ view, bands, account, created, joined }: BandHomeClientProps) {
   const router = useRouter();
   const { showDanger } = useDialog();
   const { team, myRole, rooms } = view;
@@ -122,6 +130,9 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
   const dday = showDday(nextShowAt, new Date());
   // 1A: the latest band room whose setlist is not confirmed yet.
   const activeRoom = rooms[0] && !rooms[0].setlistConfirmed ? rooms[0] : null;
+  // The bottom tabs open the band's current playlist: the latest one still voting or building its setlist, which may be
+  // older than a confirmed one; else the latest one; else nothing (#106). The 지금 card above looks at the latest only.
+  const tabRoom = rooms.find((room) => RUNNING_STAGES.has(playlistStage(room))) ?? rooms[0] ?? null;
   const alone = members.length === 1;
   const newRoomHref = `/new?band=${team.id}`;
   // DR1: a band made at home starts as the owner alone with no playlist. One start area replaces
@@ -160,9 +171,12 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
       <header className="relative isolate">
         <BandArt className="absolute inset-x-0 top-0 -z-10 h-88" />
         <div className="mx-auto max-w-md px-4 pt-4">
-          <RoundLink href="/" tone="tonal" size="md" aria-label="홈으로">
-            <ChevronIcon direction="left" />
-          </RoundLink>
+          <div className="flex items-center gap-3">
+            <div className="flex min-w-0 flex-1">
+              <BandSwitcher current={{ id: team.id, name: team.name }} bands={bands} />
+            </div>
+            {account && <AuthMenu nickname={account.nickname} avatarUrl={account.avatarUrl} embedded />}
+          </div>
 
           <div className="pt-28">
             <p className="flex items-center gap-1.5 text-caption font-semibold text-white/80">
@@ -316,6 +330,8 @@ export default function BandHomeClient({ view, created, joined }: BandHomeClient
           </div>
         )}
       </div>
+
+      <BandNavigationBar shareCode={tabRoom?.shareCode ?? null} />
 
       <BandInviteSheet
         open={inviteOpen}

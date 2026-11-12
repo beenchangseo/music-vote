@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({
@@ -54,5 +54,14 @@ describe("/design", () => {
       ...["plain", "ghost"].flatMap((tone) => [`${tone} md`, `${tone} lg`]),
       ...["tonal", "inverse", "primary", "danger"].flatMap((tone) => [`${tone} md`, `${tone} lg`, `${tone} hero`]),
     ]);
+  });
+
+  // The note promises each kind of tab the bar takes, so the demo has to show each one.
+  it("shows the TabBar's three kinds of tab: one that switches the view, a link that leaves, and a dimmed one", () => {
+    render(<DialogProvider>{DesignPage()}</DialogProvider>);
+    const dock = within(screen.getByRole("navigation", { name: "디자인 시스템 하단 탭 예시" }));
+    expect(dock.getByRole("button", { name: "후보곡" })).toHaveAttribute("aria-current", "page");
+    expect(dock.getByRole("link", { name: "홈" })).toHaveAttribute("href", "/design");
+    expect(dock.getByRole("link", { name: "합주" })).toHaveAttribute("aria-disabled", "true");
   });
 });
