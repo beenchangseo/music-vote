@@ -116,7 +116,9 @@ describe("SetlistView edit mode: (+) rows", () => {
       "「기타 셋업 변경」 다음에 넣기",
       "맨 끝에 넣기",
     ]);
-    expect(screen.getByText("≡ 를 끌어 순서를 바꾸고, (+) 로 그 자리에 넣어요")).toBeInTheDocument();
+    const hint = screen.getByText("를 끌어 순서를 바꾸고, (+) 로 그 자리에 넣어요");
+    const handle = screen.getAllByRole("button", { name: /끌어서 순서 바꾸기$/ })[0];
+    expect(hint.querySelector("svg")?.innerHTML).toBe(handle.querySelector("svg")?.innerHTML);
   });
 
   it("inserts an interval at the (+) it was opened from and focuses the new block", async () => {

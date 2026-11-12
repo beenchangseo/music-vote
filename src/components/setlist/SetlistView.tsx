@@ -13,7 +13,7 @@ import Button from "../ui/Button";
 import EmptyState from "../ui/EmptyState";
 import IconButton from "../ui/IconButton";
 import RoundButton from "../ui/RoundButton";
-import { DoneIcon, EditIcon, PlusIcon, SettingsIcon } from "../ui/icons";
+import { DoneIcon, DragHandleIcon, EditIcon, PlusIcon, SettingsIcon } from "../ui/icons";
 import { useDialog } from "../ui/DialogProvider";
 import { publishScreenToolbarHeight } from "../ui/chrome-inset";
 import { RoomCover } from "../band/BandArt";
@@ -264,7 +264,11 @@ export default function SetlistView({
           }
         />
       </div>
-      {showEditControls && <p className="mb-3 text-caption text-text-muted">≡ 를 끌어 순서를 바꾸고, (+) 로 그 자리에 넣어요</p>}
+      {showEditControls && (
+        <p className="mb-3 text-caption text-text-muted">
+          <DragHandleIcon className="inline-block size-3.5 align-middle" /> 를 끌어 순서를 바꾸고, (+) 로 그 자리에 넣어요
+        </p>
+      )}
 
       {loading ? (
         <div className="mt-6 py-16 text-center text-text-subtle">

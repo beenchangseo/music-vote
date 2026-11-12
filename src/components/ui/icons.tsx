@@ -354,11 +354,16 @@ export function InSetlistIcon({ className }: IconProps) {
   );
 }
 
-/** 끌어서 순서를 바꾸는 손잡이. */
+/** 끌어서 순서를 바꾸는 손잡이. 세 줄은 ListIcon(리스트 보기)과 겹쳐 보여서 MoreIcon 과 같은 점 여섯 개로 그린다. */
 export function DragHandleIcon({ className }: IconProps) {
   return (
     <Glyph className={className}>
-      <path d="M5 8h14M5 12h14M5 16h14" />
+      <circle cx="9" cy="5" r="1.9" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="5" r="1.9" fill="currentColor" stroke="none" />
+      <circle cx="9" cy="12" r="1.9" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="12" r="1.9" fill="currentColor" stroke="none" />
+      <circle cx="9" cy="19" r="1.9" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="19" r="1.9" fill="currentColor" stroke="none" />
     </Glyph>
   );
 }

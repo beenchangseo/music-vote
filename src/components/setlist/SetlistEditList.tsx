@@ -58,7 +58,7 @@ const screenReaderInstructions = {
   draggable: "스페이스나 엔터로 블록을 들고, 위아래 화살표로 옮긴 뒤 다시 스페이스나 엔터로 놓아요. Esc 를 누르면 취소해요.",
 };
 
-/** 편집 모드의 셋리스트. 오른쪽 레일 칸의 ≡ 로 끌어 순서를 바꾸고, 카드 사이 (+) 로 그 자리에 넣는다. */
+/** 편집 모드의 셋리스트. 오른쪽 레일 칸의 손잡이로 끌어 순서를 바꾸고, 카드 사이 (+) 로 그 자리에 넣는다. */
 export default function SetlistEditList({ blocks, totalRuntime, saving, focusItemId, onReorder, onOpenSlot, onEdit, onRemove }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
   // Only the handle starts a drag and it is touch-action: none, so a touch elsewhere still scrolls and no long press is needed.
