@@ -336,7 +336,7 @@ export default function SetlistView({
           {/* Spotify "추천 곡": candidates not in the setlist yet, best score first, one tap to add. */}
           {canEdit && !showEditControls && suggestions.length > 0 && (
             <section aria-labelledby="setlist-suggestions" className="mt-10 print:hidden">
-              <h3 id="setlist-suggestions" className="text-h3 font-bold text-text">후보곡에서 넣기</h3>
+              <h2 id="setlist-suggestions" className="text-h3 font-bold text-text">후보곡에서 넣기</h2>
               <p className="mt-0.5 text-caption text-text-muted">점수 높은 순이에요. 넣으면 셋리스트 맨 끝에 붙어요</p>
               <ul className="mt-3">
                 {visibleSuggestions.map((song) => (
