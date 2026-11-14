@@ -9,9 +9,9 @@ import { GUIDE_ARTICLES, SITE_URL } from "@/lib/seo";
 // A guide's date is its article's `modified`, the same date its structured data carries.
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
-    { url: SITE_URL, lastModified: "2026-11-08", changeFrequency: "weekly", priority: 1 },
-    { url: `${SITE_URL}/about`, lastModified: "2026-11-08", changeFrequency: "monthly", priority: 0.8 },
-    { url: `${SITE_URL}/guide`, lastModified: "2026-11-08", changeFrequency: "monthly", priority: 0.8 },
+    { url: SITE_URL, lastModified: "2026-11-15", changeFrequency: "weekly", priority: 1 },
+    { url: `${SITE_URL}/about`, lastModified: "2026-11-15", changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE_URL}/guide`, lastModified: "2026-11-15", changeFrequency: "monthly", priority: 0.8 },
     ...Object.values(GUIDE_ARTICLES).map((article) => ({
       url: `${SITE_URL}${article.path}`,
       lastModified: article.modified,

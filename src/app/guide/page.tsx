@@ -60,7 +60,7 @@ export default function GuidePage() {
           <section>
             <StepHeading step={3}>단톡방에 링크 보내기</StepHeading>
             <p>
-              플레이리스트 위쪽의 카카오톡 버튼을 누르면 단톡방에 투표 카드가 올라가요. 만들 때 나오는 링크 복사와 QR 코드로도
+              후보곡 탭에서 플레이리스트 제목 아래 공유 버튼을 누르면 단톡방에 투표 카드가 올라가요. 만들 때 나오는 링크 복사와 QR 코드로도
               보낼 수 있어요.
             </p>
             <p className="mt-2">
@@ -116,7 +116,7 @@ export default function GuidePage() {
           <section>
             <StepHeading step={6}>내보내기와 공유</StepHeading>
             <p>
-              셋리스트 탭의 내보내기에서 링크 공유, 이미지로 저장, PDF로 저장을 골라요. 이미지는 휴대폰에서 보기 좋은 세로 한
+              셋리스트 탭에서 제목 아래 공유 버튼을 누르고 링크 공유, 이미지로 저장, PDF로 저장 중에서 골라요. 이미지는 휴대폰에서 보기 좋은 세로 한
               장이고, PDF는 A4 여러 페이지에 전체 셋리스트를 담아요. 마감 뒤 셋리스트가 확정되면 후보곡 탭에서 카톡 공유 카드로도
               보내요.
             </p>
