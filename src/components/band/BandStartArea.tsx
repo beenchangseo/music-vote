@@ -15,7 +15,7 @@ export default function BandStartArea({ onInvite }: { onInvite: () => void }) {
       <h2 id="band-start-title" className="text-body font-semibold text-text">
         첫 플레이리스트부터 시작해요
       </h2>
-      <p className="mt-1 text-sm leading-relaxed text-text-muted">
+      <p className="mt-1 break-keep text-sm leading-relaxed text-text-muted">
         아래 ＋ 만들기로 첫 플레이리스트를 만들어요. 곡을 올려 두고 멤버를 부르면, 들어오자마자 같이 투표할 수 있어요
       </p>
       <Button variant="kakao" onClick={onInvite} fullWidth className="mt-4">
