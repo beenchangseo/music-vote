@@ -102,7 +102,7 @@ describe("PlaylistClient setlist confirm", () => {
     vi.mocked(confirmSetlist).mockResolvedValue({ success: true, items: [block("top", 0), block("second", 1)] });
 
     await confirmAsHost();
-    fireEvent.click(screen.getByRole("radio", { name: "셋리스트" }));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
 
     expect(dialog.showConfirm).toHaveBeenCalledWith("상위 2곡으로 셋리스트를 확정할까요?");
     expect(confirmSetlist).toHaveBeenCalledWith("p", ["top", "second"], "abc123");
@@ -117,7 +117,7 @@ describe("PlaylistClient setlist confirm", () => {
     vi.mocked(confirmSetlist).mockResolvedValue({ success: true, items: [...made, labeledBlock("original", "자작곡", 2)] });
 
     await confirmAsHost(made);
-    fireEvent.click(screen.getByRole("radio", { name: "셋리스트" }));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
 
     expect(dialog.showConfirm).toHaveBeenCalledWith("지금 셋리스트로 확정할까요?");
     expect(dialog.showAlert).not.toHaveBeenCalled();
@@ -136,7 +136,7 @@ describe("PlaylistClient setlist confirm", () => {
     });
     await clickConfirm();
     await act(async () => landBefore([]));
-    fireEvent.click(screen.getByRole("radio", { name: "셋리스트" }));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
 
     expect(screen.getByTestId("setlist")).toHaveTextContent("top,second");
     expect(fetchSetlistItems).toHaveBeenCalledTimes(2);

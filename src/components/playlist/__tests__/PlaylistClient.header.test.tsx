@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-import type { ReactNode } from "react";
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -30,8 +29,7 @@ vi.mock("../SongCard", () => ({ default: () => null }));
 vi.mock("../MiniPlayer", () => ({ default: () => null }));
 vi.mock("../YouTubePlayer", () => ({ default: () => null }));
 vi.mock("../RoomSettingsButton", () => ({ default: () => null }));
-// The real SetlistView draws the view switcher it is handed between its own header and its action row.
-vi.mock("../../setlist/SetlistView", () => ({ default: ({ switcher }: { switcher: ReactNode }) => switcher }));
+vi.mock("../../setlist/SetlistView", () => ({ default: () => null }));
 vi.mock("../../rehearsal/RehearsalView", () => ({ default: () => null }));
 vi.mock("../../auth/LoginButton", () => ({
   default: ({ label, variant }: { label?: string; variant?: string }) => <button type="button" data-variant={variant}>{label}</button>,
@@ -82,7 +80,7 @@ afterEach(() => {
 });
 
 function openTab(tab: (typeof TABS)[number]) {
-  if (tab !== "후보곡") fireEvent.click(screen.getByRole("radio", { name: tab }));
+  if (tab !== "후보곡") fireEvent.click(screen.getByRole("button", { name: tab }));
 }
 
 describe("PlaylistClient top row (#101)", () => {
@@ -119,7 +117,7 @@ describe("PlaylistClient top row (#101)", () => {
 
   it("leaves the login button out of the top row for a logged-in member", () => {
     renderRoom();
-    fireEvent.click(screen.getByRole("radio", { name: "셋리스트" }));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
 
     expect(within(screen.getByRole("banner")).queryByRole("button", { name: "로그인" })).not.toBeInTheDocument();
   });
@@ -191,7 +189,7 @@ describe("PlaylistClient header per tab (#4)", () => {
 
   it("leaves the cover header's share, notice and menu out of the 합주 tab", () => {
     renderRoom({ songs: [SONG] });
-    fireEvent.click(screen.getByRole("radio", { name: "합주" }));
+    fireEvent.click(screen.getByRole("button", { name: "합주" }));
 
     for (const action of roomActions()) expect(action).not.toBeInTheDocument();
   });
@@ -200,7 +198,7 @@ describe("PlaylistClient header per tab (#4)", () => {
   // belongs to the candidates header alone.
   it("leaves the candidates' 카카오톡 공유 vote invite off the 셋리스트 tab", () => {
     renderRoom({ songs: [SONG] });
-    fireEvent.click(screen.getByRole("radio", { name: "셋리스트" }));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
 
     expect(screen.queryByRole("button", { name: "카카오톡 공유" })).not.toBeInTheDocument();
   });
@@ -210,15 +208,15 @@ describe("PlaylistClient header per tab (#4)", () => {
 
     for (const tab of ["셋리스트", "합주", "후보곡"]) {
       vi.mocked(window.scrollTo).mockClear();
-      fireEvent.click(screen.getByRole("radio", { name: tab }));
+      fireEvent.click(screen.getByRole("button", { name: tab }));
       expect(window.scrollTo).toHaveBeenCalledWith({ top: 0 });
     }
   });
 
   it("brings the cover header back on the candidates tab", () => {
     renderRoom({ songs: [SONG] });
-    fireEvent.click(screen.getByRole("radio", { name: "셋리스트" }));
-    fireEvent.click(screen.getByRole("radio", { name: "후보곡" }));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
+    fireEvent.click(screen.getByRole("button", { name: "후보곡" }));
 
     for (const action of roomActions()) expect(action).toBeInTheDocument();
   });

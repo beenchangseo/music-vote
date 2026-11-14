@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createFakeClient, type FakeOp } from "@/actions/__tests__/fake-supabase";
@@ -14,9 +14,11 @@ const state = vi.hoisted(() => ({
   user: null as { id: string; nickname: string; avatarUrl: string | null } | null,
   /** Every service_role query the page ran, as the fake answered it. */
   adminReads: [] as FakeOp[],
+  /** The playlist's band, TEAM unless a test takes it away. */
+  teamId: null as string | null,
 }));
 
-/** The band's playlists as the tab bar's picker reads them: this one still voting, an older one confirmed. */
+/** The band's playlists, should anything read them: this one still voting, an older one confirmed. */
 const BAND_PLAYLISTS = [
   { share_code: "qDPJnh1d", title: "11월 합주", created_at: "2026-11-01T00:00:00+00:00", setlist_confirmed: false, setlist_items: [] },
   {
@@ -53,7 +55,7 @@ vi.mock("@/lib/supabase/server", () => ({
             voting_mode: "free",
             default_vote_limit: 3,
             setlist_edit_mode: "everyone",
-            team_id: TEAM,
+            team_id: state.teamId,
           },
         };
       }
@@ -106,16 +108,28 @@ async function openPlaylist() {
   const element = (await PlaylistPage({
     params: Promise.resolve({ shareCode: "qDPJnh1d" }),
     searchParams: Promise.resolve({}),
-  })) as ReactElement<{ team: unknown; bandPlaylists: unknown }>;
+  })) as ReactElement<{ team: unknown }>;
   render(element);
   return element.props;
 }
 
 const bandPlaylistReads = () => state.adminReads.filter((op) => op.table === "playlists" && op.filters.team_id === TEAM);
 
-const firstTab = () => within(screen.getByRole("navigation", { name: "플레이리스트 화면" })).getAllByRole("link")[0];
+/** Each bottom tab as [label, where it goes]: a link's href, or "current" / "view" for a view of this playlist. */
+const tabs = () =>
+  [...screen.getByRole("navigation", { name: "플레이리스트 화면" }).querySelectorAll("a, button")].map((tab) => [
+    tab.textContent,
+    tab.getAttribute("href") ?? (tab.getAttribute("aria-current") === "page" ? "current" : "view"),
+  ]);
+
+const VIEW_TABS = [
+  ["후보곡", "current"],
+  ["셋리스트", "view"],
+  ["합주", "view"],
+];
 
 beforeEach(() => {
+  state.teamId = TEAM;
   vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
 });
 
@@ -127,52 +141,45 @@ afterEach(() => {
 });
 
 // The server gives the band link only to its members (#106), so for anyone else the first tab can only go home.
-describe("/playlist/[shareCode] first tab for each viewer of a band playlist (#106)", () => {
-  it("hands a band member the band id, and the first tab goes to that band home", async () => {
+describe("/playlist/[shareCode] bottom tabs for each viewer (#106, #108)", () => {
+  it("hands a band member the band id, and the tabs are 밴드 홈 to that band · 후보곡 · 셋리스트 · 합주", async () => {
     state.user = { id: MEMBER, nickname: "기타", avatarUrl: null };
 
     expect((await openPlaylist()).team).toMatchObject({ id: TEAM, isMember: true });
-    expect(firstTab()).toHaveAccessibleName("밴드 홈");
-    expect(firstTab()).toHaveAttribute("href", `/band/${TEAM}`);
+    expect(tabs()).toEqual([["밴드 홈", `/band/${TEAM}`], ...VIEW_TABS]);
   });
 
   it.each([
     ["a logged-in viewer outside the band", { id: OUTSIDER, nickname: "손님", avatarUrl: null }],
     ["a logged-out visitor", null],
-  ])("hands %s no band id, and the first tab is 홈 to the app home", async (_who, user) => {
+  ])("hands %s no band id, and the tabs are 홈 to the app home · 후보곡 · 셋리스트 · 합주", async (_who, user) => {
     state.user = user;
 
     expect((await openPlaylist()).team).toMatchObject({ id: null, isMember: false });
-    expect(firstTab()).toHaveAccessibleName("홈");
-    expect(firstTab()).toHaveAttribute("href", "/");
+    expect(tabs()).toEqual([["홈", "/"], ...VIEW_TABS]);
+  });
+
+  it("gives a playlist without a band 홈 to the app home · 후보곡 · 셋리스트 · 합주, and reads no band", async () => {
+    state.teamId = null;
+    state.user = { id: MEMBER, nickname: "기타", avatarUrl: null };
+
+    expect((await openPlaylist()).team).toBeNull();
+    expect(tabs()).toEqual([["홈", "/"], ...VIEW_TABS]);
+    expect(state.adminReads.filter((op) => op.table === "teams" || op.table === "team_members")).toHaveLength(0);
   });
 });
 
-// The picker lists the band's playlists, so only a member may receive them, like the band link above (#110).
-describe("/playlist/[shareCode] band playlists for the tab bar's picker (#110)", () => {
-  it("hands a band member the band's playlists with their stages, and 플레이리스트 opens them with this one checked", async () => {
-    state.user = { id: MEMBER, nickname: "기타", avatarUrl: null };
-
-    expect((await openPlaylist()).bandPlaylists).toEqual([
-      { shareCode: "qDPJnh1d", title: "11월 합주", createdAt: "2026-11-01T00:00:00+00:00", stage: "voting" },
-      { shareCode: "oct00001", title: "10월 합주", createdAt: "2026-10-01T00:00:00+00:00", stage: "confirmed" },
-    ]);
-    expect(bandPlaylistReads()).toHaveLength(1);
-    fireEvent.click(within(screen.getByRole("navigation", { name: "플레이리스트 화면" })).getByRole("button", { name: "플레이리스트" }));
-    const picker = screen.getByRole("dialog", { name: "플레이리스트" });
-    expect(within(picker).getAllByRole("listitem")[0]).toHaveAttribute("aria-current", "page");
-    expect(within(picker).getByRole("link")).toHaveAttribute("href", "/playlist/oct00001");
-  });
-
+// Only #110's picker on this screen listed the band's other playlists. With the views back in the tab bar, nothing here
+// shows them, so the page spends no round trip on them for anyone, a member included.
+describe("/playlist/[shareCode] the band's other playlists", () => {
   it.each([
+    ["a band member", { id: MEMBER, nickname: "기타", avatarUrl: null }],
     ["a logged-in viewer outside the band", { id: OUTSIDER, nickname: "손님", avatarUrl: null }],
     ["a logged-out visitor", null],
   ])("hands %s none of the band's other playlists, and never reads them", async (_who, user) => {
     state.user = user;
 
-    const props = await openPlaylist();
-    expect(props.bandPlaylists).toBeNull();
-    expect(JSON.stringify(props)).not.toContain("oct00001");
+    expect(JSON.stringify(await openPlaylist())).not.toContain("oct00001");
     expect(bandPlaylistReads()).toHaveLength(0);
   });
 });

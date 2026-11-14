@@ -8,7 +8,6 @@ import NoticeCard from "@/components/ui/NoticeCard";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import Switch from "@/components/ui/Switch";
 import TabBar, { type TabBarItem } from "@/components/ui/TabBar";
-import ViewSwitcher from "@/components/ui/ViewSwitcher";
 import * as icons from "@/components/ui/icons";
 import Textarea from "@/components/ui/Textarea";
 import ListRow, {
@@ -184,18 +183,6 @@ export function SegmentedDemo() {
       />
     </div>
   );
-}
-
-type DemoView = "playlist" | "setlist" | "rehearsal";
-const DEMO_VIEWS = [
-  { value: "playlist", label: "후보곡" },
-  { value: "setlist", label: "셋리스트" },
-  { value: "rehearsal", label: "합주" },
-] as const;
-
-export function ViewSwitcherDemo() {
-  const [view, setView] = useState<DemoView>("playlist");
-  return <ViewSwitcher aria-label="디자인 시스템 보기 바꾸기 예시" options={DEMO_VIEWS} value={view} onChange={setView} />;
 }
 
 type DockTab = "home" | "playlists";

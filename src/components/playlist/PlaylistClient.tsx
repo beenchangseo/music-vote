@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useMemo, useRef, type SetStateAction 
 import { useRouter } from "next/navigation";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Image from "next/image";
+import Link from "next/link";
 import { useDialog } from "../ui/DialogProvider";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
@@ -13,9 +14,7 @@ import InlineNotice from "../ui/InlineNotice";
 import { SongRow } from "../ui/ListRow";
 import Modal from "../ui/Modal";
 import Avatar from "../ui/Avatar";
-import ViewSwitcher from "../ui/ViewSwitcher";
-import type { SegmentOption } from "../ui/SegmentedControl";
-import { ArrowUpIcon, CardsIcon, DoneIcon, ListIcon } from "../ui/icons";
+import { ArrowUpIcon, CardsIcon, ChevronIcon, DoneIcon, ListIcon } from "../ui/icons";
 import PlaylistHeader from "./PlaylistHeader";
 import AnnouncementButton from "./AnnouncementButton";
 import type { PlaylistMenuItem } from "./PlaylistActionRow";
@@ -25,6 +24,7 @@ import SongCard from "./SongCard";
 import VoteButtons from "./VoteButtons";
 import MiniPlayer from "./MiniPlayer";
 import YouTubePlayer from "./YouTubePlayer";
+import NavigationBar from "./NavigationBar";
 import SetlistView from "../setlist/SetlistView";
 import RehearsalView from "../rehearsal/RehearsalView";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
@@ -39,14 +39,12 @@ import KakaoShareButton from "../share/KakaoShareButton";
 import RoomSettingsButton, { type RoomSettingsHandle } from "./RoomSettingsButton";
 import BandPromptCard, { BandCreatedCard } from "../band/BandPromptCard";
 import BandInviteSheet from "../band/BandInviteSheet";
-import BandTabBar from "../band/BandTabBar";
 import type { CreatedBand } from "../band/CreateBandSheet";
 import VoteAllowanceStatus from "./VoteAllowanceStatus";
 import { registerPlaylistMember } from "@/actions/member";
 import { setlistEditAccess } from "@/domain/setlist";
 import { setlistStatus } from "@/domain/setlist-card";
 import { PLAYLIST_TAB_PARAM, type PlaylistLinkTab } from "@/domain/playlist-tab";
-import type { PlaylistPick } from "@/domain/playlist-picker";
 import type { MyTeam } from "@/actions/team";
 import type { PlaylistView, RoomTeam, SongWithScore, SetlistItem, Comment, VoteAllowance } from "@/domain/types";
 import { displayTitle } from "@/domain/song-meta";
@@ -54,13 +52,6 @@ import { inviteSongs } from "@/domain/invite-card";
 import { assignRanks } from "@/domain/vote";
 import { PLAYLIST_STAGE_LABEL } from "@/domain/playlist-stage";
 import { isPastDeadline } from "@/domain/deadline";
-
-/** 플레이리스트의 세 보기. 이름은 CONTEXT.md 의 도메인 용어를 따른다. */
-const PLAYLIST_VIEWS: readonly SegmentOption<PlaylistLinkTab>[] = [
-  { value: "playlist", label: "후보곡" },
-  { value: "setlist", label: "셋리스트" },
-  { value: "rehearsal", label: "합주" },
-];
 
 interface PlaylistClientProps {
   playlist: PlaylistView;
@@ -74,8 +65,6 @@ interface PlaylistClientProps {
   currentUserAvatarUrl?: string | null;
   /** The room's band, trimmed per viewer by the page (R10 payload table). null for rooms without a band. */
   team?: RoomTeam | null;
-  /** The band's playlists for the tab bar's picker. Band members only; null when the read failed (#110). */
-  bandPlaylists?: readonly PlaylistPick[] | null;
   /** Owner of a room without a band only: bands this room can join (T14). */
   myTeams?: MyTeam[];
   /** Owner of a room without a band only: logged-in room members, for the band prompt (F7). */
@@ -98,7 +87,6 @@ export default function PlaylistClient({
   isHost,
   currentUserAvatarUrl,
   team = null,
-  bandPlaylists = null,
   myTeams = [],
   memberCount = null,
   bandPromptDismissed = false,
@@ -414,10 +402,6 @@ export default function PlaylistClient({
   }
 
   const memberBand = team?.isMember && team.id && team.name ? { id: team.id, name: team.name, nextShowAt: team.nextShowAt } : null;
-  // #110: the three views moved from the bottom tabs to here. Each view puts it right above its own body.
-  const viewSwitcher = (
-    <ViewSwitcher options={PLAYLIST_VIEWS} value={navMode} onChange={handleModeChange} aria-label="플레이리스트 보기" className="mt-2" />
-  );
 
   /*
     방 설정은 화면 설정이 아니라 방 설정이다. 투표 공개 범위도, 셋리스트 편집 권한도
@@ -508,10 +492,17 @@ export default function PlaylistClient({
           )}
 
           {isArchived && (
-            <InlineNotice role="status" className="mt-3 animate-fade-in">
+            <InlineNotice
+              role="status"
+              className="mt-3 animate-fade-in"
+              action={
+                <Link href="/" className="font-semibold text-primary-fg underline-offset-2 hover:underline">
+                  새 플레이리스트 만들기
+                </Link>
+              }
+            >
               <span className="font-semibold text-text">보관된 플레이리스트예요.</span>{" "}
-              지난 투표 결과와 셋리스트는 그대로 볼 수 있지만, 새로 투표하거나 곡을 추가할 수는 없어요. 아래 ＋ 만들기로 새
-              플레이리스트를 만들어요.
+              지난 투표 결과와 셋리스트는 그대로 볼 수 있지만, 새로 투표하거나 곡을 추가할 수는 없어요.
             </InlineNotice>
           )}
 
@@ -521,8 +512,6 @@ export default function PlaylistClient({
           {/* === MODE: PLAYLIST === */}
           {navMode === "playlist" && (
             <>
-              {viewSwitcher}
-
               {/* Allocated voting: how many votes are left, right above the songs. */}
               {allowance?.mode === "allocated" && (
                 <div className="mt-5 text-center text-caption text-text-muted tabular-nums">
@@ -547,7 +536,7 @@ export default function PlaylistClient({
 
               {/* Add song form (hide if expired) */}
               {!isExpired && !isArchived && (
-                <div className="mt-2">
+                <div className="mt-6">
                   <AddSongForm playlistId={playlist.id} shareCode={shareCode} loginGate={loginGate} onAdded={notifyChange} />
                 </div>
               )}
@@ -721,12 +710,10 @@ export default function PlaylistClient({
               onOpenSettings={openSettings}
               onPlay={handlePlayFromSetlist}
               player={playerState}
-              switcher={viewSwitcher}
             />
           )}
 
           {/* === MODE: REHEARSAL === */}
-          {navMode === "rehearsal" && viewSwitcher}
           {navMode === "rehearsal" && (
             <RehearsalView
               setlistItems={setlistItems || []}
@@ -743,6 +730,19 @@ export default function PlaylistClient({
             />
           )}
 
+          {/* CTA: Create your own — 페이지 가장 아래 (모든 모드 공통, 곡이 있을 때만). 보관된 플레이리스트는 안내가 같은 링크를 가진다. */}
+          {songsWithVotes.length > 0 && !isArchived && (
+            <div className="mt-10 mb-4 text-center">
+              <p className="text-caption text-text-subtle mb-2">새로운 플레이리스트가 필요하다면</p>
+              <Link
+                href={memberBand ? `/new?band=${memberBand.id}` : "/"}
+                className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary-fg hover:text-on-primary-tint transition-colors"
+              >
+                플레이리스트 만들기
+                <ChevronIcon direction="right" className="size-4" />
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
@@ -811,7 +811,12 @@ export default function PlaylistClient({
         />
       </MiniPlayer>
 
-      <BandTabBar screen="playlist" shareCode={shareCode} band={memberBand && { id: memberBand.id, playlists: bandPlaylists }} />
+      {/* Navigation Bar */}
+      <NavigationBar
+        band={memberBand}
+        mode={navMode}
+        onModeChange={handleModeChange}
+      />
     </>
   );
 }

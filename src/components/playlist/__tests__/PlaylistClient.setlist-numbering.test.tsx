@@ -105,7 +105,7 @@ describe("PlaylistClient function updater vs read numbering", () => {
     });
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Plastic Love 셋리에서 빼기" })));
     await act(async () => landStale([inSetlist, item("theirs"), item("stale")]));
-    fireEvent.click(screen.getByRole("radio", { name: "셋리스트" }));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
 
     expect(shown()).toBe("theirs");
     expect(fetchSetlistItems).toHaveBeenCalledTimes(2);
@@ -113,7 +113,7 @@ describe("PlaylistClient function updater vs read numbering", () => {
 
   it("a function write from the setlist tab applies to the list a read drew after the click, and a read that then lands late is discarded", async () => {
     render(<PlaylistClient playlist={playlist} songs={[]} shareCode="abc123" participantCount={2} userNickname="보컬" loggedIn isHost team={null} initialSetlistItems={[item("first"), item("theirs")]} />);
-    fireEvent.click(screen.getByRole("radio", { name: "셋리스트" }));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
     let landLate: (items: SetlistItem[]) => void = () => {};
     vi.mocked(fetchSetlistItems)
       .mockReturnValueOnce(new Promise((resolve) => (landLate = resolve)))

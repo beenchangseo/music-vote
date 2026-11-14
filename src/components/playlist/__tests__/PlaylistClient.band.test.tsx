@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-import type { ReactNode } from "react";
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -37,8 +36,7 @@ vi.mock("../AddSongForm", () => ({ default: () => null }));
 vi.mock("../SongCard", () => ({ default: () => null }));
 vi.mock("../MiniPlayer", () => ({ default: () => null }));
 vi.mock("../YouTubePlayer", () => ({ default: () => null }));
-// The real SetlistView draws the view switcher it is handed between its own header and its action row.
-vi.mock("../../setlist/SetlistView", () => ({ default: ({ switcher }: { switcher: ReactNode }) => switcher }));
+vi.mock("../../setlist/SetlistView", () => ({ default: () => null }));
 vi.mock("../../rehearsal/RehearsalView", () => ({ default: () => null }));
 vi.mock("../RoomSettingsButton", () => ({ default: () => null }));
 vi.mock("../../auth/LoginButton", () => ({ default: () => null }));
@@ -134,11 +132,11 @@ describe("PlaylistClient band prompt (F7, 27A)", () => {
 
   it("lives on the candidates tab only", () => {
     render(ui());
-    fireEvent.click(screen.getByRole("radio", { name: "셋리스트" }));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
     expect(screen.queryByText(PROMPT)).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("radio", { name: "합주" }));
+    fireEvent.click(screen.getByRole("button", { name: "합주" }));
     expect(screen.queryByText(PROMPT)).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("radio", { name: "후보곡" }));
+    fireEvent.click(screen.getByRole("button", { name: "후보곡" }));
     expect(screen.getByText(PROMPT)).toBeInTheDocument();
   });
 
@@ -229,12 +227,42 @@ describe("PlaylistClient list notices", () => {
     expect(screen.getByText("첫 곡을 추가해보세요")).toBeInTheDocument();
   });
 
-  // ＋ 만들기 in the tab bar is the one way to a new playlist, so the notice points there without a link of its own (#110).
-  it("tells a visitor that an archived room is read-only and points to ＋ 만들기", () => {
+  // The playlist's tab bar has no ＋ 만들기, so the notice carries the way to a new playlist itself.
+  it("tells a visitor that an archived room is read-only and links to a new playlist", () => {
     render(ui({ playlist: { ...playlist, archived: true }, isHost: false }));
     const notice = screen.getByRole("status");
     expect(notice).toHaveTextContent("보관된 플레이리스트예요.");
-    expect(notice).toHaveTextContent("아래 ＋ 만들기로 새 플레이리스트를 만들어요");
-    expect(within(notice).queryByRole("link")).not.toBeInTheDocument();
+    expect(notice).not.toHaveTextContent("＋ 만들기");
+    expect(within(notice).getByRole("link", { name: "새 플레이리스트 만들기" })).toHaveAttribute("href", "/");
+  });
+
+  // A visitor who came in from a KakaoTalk card finds a way to start their own at the end of the page.
+  it("ends a playlist that has songs with a link to make a new playlist", () => {
+    render(ui({ songs: [{ id: "s-1", title: "Creep", score: 1 } as Props["songs"][number]] }));
+    expect(screen.getByText("새로운 플레이리스트가 필요하다면")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toHaveAttribute("href", "/");
+  });
+
+  // Band home's ＋ 만들기 goes to the same place, so a member does not pick the band again.
+  it("sends a band member to a new playlist in that band", () => {
+    render(ui({ playlist: { ...playlist, team_id: TEAM }, team: bandTeam, memberCount: null, songs: [{ id: "s-1", title: "Creep", score: 1 } as Props["songs"][number]] }));
+    expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toHaveAttribute("href", `/new?band=${TEAM}`);
+  });
+
+  // The page gives the band id to members only (RoomTeam.id), and the link must not carry it to anyone else.
+  it.each([
+    ["someone outside the band", { team: { id: null, name: null, nextShowAt: null, isMember: false }, isHost: false }],
+    ["the owner, who left the band", { team: { id: null, name: "일코해제", nextShowAt: null, isMember: false } }],
+    ["a logged-out visitor", { team: { id: null, name: null, nextShowAt: null, isMember: false }, loggedIn: false, isHost: false }],
+  ])("sends %s to the plain start page", (_label, overrides) => {
+    render(ui({ playlist: { ...playlist, team_id: TEAM }, memberCount: null, songs: [{ id: "s-1", title: "Creep", score: 1 } as Props["songs"][number]], ...(overrides as Partial<Props>) }));
+    expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toHaveAttribute("href", "/");
+  });
+
+  // The notice already links to a new playlist, and one screen does not carry two buttons that do the same thing.
+  it("leaves the end-of-page link off an archived playlist, so only the notice links to a new one", () => {
+    render(ui({ playlist: { ...playlist, archived: true }, isHost: false, songs: [{ id: "s-1", title: "Creep", score: 1 } as Props["songs"][number]] }));
+    expect(screen.getAllByRole("link", { name: /플레이리스트 만들기/ }).map((link) => link.textContent)).toEqual(["새 플레이리스트 만들기"]);
+    expect(screen.queryByText("새로운 플레이리스트가 필요하다면")).not.toBeInTheDocument();
   });
 });
