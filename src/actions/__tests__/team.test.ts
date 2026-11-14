@@ -750,7 +750,7 @@ describe("getTeamHome", () => {
   });
 
   // The shelf's first card and the 지금 card read rooms[0] as the newest playlist (#110).
-  it("reads the band's playlists once, newest first, for the owner as for a member", async () => {
+  it("reads the band's playlists once, newest first, for the owner", async () => {
     const ownerMembers = members.map((member) => (member.user_id === ME.id ? { ...member, role: "owner" } : { ...member, role: "member" }));
     state.admin = createFakeClient(home({ "team_members:select": ok(ownerMembers) }));
     const view = await getTeamHome(TEAM);

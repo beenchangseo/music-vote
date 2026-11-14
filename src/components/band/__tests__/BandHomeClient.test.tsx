@@ -354,6 +354,16 @@ describe("BandHomeClient rooms shelf and played songs (26A, E1)", () => {
     ].forEach((name, i) => expect(links[i]).toHaveAccessibleName(name));
   });
 
+  it.each([
+    ["an owner whose members joined", ownerView({ rooms: [] })],
+    ["a member", view({ rooms: [] })],
+  ])("draws no empty shelf for %s, only the caption, when the band has no playlist (#110)", (_, v) => {
+    renderHome(v);
+    const section = screen.getByRole("region", { name: /^플레이리스트\s*0$/ });
+    expect(within(section).queryByRole("list")).not.toBeInTheDocument();
+    expect(section).toHaveTextContent("새 플레이리스트를 만들면 여기에 모여요");
+  });
+
   it("counts a song once per room, puts the most played first and links its latest room", () => {
     renderHome(
       view({

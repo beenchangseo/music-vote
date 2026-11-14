@@ -457,24 +457,27 @@ function RoomsShelf({ rooms }: { rooms: TeamRoom[] }) {
   return (
     <section aria-labelledby="band-rooms" className="mt-10">
       <SectionTitle id="band-rooms" title="플레이리스트" count={rooms.length} />
-      <Shelf className="mt-4">
-        {rooms.map((room) => (
-          <li key={room.id} className="w-36">
-            <Link href={`/playlist/${room.shareCode}`} className="block">
-              <RoomCover thumbs={room.coverThumbs} sizes="144px" className="aspect-square w-full" />
-              <span className="mt-2 block truncate text-sm font-semibold text-text">{room.title}</span>
-              <NameBreak />
-              {/* A cut date reads as another day ("10월 2…"), so the date moves under a long badge instead. */}
-              <span className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-caption text-text-muted tabular-nums">
-                <StageBadge room={room} />
+      {rooms.length === 0 ? (
+        <p className="mt-4 text-caption text-text-muted">새 플레이리스트를 만들면 여기에 모여요</p>
+      ) : (
+        <Shelf className="mt-4">
+          {rooms.map((room) => (
+            <li key={room.id} className="w-36">
+              <Link href={`/playlist/${room.shareCode}`} className="block">
+                <RoomCover thumbs={room.coverThumbs} sizes="144px" className="aspect-square w-full" />
+                <span className="mt-2 block truncate text-sm font-semibold text-text">{room.title}</span>
                 <NameBreak />
-                <span>{roomDate.format(new Date(room.createdAt))}</span>
-              </span>
-            </Link>
-          </li>
-        ))}
-      </Shelf>
-      {rooms.length === 0 && <p className="mt-1 text-caption text-text-muted">새 플레이리스트를 만들면 여기에 모여요</p>}
+                {/* A cut date reads as another day ("10월 2…"), so the date moves under a long badge instead. */}
+                <span className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-caption text-text-muted tabular-nums">
+                  <StageBadge room={room} />
+                  <NameBreak />
+                  <span>{roomDate.format(new Date(room.createdAt))}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </Shelf>
+      )}
     </section>
   );
 }
