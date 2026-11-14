@@ -730,8 +730,8 @@ export default function PlaylistClient({
             />
           )}
 
-          {/* CTA: Create your own — 페이지 가장 아래 (모든 모드 공통, 곡이 있을 때만) */}
-          {songsWithVotes.length > 0 && (
+          {/* CTA: Create your own — 페이지 가장 아래 (모든 모드 공통, 곡이 있을 때만). 보관된 플레이리스트는 안내가 같은 링크를 가진다. */}
+          {songsWithVotes.length > 0 && !isArchived && (
             <div className="mt-10 mb-4 text-center">
               <p className="text-caption text-text-subtle mb-2">새로운 플레이리스트가 필요하다면</p>
               <Link

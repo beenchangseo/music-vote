@@ -242,4 +242,11 @@ describe("PlaylistClient list notices", () => {
     expect(screen.getByText("새로운 플레이리스트가 필요하다면")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toHaveAttribute("href", "/");
   });
+
+  // The notice already links to a new playlist, and one screen does not carry two buttons that do the same thing.
+  it("leaves the end-of-page link off an archived playlist, so only the notice links to a new one", () => {
+    render(ui({ playlist: { ...playlist, archived: true }, isHost: false, songs: [{ id: "s-1", title: "Creep", score: 1 } as Props["songs"][number]] }));
+    expect(screen.getAllByRole("link", { name: /플레이리스트 만들기/ }).map((link) => link.textContent)).toEqual(["새 플레이리스트 만들기"]);
+    expect(screen.queryByText("새로운 플레이리스트가 필요하다면")).not.toBeInTheDocument();
+  });
 });
