@@ -3,14 +3,18 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createFakeClient } from "@/actions/__tests__/fake-supabase";
+import { createFakeClient, type FakeOp } from "@/actions/__tests__/fake-supabase";
 
 const TEAM = "7ea70000-0000-4000-8000-000000000001";
 const HOST = "9c1f6a2e-1111-4111-8111-000000000001";
 const MEMBER = "9c1f6a2e-2222-4222-8222-000000000002";
 const OUTSIDER = "9c1f6a2e-3333-4333-8333-000000000003";
 
-const state = vi.hoisted(() => ({ user: null as { id: string; nickname: string; avatarUrl: string | null } | null }));
+const state = vi.hoisted(() => ({
+  user: null as { id: string; nickname: string; avatarUrl: string | null } | null,
+  /** Every service_role query the page ran, as the fake answered it. */
+  adminReads: [] as FakeOp[],
+}));
 
 /** The band's playlists as the tab bar's picker reads them: this one still voting, an older one confirmed. */
 const BAND_PLAYLISTS = [
@@ -30,6 +34,7 @@ const BAND_PLAYLISTS = [
 vi.mock("@/lib/supabase/server", () => ({
   createAdminClient: () =>
     createFakeClient((op) => {
+      state.adminReads.push(op);
       if (op.table === "playlists" && op.filters.team_id) return { data: BAND_PLAYLISTS };
       if (op.table === "playlists") {
         return {
@@ -106,6 +111,8 @@ async function openPlaylist() {
   return element.props;
 }
 
+const bandPlaylistReads = () => state.adminReads.filter((op) => op.table === "playlists" && op.filters.team_id === TEAM);
+
 const firstTab = () => within(screen.getByRole("navigation", { name: "플레이리스트 화면" })).getAllByRole("link")[0];
 
 beforeEach(() => {
@@ -115,6 +122,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   state.user = null;
+  state.adminReads = [];
   vi.restoreAllMocks();
 });
 
@@ -149,6 +157,7 @@ describe("/playlist/[shareCode] band playlists for the tab bar's picker (#110)",
       { shareCode: "qDPJnh1d", title: "11월 합주", createdAt: "2026-11-01T00:00:00+00:00", stage: "voting" },
       { shareCode: "oct00001", title: "10월 합주", createdAt: "2026-10-01T00:00:00+00:00", stage: "confirmed" },
     ]);
+    expect(bandPlaylistReads()).toHaveLength(1);
     fireEvent.click(within(screen.getByRole("navigation", { name: "플레이리스트 화면" })).getByRole("button", { name: "플레이리스트" }));
     const picker = screen.getByRole("dialog", { name: "플레이리스트" });
     expect(within(picker).getAllByRole("listitem")[0]).toHaveAttribute("aria-current", "page");
@@ -158,11 +167,12 @@ describe("/playlist/[shareCode] band playlists for the tab bar's picker (#110)",
   it.each([
     ["a logged-in viewer outside the band", { id: OUTSIDER, nickname: "손님", avatarUrl: null }],
     ["a logged-out visitor", null],
-  ])("hands %s none of the band's other playlists", async (_who, user) => {
+  ])("hands %s none of the band's other playlists, and never reads them", async (_who, user) => {
     state.user = user;
 
     const props = await openPlaylist();
     expect(props.bandPlaylists).toBeNull();
     expect(JSON.stringify(props)).not.toContain("oct00001");
+    expect(bandPlaylistReads()).toHaveLength(0);
   });
 });
