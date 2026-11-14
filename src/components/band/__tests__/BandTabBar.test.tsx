@@ -19,6 +19,8 @@ const DEC = pick("dec", "연말 파티 곡", "voting", "2026-11-08T10:00:00Z");
 const NOV = pick("nov", "11월 정기공연 후보곡", "building", "2026-11-01T10:00:00Z");
 const OCT = pick("oct", "10월 합주", "confirmed", "2026-10-05T10:00:00Z");
 const SEP = pick("sep", "9월 버스킹", "closed", "2026-09-08T10:00:00Z");
+/** Confirmed after the running ones were made, so a newest-first order alone would put it first. */
+const XMAS = pick("xmas", "크리스마스 공연 셋", "confirmed", "2026-11-10T10:00:00Z");
 
 const nav = (name: string) => screen.getByRole("navigation", { name });
 const tabsOf = (bar: HTMLElement) =>
@@ -63,18 +65,20 @@ describe("BandTabBar on band home (#110)", () => {
   });
 
   it("opens a picker with the running ones first, then the rest, newest first, each with its stage", () => {
-    render(<BandTabBar screen="band-home" band={{ id: TEAM, playlists: [OCT, NOV, SEP, DEC] }} />);
+    render(<BandTabBar screen="band-home" band={{ id: TEAM, playlists: [XMAS, OCT, NOV, SEP, DEC] }} />);
     fireEvent.click(within(nav("밴드 화면")).getByRole("button", { name: "플레이리스트" }));
 
     expect(rowsOf(picker())).toEqual([
       expect.stringMatching(/^연말 파티 곡.*투표 중/),
       expect.stringMatching(/^11월 정기공연 후보곡.*셋리스트 짜는 중/),
+      expect.stringMatching(/^크리스마스 공연 셋.*셋리스트 확정/),
       expect.stringMatching(/^10월 합주.*셋리스트 확정/),
       expect.stringMatching(/^9월 버스킹.*마감/),
     ]);
     expect(within(picker()).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
       "/playlist/dec",
       "/playlist/nov",
+      "/playlist/xmas",
       "/playlist/oct",
       "/playlist/sep",
     ]);
