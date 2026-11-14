@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import type { ReactNode } from "react";
 import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PlaylistView, RoomTeam } from "@/domain/types";
 import PlaylistClient from "../PlaylistClient";
@@ -229,9 +229,12 @@ describe("PlaylistClient list notices", () => {
     expect(screen.getByText("첫 곡을 추가해보세요")).toBeInTheDocument();
   });
 
-  it("tells a visitor that an archived room is read-only and links to a new playlist", () => {
+  // ＋ 만들기 in the tab bar is the one way to a new playlist, so the notice points there without a link of its own (#110).
+  it("tells a visitor that an archived room is read-only and points to ＋ 만들기", () => {
     render(ui({ playlist: { ...playlist, archived: true }, isHost: false }));
-    expect(screen.getByRole("status")).toHaveTextContent("보관된 플레이리스트예요.");
-    expect(screen.getByRole("link", { name: /새 플레이리스트 만들기/ })).toHaveAttribute("href", "/");
+    const notice = screen.getByRole("status");
+    expect(notice).toHaveTextContent("보관된 플레이리스트예요.");
+    expect(notice).toHaveTextContent("아래 ＋ 만들기로 새 플레이리스트를 만들어요");
+    expect(within(notice).queryByRole("link")).not.toBeInTheDocument();
   });
 });

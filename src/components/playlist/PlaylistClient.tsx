@@ -4,7 +4,6 @@ import { useState, useCallback, useEffect, useMemo, useRef, type SetStateAction 
 import { useRouter } from "next/navigation";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Image from "next/image";
-import Link from "next/link";
 import { useDialog } from "../ui/DialogProvider";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
@@ -509,17 +508,10 @@ export default function PlaylistClient({
           )}
 
           {isArchived && (
-            <InlineNotice
-              role="status"
-              className="mt-3 animate-fade-in"
-              action={
-                <Link href="/" className="font-semibold text-primary-fg underline-offset-2 hover:underline">
-                  새 플레이리스트 만들기
-                </Link>
-              }
-            >
+            <InlineNotice role="status" className="mt-3 animate-fade-in">
               <span className="font-semibold text-text">보관된 플레이리스트예요.</span>{" "}
-              지난 투표 결과와 셋리스트는 그대로 볼 수 있지만, 새로 투표하거나 곡을 추가할 수는 없어요.
+              지난 투표 결과와 셋리스트는 그대로 볼 수 있지만, 새로 투표하거나 곡을 추가할 수는 없어요. 아래 ＋ 만들기로 새
+              플레이리스트를 만들어요.
             </InlineNotice>
           )}
 
