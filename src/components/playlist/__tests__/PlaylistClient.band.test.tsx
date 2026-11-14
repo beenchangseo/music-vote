@@ -227,12 +227,19 @@ describe("PlaylistClient list notices", () => {
     expect(screen.getByText("첫 곡을 추가해보세요")).toBeInTheDocument();
   });
 
-  // ＋ 만들기 in the tab bar is the one way to a new playlist, so the notice points there without a link of its own (#110).
-  it("tells a visitor that an archived room is read-only and points to ＋ 만들기", () => {
+  // The playlist's tab bar has no ＋ 만들기, so the notice carries the way to a new playlist itself.
+  it("tells a visitor that an archived room is read-only and links to a new playlist", () => {
     render(ui({ playlist: { ...playlist, archived: true }, isHost: false }));
     const notice = screen.getByRole("status");
     expect(notice).toHaveTextContent("보관된 플레이리스트예요.");
-    expect(notice).toHaveTextContent("아래 ＋ 만들기로 새 플레이리스트를 만들어요");
-    expect(within(notice).queryByRole("link")).not.toBeInTheDocument();
+    expect(notice).not.toHaveTextContent("＋ 만들기");
+    expect(within(notice).getByRole("link", { name: "새 플레이리스트 만들기" })).toHaveAttribute("href", "/");
+  });
+
+  // A visitor who came in from a KakaoTalk card finds a way to start their own at the end of the page.
+  it("ends a playlist that has songs with a link to make a new playlist", () => {
+    render(ui({ songs: [{ id: "s-1", title: "Creep", score: 1 } as Props["songs"][number]] }));
+    expect(screen.getByText("새로운 플레이리스트가 필요하다면")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toHaveAttribute("href", "/");
   });
 });

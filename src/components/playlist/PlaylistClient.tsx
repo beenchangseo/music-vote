@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useMemo, useRef, type SetStateAction 
 import { useRouter } from "next/navigation";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Image from "next/image";
+import Link from "next/link";
 import { useDialog } from "../ui/DialogProvider";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
@@ -13,7 +14,7 @@ import InlineNotice from "../ui/InlineNotice";
 import { SongRow } from "../ui/ListRow";
 import Modal from "../ui/Modal";
 import Avatar from "../ui/Avatar";
-import { ArrowUpIcon, CardsIcon, DoneIcon, ListIcon } from "../ui/icons";
+import { ArrowUpIcon, CardsIcon, ChevronIcon, DoneIcon, ListIcon } from "../ui/icons";
 import PlaylistHeader from "./PlaylistHeader";
 import AnnouncementButton from "./AnnouncementButton";
 import type { PlaylistMenuItem } from "./PlaylistActionRow";
@@ -491,10 +492,17 @@ export default function PlaylistClient({
           )}
 
           {isArchived && (
-            <InlineNotice role="status" className="mt-3 animate-fade-in">
+            <InlineNotice
+              role="status"
+              className="mt-3 animate-fade-in"
+              action={
+                <Link href="/" className="font-semibold text-primary-fg underline-offset-2 hover:underline">
+                  새 플레이리스트 만들기
+                </Link>
+              }
+            >
               <span className="font-semibold text-text">보관된 플레이리스트예요.</span>{" "}
-              지난 투표 결과와 셋리스트는 그대로 볼 수 있지만, 새로 투표하거나 곡을 추가할 수는 없어요. 아래 ＋ 만들기로 새
-              플레이리스트를 만들어요.
+              지난 투표 결과와 셋리스트는 그대로 볼 수 있지만, 새로 투표하거나 곡을 추가할 수는 없어요.
             </InlineNotice>
           )}
 
@@ -722,6 +730,19 @@ export default function PlaylistClient({
             />
           )}
 
+          {/* CTA: Create your own — 페이지 가장 아래 (모든 모드 공통, 곡이 있을 때만) */}
+          {songsWithVotes.length > 0 && (
+            <div className="mt-10 mb-4 text-center">
+              <p className="text-caption text-text-subtle mb-2">새로운 플레이리스트가 필요하다면</p>
+              <Link
+                href="/"
+                className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary-fg hover:text-on-primary-tint transition-colors"
+              >
+                플레이리스트 만들기
+                <ChevronIcon direction="right" className="size-4" />
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
