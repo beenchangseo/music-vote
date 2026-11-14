@@ -21,7 +21,7 @@ import { RankNumber, SongRow } from "@/components/ui/ListRow";
 import { MenuItemButton, MenuItemLink, MenuPanel } from "@/components/ui/Menu";
 import Shelf from "@/components/ui/Shelf";
 import Textarea from "@/components/ui/Textarea";
-import { DialogDemo, HoverSample, IconGallery, ListGroupDemo, ModalDemo, MotionDemo, NoticeDemo, SegmentedDemo, SongRowActionsDemo, SwitchDemo, TabBarDemo, ViewSwitcherDemo } from "./demos";
+import { DialogDemo, HoverSample, IconGallery, ListGroupDemo, ModalDemo, MotionDemo, NoticeDemo, SegmentedDemo, SongRowActionsDemo, SwitchDemo, TabBarDemo } from "./demos";
 
 export const metadata: Metadata = {
   title: "디자인 시스템 · Plypick",
@@ -442,10 +442,6 @@ export default function DesignPage() {
 
       <Section title="SegmentedControl" note="한 화면 안에서 하나를 고르는 라디오 묶음. 화살표 키로 옮기면 바로 골라져요. 고른 칸은 primary-tint 바탕에 on-primary-tint 글자, primary-fg 테두리예요. tint 는 트랙과 1.1:1 이라 테두리가 3:1 을 넘겨요.">
         <SegmentedDemo />
-      </Section>
-
-      <Section title="ViewSwitcher" note="한 화면의 보기를 바꾸는 SegmentedControl 줄(플레이리스트의 후보곡 · 셋리스트 · 합주). 스크롤해 지나가면 화면 위에 붙고 그 높이를 알려요. 그 아래 붙는 막대(ScreenToolbar, 편집 중인 셋리스트 동작 줄)는 top-view-switcher 로 이 줄 밑에 서요.">
-        <ViewSwitcherDemo />
       </Section>
 
       <Section title="TabBar" note="화면 아래 dock. 아이콘 위 글자이고 칸 상자가 없어요. 지금 탭은 채운 아이콘에 aria-current 예요. id 를 준 탭은 이 화면 안에서 눌리고(밴드 홈 · 플레이리스트), href 를 준 탭(만들기)은 화면을 떠나는 링크예요. 밴드 홈과 플레이리스트가 쓰는 세 칸은 BandTabBar 예요. 이 페이지 맨 아래에 붙어 있어요.">

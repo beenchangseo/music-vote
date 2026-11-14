@@ -24,7 +24,7 @@ type Tab = "home" | "playlists";
  * 플레이리스트 칸은 밴드 홈에서 진행 중인 플레이리스트가 꼭 하나면 그리로 가고, 아니면 고르는 시트를 연다.
  * 플레이리스트 안에서는 그 칸이 지금 칸이고, 누르면 같은 시트가 지금 플레이리스트에 체크를 하고 열린다.
  * 밴드를 볼 수 없는 사람에게는 홈(/) · 플레이리스트(지금 칸, 누르면 맨 위로) · 만들기(/new)다.
- * 후보곡 · 셋리스트 · 합주는 탭이 아니라 플레이리스트 안의 보기다(PlaylistClient 의 ViewSwitcher).
+ * 후보곡 · 셋리스트 · 합주는 탭이 아니라 플레이리스트 안의 보기다(PlaylistClient 의 SegmentedControl).
  */
 export default function BandTabBar(props: BandTabBarProps) {
   const [pickerOpen, setPickerOpen] = useState(false);

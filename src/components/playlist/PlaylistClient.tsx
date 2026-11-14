@@ -13,8 +13,7 @@ import InlineNotice from "../ui/InlineNotice";
 import { SongRow } from "../ui/ListRow";
 import Modal from "../ui/Modal";
 import Avatar from "../ui/Avatar";
-import ViewSwitcher from "../ui/ViewSwitcher";
-import type { SegmentOption } from "../ui/SegmentedControl";
+import SegmentedControl, { type SegmentOption } from "../ui/SegmentedControl";
 import { ArrowUpIcon, CardsIcon, DoneIcon, ListIcon } from "../ui/icons";
 import PlaylistHeader from "./PlaylistHeader";
 import AnnouncementButton from "./AnnouncementButton";
@@ -416,7 +415,7 @@ export default function PlaylistClient({
   const memberBand = team?.isMember && team.id && team.name ? { id: team.id, name: team.name, nextShowAt: team.nextShowAt } : null;
   // #110: the three views moved from the bottom tabs to here. Each view puts it right above its own body.
   const viewSwitcher = (
-    <ViewSwitcher options={PLAYLIST_VIEWS} value={navMode} onChange={handleModeChange} aria-label="플레이리스트 보기" className="mt-2" />
+    <SegmentedControl options={PLAYLIST_VIEWS} value={navMode} onChange={handleModeChange} aria-label="플레이리스트 보기" className="mt-2" />
   );
 
   /*
@@ -706,6 +705,7 @@ export default function PlaylistClient({
           )}
 
           {/* === MODE: SETLIST === */}
+          {navMode === "setlist" && viewSwitcher}
           {navMode === "setlist" && (
             <SetlistView
               setlistItems={setlistItems || []}
@@ -721,7 +721,6 @@ export default function PlaylistClient({
               onOpenSettings={openSettings}
               onPlay={handlePlayFromSetlist}
               player={playerState}
-              switcher={viewSwitcher}
             />
           )}
 
