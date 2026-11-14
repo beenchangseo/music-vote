@@ -77,13 +77,6 @@ vi.mock("../PlaylistHeader", () => ({
     ) : null,
 }));
 vi.mock("../PlaylistTopBar", () => ({ default: () => null }));
-vi.mock("../NavigationBar", () => ({
-  default: ({ onModeChange }: { onModeChange: (mode: string) => void }) => (
-    <nav>
-      <button type="button" onClick={() => onModeChange("setlist")}>셋리스트</button>
-    </nav>
-  ),
-}));
 vi.mock("../AddSongForm", () => ({ default: () => null }));
 vi.mock("../MiniPlayer", () => ({ default: () => null }));
 vi.mock("../YouTubePlayer", () => ({ default: () => null }));
@@ -184,7 +177,7 @@ afterEach(cleanup);
 describe("an open member screen follows the host's setlist permission", () => {
   it("unlocks editing when a refetch brings 'everyone'", () => {
     const { rerender } = render(ui({ playlist: { ...playlist, setlist_edit_mode: "host_only" } }));
-    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
+    fireEvent.click(screen.getByRole("radio", { name: "셋리스트" }));
     expect(screen.getByText(HOST_ONLY_NOTICE)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "편집" })).not.toBeInTheDocument();
 
@@ -196,7 +189,7 @@ describe("an open member screen follows the host's setlist permission", () => {
 
   it("locks editing when a refetch brings 'host_only'", () => {
     const { rerender } = render(ui({ playlist: { ...playlist, setlist_edit_mode: "everyone" } }));
-    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
+    fireEvent.click(screen.getByRole("radio", { name: "셋리스트" }));
     expect(screen.getByRole("button", { name: "편집" })).toBeInTheDocument();
 
     rerender(ui({ playlist: { ...playlist, setlist_edit_mode: "host_only" } }));

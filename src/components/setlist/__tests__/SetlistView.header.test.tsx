@@ -39,6 +39,7 @@ function renderSetlist({
       onPlay={vi.fn()}
       notice={<button type="button">공지사항</button>}
       onOpenSettings={onOpenSettings}
+      switcher={<div role="radiogroup" aria-label="플레이리스트 보기" />}
     />,
   );
 }
@@ -119,15 +120,19 @@ describe("SetlistView action row while editing (#101)", () => {
     vi.restoreAllMocks();
   });
 
-  it("stays at the top while editing, so 완료 is in reach at the end of a long setlist, and scrolls away otherwise", async () => {
+  // #110: the view switcher pins at the very top, so the row pins under it at the height it publishes, never over it.
+  it("stays at the top while editing, under the pinned view switcher, so 완료 is in reach at the end of a long setlist", async () => {
     renderSetlist();
     const toggle = screen.getByRole("button", { name: "편집" });
+    const switcher = screen.getByRole("radiogroup", { name: "플레이리스트 보기" });
+    expect(switcher.compareDocumentPosition(toggle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1 }).compareDocumentPosition(switcher) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(toggle.closest(".sticky")).toBeNull();
     expect(publishedHeight()).toBe("");
 
     fireEvent.click(toggle);
     await screen.findByRole("button", { name: "완료" });
-    expect(toggle.closest(".sticky")).toHaveClass("top-0", "bg-bg");
+    expect(toggle.closest(".sticky")).toHaveClass("top-view-switcher", "bg-bg");
     expect(publishedHeight()).toBe("60px");
 
     fireEvent.click(toggle);

@@ -179,6 +179,13 @@ export const INSETS: readonly ScaleToken[] = [
     utility: "pb-safe-bottom",
     use: "홈 인디케이터 자리. body 가 비우고, 그 자리를 스스로 칠하는 아래 막대는 data-safe-bottom 을 단다",
   },
+  {
+    name: "view-switcher",
+    cssVar: "--spacing-view-switcher",
+    value: "var(--view-switcher-height, 0px)",
+    utility: "top-view-switcher",
+    use: "위에 붙은 ViewSwitcher 의 높이. 그 아래 붙는 막대(ScreenToolbar, 편집 중인 셋리스트 동작 줄)가 top 으로 쓴다",
+  },
 ];
 
 export const SHADOWS: readonly ScaleToken[] = [

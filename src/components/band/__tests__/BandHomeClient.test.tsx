@@ -625,25 +625,20 @@ describe("BandHomeClient top row (#106)", () => {
   });
 });
 
-describe("BandHomeClient tab bar (#106)", () => {
+describe("BandHomeClient tab bar (#110)", () => {
   const nav = () => screen.getByRole("navigation", { name: "밴드 화면" });
-  const targets = () => ["후보곡", "셋리스트", "합주"].map((name) => within(nav()).getByRole("link", { name }).getAttribute("href"));
+  const tabs = () => [...nav().querySelectorAll("a, button")].map((tab) => tab.textContent);
 
-  it("puts the same four tabs at the bottom, with 밴드 홈 the current one", () => {
+  it("puts the band-level tabs at the bottom: 밴드 홈 (current) · 플레이리스트 · 만들기 in this band", () => {
     renderHome(view({ rooms: [room()] }));
 
-    expect([...nav().querySelectorAll("a, button, [role=link]")].map((tab) => tab.textContent)).toEqual(["밴드 홈", "후보곡", "셋리스트", "합주"]);
+    expect(tabs()).toEqual(["밴드 홈", "플레이리스트", "만들기"]);
     expect(within(nav()).getByRole("button", { name: "밴드 홈" })).toHaveAttribute("aria-current", "page");
+    expect(within(nav()).getByRole("link", { name: "만들기" })).toHaveAttribute("href", `/new?band=${TEAM}`);
   });
 
-  it("opens the band's current playlist on the tab that was tapped", () => {
-    renderHome(view({ rooms: [room({ shareCode: "now0001" }), room({ id: "room-0", shareCode: "old0001", setlistConfirmed: true })] }));
-
-    expect(targets()).toEqual(["/playlist/now0001", "/playlist/now0001?tab=setlist", "/playlist/now0001?tab=rehearsal"]);
-  });
-
-  // The 지금 card still features only the newest playlist (1A); the tabs look past a newer confirmed one.
-  it("opens an older playlist that is still voting over a newer confirmed one", () => {
+  // The 지금 card still features only the newest playlist (1A); the tab looks past a newer confirmed one.
+  it("goes straight to the one running playlist, even an older one under a newer confirmed one", () => {
     renderHome(
       view({
         rooms: [
@@ -653,30 +648,30 @@ describe("BandHomeClient tab bar (#106)", () => {
       }),
     );
 
-    expect(targets()).toEqual(["/playlist/vote001", "/playlist/vote001?tab=setlist", "/playlist/vote001?tab=rehearsal"]);
+    expect(within(nav()).getByRole("link", { name: "플레이리스트" })).toHaveAttribute("href", "/playlist/vote001");
     expect(screen.queryByRole("region", { name: "지금 플레이리스트" })).not.toBeInTheDocument();
   });
 
-  it("opens the most recent playlist when none is running", () => {
+  it("opens a picker of the band's playlists when none is running", () => {
     renderHome(
       view({
         rooms: [
-          room({ shareCode: "last001", setlistConfirmed: true }),
-          room({ id: "room-0", shareCode: "old0001", setlistConfirmed: true }),
+          room({ title: "10월 합주", shareCode: "last001", setlistConfirmed: true, setlistBlockCount: 3 }),
+          room({ id: "room-0", title: "9월 합주", shareCode: "old0001", setlistConfirmed: true, createdAt: "2026-09-01T03:00:00Z" }),
         ],
       }),
     );
 
-    expect(targets()).toEqual(["/playlist/last001", "/playlist/last001?tab=setlist", "/playlist/last001?tab=rehearsal"]);
+    fireEvent.click(within(nav()).getByRole("button", { name: "플레이리스트" }));
+    const picker = screen.getByRole("dialog", { name: "플레이리스트" });
+    expect(within(picker).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/playlist/last001", "/playlist/old0001"]);
   });
 
-  it("dims the three playlist tabs in place when the band has no playlist", () => {
+  it("keeps all three tabs lit for a band with no playlist, the picker pointing to 만들기", () => {
     renderHome(ownerView({ rooms: [] }));
 
-    for (const name of ["후보곡", "셋리스트", "합주"]) {
-      const tab = within(nav()).getByRole("link", { name });
-      expect(tab).toHaveAttribute("aria-disabled", "true");
-      expect(tab).not.toHaveAttribute("href");
-    }
+    expect(nav().querySelector("[aria-disabled]")).toBeNull();
+    fireEvent.click(within(nav()).getByRole("button", { name: "플레이리스트" }));
+    expect(screen.getByRole("dialog", { name: "플레이리스트" })).toHaveTextContent("아래 ＋ 만들기로 첫 플레이리스트를 만들어요");
   });
 });

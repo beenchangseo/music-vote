@@ -45,6 +45,16 @@ export function HomeIcon({ filled = false, className }: TabIconProps) {
   );
 }
 
+/** 겹친 두 장. 밴드 탭의 플레이리스트 칸 (#110). */
+export function PlaylistsIcon({ filled = false, className }: TabIconProps) {
+  return (
+    <Glyph className={className}>
+      <rect fill={filled ? "currentColor" : undefined} x="3.5" y="7.5" width="13" height="13" rx="2.5" />
+      <path d="M7.5 4h10a3 3 0 0 1 3 3v10" />
+    </Glyph>
+  );
+}
+
 /** 곡. 후보곡 탭, 자작곡 블록, 썸네일 없는 커버. */
 export function SongIcon({ filled = false, className }: TabIconProps) {
   return (
