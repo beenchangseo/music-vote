@@ -55,6 +55,13 @@ describe("BandTabBar on band home (#110)", () => {
     expect(within(nav("밴드 화면")).getByRole("link", { name: "플레이리스트" })).toHaveAttribute("href", "/playlist/nov");
   });
 
+  it("says 플레이리스트 opens a dialog only when it opens the picker, never on 밴드 홈", () => {
+    render(<BandTabBar screen="band-home" band={{ id: TEAM, playlists: [DEC, NOV] }} />);
+    const bar = nav("밴드 화면");
+    expect(within(bar).getByRole("button", { name: "플레이리스트" })).toHaveAttribute("aria-haspopup", "dialog");
+    expect(within(bar).getByRole("button", { name: "밴드 홈" })).not.toHaveAttribute("aria-haspopup");
+  });
+
   it("opens a picker with the running ones first, then the rest, newest first, each with its stage", () => {
     render(<BandTabBar screen="band-home" band={{ id: TEAM, playlists: [OCT, NOV, SEP, DEC] }} />);
     fireEvent.click(within(nav("밴드 화면")).getByRole("button", { name: "플레이리스트" }));
@@ -97,7 +104,10 @@ describe("BandTabBar inside a band playlist (#110)", () => {
 
   it("opens the same picker with this playlist checked, to switch to another one", () => {
     render(<BandTabBar screen="playlist" shareCode="nov" band={{ id: TEAM, playlists: [OCT, NOV, DEC] }} />);
-    fireEvent.click(within(nav("플레이리스트 화면")).getByRole("button", { name: "플레이리스트" }));
+    const tab = within(nav("플레이리스트 화면")).getByRole("button", { name: "플레이리스트" });
+    expect(tab).toHaveAttribute("aria-current", "page");
+    expect(tab).toHaveAttribute("aria-haspopup", "dialog");
+    fireEvent.click(tab);
 
     const rows = within(picker()).getAllByRole("listitem");
     expect(rowsOf(picker())[1]).toMatch(/^11월 정기공연 후보곡/);
@@ -123,6 +133,7 @@ describe("BandTabBar for a viewer without the band (#106 rule, #110)", () => {
       ["만들기", "/new"],
     ]);
 
+    expect(within(bar).getByRole("button", { name: "플레이리스트" })).not.toHaveAttribute("aria-haspopup");
     fireEvent.click(within(bar).getByRole("button", { name: "플레이리스트" }));
     expect(window.scrollTo).toHaveBeenCalledWith({ top: 0 });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

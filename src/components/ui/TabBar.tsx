@@ -15,6 +15,8 @@ interface TabBarItemBase {
 interface TabBarView<T extends string> extends TabBarItemBase {
   id: T;
   href?: never;
+  /** 누르면 시트가 열리는 칸(BandTabBar 의 플레이리스트). aria-haspopup="dialog" 로 알린다. */
+  opensDialog?: boolean;
 }
 
 /** 이 화면을 떠나는 탭(플레이리스트의 밴드 홈, 만들기). 지금 화면이 될 수 없어 늘 꺼진 모양이다. */
@@ -76,6 +78,7 @@ export default function TabBar<T extends string>({ items, value, onChange, "aria
               type="button"
               onClick={() => onChange(item.id)}
               aria-current={current ? "page" : undefined}
+              aria-haspopup={item.opensDialog ? "dialog" : undefined}
               className={itemClass(current ? "current" : "idle")}
             >
               <item.icon filled={current} />

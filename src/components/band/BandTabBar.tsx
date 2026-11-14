@@ -40,7 +40,7 @@ export default function BandTabBar(props: BandTabBarProps) {
   const playlists: TabBarItem<Tab> =
     target.kind === "open"
       ? { href: `/playlist/${target.shareCode}`, label: "플레이리스트", icon: PlaylistsIcon }
-      : { id: "playlists", label: "플레이리스트", icon: PlaylistsIcon };
+      : { id: "playlists", label: "플레이리스트", icon: PlaylistsIcon, opensDialog: !!band };
   const create: TabBarItem<Tab> = { href: band ? `/new?band=${band.id}` : "/new", label: "만들기", icon: PlusIcon };
 
   function select(tab: Tab) {

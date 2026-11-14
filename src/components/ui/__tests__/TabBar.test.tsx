@@ -31,6 +31,16 @@ describe("TabBar", () => {
     expect(onChange).toHaveBeenCalledWith("rehearsal");
   });
 
+  it("tells assistive tech that a tab opens a dialog when it does", () => {
+    const items: TabBarItem<"playlist" | "setlist">[] = [
+      { id: "playlist", label: "후보곡", icon: Glyph },
+      { id: "setlist", label: "셋리스트", icon: Glyph, opensDialog: true },
+    ];
+    render(<TabBar aria-label="플레이리스트 화면" items={items} value="setlist" onChange={() => {}} />);
+    expect(screen.getByRole("button", { name: "셋리스트" })).toHaveAttribute("aria-haspopup", "dialog");
+    expect(screen.getByRole("button", { name: "후보곡" })).not.toHaveAttribute("aria-haspopup");
+  });
+
   it("takes a link tab that leaves the screen instead of switching it", () => {
     const onChange = vi.fn();
     render(<TabBar aria-label="플레이리스트 화면" items={TABS} value="playlist" onChange={onChange} />);
