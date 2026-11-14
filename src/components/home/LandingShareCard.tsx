@@ -1,8 +1,20 @@
 import { ChevronIcon, KakaoIcon, TapIcon } from "@/components/ui/icons";
+import { INVITE_CARD_BUTTON, inviteSongs, playlistShareCard } from "@/domain/invite-card";
+import { DEMO_SONGS } from "./landing-demo-songs";
 // 랜딩의 카톡 공유 장면. 멤버 쪽에서 보는 카드와 세 단계를 보여 준다.
-// 카드 문구는 실제 공유 카드(KakaoShareButton 의 playlist 템플릿)와 같다.
+// 카드 글자는 플레이리스트 화면의 공유 버튼(PlaylistHeader)이 보내는 카드를 같은 함수로 만든다.
+
+/** 위 투표 예시의 플레이리스트. 네 명이 이미 투표했다. */
+export const LANDING_INVITE = {
+  title: "10월 정기 합주",
+  participants: 4,
+  songs: inviteSongs(
+    DEMO_SONGS.map((song, i) => ({ title: song.title, youtube_video_id: "", created_at: new Date(Date.UTC(2026, 9, 1, 12, i)).toISOString() })),
+  ),
+};
 
 export function LandingShareChat() {
+  const card = playlistShareCard({ title: LANDING_INVITE.title, archived: false }, LANDING_INVITE.participants, LANDING_INVITE.songs);
   return (
     <div className="rounded-card bg-surface p-4">
       <p className="mb-3 text-center text-caption text-text-subtle">오후 9:41</p>
@@ -20,13 +32,13 @@ export function LandingShareChat() {
               <span aria-hidden className="absolute -right-7 -top-10 size-35 rounded-pill bg-primary opacity-60" />
               <span aria-hidden className="absolute right-12 top-2.5 size-28 rounded-pill bg-primary-hover opacity-90" />
               <p className="relative text-caption font-bold text-text">Plypick</p>
-              <p className="relative mt-7 text-h3 font-bold text-text">10월 정기 합주</p>
+              <p className="relative mt-7 text-h3 font-bold text-text">{LANDING_INVITE.title}</p>
             </div>
             <div className="px-4 py-3">
-              <p className="text-sm font-bold text-text">10월 정기 합주</p>
-              <p className="mt-0.5 text-caption text-text-muted">5곡 등록 · 카카오 로그인 한 번이면 투표 끝</p>
+              <p className="text-sm font-bold text-text">{card.title}</p>
+              <p className="mt-0.5 break-keep text-caption text-text-muted">{card.description}</p>
             </div>
-            <p className="flex min-h-11 items-center justify-center border-t border-border text-sm font-bold text-text">지금 투표하기</p>
+            <p className="flex min-h-11 items-center justify-center border-t border-border text-sm font-bold text-text">{INVITE_CARD_BUTTON}</p>
           </div>
         </div>
       </div>

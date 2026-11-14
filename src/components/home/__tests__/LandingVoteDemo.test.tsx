@@ -5,7 +5,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@formkit/auto-animate/react", () => ({ useAutoAnimate: () => [() => {}] }));
 
-import LandingVoteDemo, { DEMO_SONGS, rankDemoSongs } from "../LandingVoteDemo";
+import LandingVoteDemo, { rankDemoSongs } from "../LandingVoteDemo";
+import { DEMO_SONGS } from "../landing-demo-songs";
 
 afterEach(cleanup);
 

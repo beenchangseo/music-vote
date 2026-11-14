@@ -6,27 +6,9 @@ import { useState } from "react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import RoundButton from "../ui/RoundButton";
 import { ChevronIcon } from "@/components/ui/icons";
-
-type Cover = "violet" | "slate" | "night";
-
-export interface DemoSong {
-  id: string;
-  title: string;
-  artist: string;
-  /** Score from the four members who already voted. */
-  votes: number;
-  cover: Cover;
-}
+import { DEMO_SONGS, type DemoSong } from "./landing-demo-songs";
 
 export type MyVote = 1 | -1;
-
-export const DEMO_SONGS: DemoSong[] = [
-  { id: "tomboy", title: "TOMBOY", artist: "혁오", votes: 2, cover: "slate" },
-  { id: "page", title: "한 페이지가 될 수 있게", artist: "DAY6", votes: 2, cover: "violet" },
-  { id: "lovers", title: "주저하는 연인들을 위해", artist: "잔나비", votes: 1, cover: "violet" },
-  { id: "twentyfive", title: "스물다섯, 스물하나", artist: "자우림", votes: 1, cover: "night" },
-  { id: "anger", title: "Don't Look Back in Anger", artist: "Oasis", votes: 0, cover: "slate" },
-];
 
 /** Highest score first; ties keep their list order so a row only moves when it really passes another. */
 export function rankDemoSongs(songs: DemoSong[], mine: Partial<Record<string, MyVote>>) {
@@ -38,7 +20,7 @@ export function rankDemoSongs(songs: DemoSong[], mine: Partial<Record<string, My
     .sort((a, b) => b.score - a.score || a.index - b.index);
 }
 
-const COVER: Record<Cover, { box: string; dot: string }> = {
+const COVER: Record<DemoSong["cover"], { box: string; dot: string }> = {
   violet: { box: "bg-primary-tint", dot: "bg-primary -top-2 left-2.5" },
   slate: { box: "bg-surface-elevated", dot: "bg-primary-hover -bottom-3 -left-2.5" },
   night: { box: "bg-surface-hover", dot: "bg-primary-hover top-1 left-1" },

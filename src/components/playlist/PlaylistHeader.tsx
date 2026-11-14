@@ -9,7 +9,7 @@ import PlaylistActionRow, { type PlaylistMenuItem } from "./PlaylistActionRow";
 import { track } from "@/lib/analytics";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/og-size";
 import { roomSharePrefix } from "@/domain/team";
-import { playlistShareCard, type InviteSongs } from "@/domain/invite-card";
+import { INVITE_CARD_BUTTON, playlistShareCard, type InviteSongs } from "@/domain/invite-card";
 import { kakaoShareQuery } from "@/domain/kakao-share";
 
 declare global {
@@ -77,7 +77,7 @@ export default function PlaylistHeader({
         window.Kakao.Share.sendDefault({
           objectType: "feed",
           content: {
-            title: `🎵 ${title}`,
+            title: card.title,
             description,
             imageUrl: `${window.location.origin}/api/og?${card.query}`,
             imageWidth: OG_IMAGE_WIDTH,
@@ -85,7 +85,7 @@ export default function PlaylistHeader({
             link: { mobileWebUrl: url, webUrl: url },
           },
           buttons: [
-            { title: "투표 참여하기", link: { mobileWebUrl: url, webUrl: url } },
+            { title: INVITE_CARD_BUTTON, link: { mobileWebUrl: url, webUrl: url } },
           ],
         });
         track("kakao_shared", { variant: "playlist" });
