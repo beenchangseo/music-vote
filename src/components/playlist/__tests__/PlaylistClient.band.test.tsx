@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-import type { ReactNode } from "react";
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -37,8 +36,7 @@ vi.mock("../AddSongForm", () => ({ default: () => null }));
 vi.mock("../SongCard", () => ({ default: () => null }));
 vi.mock("../MiniPlayer", () => ({ default: () => null }));
 vi.mock("../YouTubePlayer", () => ({ default: () => null }));
-// The real SetlistView draws the view switcher it is handed between its own header and its action row.
-vi.mock("../../setlist/SetlistView", () => ({ default: ({ switcher }: { switcher: ReactNode }) => switcher }));
+vi.mock("../../setlist/SetlistView", () => ({ default: () => null }));
 vi.mock("../../rehearsal/RehearsalView", () => ({ default: () => null }));
 vi.mock("../RoomSettingsButton", () => ({ default: () => null }));
 vi.mock("../../auth/LoginButton", () => ({ default: () => null }));
@@ -134,11 +132,11 @@ describe("PlaylistClient band prompt (F7, 27A)", () => {
 
   it("lives on the candidates tab only", () => {
     render(ui());
-    fireEvent.click(screen.getByRole("radio", { name: "셋리스트" }));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
     expect(screen.queryByText(PROMPT)).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("radio", { name: "합주" }));
+    fireEvent.click(screen.getByRole("button", { name: "합주" }));
     expect(screen.queryByText(PROMPT)).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("radio", { name: "후보곡" }));
+    fireEvent.click(screen.getByRole("button", { name: "후보곡" }));
     expect(screen.getByText(PROMPT)).toBeInTheDocument();
   });
 

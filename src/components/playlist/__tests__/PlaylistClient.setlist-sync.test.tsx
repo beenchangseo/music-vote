@@ -87,7 +87,7 @@ function deferred() {
 
 function openSetlist() {
   render(<PlaylistClient playlist={playlist} songs={[]} shareCode="abc123" participantCount={2} userNickname="보컬" loggedIn isHost team={null} initialSetlistItems={[item("first")]} />);
-  fireEvent.click(screen.getByRole("radio", { name: "셋리스트" }));
+  fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
 }
 
 const shown = () => screen.getByTestId("setlist").textContent;
@@ -218,7 +218,7 @@ describe("PlaylistClient setlist sync", () => {
     vi.mocked(fetchSetlistItems).mockReturnValue(new Promise(() => {}));
 
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Plastic Love 셋리에서 빼기" })));
-    fireEvent.click(screen.getByRole("radio", { name: "셋리스트" }));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
 
     expect(shown()).toBe("theirs");
     expect(realtime.notifyChange).toHaveBeenCalledTimes(1);
@@ -236,7 +236,7 @@ describe("PlaylistClient setlist sync", () => {
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Plastic Love 셋리에서 빼기" })));
     await act(async () => realtime.onRemoteChange());
     await act(async () => landRemoval({ success: true, items: null }));
-    fireEvent.click(screen.getByRole("radio", { name: "셋리스트" }));
+    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
 
     expect(shown()).toBe("theirs,new");
   });

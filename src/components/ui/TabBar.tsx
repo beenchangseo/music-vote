@@ -19,7 +19,7 @@ interface TabBarView<T extends string> extends TabBarItemBase {
   opensDialog?: boolean;
 }
 
-/** 이 화면을 떠나는 탭(플레이리스트의 밴드 홈, 만들기). 지금 화면이 될 수 없어 늘 꺼진 모양이다. */
+/** 이 화면을 떠나는 탭(플레이리스트의 밴드 홈, 밴드 홈의 만들기). 지금 화면이 될 수 없어 늘 꺼진 모양이다. */
 interface TabBarLink extends TabBarItemBase {
   href: string;
   id?: never;
@@ -50,7 +50,8 @@ const itemClass = (state: TabState) =>
  * 알리기 전(하이드레이션 전)에는 globals.css 가 data-tab-bar 를 보고 같은 높이를 미리 둔다.
  * Spotify 처럼 아이콘 위 글자이고 칸 상자가 없다. 지금 탭은 채운 아이콘과 text-text, 나머지는 선 아이콘과 text-muted 다.
  * 위로 24px 은 bg 로 옅어지는 막이라 목록이 탭 밑으로 갑자기 잘리지 않는다. 막은 높이에 들지 않아 MiniPlayer 가 덮는다.
- * 글자는 줄을 바꾸지 않는다. 지금 쓰는 칸은 셋이라(BandTabBar) 320px 화면에서 칸이 100px 남짓이고 "플레이리스트" 여섯 글자가 한 줄에 선다.
+ * 글자는 줄을 바꾸지 않는다. 320px 화면에서 플레이리스트의 칸 넷(NavigationBar)은 76px 이라 "셋리스트" 네 글자가,
+ * 밴드 홈의 칸 셋(BandTabBar)은 100px 남짓이라 "플레이리스트" 여섯 글자가 한 줄에 선다.
  */
 export default function TabBar<T extends string>({ items, value, onChange, "aria-label": label }: TabBarProps<T>) {
   return (

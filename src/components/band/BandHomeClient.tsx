@@ -311,7 +311,7 @@ export default function BandHomeClient({ view, bands, account, created, joined }
         )}
       </div>
 
-      <BandTabBar screen="band-home" band={{ id: team.id, playlists: picks }} />
+      <BandTabBar teamId={team.id} playlists={picks} />
 
       <BandInviteSheet
         open={inviteOpen}

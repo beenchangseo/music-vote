@@ -14,13 +14,14 @@ test.describe("account-a: fixed test room screens", () => {
 
   const scoreBadges = (page: Page) => page.getByRole("status", { name: /^점수 -?\d+점/ });
 
-  // The views are radios in the switcher under the header (#110); song rows carry their own "셋리스트" button.
-  // aria-checked flips in the same render that starts the lazy data load, so waiting for it
+  // The bottom tab bar is the last element named "셋리스트" / "합주" in the DOM: song rows
+  // carry their own "셋리스트" button, and the tab bar renders after them.
+  // aria-current flips in the same render that starts the lazy data load, so waiting for it
   // makes the "loading finished" checks below meaningful instead of racing the click.
   async function openTab(page: Page, name: "셋리스트" | "합주") {
-    const tab = page.getByRole("radiogroup", { name: "플레이리스트 보기" }).getByRole("radio", { name, exact: true });
+    const tab = page.getByRole("button", { name, exact: true }).last();
     await tab.click();
-    await expect(tab).toHaveAttribute("aria-checked", "true");
+    await expect(tab).toHaveAttribute("aria-current", "page");
   }
 
   const LOAD_TIMEOUT = 30_000; // server action behind a cold `next dev` route

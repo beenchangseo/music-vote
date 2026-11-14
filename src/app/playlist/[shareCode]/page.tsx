@@ -345,7 +345,6 @@ export default async function PlaylistPage({ params, searchParams }: PageProps) 
       isHost={isHost}
       currentUserAvatarUrl={currentUser?.avatarUrl ?? null}
       team={roomTeam}
-      bandPlaylists={band?.isMember ? band.playlists : null}
       myTeams={myTeams}
       memberCount={memberCount}
       bandPromptDismissed={bandPromptDismissed}

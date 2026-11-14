@@ -74,7 +74,7 @@ type EventMap = GaSafe<{
   tap_tempo_used: {
     taps: number;
   };
-  /** 플레이리스트 보기 전환(후보곡 · 셋리스트 · 합주). 합주를 실제로 여는지 본다. 2026-11 전까지는 하단 탭이었다(#110). */
+  /** 플레이리스트 하단 탭 전환. 합주 탭을 실제로 여는지 본다. */
   playlist_tab_viewed: {
     tab: "candidates" | "setlist" | "rehearsal";
   };
