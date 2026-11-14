@@ -45,6 +45,16 @@ export function HomeIcon({ filled = false, className }: TabIconProps) {
   );
 }
 
+/** 겹친 두 장. 밴드 탭의 플레이리스트 칸 (#110). */
+export function PlaylistsIcon({ filled = false, className }: TabIconProps) {
+  return (
+    <Glyph className={className}>
+      <rect fill={filled ? "currentColor" : undefined} x="3.5" y="7.5" width="13" height="13" rx="2.5" />
+      <path d="M7.5 4h10a3 3 0 0 1 3 3v10" />
+    </Glyph>
+  );
+}
+
 /** 곡. 후보곡 탭, 자작곡 블록, 썸네일 없는 커버. */
 export function SongIcon({ filled = false, className }: TabIconProps) {
   return (
@@ -450,15 +460,6 @@ export function InviteIcon({ className }: IconProps) {
       <circle cx="10" cy="8" r="3.5" />
       <path d="M3.5 19.5a6.5 6.5 0 0 1 13 0" />
       <path d="M19 7.5v6M16 10.5h6" />
-    </Glyph>
-  );
-}
-
-/** 있던 플레이리스트를 밴드에 넣는다. */
-export function FolderIcon({ className }: IconProps) {
-  return (
-    <Glyph className={className}>
-      <path d="M3.5 7a2 2 0 0 1 2-2h3.7l2.3 2.5h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" />
     </Glyph>
   );
 }

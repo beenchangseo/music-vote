@@ -15,14 +15,13 @@ interface TabBarItemBase {
 interface TabBarView<T extends string> extends TabBarItemBase {
   id: T;
   href?: never;
+  /** 누르면 시트가 열리는 칸(BandTabBar 의 플레이리스트). aria-haspopup="dialog" 로 알린다. */
+  opensDialog?: boolean;
 }
 
-/**
- * 이 화면을 떠나는 탭(플레이리스트의 밴드 홈, 밴드 홈의 후보곡·셋리스트·합주). 지금 화면이 될 수 없어 늘 꺼진 모양이다.
- * href 가 null 이면 아직 갈 곳이 없다(플레이리스트가 없는 밴드). 칸은 제자리에 흐리게 서고, 키보드로 닿되 aria-disabled 다.
- */
+/** 이 화면을 떠나는 탭(플레이리스트의 밴드 홈, 만들기). 지금 화면이 될 수 없어 늘 꺼진 모양이다. */
 interface TabBarLink extends TabBarItemBase {
-  href: string | null;
+  href: string;
   id?: never;
 }
 
@@ -35,12 +34,11 @@ interface TabBarProps<T extends string> {
   "aria-label": string;
 }
 
-type TabState = "current" | "idle" | "disabled";
+type TabState = "current" | "idle";
 
 const TAB_TONE: Record<TabState, string> = {
   current: "text-text",
   idle: "text-text-muted hover:text-text",
-  disabled: "cursor-not-allowed text-text-muted opacity-50",
 };
 
 const itemClass = (state: TabState) =>
@@ -52,7 +50,7 @@ const itemClass = (state: TabState) =>
  * 알리기 전(하이드레이션 전)에는 globals.css 가 data-tab-bar 를 보고 같은 높이를 미리 둔다.
  * Spotify 처럼 아이콘 위 글자이고 칸 상자가 없다. 지금 탭은 채운 아이콘과 text-text, 나머지는 선 아이콘과 text-muted 다.
  * 위로 24px 은 bg 로 옅어지는 막이라 목록이 탭 밑으로 갑자기 잘리지 않는다. 막은 높이에 들지 않아 MiniPlayer 가 덮는다.
- * 글자는 줄을 바꾸지 않는다. 칸 넷이면 320px 화면에서 칸이 72px 이고 "셋리스트" 네 글자가 한 줄에 선다.
+ * 글자는 줄을 바꾸지 않는다. 지금 쓰는 칸은 셋이라(BandTabBar) 320px 화면에서 칸이 100px 남짓이고 "플레이리스트" 여섯 글자가 한 줄에 선다.
  */
 export default function TabBar<T extends string>({ items, value, onChange, "aria-label": label }: TabBarProps<T>) {
   return (
@@ -65,14 +63,6 @@ export default function TabBar<T extends string>({ items, value, onChange, "aria
     >
       <div className="mx-auto flex h-dock max-w-lg items-center px-2">
         {items.map((item) => {
-          if (item.href === null) {
-            return (
-              <span key={item.label} role="link" aria-disabled="true" tabIndex={0} className={itemClass("disabled")}>
-                <item.icon />
-                {item.label}
-              </span>
-            );
-          }
           if (item.href !== undefined) {
             return (
               <Link key={item.label} href={item.href} className={itemClass("idle")}>
@@ -88,6 +78,7 @@ export default function TabBar<T extends string>({ items, value, onChange, "aria
               type="button"
               onClick={() => onChange(item.id)}
               aria-current={current ? "page" : undefined}
+              aria-haspopup={item.opensDialog ? "dialog" : undefined}
               className={itemClass(current ? "current" : "idle")}
             >
               <item.icon filled={current} />

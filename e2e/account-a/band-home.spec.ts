@@ -12,7 +12,7 @@ import { authProblem, metricsProblem } from "../helpers/guards";
 test.describe("account-a: a new band from the home page", () => {
   skipWhen(authProblem("account-a"), adminProblem(), metricsProblem("account-a"));
 
-  test("home → 밴드 만들기 → empty band → start area → first playlist link", async ({ page, cleanup }) => {
+  test("home → 밴드 만들기 → empty band → start area that points to ＋ 만들기 and only invites", async ({ page, cleanup }) => {
     test.setTimeout(120_000);
     const { error: schemaError } = await adminClient().from("teams").select("created_via").limit(1);
     test.skip(schemaError !== null, "teams.created_via 가 없어요 (supabase/migrations/v21.sql 적용 전)");
@@ -43,21 +43,11 @@ test.describe("account-a: a new band from the home page", () => {
     await expect(page.getByRole("status")).toHaveText("밴드를 만들었어요");
     const area = page.getByRole("region", { name: "첫 플레이리스트부터 시작해요" });
     const teamId = new URL(page.url()).pathname.split("/").pop()!;
-    // account-a owns playlists outside any band, so putting one in is the main button (DR1 · DR8) and
-    // making a new one stays as a link. Open the sheet to see the list, then close it WITHOUT attaching:
-    // these are the operator's real playlists.
-    const attach = area.getByRole("button", { name: "있던 플레이리스트 넣기" });
-    if (await attach.count()) {
-      await expect(area.getByRole("link", { name: "새 플레이리스트 만들기" })).toHaveAttribute("href", `/new?band=${teamId}`);
-      await attach.click();
-      const attachSheet = page.getByRole("dialog", { name: /^있던 플레이리스트 넣기 · \d+개$/ });
-      await expect(attachSheet.getByText("넣어도 참여자는 밴드 멤버가 되지 않아요")).toBeVisible();
-      await expect(attachSheet.getByRole("button", { name: /넣기$/ }).first()).toBeVisible();
-      await attachSheet.getByRole("button", { name: "닫기" }).click();
-      await expect(attachSheet).toHaveCount(0);
-    } else {
-      await expect(area.getByRole("link", { name: "첫 플레이리스트 만들기" })).toHaveAttribute("href", `/new?band=${teamId}`);
-    }
+    // #110: the area points to the tab bar's ＋ 만들기 and keeps only the invite button, with or without
+    // playlists of account-a's own outside any band.
+    await expect(area).toContainText("아래 ＋ 만들기로 첫 플레이리스트를 만들어요");
+    await expect(area.getByRole("link")).toHaveCount(0);
+    await expect(area.getByRole("button")).toHaveText(["카톡으로 멤버 부르기"]);
     await expect(page.getByRole("button", { name: "멤버 초대" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "더 부르기" })).toHaveCount(0);
 

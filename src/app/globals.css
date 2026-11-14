@@ -103,6 +103,8 @@
   --spacing-dock: 4rem;       /* 64px — 하단 탭 (아이콘 위 글자 칸 56px + 위아래 여백) */
   --spacing-player: 3.5rem;   /* 56px — 플레이어 바 */
   --spacing-safe-bottom: env(safe-area-inset-bottom);
+  /* 위에 붙은 보기 바꾸기 줄(ViewSwitcher)이 알린 높이. 그 아래 붙는 막대의 top 이다(top-view-switcher). */
+  --spacing-view-switcher: var(--view-switcher-height, 0px);
 
   --shadow-float: 0 12px 32px -8px rgb(0 0 0 / 0.6);
 
@@ -211,12 +213,12 @@
   overflow-wrap: break-word;
 }
 
-/* 붙어 있는 막대(위 ScreenToolbar·편집 중인 셋리스트 동작 줄, 아래 TabBar·MiniPlayer 막대)는 자기 높이를 알린다(components/ui/chrome-inset.ts).
- * scrollIntoView·포커스로 끌어온 내용이 막대 밑에 숨지 않게 그만큼 비운다. 막대가 없는 화면은 0 이다.
- * 아래 막대 높이에는 홈 인디케이터 자리가 들어 있다. body 도 이 값만큼 페이지 끝을 비운다(layout.tsx). */
+/* 붙어 있는 막대(위 ViewSwitcher 와 그 아래 ScreenToolbar·편집 중인 셋리스트 동작 줄, 아래 TabBar·MiniPlayer 막대)는
+ * 자기 높이를 알린다(components/ui/chrome-inset.ts). scrollIntoView·포커스로 끌어온 내용이 막대 밑에 숨지 않게 그만큼 비운다.
+ * 막대가 없는 화면은 0 이다. 아래 막대 높이에는 홈 인디케이터 자리가 들어 있다. body 도 이 값만큼 페이지 끝을 비운다(layout.tsx). */
 html {
   --bottom-chrome-height: calc(var(--tab-bar-height, 0px) + var(--mini-player-height, 0px));
-  scroll-padding-top: var(--screen-toolbar-height, 0px);
+  scroll-padding-top: calc(var(--view-switcher-height, 0px) + var(--screen-toolbar-height, 0px));
   scroll-padding-bottom: var(--bottom-chrome-height);
 }
 

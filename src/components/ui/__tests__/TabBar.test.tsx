@@ -31,6 +31,16 @@ describe("TabBar", () => {
     expect(onChange).toHaveBeenCalledWith("rehearsal");
   });
 
+  it("tells assistive tech that a tab opens a dialog when it does", () => {
+    const items: TabBarItem<"playlist" | "setlist">[] = [
+      { id: "playlist", label: "후보곡", icon: Glyph },
+      { id: "setlist", label: "셋리스트", icon: Glyph, opensDialog: true },
+    ];
+    render(<TabBar aria-label="플레이리스트 화면" items={items} value="setlist" onChange={() => {}} />);
+    expect(screen.getByRole("button", { name: "셋리스트" })).toHaveAttribute("aria-haspopup", "dialog");
+    expect(screen.getByRole("button", { name: "후보곡" })).not.toHaveAttribute("aria-haspopup");
+  });
+
   it("takes a link tab that leaves the screen instead of switching it", () => {
     const onChange = vi.fn();
     render(<TabBar aria-label="플레이리스트 화면" items={TABS} value="playlist" onChange={onChange} />);
@@ -38,37 +48,6 @@ describe("TabBar", () => {
     expect(home).toHaveAttribute("href", "/");
     expect(home).not.toHaveAttribute("aria-current");
     expect(screen.queryByRole("button", { name: "홈" })).not.toBeInTheDocument();
-  });
-
-  it("dims a link tab with nowhere to go yet, and keeps it in its place", () => {
-    const items: TabBarItem<"band">[] = [
-      { id: "band", label: "밴드 홈", icon: Glyph },
-      { href: null, label: "후보곡", icon: Glyph },
-      { href: "/playlist/abc123?tab=setlist", label: "셋리스트", icon: Glyph },
-    ];
-    render(<TabBar aria-label="밴드 화면" items={items} value="band" onChange={() => {}} />);
-    const nav = screen.getByRole("navigation", { name: "밴드 화면" });
-
-    expect([...nav.querySelectorAll("a, button, [role=link]")].map((tab) => tab.textContent)).toEqual(["밴드 홈", "후보곡", "셋리스트"]);
-    const dimmed = screen.getByRole("link", { name: "후보곡" });
-    expect(dimmed).toHaveAttribute("aria-disabled", "true");
-    expect(dimmed).not.toHaveAttribute("href");
-    expect(screen.getByRole("link", { name: "셋리스트" })).not.toHaveAttribute("aria-disabled");
-  });
-
-  // A screen reader user on the keyboard tabs through the bar too, and should hear the tab is there but unavailable.
-  it("lets the keyboard reach a dimmed tab, which says it is unavailable", () => {
-    const items: TabBarItem<"band">[] = [
-      { id: "band", label: "밴드 홈", icon: Glyph },
-      { href: null, label: "후보곡", icon: Glyph },
-    ];
-    render(<TabBar aria-label="밴드 화면" items={items} value="band" onChange={() => {}} />);
-    const dimmed = screen.getByRole("link", { name: "후보곡" });
-
-    dimmed.focus();
-
-    expect(dimmed).toHaveFocus();
-    expect(dimmed).toHaveAttribute("aria-disabled", "true");
   });
 
   // The bar is fixed to the bottom edge, so on iPhone its tabs sit under the home indicator unless it pads that area

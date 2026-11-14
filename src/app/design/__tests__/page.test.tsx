@@ -57,11 +57,11 @@ describe("/design", () => {
   });
 
   // The note promises each kind of tab the bar takes, so the demo has to show each one.
-  it("shows the TabBar's three kinds of tab: one that switches the view, a link that leaves, and a dimmed one", () => {
+  it("shows the TabBar's two kinds of tab: one pressed on this screen, and a link that leaves", () => {
     render(<DialogProvider>{DesignPage()}</DialogProvider>);
     const dock = within(screen.getByRole("navigation", { name: "디자인 시스템 하단 탭 예시" }));
-    expect(dock.getByRole("button", { name: "후보곡" })).toHaveAttribute("aria-current", "page");
-    expect(dock.getByRole("link", { name: "홈" })).toHaveAttribute("href", "/design");
-    expect(dock.getByRole("link", { name: "합주" })).toHaveAttribute("aria-disabled", "true");
+    expect(dock.getByRole("button", { name: "밴드 홈" })).toHaveAttribute("aria-current", "page");
+    expect(dock.getByRole("button", { name: "플레이리스트" })).not.toHaveAttribute("aria-current");
+    expect(dock.getByRole("link", { name: "만들기" })).toHaveAttribute("href", "/design");
   });
 });

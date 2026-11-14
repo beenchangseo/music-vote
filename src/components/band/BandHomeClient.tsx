@@ -13,23 +13,23 @@ import { ListRowButton, SongRowLink } from "../ui/ListRow";
 import { MenuItemButton, MenuPanel, useMenu } from "../ui/Menu";
 import Shelf from "../ui/Shelf";
 import { useDialog } from "../ui/DialogProvider";
-import { CalendarIcon, ChevronIcon, DoneIcon, FolderIcon, GuitarIcon, InviteIcon, MoreIcon, PlusIcon } from "@/components/ui/icons";
+import { CalendarIcon, ChevronIcon, DoneIcon, GuitarIcon, InviteIcon, MoreIcon, PlusIcon } from "@/components/ui/icons";
 import Badge from "../ui/Badge";
 import { showDateSpokenLabel } from "./ShowDateTile";
 import { BandArt, RoomCover, SongThumb } from "./BandArt";
 import BandInviteSheet from "./BandInviteSheet";
 import BandStartArea from "./BandStartArea";
-import AttachPlaylistsSheet from "./AttachPlaylistsSheet";
 import BandDateSheet from "./BandDateSheet";
 import RemoveMemberModal from "./RemoveMemberModal";
 import { LEFT_BAND_STORAGE_KEY } from "./LeftBandNotice";
-import { BandNavigationBar } from "../playlist/NavigationBar";
+import BandTabBar from "./BandTabBar";
 import BandSwitcher, { type SwitchBand } from "./BandSwitcher";
 import AuthMenu from "../auth/AuthMenu";
 import { leaveTeam, type TeamHomeMember, type TeamHomeView, type TeamRoom } from "@/actions/team";
 import { track } from "@/lib/analytics";
 import { aggregatePlayedSongs, formatShowDate, showDday, type PlayedSong, type ShowDday } from "@/domain/team";
-import { PLAYLIST_STAGE_LABEL, playlistStage, type PlaylistStage } from "@/domain/playlist-stage";
+import { PLAYLIST_STAGE_LABEL, playlistStage } from "@/domain/playlist-stage";
+import { playlistPick } from "@/domain/playlist-picker";
 import type { MemberKey } from "@/domain/types";
 import { teamMessage } from "@/lib/team-messages";
 
@@ -49,8 +49,6 @@ function subscribeStorage(callback: () => void) {
 
 const LEAVE_MESSAGE =
   "홈의 '내 밴드'와 멤버 목록에서 빠져요. 이미 들어간 플레이리스트는 그대로 남아요. 초대 링크가 있으면 다시 들어올 수 있어요.";
-
-const RUNNING_STAGES: ReadonlySet<PlaylistStage> = new Set(["voting", "building"]);
 
 const roomDate = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", timeZone: "Asia/Seoul" });
 
@@ -89,7 +87,6 @@ export default function BandHomeClient({ view, bands, account, created, joined }
   const members = view.members.filter((member) => !removedKeys.includes(member.memberKey));
 
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [attachOpen, setAttachOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [removing, setRemoving] = useState<{ memberKey: MemberKey; displayName: string } | null>(null);
   const membersTitleRef = useRef<HTMLHeadingElement>(null);
@@ -130,11 +127,8 @@ export default function BandHomeClient({ view, bands, account, created, joined }
   const dday = showDday(nextShowAt, new Date());
   // 1A: the latest band room whose setlist is not confirmed yet.
   const activeRoom = rooms[0] && !rooms[0].setlistConfirmed ? rooms[0] : null;
-  // The bottom tabs open the band's current playlist: the latest one still voting or building its setlist, which may be
-  // older than a confirmed one; else the latest one; else nothing (#106). The 지금 card above looks at the latest only.
-  const tabRoom = rooms.find((room) => RUNNING_STAGES.has(playlistStage(room))) ?? rooms[0] ?? null;
+  const picks = useMemo(() => rooms.map(playlistPick), [rooms]);
   const alone = members.length === 1;
-  const newRoomHref = `/new?band=${team.id}`;
   // DR1: a band made at home starts as the owner alone with no playlist. One start area replaces
   // the created banner, the call-members card, the invite icon, "더 부르기" and the empty shelf.
   const starting = isOwner && alone && rooms.length === 0;
@@ -217,14 +211,7 @@ export default function BandHomeClient({ view, bands, account, created, joined }
           </div>
         )}
 
-        {starting && (
-          <BandStartArea
-            newRoomHref={newRoomHref}
-            onInvite={() => setInviteOpen(true)}
-            attachableCount={view.attachableCount}
-            onAttach={() => setAttachOpen(true)}
-          />
-        )}
+        {starting && <BandStartArea onInvite={() => setInviteOpen(true)} />}
 
         {banner && !starting && (
           <NoticeCard
@@ -278,14 +265,7 @@ export default function BandHomeClient({ view, bands, account, created, joined }
 
         {activeRoom && <NowRoomCard room={activeRoom} />}
 
-        {!starting && (
-          <RoomsShelf
-            rooms={rooms}
-            newRoomHref={newRoomHref}
-            // DR8: owner only, and only when there is something to put in.
-            onAttach={isOwner && (view.attachableCount ?? 0) > 0 ? () => setAttachOpen(true) : null}
-          />
-        )}
+        {!starting && <RoomsShelf rooms={rooms} />}
 
         {!(starting && played.length === 0) && <PlayedSongs songs={played} />}
 
@@ -331,7 +311,7 @@ export default function BandHomeClient({ view, bands, account, created, joined }
         )}
       </div>
 
-      <BandNavigationBar shareCode={tabRoom?.shareCode ?? null} />
+      <BandTabBar screen="band-home" band={{ id: team.id, playlists: picks }} />
 
       <BandInviteSheet
         open={inviteOpen}
@@ -345,14 +325,6 @@ export default function BandHomeClient({ view, bands, account, created, joined }
         isOwner={isOwner}
         onInviteCodeChange={setRotatedCode}
       />
-      {isOwner && view.attachableCount !== null && (
-        <AttachPlaylistsSheet
-          open={attachOpen}
-          onClose={() => setAttachOpen(false)}
-          teamId={team.id}
-          count={view.attachableCount}
-        />
-      )}
       <BandDateSheet
         open={dateOpen}
         onClose={() => setDateOpen(false)}
@@ -477,56 +449,35 @@ function SectionTitle({ id, title, count, ref }: { id: string; title: string; co
   );
 }
 
-/** 합주방 가로 선반 (YouTube Music "새 앨범" 줄): 맨 앞은 새 합주방, 그다음 최근 방부터. */
-function RoomsShelf({
-  rooms,
-  newRoomHref,
-  onAttach,
-}: {
-  rooms: TeamRoom[];
-  newRoomHref: string;
-  /** "있던 플레이리스트 넣기" 타일 (DR8). null 이면 타일 없음. */
-  onAttach: (() => void) | null;
-}) {
+/**
+ * 플레이리스트 가로 선반 (YouTube Music "새 앨범" 줄): 최근 플레이리스트부터. 만드는 길은 아래 탭의 ＋ 만들기 하나라
+ * 선반에는 만들기 타일이 없다(#110).
+ */
+function RoomsShelf({ rooms }: { rooms: TeamRoom[] }) {
   return (
     <section aria-labelledby="band-rooms" className="mt-10">
       <SectionTitle id="band-rooms" title="플레이리스트" count={rooms.length} />
-      <Shelf className="mt-4">
-        <li className="w-36">
-          <Link href={newRoomHref} aria-label="플레이리스트 만들기" className="group block">
-            <span className="flex aspect-square w-full items-center justify-center rounded-control border-2 border-dashed border-border-strong text-text-muted transition-colors group-hover:border-text-muted group-hover:text-text">
-              <PlusIcon className="size-8" />
-            </span>
-            <span className="mt-2 block text-sm font-semibold text-text">만들기</span>
-          </Link>
-        </li>
-        {onAttach && (
-          <li className="w-36">
-            <button type="button" onClick={onAttach} className="group block w-full text-left">
-              <span className="flex aspect-square w-full items-center justify-center rounded-control border-2 border-dashed border-border-strong text-text-muted transition-colors group-hover:border-text-muted group-hover:text-text">
-                <FolderIcon className="size-8" />
-              </span>
-              <span className="mt-2 block text-sm font-semibold text-text">있던 플레이리스트 넣기</span>
-            </button>
-          </li>
-        )}
-        {rooms.map((room) => (
-          <li key={room.id} className="w-36">
-            <Link href={`/playlist/${room.shareCode}`} className="block">
-              <RoomCover thumbs={room.coverThumbs} sizes="144px" className="aspect-square w-full" />
-              <span className="mt-2 block truncate text-sm font-semibold text-text">{room.title}</span>
-              <NameBreak />
-              {/* A cut date reads as another day ("10월 2…"), so the date moves under a long badge instead. */}
-              <span className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-caption text-text-muted tabular-nums">
-                <StageBadge room={room} />
+      {rooms.length === 0 ? (
+        <p className="mt-4 text-caption text-text-muted">새 플레이리스트를 만들면 여기에 모여요</p>
+      ) : (
+        <Shelf className="mt-4">
+          {rooms.map((room) => (
+            <li key={room.id} className="w-36">
+              <Link href={`/playlist/${room.shareCode}`} className="block">
+                <RoomCover thumbs={room.coverThumbs} sizes="144px" className="aspect-square w-full" />
+                <span className="mt-2 block truncate text-sm font-semibold text-text">{room.title}</span>
                 <NameBreak />
-                <span>{roomDate.format(new Date(room.createdAt))}</span>
-              </span>
-            </Link>
-          </li>
-        ))}
-      </Shelf>
-      {rooms.length === 0 && <p className="mt-1 text-caption text-text-muted">새 플레이리스트를 만들면 여기에 모여요</p>}
+                {/* A cut date reads as another day ("10월 2…"), so the date moves under a long badge instead. */}
+                <span className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-caption text-text-muted tabular-nums">
+                  <StageBadge room={room} />
+                  <NameBreak />
+                  <span>{roomDate.format(new Date(room.createdAt))}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </Shelf>
+      )}
     </section>
   );
 }

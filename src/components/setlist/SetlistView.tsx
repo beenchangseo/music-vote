@@ -67,6 +67,11 @@ interface Props {
   notice?: ReactNode;
   /** ⋯ 시트의 "플레이리스트 설정". 방장에게만 넘긴다. */
   onOpenSettings?: () => void;
+  /**
+   * 플레이리스트의 보기 바꾸기 줄(ViewSwitcher, #110). 머리 아래, 동작 줄 위에 선다. 편집 중에 붙는 동작 줄이 그 밑에 쌓이려면
+   * 문서 순서도 줄이 먼저여야 한다. 반대면 스크롤하는 동안 줄이 붙은 동작 줄 위를 지나간다.
+   */
+  switcher?: ReactNode;
 }
 
 export default function SetlistView({
@@ -83,6 +88,7 @@ export default function SetlistView({
   coverThumbs = [],
   notice,
   onOpenSettings,
+  switcher,
 }: Props) {
   const [isPending, startTransition] = useTransition();
   // A drop or a removal shows at once and falls back to the server list when the write settles or fails.
@@ -219,11 +225,13 @@ export default function SetlistView({
         </div>
       </div>
 
+      {switcher}
+
       {/* Pinned while editing, as the old toolbar was, so 완료 stays in reach while dragging at the end of a long setlist.
           The padding trades places with the margin, so the row does not move when it pins. */}
       <div
         ref={showEditControls ? publishScreenToolbarHeight : undefined}
-        className={showEditControls ? "sticky top-0 z-20 -mx-4 mb-2 bg-bg px-4 py-2" : "mt-2 mb-4"}
+        className={showEditControls ? "sticky top-view-switcher z-20 -mx-4 mb-2 bg-bg px-4 py-2" : "mt-2 mb-4"}
       >
         <PlaylistActionRow
           title={title}
