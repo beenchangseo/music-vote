@@ -385,7 +385,6 @@ const ICON_SAMPLES: [string, ReactNode][] = [
   ["Document", <icons.DocumentIcon key="Document" />],
   ["QrCode", <icons.QrCodeIcon key="QrCode" />],
   ["Invite", <icons.InviteIcon key="Invite" />],
-  ["Folder", <icons.FolderIcon key="Folder" />],
   ["Tap", <icons.TapIcon key="Tap" />],
   ["Guitar", <icons.GuitarIcon key="Guitar" />],
   ["Kakao", <icons.KakaoIcon key="Kakao" />],

@@ -454,15 +454,6 @@ export function InviteIcon({ className }: IconProps) {
   );
 }
 
-/** 있던 플레이리스트를 밴드에 넣는다. */
-export function FolderIcon({ className }: IconProps) {
-  return (
-    <Glyph className={className}>
-      <path d="M3.5 7a2 2 0 0 1 2-2h3.7l2.3 2.5h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" />
-    </Glyph>
-  );
-}
-
 /** 카드를 누른다(카톡 카드로 들어오는 순서). */
 export function TapIcon({ className }: IconProps) {
   return (

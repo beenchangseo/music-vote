@@ -26,7 +26,6 @@ import {
   createBandPlaylist,
   createTeam,
   createTeamFromPlaylist,
-  getAttachablePlaylists,
   teamExists,
   getMyTeams,
   getTeamHome,
@@ -732,8 +731,6 @@ describe("getTeamHome", () => {
           participantCount: 0,
         },
       ],
-      // Not the owner: no attach entry, no count query.
-      attachableCount: null,
     });
     expect(opsFor("playlists", "select")).toHaveLength(1);
     // Participants ride on the rooms query (DR9), no extra round trip.
@@ -752,30 +749,16 @@ describe("getTeamHome", () => {
     expect(songs[0].filters).toEqual({ playlist_id: ["room-new", "room-old", "room-attached"] });
   });
 
-  it("counts the owner's band-less playlists for the attach entry, beside the room reads (DR8)", async () => {
+  // The shelf's first card and the 지금 card read rooms[0] as the newest playlist (#110).
+  it("reads the band's playlists once, newest first, for the owner as for a member", async () => {
     const ownerMembers = members.map((member) => (member.user_id === ME.id ? { ...member, role: "owner" } : { ...member, role: "member" }));
-    state.admin = createFakeClient(
-      home({
-        "team_members:select": ok(ownerMembers),
-        "playlists:select": (op) => (op.filters.creator_user_id ? { data: null, error: null, count: 2 } : ok(rooms)),
-      }),
-    );
+    state.admin = createFakeClient(home({ "team_members:select": ok(ownerMembers) }));
     const view = await getTeamHome(TEAM);
-    expect(view).toMatchObject({ access: "member", myRole: "owner", attachableCount: 2 });
-    const count = opsFor("playlists", "select").find((op) => op.filters.creator_user_id);
-    expect(count?.filters).toEqual({ creator_user_id: ME.id, "is:team_id": null });
-  });
-
-  it("hides the attach entry when that count fails, without failing the band home", async () => {
-    const ownerMembers = members.map((member) => (member.user_id === ME.id ? { ...member, role: "owner" } : { ...member, role: "member" }));
-    state.admin = createFakeClient(
-      home({
-        "team_members:select": ok(ownerMembers),
-        "playlists:select": (op) => (op.filters.creator_user_id ? dbError() : ok(rooms)),
-      }),
-    );
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    await expect(getTeamHome(TEAM)).resolves.toMatchObject({ attachableCount: null });
+    expect(view).not.toHaveProperty("attachableCount");
+    const reads = opsFor("playlists", "select");
+    expect(reads).toHaveLength(1);
+    expect(reads[0].filters).toEqual({ team_id: TEAM });
+    expect(reads[0].orders).toEqual([{ column: "created_at", ascending: false }]);
   });
 
   it("still shows the band when the cover lookup fails (setlist covers only, no counts)", async () => {
@@ -882,66 +865,6 @@ describe("teamExists (band home 404)", () => {
     state.admin = createFakeClient(router({ "teams:select": dbError() }));
     vi.spyOn(console, "error").mockImplementation(() => {});
     await expect(teamExists(TEAM)).rejects.toThrow("밴드를 불러오지 못했어요.");
-  });
-});
-
-describe("getAttachablePlaylists (DR8)", () => {
-  const rows = [
-    {
-      id: "pl-new",
-      share_code: "new",
-      title: "11월 합주",
-      created_at: "2026-10-05T00:00:00Z",
-      playlist_members: [{ count: 4 }],
-      songs: [
-        { thumbnail_url: "t-old", created_at: "2026-10-05T01:00:00Z" },
-        { thumbnail_url: "t-new", created_at: "2026-10-05T02:00:00Z" },
-      ],
-    },
-    { id: "pl-old", share_code: "old", title: "9월 합주", created_at: "2026-09-01T00:00:00Z", playlist_members: null, songs: null },
-  ];
-
-  it("requires a logged-in user", async () => {
-    state.getCurrentUser.mockResolvedValue(null);
-    await expect(getAttachablePlaylists(TEAM)).resolves.toEqual({ success: false, reason: "not_logged_in" });
-    expect(state.admin.ops).toEqual([]);
-  });
-
-  it("refuses someone outside the band", async () => {
-    state.admin = createFakeClient(router({ "team_members:select": ok(null), "playlists:select": ok(rows) }));
-    await expect(getAttachablePlaylists(TEAM)).resolves.toEqual({ success: false, reason: "not_member" });
-  });
-
-  it("lists only my own playlists outside any band, newest first, with participants and covers", async () => {
-    state.admin = createFakeClient(router({ "team_members:select": ok({ role: "owner" }), "playlists:select": ok(rows) }));
-    await expect(getAttachablePlaylists(TEAM)).resolves.toEqual({
-      success: true,
-      playlists: [
-        { id: "pl-new", shareCode: "new", title: "11월 합주", createdAt: "2026-10-05T00:00:00Z", participantCount: 4, coverThumbs: ["t-new", "t-old"] },
-        { id: "pl-old", shareCode: "old", title: "9월 합주", createdAt: "2026-09-01T00:00:00Z", participantCount: 0, coverThumbs: [] },
-      ],
-    });
-    const [query] = opsFor("playlists", "select");
-    expect(query.filters).toEqual({ creator_user_id: ME.id, "is:team_id": null });
-    expect(query.orders).toEqual([{ column: "created_at", ascending: false }]);
-  });
-
-  it("puts the newer cover picture first within one second (Postgres drops a zero fraction)", async () => {
-    const songs = [
-      { thumbnail_url: "t-whole", created_at: "2026-10-05T00:00:00+00:00" },
-      { thumbnail_url: "t-half", created_at: "2026-10-05T00:00:00.5+00:00" },
-    ];
-    state.admin = createFakeClient(
-      router({ "team_members:select": ok({ role: "owner" }), "playlists:select": ok([{ ...rows[0], songs }]) }),
-    );
-    const result = await getAttachablePlaylists(TEAM);
-    expect(result.success && result.playlists.map((playlist) => playlist.coverThumbs)).toEqual([["t-half", "t-whole"]]);
-  });
-
-  it("reports a failed read", async () => {
-    state.admin = createFakeClient(router({ "team_members:select": ok({ role: "owner" }), "playlists:select": dbError() }));
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    await expect(getAttachablePlaylists(TEAM)).resolves.toEqual({ success: false, reason: "write_failed" });
   });
 });
 

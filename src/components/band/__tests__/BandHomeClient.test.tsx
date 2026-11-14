@@ -21,11 +21,6 @@ vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
 vi.mock("next/image", () => ({ default: () => null }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push, refresh: vi.fn() }), usePathname: () => "/band/team" }));
 vi.mock("../../ui/DialogProvider", () => ({ useDialog: () => ({ showDanger, showAlert: vi.fn(), showConfirm: vi.fn() }) }));
-// The sheet's own behaviour is in AttachPlaylistsSheet.test; here only who can open it.
-vi.mock("../AttachPlaylistsSheet", () => ({
-  default: ({ open, count }: { open: boolean; count: number }) =>
-    open ? <div role="dialog" aria-label={`있던 플레이리스트 넣기 · ${count}개`} /> : null,
-}));
 
 type MemberView = Extract<TeamHomeView, { access: "member" }>;
 const TEAM = "11111111-1111-4111-8111-111111111111";
@@ -57,7 +52,6 @@ function view(overrides: Partial<MemberView> = {}, team: Partial<MemberView["tea
       { memberKey: key("k-guitar"), displayName: "기타", role: "member", joinedAt: "2026-09-02T00:00:00Z", isMe: true, canRemove: false },
     ],
     rooms: [],
-    attachableCount: null,
     ...overrides,
   };
 }
@@ -166,7 +160,6 @@ describe("BandHomeClient primary action (1A)", () => {
   it("asks a lone owner to call members", () => {
     renderHome(ownerView({ members: [ownerView().members[0]], rooms: [room()] }));
     expect(screen.getByRole("button", { name: "카톡으로 멤버 부르기" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toHaveAttribute("href", `/new?band=${TEAM}`);
   });
 
   it("does not ask once a second member is in", () => {
@@ -204,7 +197,6 @@ describe("BandHomeClient primary action (1A)", () => {
     expect(card).toHaveAttribute("href", "/playlist/abc123");
     expect(card).toHaveAccessibleName("투표 중, 10월 정기 합주, 후보곡 7곡");
     expect(card.innerHTML).not.toContain(PLAY_TRIANGLE);
-    expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toHaveAttribute("href", `/new?band=${TEAM}`);
   });
 
   it("counts a setlist made only of 자작곡 as a setlist being built", () => {
@@ -237,10 +229,9 @@ describe("BandHomeClient primary action (1A)", () => {
     expect(card.innerHTML).not.toContain(PLAY_TRIANGLE);
   });
 
-  it("falls back to 플레이리스트 만들기 when nothing is running", () => {
+  it("has no 지금 card when nothing is running", () => {
     renderHome(view({ rooms: [room({ setlistConfirmed: true, setlistBlockCount: 8 })] }));
     expect(screen.queryByRole("region", { name: "지금 플레이리스트" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toBeInTheDocument();
   });
 });
 
@@ -250,7 +241,9 @@ describe("BandHomeClient start area for a new empty band (DR1, DR16)", () => {
   it("gathers the first steps into one area and hides the other ways in", () => {
     renderHome(empty());
     const area = screen.getByRole("region", { name: "첫 플레이리스트부터 시작해요" });
-    expect(within(area).getByRole("link", { name: "첫 플레이리스트 만들기" })).toHaveAttribute("href", `/new?band=${TEAM}`);
+    // #110: the tab bar's ＋ 만들기 makes the first playlist, so the area has no create button of its own.
+    expect(within(area).queryAllByRole("link")).toHaveLength(0);
+    expect(within(area).getAllByRole("button").map((button) => button.textContent)).toEqual(["카톡으로 멤버 부르기"]);
     // One way to invite: the start area. No icon, no 더 부르기 tile, no call-members card.
     expect(screen.getAllByRole("button", { name: /부르기|멤버 초대/ })).toHaveLength(1);
     expect(screen.queryByRole("button", { name: "멤버 초대" })).not.toBeInTheDocument();
@@ -258,8 +251,8 @@ describe("BandHomeClient start area for a new empty band (DR1, DR16)", () => {
     expect(screen.queryByText("멤버를 불러야 같이 투표해요")).not.toBeInTheDocument();
     // No lone avatar link above the area; the members section shows the one member.
     expect(screen.queryByRole("link", { name: "멤버 1명" })).not.toBeInTheDocument();
-    // No empty shelf with a second "new playlist" and no empty history.
-    expect(screen.queryByRole("link", { name: "플레이리스트 만들기" })).not.toBeInTheDocument();
+    // No empty shelf and no empty history.
+    expect(screen.queryByRole("region", { name: /^플레이리스트/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("region", { name: /우리가 했던 곡/ })).not.toBeInTheDocument();
 
     fireEvent.click(within(area).getByRole("button", { name: "카톡으로 멤버 부르기" }));
@@ -282,7 +275,7 @@ describe("BandHomeClient start area for a new empty band (DR1, DR16)", () => {
   it("goes back to the usual home once a member joins", () => {
     renderHome(ownerView({ rooms: [] }));
     expect(screen.queryByRole("region", { name: "첫 플레이리스트부터 시작해요" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /^플레이리스트\s*0$/ })).toHaveTextContent("새 플레이리스트를 만들면 여기에 모여요");
   });
 
   it("sends an invite card that names the band's leader, not '멤버 1명' (DR13)", () => {
@@ -307,28 +300,15 @@ describe("BandHomeClient start area for a new empty band (DR1, DR16)", () => {
   });
 });
 
-describe("BandHomeClient attach entry (DR8) and the guests line (DR9)", () => {
-  it("gives the owner a 있던 플레이리스트 넣기 tile next to 만들기 when there is something to put in", () => {
-    renderHome(ownerView({ rooms: [room()], attachableCount: 2 }));
-    const shelf = screen.getByRole("region", { name: /^플레이리스트\s*1$/ });
-    fireEvent.click(within(shelf).getByRole("button", { name: "있던 플레이리스트 넣기" }));
-    expect(screen.getByRole("dialog", { name: "있던 플레이리스트 넣기 · 2개" })).toBeInTheDocument();
-  });
-
+describe("BandHomeClient without 있던 플레이리스트 넣기 (#110) and the guests line (DR9)", () => {
   it.each([
-    ["nothing to put in", ownerView({ rooms: [room()], attachableCount: 0 })],
-    ["the count could not be read", ownerView({ rooms: [room()], attachableCount: null })],
-    ["a member", view({ rooms: [room()], attachableCount: null })],
-  ])("has no attach tile with %s", (_label, v) => {
+    ["an owner's shelf", ownerView({ rooms: [room()] })],
+    ["an empty band's start area", ownerView({ members: [ownerView().members[0]], rooms: [] })],
+    ["a member's shelf", view({ rooms: [room()] })],
+  ])("offers no way to put an existing playlist in from %s", (_label, v) => {
     renderHome(v);
-    expect(screen.queryByRole("button", { name: "있던 플레이리스트 넣기" })).not.toBeInTheDocument();
-  });
-
-  it("opens the sheet from the start area of an empty band", () => {
-    renderHome(ownerView({ members: [ownerView().members[0]], rooms: [], attachableCount: 3 }));
-    const area = screen.getByRole("region", { name: "첫 플레이리스트부터 시작해요" });
-    fireEvent.click(within(area).getByRole("button", { name: "있던 플레이리스트 넣기" }));
-    expect(screen.getByRole("dialog", { name: "있던 플레이리스트 넣기 · 3개" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /넣기/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/있던 플레이리스트/)).not.toBeInTheDocument();
   });
 
   it("tells a lone owner that the put-in playlist's participants are not members yet", () => {
@@ -350,7 +330,7 @@ describe("BandHomeClient rooms shelf and played songs (26A, E1)", () => {
   const run = song("s1", "말달리자", "크라잉넛", "v-run");
   const crush = song("s2", "넌 내게 반했어", "노브레인", "v-crush", 1);
 
-  it("shelves a 만들기 tile, then every room newest first with its stage and date", () => {
+  it("shelves every room in the order the server sends, newest first, with no 만들기 tile ahead of them (#110)", () => {
     renderHome(
       view({
         rooms: [
@@ -364,16 +344,14 @@ describe("BandHomeClient rooms shelf and played songs (26A, E1)", () => {
     );
     const shelf = screen.getByRole("region", { name: /^플레이리스트\s*4$/ });
     const links = within(shelf).getAllByRole("link");
-    expect(links.map((link) => link.getAttribute("href"))).toEqual([`/new?band=${TEAM}`, "/playlist/newest", "/playlist/new", "/playlist/abc123", "/playlist/old"]);
-    // The section title already says 플레이리스트, so the tile reads 만들기; its name still says what it makes.
-    expect(links[0]).toHaveAccessibleName("플레이리스트 만들기");
-    expect(links[0]).toHaveTextContent(/^만들기$/);
+    expect(links.map((link) => link.getAttribute("href"))).toEqual(["/playlist/newest", "/playlist/new", "/playlist/abc123", "/playlist/old"]);
+    expect(within(shelf).queryByText("만들기")).not.toBeInTheDocument();
     [
       "12월 합주, 투표 중, 11월 5일",
       "11월 합주, 셋리스트 짜는 중, 11월 2일",
       "10월 합주, 셋리스트 확정, 10월 12일",
       "9월 합주, 마감, 9월 5일",
-    ].forEach((name, i) => expect(links[i + 1]).toHaveAccessibleName(name));
+    ].forEach((name, i) => expect(links[i]).toHaveAccessibleName(name));
   });
 
   it("counts a song once per room, puts the most played first and links its latest room", () => {

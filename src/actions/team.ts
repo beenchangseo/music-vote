@@ -24,7 +24,6 @@
     getTeamInvite           불필요 · 이름·멤버 수·앞 3명·공연 날짜만 (방·초대 코드 없음)
     getTeamHome             불필요 · 멤버만 본문, 그 외에는 밴드 이름만
     teamExists              불필요 · 있는지만 (밴드 홈이 응답 전에 404 를 정하려고)
-    getAttachablePlaylists  로그인 · 그 밴드 멤버 · 내가 만든 밴드 없는 플레이리스트만 (넣기 시트 DR8)
     getMyTeams              불필요 (비로그인 빈 배열) · 내 team_members 행만
 */
 
@@ -191,21 +190,6 @@ export interface TeamRoom {
   participantCount: number;
 }
 
-/** 밴드 홈 넣기 시트의 한 줄 (DR8): 내가 만든 밴드 없는 플레이리스트. */
-export interface AttachablePlaylist {
-  id: string;
-  shareCode: string;
-  title: string;
-  createdAt: string;
-  participantCount: number;
-  coverThumbs: string[];
-}
-
-export type GetAttachablePlaylistsResult = ActionResult<
-  { playlists: AttachablePlaylist[] },
-  "not_logged_in" | "team_not_found" | "not_member" | "write_failed"
->;
-
 /** 밴드 홈(/band/[teamId]) 데이터. */
 export type TeamHomeView =
   /** 비로그인·비멤버: 밴드 이름만 (방·멤버·날짜·초대 코드 없음). */
@@ -223,13 +207,8 @@ export type TeamHomeView =
       };
       /** owner 먼저, 그다음 가입 순. */
       members: TeamHomeMember[];
-      /** created_at 내림차순. */
+      /** created_at 내림차순. 선반의 첫 장과 지금 카드가 rooms[0] 을 가장 최근 플레이리스트로 읽는다. */
       rooms: TeamRoom[];
-      /**
-       * owner 만: 넣을 수 있는 내 플레이리스트 수(밴드 없음 · 내가 만든 것). 0 이면 넣기 입구를 숨긴다(DR8).
-       * owner 가 아니거나 조회에 실패하면 null(입구 없음).
-       */
-      attachableCount: number | null;
     };
 
 export interface MyTeam {
@@ -687,16 +666,7 @@ export async function getTeamHome(teamId: string): Promise<TeamHomeView | null> 
     playlist_members?: { count: number }[] | { count: number } | null;
   }[];
 
-  // DR8: the owner's attach entry needs only a count; the list loads when the sheet opens.
-  // Runs alongside the setlist and song reads below, so the band home keeps its round trips.
   const isOwner = me.role === "owner";
-  const attachablePromise = isOwner
-    ? admin
-        .from("playlists")
-        .select("id", { count: "exact", head: true })
-        .eq("creator_user_id", me.user_id)
-        .is("team_id", null)
-    : null;
 
   const setlistByRoom = new Map<string, TeamSetlistSong[]>();
   const blockCountByRoom = new Map<string, number>();
@@ -760,14 +730,6 @@ export async function getTeamHome(teamId: string): Promise<TeamHomeView | null> 
     }
   }
 
-  let attachableCount: number | null = null;
-  if (attachablePromise) {
-    const { count, error } = await attachablePromise;
-    // Decoration: without the count the entry just stays hidden.
-    if (error) logTeamError(action, "attachable count failed", { teamId }, error);
-    else attachableCount = count ?? 0;
-  }
-
   return {
     access: "member",
     myRole: me.role,
@@ -802,7 +764,6 @@ export async function getTeamHome(teamId: string): Promise<TeamHomeView | null> 
         participantCount: nestedRows(room.playlist_members)[0]?.count ?? 0,
       };
     }),
-    attachableCount,
   };
 }
 
@@ -822,69 +783,6 @@ export async function teamExists(teamId: string): Promise<boolean> {
     throw new Error("밴드를 불러오지 못했어요.");
   }
   return !!data;
-}
-
-// ============================================================
-// 넣기 시트 목록 (DR8)
-// ============================================================
-
-/**
- * 밴드 홈 "있던 플레이리스트 넣기" 시트가 열릴 때 읽는 목록: 내가 만든 밴드 없는 플레이리스트, 최근순.
- * 보관된(로그인 전) 플레이리스트는 만든 사람이 없으므로 들어오지 않는다. 넣기 자체는 attachPlaylistToTeam 이
- * 권한(방장 · 밴드 멤버 · 보관 아님)과 조건부 UPDATE 로 다시 검사한다.
- */
-export async function getAttachablePlaylists(teamId: string): Promise<GetAttachablePlaylistsResult> {
-  const action = "getAttachablePlaylists";
-  const user = await getCurrentUser();
-  if (!user) return fail("not_logged_in");
-  if (!isTeamIdFormat(teamId)) return fail("team_not_found");
-
-  const admin = createAdminClient();
-  const [membership, { data, error }] = await Promise.all([
-    readMyRole(admin, teamId, user.id),
-    admin
-      .from("playlists")
-      .select("id, share_code, title, created_at, playlist_members(count), songs(thumbnail_url, created_at)")
-      .eq("creator_user_id", user.id)
-      .is("team_id", null)
-      .order("created_at", { ascending: false }),
-  ]);
-  if (!membership.ok) {
-    logTeamError(action, "membership lookup failed", { teamId, userId: user.id }, membership.error);
-    return fail("write_failed");
-  }
-  if (!membership.role) return fail("not_member");
-  if (error) {
-    logTeamError(action, "playlists lookup failed", { teamId, userId: user.id }, error);
-    return fail("write_failed");
-  }
-
-  type SongRow = { thumbnail_url: string | null; created_at: string };
-  type Row = {
-    id: string;
-    share_code: string;
-    title: string;
-    created_at: string;
-    playlist_members: { count: number }[] | { count: number } | null;
-    songs: SongRow[] | SongRow | null;
-  };
-  return {
-    success: true,
-    playlists: ((data ?? []) as Row[]).map((row) => ({
-      id: row.id,
-      shareCode: row.share_code,
-      title: row.title,
-      createdAt: row.created_at,
-      participantCount: nestedRows(row.playlist_members)[0]?.count ?? 0,
-      coverThumbs: roomCoverThumbs(
-        [],
-        nestedRows(row.songs)
-          .slice()
-          .sort((a, b) => compareTimestamps(b.created_at, a.created_at))
-          .map((song) => ({ thumbnailUrl: song.thumbnail_url })),
-      ),
-    })),
-  };
 }
 
 export interface MyTeamsResult {

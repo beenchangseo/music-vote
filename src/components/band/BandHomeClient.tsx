@@ -13,13 +13,12 @@ import { ListRowButton, SongRowLink } from "../ui/ListRow";
 import { MenuItemButton, MenuPanel, useMenu } from "../ui/Menu";
 import Shelf from "../ui/Shelf";
 import { useDialog } from "../ui/DialogProvider";
-import { CalendarIcon, ChevronIcon, DoneIcon, FolderIcon, GuitarIcon, InviteIcon, MoreIcon, PlusIcon } from "@/components/ui/icons";
+import { CalendarIcon, ChevronIcon, DoneIcon, GuitarIcon, InviteIcon, MoreIcon, PlusIcon } from "@/components/ui/icons";
 import Badge from "../ui/Badge";
 import { showDateSpokenLabel } from "./ShowDateTile";
 import { BandArt, RoomCover, SongThumb } from "./BandArt";
 import BandInviteSheet from "./BandInviteSheet";
 import BandStartArea from "./BandStartArea";
-import AttachPlaylistsSheet from "./AttachPlaylistsSheet";
 import BandDateSheet from "./BandDateSheet";
 import RemoveMemberModal from "./RemoveMemberModal";
 import { LEFT_BAND_STORAGE_KEY } from "./LeftBandNotice";
@@ -89,7 +88,6 @@ export default function BandHomeClient({ view, bands, account, created, joined }
   const members = view.members.filter((member) => !removedKeys.includes(member.memberKey));
 
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [attachOpen, setAttachOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [removing, setRemoving] = useState<{ memberKey: MemberKey; displayName: string } | null>(null);
   const membersTitleRef = useRef<HTMLHeadingElement>(null);
@@ -134,7 +132,6 @@ export default function BandHomeClient({ view, bands, account, created, joined }
   // older than a confirmed one; else the latest one; else nothing (#106). The 지금 card above looks at the latest only.
   const tabRoom = rooms.find((room) => RUNNING_STAGES.has(playlistStage(room))) ?? rooms[0] ?? null;
   const alone = members.length === 1;
-  const newRoomHref = `/new?band=${team.id}`;
   // DR1: a band made at home starts as the owner alone with no playlist. One start area replaces
   // the created banner, the call-members card, the invite icon, "더 부르기" and the empty shelf.
   const starting = isOwner && alone && rooms.length === 0;
@@ -217,14 +214,7 @@ export default function BandHomeClient({ view, bands, account, created, joined }
           </div>
         )}
 
-        {starting && (
-          <BandStartArea
-            newRoomHref={newRoomHref}
-            onInvite={() => setInviteOpen(true)}
-            attachableCount={view.attachableCount}
-            onAttach={() => setAttachOpen(true)}
-          />
-        )}
+        {starting && <BandStartArea onInvite={() => setInviteOpen(true)} />}
 
         {banner && !starting && (
           <NoticeCard
@@ -278,14 +268,7 @@ export default function BandHomeClient({ view, bands, account, created, joined }
 
         {activeRoom && <NowRoomCard room={activeRoom} />}
 
-        {!starting && (
-          <RoomsShelf
-            rooms={rooms}
-            newRoomHref={newRoomHref}
-            // DR8: owner only, and only when there is something to put in.
-            onAttach={isOwner && (view.attachableCount ?? 0) > 0 ? () => setAttachOpen(true) : null}
-          />
-        )}
+        {!starting && <RoomsShelf rooms={rooms} />}
 
         {!(starting && played.length === 0) && <PlayedSongs songs={played} />}
 
@@ -345,14 +328,6 @@ export default function BandHomeClient({ view, bands, account, created, joined }
         isOwner={isOwner}
         onInviteCodeChange={setRotatedCode}
       />
-      {isOwner && view.attachableCount !== null && (
-        <AttachPlaylistsSheet
-          open={attachOpen}
-          onClose={() => setAttachOpen(false)}
-          teamId={team.id}
-          count={view.attachableCount}
-        />
-      )}
       <BandDateSheet
         open={dateOpen}
         onClose={() => setDateOpen(false)}
@@ -477,39 +452,15 @@ function SectionTitle({ id, title, count, ref }: { id: string; title: string; co
   );
 }
 
-/** 합주방 가로 선반 (YouTube Music "새 앨범" 줄): 맨 앞은 새 합주방, 그다음 최근 방부터. */
-function RoomsShelf({
-  rooms,
-  newRoomHref,
-  onAttach,
-}: {
-  rooms: TeamRoom[];
-  newRoomHref: string;
-  /** "있던 플레이리스트 넣기" 타일 (DR8). null 이면 타일 없음. */
-  onAttach: (() => void) | null;
-}) {
+/**
+ * 플레이리스트 가로 선반 (YouTube Music "새 앨범" 줄): 최근 플레이리스트부터. 만드는 길은 아래 탭의 ＋ 만들기 하나라
+ * 선반에는 만들기 타일이 없다(#110).
+ */
+function RoomsShelf({ rooms }: { rooms: TeamRoom[] }) {
   return (
     <section aria-labelledby="band-rooms" className="mt-10">
       <SectionTitle id="band-rooms" title="플레이리스트" count={rooms.length} />
       <Shelf className="mt-4">
-        <li className="w-36">
-          <Link href={newRoomHref} aria-label="플레이리스트 만들기" className="group block">
-            <span className="flex aspect-square w-full items-center justify-center rounded-control border-2 border-dashed border-border-strong text-text-muted transition-colors group-hover:border-text-muted group-hover:text-text">
-              <PlusIcon className="size-8" />
-            </span>
-            <span className="mt-2 block text-sm font-semibold text-text">만들기</span>
-          </Link>
-        </li>
-        {onAttach && (
-          <li className="w-36">
-            <button type="button" onClick={onAttach} className="group block w-full text-left">
-              <span className="flex aspect-square w-full items-center justify-center rounded-control border-2 border-dashed border-border-strong text-text-muted transition-colors group-hover:border-text-muted group-hover:text-text">
-                <FolderIcon className="size-8" />
-              </span>
-              <span className="mt-2 block text-sm font-semibold text-text">있던 플레이리스트 넣기</span>
-            </button>
-          </li>
-        )}
         {rooms.map((room) => (
           <li key={room.id} className="w-36">
             <Link href={`/playlist/${room.shareCode}`} className="block">
