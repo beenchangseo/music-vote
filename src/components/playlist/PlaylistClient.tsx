@@ -417,7 +417,7 @@ export default function PlaylistClient({
   const memberBand = team?.isMember && team.id && team.name ? { id: team.id, name: team.name, nextShowAt: team.nextShowAt } : null;
   // #110: the three views moved from the bottom tabs to here. Each view puts it right above its own body.
   const viewSwitcher = (
-    <ViewSwitcher options={PLAYLIST_VIEWS} value={navMode} onChange={handleModeChange} aria-label="플레이리스트 보기" className="mt-3" />
+    <ViewSwitcher options={PLAYLIST_VIEWS} value={navMode} onChange={handleModeChange} aria-label="플레이리스트 보기" className="mt-2" />
   );
 
   /*
@@ -555,7 +555,7 @@ export default function PlaylistClient({
 
               {/* Add song form (hide if expired) */}
               {!isExpired && !isArchived && (
-                <div className="mt-6">
+                <div className="mt-2">
                   <AddSongForm playlistId={playlist.id} shareCode={shareCode} loginGate={loginGate} onAdded={notifyChange} />
                 </div>
               )}
