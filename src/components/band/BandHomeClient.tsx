@@ -22,13 +22,14 @@ import BandStartArea from "./BandStartArea";
 import BandDateSheet from "./BandDateSheet";
 import RemoveMemberModal from "./RemoveMemberModal";
 import { LEFT_BAND_STORAGE_KEY } from "./LeftBandNotice";
-import { BandNavigationBar } from "../playlist/NavigationBar";
+import BandTabBar from "./BandTabBar";
 import BandSwitcher, { type SwitchBand } from "./BandSwitcher";
 import AuthMenu from "../auth/AuthMenu";
 import { leaveTeam, type TeamHomeMember, type TeamHomeView, type TeamRoom } from "@/actions/team";
 import { track } from "@/lib/analytics";
 import { aggregatePlayedSongs, formatShowDate, showDday, type PlayedSong, type ShowDday } from "@/domain/team";
-import { PLAYLIST_STAGE_LABEL, playlistStage, type PlaylistStage } from "@/domain/playlist-stage";
+import { PLAYLIST_STAGE_LABEL, playlistStage } from "@/domain/playlist-stage";
+import { playlistPick } from "@/domain/playlist-picker";
 import type { MemberKey } from "@/domain/types";
 import { teamMessage } from "@/lib/team-messages";
 
@@ -48,8 +49,6 @@ function subscribeStorage(callback: () => void) {
 
 const LEAVE_MESSAGE =
   "홈의 '내 밴드'와 멤버 목록에서 빠져요. 이미 들어간 플레이리스트는 그대로 남아요. 초대 링크가 있으면 다시 들어올 수 있어요.";
-
-const RUNNING_STAGES: ReadonlySet<PlaylistStage> = new Set(["voting", "building"]);
 
 const roomDate = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", timeZone: "Asia/Seoul" });
 
@@ -128,9 +127,7 @@ export default function BandHomeClient({ view, bands, account, created, joined }
   const dday = showDday(nextShowAt, new Date());
   // 1A: the latest band room whose setlist is not confirmed yet.
   const activeRoom = rooms[0] && !rooms[0].setlistConfirmed ? rooms[0] : null;
-  // The bottom tabs open the band's current playlist: the latest one still voting or building its setlist, which may be
-  // older than a confirmed one; else the latest one; else nothing (#106). The 지금 card above looks at the latest only.
-  const tabRoom = rooms.find((room) => RUNNING_STAGES.has(playlistStage(room))) ?? rooms[0] ?? null;
+  const picks = useMemo(() => rooms.map(playlistPick), [rooms]);
   const alone = members.length === 1;
   // DR1: a band made at home starts as the owner alone with no playlist. One start area replaces
   // the created banner, the call-members card, the invite icon, "더 부르기" and the empty shelf.
@@ -314,7 +311,7 @@ export default function BandHomeClient({ view, bands, account, created, joined }
         )}
       </div>
 
-      <BandNavigationBar shareCode={tabRoom?.shareCode ?? null} />
+      <BandTabBar screen="band-home" band={{ id: team.id, playlists: picks }} />
 
       <BandInviteSheet
         open={inviteOpen}

@@ -111,8 +111,10 @@ verification/     TLA+ 형식 검증 (verify-vote-quota 스킬)
 **크기.** 모서리 `rounded-badge` 6 · `rounded-control` 12(버튼·입력·칩) · `rounded-card` 16 · `rounded-t-sheet` 24 ·
 `rounded-pill`. 높이 `h-control-sm` 36(누르는 영역은 44) · `h-control-md` 44 · `h-control-lg` 52 · `control-hero` 64(둥근 주 원판), 행 `min-h-row` 56(설정·멤버)
 · `min-h-row-song` 72(곡). 그림자는 `shadow-float` 하나이고 시트·토스트·FAB 에만 쓴다. 다른 층은 표면 색으로 만든다.
-화면에 붙는 막대(`ScreenToolbar`·편집 중인 셋리스트 동작 줄·`TabBar`·`MiniPlayer` 막대)는 `ui/chrome-inset.ts` 로 자기 높이를 알리고, `html` 의
+화면에 붙는 막대(`ViewSwitcher`·`ScreenToolbar`·편집 중인 셋리스트 동작 줄·`TabBar`·`MiniPlayer` 막대)는 `ui/chrome-inset.ts` 로 자기 높이를 알리고, `html` 의
 scroll-padding 이 그만큼 비운다. 막대 밑으로 스크롤되는 여백을 `scroll-mt-*` 같은 숫자로 따로 적지 않는다.
+위에 붙는 막대는 두 층이다. `ViewSwitcher` 가 `top-0` 에 붙고, 그 아래 층(`ScreenToolbar`, 편집 중인 셋리스트 동작 줄)은
+`top-view-switcher`(알린 높이)에 붙는다. 아래 층은 문서 순서도 `ViewSwitcher` 뒤에 둔다. 앞에 두면 스크롤하는 동안 겹친다.
 홈 인디케이터 자리는 `pb-safe-bottom` 이다. body 가 비우고, 그 자리를 스스로 칠하는 아래 막대는 `data-safe-bottom` 을 달아
 body 의 몫을 가져간다. `TabBar` 처럼 fixed 로 붙는 막대가 있으면 body 는 대신 아래 막대들이 알린 높이(`--bottom-chrome-height`)만큼
 페이지 끝을 비우고, `MiniPlayer` 는 `--tab-bar-height` 위에 붙는다. 두 높이에 홈 인디케이터 자리가 들어 있다.
@@ -144,15 +146,25 @@ Variable(한국어) + Geist(영문) 폴백. 한글에는 대소문자가 없어�
   390px 에서도 쌓인다. 줄보다 긴 `truncate` 이름은 `Button` 안에서 줄 폭으로 말줄임되지만, `buttonClassName` 링크는 글자 칸이
   줄지 않아 넘치므로 `ButtonGroup` 안 링크에는 truncate 글자를 두지 않는다(eslint).
 - 고르기: 필터·켜고 끄는 선택지는 `Chip`(36px, 누르는 영역 44px), 한 화면 안 보기·방식 하나는 `SegmentedControl`
-  (radiogroup), 켜고 끄기는 `Switch`(label 을 주면 줄 전체가 눌린다), 화면 아래 탭은 `TabBar`. 탭은 아이콘 위 글자이고
-  칸 상자가 없다. 지금 탭은 채운 아이콘과 `text-text`, 나머지는 선 아이콘과 `text-text-muted` 다. `href` 를 준 칸은 화면을
-  떠나는 링크이고, `href` 가 null 이면 갈 곳이 없어 흐리게 제자리에 선다(`aria-disabled`).
-- 아래 탭은 밴드를 따른다(#106, `playlist/NavigationBar.tsx`). 플레이리스트의 맨 앞 칸은 볼 수 있는 밴드(맨 위 줄과 같은
-  규칙, 밴드 멤버만)가 있으면 「밴드 홈」, 없으면 「홈」(`/`)이다. 밴드 홈은 같은 네 칸에서 밴드 홈이 지금 칸이고, 후보곡·셋리스트·합주는
-  투표 중이거나 셋리스트 짜는 중인 가장 최근 플레이리스트(`playlistStage`, 없으면 가장 최근)를 그 탭으로 연다(`playlistTabPath`, `?tab=setlist`·`?tab=rehearsal`). 플레이리스트가
-  없으면 세 칸이 흐리게 선다. 로그인 홈(`/`)과 멤버가 아닌 사람의 밴드 화면에는 탭이 없다. 같은 곳으로 가는 버튼을 두 개 두지
-  않으므로 플레이리스트 맨 위 줄은 밴드를 글자로만 보인다. 밴드 사이를 오가는 길은 밴드 홈 왼쪽 위 `BandSwitcher`(「{밴드} ▾」
-  시트, `{ id, name }` 만 받는다)다.
+  (radiogroup), 스크롤해도 위에 붙어 있어야 하는 보기 바꾸기는 `ViewSwitcher`(붙는 `SegmentedControl`), 켜고 끄기는
+  `Switch`(label 을 주면 줄 전체가 눌린다), 화면 아래 탭은 `TabBar`. 탭은 아이콘 위 글자이고 칸 상자가 없다. 지금 탭은 채운
+  아이콘과 `text-text`, 나머지는 선 아이콘과 `text-text-muted` 다. `id` 를 준 칸은 이 화면 안에서 눌리고, `href` 를 준 칸은
+  화면을 떠나는 링크다. 흐린 칸은 두지 않는다.
+- 아래 탭은 밴드 층 세 칸이다(#110, `band/BandTabBar.tsx`): 밴드 홈 · 플레이리스트 · ＋ 만들기. 밴드 홈과 플레이리스트 화면이
+  같은 막대를 쓴다. 밴드 홈에서는 밴드 홈이 지금 칸이고, 플레이리스트 칸은 진행 중(투표 중 · 셋리스트 짜는 중)인 플레이리스트가
+  꼭 하나면 그리로 가고, 아니면 고르는 시트(`BandPlaylistPicker`)를 연다. 시트는 진행 중인 것이 먼저, 그다음 나머지이고 묶음마다
+  최근 것부터이며 줄마다 단계 배지가 붙는다(`domain/playlist-picker.ts`). 플레이리스트가 없는 밴드면 시트가 ＋ 만들기를 가리키는
+  `EmptyState` 하나이고 만들기 버튼을 따로 두지 않는다. 플레이리스트 안에서는 플레이리스트 칸이 지금 칸이고, 누르면 같은 시트가
+  지금 플레이리스트에 체크를 하고 열려 다른 플레이리스트로 옮긴다. 시트 목록은 밴드 멤버에게만 내려간다(페이지가 멤버 확인과 같이
+  읽고, 멤버가 아니면 버린다). ＋ 만들기는 `/new?band={teamId}` 다.
+- 밴드를 볼 수 없는 사람(밴드 없는 플레이리스트, 밴드 멤버가 아닌 사람, 로그아웃)에게는 #106 규칙대로 밴드를 드러내지 않는다.
+  첫 칸은 「홈」(`/`), 플레이리스트 칸은 지금 칸이고 누르면 맨 위로 가며, ＋ 만들기는 `/new` 다. 로그인 홈(`/`)과 멤버가 아닌
+  사람의 밴드 화면에는 탭이 없다. 같은 곳으로 가는 버튼을 두 개 두지 않으므로 플레이리스트 맨 위 줄은 밴드를 글자로만 보이고,
+  플레이리스트 끝이나 밴드 홈 선반·빈 밴드 시작 카드에 만들기 버튼을 따로 두지 않는다. 밴드 사이를 오가는 길은 밴드 홈 왼쪽 위
+  `BandSwitcher`(「{밴드} ▾」 시트, `{ id, name }` 만 받는다)다.
+- 후보곡 · 셋리스트 · 합주는 탭이 아니라 플레이리스트 안의 보기다. 각 보기의 머리 바로 아래(후보곡은 `PlaylistActionRow` 아래,
+  셋리스트는 작은 커버 머리와 동작 줄 사이, 합주는 진행 `ScreenToolbar` 위)에 `ViewSwitcher` 를 두고, 스크롤해 지나가면 위에 붙는다.
+  `?tab=setlist`·`?tab=rehearsal` 링크는 그 보기로 열리고 `ViewSwitcher` 가 그 칸을 고른 채로 선다(`playlistTabPath`).
 - 목록: 곡은 `SongRow`(카드 없이 72px, 48px 커버, 고정 폭 `RankNumber`), 설정·멤버는 `ListRow`(56px)를 시트 안에서
   `ListGroup` 으로 묶는다. 줄 전체가 눌리면 `ListRowButton`, 줄 전체가 링크면 `ListRowLink` 다. 둘은 `SongRow` 처럼 내용을 열 가장자리에 두고 hover 바탕만 양옆 8px 밖까지 편다. 그래서 시트 제목·위 글자와 같은 세로줄에 서고, 옆에 다른 칸을 두면 8px 이상 띄운다. 버튼 안에 div 를 둘 수 없어 칸이 span 이다.
   펼치는 곡 행의 제목 줄은 `SongRowTitleButton`, 펼친 아래 동작은 `ActionTab` 을 `ActionTabBar` 에 담는다(바탕 없는 44px 탭, 끝에 ⋯ `IconButton`). 사람은 `Avatar`·`AvatarStack`, 메타·상태는 `Badge`(neutral·primary·warning).
@@ -167,8 +179,8 @@ Variable(한국어) + Geist(영문) 폴백. 한글에는 대소문자가 없어�
 - `Card`: variant `default`·`elevated`·`outline`·`selected`(목록에서 지금 고른 한 장, `border-primary-fg`), 그림자 없음. 카드 끝까지
   닿는 아래 칸(펼친 코멘트)은 `footer` 다. 음수 margin 으로 padding 을 지우지 않는다. `IconButton`: tone `default`·`danger`·`brand`, `bare`, 44px,
   `aria-label` 필수. `ScreenToolbar`: 화면 위에 붙는 숫자 막대. 지금은 합주 탭의 진행만 쓴다.
-  플레이리스트 세 탭의 맨 윗줄은 `PlaylistTopBar` 하나다. 밴드 멤버에게는
-  「밴드 · 공연 D-n」을 링크 없는 글자로 보이고, 오른쪽에 계정 메뉴나 로그인 버튼이 선다. 밴드 홈과 앱 홈으로 가는 길은 아래 탭의 맨 앞 칸 하나라서 윗줄에 같은 일을 하는 링크를 두지 않는다(#106). 탭마다 윗줄을 따로 그리지 않는다.
+  플레이리스트 세 보기의 맨 윗줄은 `PlaylistTopBar` 하나다. 밴드 멤버에게는
+  「밴드 · 공연 D-n」을 링크 없는 글자로 보이고, 오른쪽에 계정 메뉴나 로그인 버튼이 선다. 밴드 홈과 앱 홈으로 가는 길은 아래 탭의 맨 앞 칸 하나라서 윗줄에 같은 일을 하는 링크를 두지 않는다(#106). 보기마다 윗줄을 따로 그리지 않는다.
 - 플레이리스트 머리: 후보곡은 Spotify 앨범처럼 가운데 큰 커버(220) 아래 왼쪽 정렬 제목과 메타 줄, 셋리스트는 작은 커버(112)
   옆에 제목과 「곡 수 · 총 시간 · 인터벌」. 둘 다 그 아래에 `PlaylistActionRow` 하나를 쓴다. 왼쪽은 맨 글리프
   (`RoundButton` ghost md, 공유 → 편집 → ⋯, 공유는 `edge="start"`), 오른쪽은 공지(tonal lg)와 재생(primary lg) 원판이다.
@@ -271,7 +283,7 @@ hook(`.claude/settings.json`, `.claude/hooks/`):
 
 - "~해요" 톤. 격식도 가벼움도 아니다.
 - 페르소나 용어를 그대로 쓴다: "합주", "셋리스트", "단톡방", "키 변경".
-- 화면 이름은 **플레이리스트**다. 후보곡·셋리스트·합주 탭이 있는 `/playlist/[shareCode]` 하나를 가리킨다
+- 화면 이름은 **플레이리스트**다. 후보곡·셋리스트·합주 보기가 있는 `/playlist/[shareCode]` 하나를 가리킨다
   (2026-10-05 "합주방"에서 바꿈). 코드 주석·ADR·계획 문서의 "합주방"·"방"은 같은 것이다. 화면 문구에 "합주방"을
   새로 쓰지 않는다. 역할 이름 "방장"은 그대로 쓴다.
 - AI·SaaS 마케팅 용어를 쓰지 않는다: "스마트", "혁신적", "AI 추천 엔진".

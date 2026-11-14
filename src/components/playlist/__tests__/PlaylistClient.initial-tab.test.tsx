@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import type { ReactNode } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchComments, fetchSetlistItems } from "@/lib/playlist-refetch";
 import type { Comment, PlaylistView, SetlistItem } from "@/domain/types";
 import PlaylistClient from "../PlaylistClient";
@@ -35,8 +36,14 @@ vi.mock("../../rehearsal/RehearsalView", () => ({
     loading ? <p>합주 불러오는 중</p> : <p>{`댓글 ${comments.length}개 · 셋리스트 ${setlistItems.length}줄`}</p>,
 }));
 vi.mock("../../auth/LoginButton", () => ({ default: () => null }));
+// The real SetlistView puts the view switcher between its own header and its action row.
 vi.mock("../../setlist/SetlistView", () => ({
-  default: ({ setlistItems }: { setlistItems: SetlistItem[] }) => <ol aria-label="셋리스트">{setlistItems.map((item) => <li key={item.id}>{item.label}</li>)}</ol>,
+  default: ({ setlistItems, switcher }: { setlistItems: SetlistItem[]; switcher: ReactNode }) => (
+    <>
+      {switcher}
+      <ol aria-label="셋리스트">{setlistItems.map((item) => <li key={item.id}>{item.label}</li>)}</ol>
+    </>
+  ),
 }));
 
 const playlist = {
@@ -67,18 +74,23 @@ function renderRoom(overrides: Partial<Props> = {}) {
   render(<PlaylistClient playlist={playlist} songs={[]} shareCode="abc123" participantCount={2} loggedIn={false} isHost={false} initialSetlistItems={[opener]} {...overrides} />);
 }
 
-const currentTab = () => within(screen.getByRole("navigation", { name: "플레이리스트 화면" })).getByRole("button", { current: "page" });
+const views = () => screen.getByRole("radiogroup", { name: "플레이리스트 보기" });
+const currentView = () => within(views()).getByRole("radio", { checked: true });
+
+beforeEach(() => {
+  vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
+});
 
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
 });
 
-describe("PlaylistClient first tab (#80)", () => {
+describe("PlaylistClient first view (#80, #110)", () => {
   it("opens on the setlist the page read when the link asks for it", () => {
     renderRoom({ initialTab: "setlist" });
 
-    expect(currentTab()).toHaveTextContent("셋리스트");
+    expect(currentView()).toHaveTextContent("셋리스트");
     expect(within(screen.getByRole("list", { name: "셋리스트" })).getByText("사운드 체크")).toBeInTheDocument();
     expect(fetchSetlistItems).not.toHaveBeenCalled();
   });
@@ -87,9 +99,9 @@ describe("PlaylistClient first tab (#80)", () => {
     window.history.replaceState(null, "", "/playlist/abc123?utm_source=kakao&tab=setlist");
     renderRoom({ initialTab: "setlist" });
 
-    fireEvent.click(within(screen.getByRole("navigation", { name: "플레이리스트 화면" })).getByRole("button", { name: /후보곡/ }));
+    fireEvent.click(within(views()).getByRole("radio", { name: "후보곡" }));
 
-    expect(currentTab()).toHaveTextContent("후보곡");
+    expect(currentView()).toHaveTextContent("후보곡");
     expect(`${window.location.pathname}${window.location.search}`).toBe("/playlist/abc123?utm_source=kakao");
   });
 
@@ -97,7 +109,7 @@ describe("PlaylistClient first tab (#80)", () => {
     vi.mocked(fetchComments).mockResolvedValue([comment]);
     renderRoom({ initialTab: "rehearsal" });
 
-    expect(currentTab()).toHaveTextContent("합주");
+    expect(currentView()).toHaveTextContent("합주");
     expect(screen.getByRole("heading", { level: 1, name: "10월 합주" })).toHaveClass("sr-only");
     expect(await screen.findByText("댓글 1개 · 셋리스트 1줄")).toBeInTheDocument();
     expect(fetchComments).toHaveBeenCalledWith(playlist.id);
@@ -107,7 +119,32 @@ describe("PlaylistClient first tab (#80)", () => {
   it("opens on 후보곡 otherwise", () => {
     renderRoom();
 
-    expect(currentTab()).toHaveTextContent("후보곡");
+    expect(currentView()).toHaveTextContent("후보곡");
     expect(screen.queryByRole("list", { name: "셋리스트" })).not.toBeInTheDocument();
+  });
+});
+
+describe("PlaylistClient views and tab bar (#110)", () => {
+  it("switches 후보곡 · 셋리스트 · 합주 with the segment under the header, not with the bottom tabs", async () => {
+    vi.mocked(fetchComments).mockResolvedValue([comment]);
+    renderRoom();
+    expect(within(views()).getAllByRole("radio").map((radio) => radio.textContent)).toEqual(["후보곡", "셋리스트", "합주"]);
+
+    fireEvent.click(within(views()).getByRole("radio", { name: "셋리스트" }));
+    expect(currentView()).toHaveTextContent("셋리스트");
+    expect(within(screen.getByRole("list", { name: "셋리스트" })).getByText("사운드 체크")).toBeInTheDocument();
+
+    fireEvent.click(within(views()).getByRole("radio", { name: "합주" }));
+    expect(currentView()).toHaveTextContent("합주");
+    expect(await screen.findByText("댓글 1개 · 셋리스트 1줄")).toBeInTheDocument();
+
+    const tabs = screen.getByRole("navigation", { name: "플레이리스트 화면" });
+    expect([...tabs.querySelectorAll("a, button")].map((tab) => tab.textContent)).toEqual(["홈", "플레이리스트", "만들기"]);
+  });
+
+  it("leaves making a new playlist to the tab bar's 만들기, with no second link at the end of the page", () => {
+    renderRoom({ songs: [{ id: "s-1", title: "Creep", score: 1 } as Props["songs"][number]] });
+    const links = screen.getAllByRole("link").filter((link) => /만들기/.test(link.textContent ?? ""));
+    expect(links.map((link) => [link.textContent, link.getAttribute("href")])).toEqual([["만들기", "/new"]]);
   });
 });

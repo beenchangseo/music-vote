@@ -70,8 +70,10 @@ test.describe("account-a + account-b: band flow", () => {
       await expect(pageB.getByRole("status")).toContainText("밴드에 들어왔어요");
     });
 
-    // 5. account-a makes a new room for the band.
-    await page.goto(`/new?band=${teamId}`);
+    // 5. account-a makes a new room from the band home's 만들기 tab.
+    await page.goto(`/band/${teamId}`);
+    await page.getByRole("navigation", { name: "밴드 화면" }).getByRole("link", { name: "만들기", exact: true }).click();
+    await page.waitForURL(new RegExp(`/new\\?band=${teamId}$`));
     await expect(page.getByText(`${bandName}의 플레이리스트`)).toBeVisible();
     await page.getByPlaceholder(/어떤 합주예요/).fill(bandRoomTitle);
     await page.getByRole("button", { name: "플레이리스트 만들기", exact: true }).click();

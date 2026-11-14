@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createFakeClient } from "@/actions/__tests__/fake-supabase";
@@ -12,9 +12,25 @@ const OUTSIDER = "9c1f6a2e-3333-4333-8333-000000000003";
 
 const state = vi.hoisted(() => ({ user: null as { id: string; nickname: string; avatarUrl: string | null } | null }));
 
+/** The band's playlists as the tab bar's picker reads them: this one still voting, an older one confirmed. */
+const BAND_PLAYLISTS = [
+  { share_code: "qDPJnh1d", title: "11월 합주", created_at: "2026-11-01T00:00:00+00:00", setlist_confirmed: false, setlist_items: [] },
+  {
+    share_code: "oct00001",
+    title: "10월 합주",
+    created_at: "2026-10-01T00:00:00+00:00",
+    setlist_confirmed: true,
+    setlist_items: [
+      { item_type: "song", song_id: "s-1" },
+      { item_type: "interval", song_id: null },
+    ],
+  },
+];
+
 vi.mock("@/lib/supabase/server", () => ({
   createAdminClient: () =>
     createFakeClient((op) => {
+      if (op.table === "playlists" && op.filters.team_id) return { data: BAND_PLAYLISTS };
       if (op.table === "playlists") {
         return {
           data: {
@@ -85,9 +101,9 @@ async function openPlaylist() {
   const element = (await PlaylistPage({
     params: Promise.resolve({ shareCode: "qDPJnh1d" }),
     searchParams: Promise.resolve({}),
-  })) as ReactElement<{ team: unknown }>;
+  })) as ReactElement<{ team: unknown; bandPlaylists: unknown }>;
   render(element);
-  return element.props.team;
+  return element.props;
 }
 
 const firstTab = () => within(screen.getByRole("navigation", { name: "플레이리스트 화면" })).getAllByRole("link")[0];
@@ -107,7 +123,7 @@ describe("/playlist/[shareCode] first tab for each viewer of a band playlist (#1
   it("hands a band member the band id, and the first tab goes to that band home", async () => {
     state.user = { id: MEMBER, nickname: "기타", avatarUrl: null };
 
-    expect(await openPlaylist()).toMatchObject({ id: TEAM, isMember: true });
+    expect((await openPlaylist()).team).toMatchObject({ id: TEAM, isMember: true });
     expect(firstTab()).toHaveAccessibleName("밴드 홈");
     expect(firstTab()).toHaveAttribute("href", `/band/${TEAM}`);
   });
@@ -118,8 +134,35 @@ describe("/playlist/[shareCode] first tab for each viewer of a band playlist (#1
   ])("hands %s no band id, and the first tab is 홈 to the app home", async (_who, user) => {
     state.user = user;
 
-    expect(await openPlaylist()).toMatchObject({ id: null, isMember: false });
+    expect((await openPlaylist()).team).toMatchObject({ id: null, isMember: false });
     expect(firstTab()).toHaveAccessibleName("홈");
     expect(firstTab()).toHaveAttribute("href", "/");
+  });
+});
+
+// The picker lists the band's playlists, so only a member may receive them, like the band link above (#110).
+describe("/playlist/[shareCode] band playlists for the tab bar's picker (#110)", () => {
+  it("hands a band member the band's playlists with their stages, and 플레이리스트 opens them with this one checked", async () => {
+    state.user = { id: MEMBER, nickname: "기타", avatarUrl: null };
+
+    expect((await openPlaylist()).bandPlaylists).toEqual([
+      { shareCode: "qDPJnh1d", title: "11월 합주", createdAt: "2026-11-01T00:00:00+00:00", stage: "voting" },
+      { shareCode: "oct00001", title: "10월 합주", createdAt: "2026-10-01T00:00:00+00:00", stage: "confirmed" },
+    ]);
+    fireEvent.click(within(screen.getByRole("navigation", { name: "플레이리스트 화면" })).getByRole("button", { name: "플레이리스트" }));
+    const picker = screen.getByRole("dialog", { name: "플레이리스트" });
+    expect(within(picker).getAllByRole("listitem")[0]).toHaveAttribute("aria-current", "page");
+    expect(within(picker).getByRole("link")).toHaveAttribute("href", "/playlist/oct00001");
+  });
+
+  it.each([
+    ["a logged-in viewer outside the band", { id: OUTSIDER, nickname: "손님", avatarUrl: null }],
+    ["a logged-out visitor", null],
+  ])("hands %s none of the band's other playlists", async (_who, user) => {
+    state.user = user;
+
+    const props = await openPlaylist();
+    expect(props.bandPlaylists).toBeNull();
+    expect(JSON.stringify(props)).not.toContain("oct00001");
   });
 });

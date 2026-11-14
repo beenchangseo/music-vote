@@ -8,6 +8,7 @@ import NoticeCard from "@/components/ui/NoticeCard";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import Switch from "@/components/ui/Switch";
 import TabBar, { type TabBarItem } from "@/components/ui/TabBar";
+import ViewSwitcher from "@/components/ui/ViewSwitcher";
 import * as icons from "@/components/ui/icons";
 import Textarea from "@/components/ui/Textarea";
 import ListRow, {
@@ -185,16 +186,27 @@ export function SegmentedDemo() {
   );
 }
 
-type DockTab = "playlist" | "setlist";
+type DemoView = "playlist" | "setlist" | "rehearsal";
+const DEMO_VIEWS = [
+  { value: "playlist", label: "후보곡" },
+  { value: "setlist", label: "셋리스트" },
+  { value: "rehearsal", label: "합주" },
+] as const;
+
+export function ViewSwitcherDemo() {
+  const [view, setView] = useState<DemoView>("playlist");
+  return <ViewSwitcher aria-label="디자인 시스템 보기 바꾸기 예시" options={DEMO_VIEWS} value={view} onChange={setView} />;
+}
+
+type DockTab = "home" | "playlists";
 const DOCK: TabBarItem<DockTab>[] = [
-  { href: "/design", label: "홈", icon: icons.HomeIcon },
-  { id: "playlist", label: "후보곡", icon: icons.SongIcon },
-  { id: "setlist", label: "셋리스트", icon: icons.SetlistIcon },
-  { href: null, label: "합주", icon: icons.MetronomeIcon },
+  { id: "home", label: "밴드 홈", icon: icons.HomeIcon },
+  { id: "playlists", label: "플레이리스트", icon: icons.PlaylistsIcon },
+  { href: "/design", label: "만들기", icon: icons.PlusIcon },
 ];
 
 export function TabBarDemo() {
-  const [tab, setTab] = useState<DockTab>("playlist");
+  const [tab, setTab] = useState<DockTab>("home");
   return <TabBar aria-label="디자인 시스템 하단 탭 예시" items={DOCK} value={tab} onChange={setTab} />;
 }
 
@@ -336,6 +348,8 @@ export function SongRowActionsDemo() {
 const ICON_SAMPLES: [string, ReactNode][] = [
   ["Home", <icons.HomeIcon key="Home" />],
   ["Home filled", <icons.HomeIcon key="Home filled" filled />],
+  ["Playlists", <icons.PlaylistsIcon key="Playlists" />],
+  ["Playlists filled", <icons.PlaylistsIcon key="Playlists filled" filled />],
   ["Song", <icons.SongIcon key="Song" />],
   ["Song filled", <icons.SongIcon key="Song filled" filled />],
   ["Setlist", <icons.SetlistIcon key="Setlist" />],

@@ -38,7 +38,6 @@ vi.mock("../YouTubePlayer", () => ({ default: () => null }));
 vi.mock("../RoomSettingsButton", () => ({ default: () => null }));
 vi.mock("../../rehearsal/RehearsalView", () => ({ default: () => null }));
 vi.mock("../../auth/LoginButton", () => ({ default: () => null }));
-vi.mock("../NavigationBar", () => ({ default: () => null }));
 vi.mock("../../setlist/SetlistView", () => ({ default: () => null }));
 
 const candidate = { id: "song-1", title: "Plastic Love", artist: "Mariya Takeuchi", youtube_video_id: "abcdefghijk", thumbnail_url: null, score: 0, votes: [], commentCount: 0, versionCount: 0 } as unknown as SongWithScore;

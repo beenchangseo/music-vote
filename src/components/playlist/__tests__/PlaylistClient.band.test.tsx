@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import type { ReactNode } from "react";
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -36,19 +37,11 @@ vi.mock("../AddSongForm", () => ({ default: () => null }));
 vi.mock("../SongCard", () => ({ default: () => null }));
 vi.mock("../MiniPlayer", () => ({ default: () => null }));
 vi.mock("../YouTubePlayer", () => ({ default: () => null }));
-vi.mock("../../setlist/SetlistView", () => ({ default: () => null }));
+// The real SetlistView draws the view switcher it is handed between its own header and its action row.
+vi.mock("../../setlist/SetlistView", () => ({ default: ({ switcher }: { switcher: ReactNode }) => switcher }));
 vi.mock("../../rehearsal/RehearsalView", () => ({ default: () => null }));
 vi.mock("../RoomSettingsButton", () => ({ default: () => null }));
 vi.mock("../../auth/LoginButton", () => ({ default: () => null }));
-vi.mock("../NavigationBar", () => ({
-  default: ({ onModeChange }: { onModeChange: (mode: string) => void }) => (
-    <nav>
-      <button type="button" onClick={() => onModeChange("playlist")}>후보곡</button>
-      <button type="button" onClick={() => onModeChange("setlist")}>셋리스트</button>
-      <button type="button" onClick={() => onModeChange("rehearsal")}>합주</button>
-    </nav>
-  ),
-}));
 // The sheet's own behaviour is covered in RoomSettingsButton.test; here it just "succeeds".
 vi.mock("../../band/CreateBandSheet", () => ({
   default: ({ open, onCreated }: { open: boolean; onCreated: (band: unknown) => void }) =>
@@ -141,11 +134,11 @@ describe("PlaylistClient band prompt (F7, 27A)", () => {
 
   it("lives on the candidates tab only", () => {
     render(ui());
-    fireEvent.click(screen.getByRole("button", { name: "셋리스트" }));
+    fireEvent.click(screen.getByRole("radio", { name: "셋리스트" }));
     expect(screen.queryByText(PROMPT)).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "합주" }));
+    fireEvent.click(screen.getByRole("radio", { name: "합주" }));
     expect(screen.queryByText(PROMPT)).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "후보곡" }));
+    fireEvent.click(screen.getByRole("radio", { name: "후보곡" }));
     expect(screen.getByText(PROMPT)).toBeInTheDocument();
   });
 
@@ -203,7 +196,9 @@ describe("PlaylistClient band success card (R6, D30A)", () => {
     // revalidatePath: same component, new props where the prompt condition is false.
     rerender(ui({ playlist: { ...playlist, team_id: TEAM }, team: bandTeam, memberCount: null }));
     expect(screen.getByRole("status")).toHaveTextContent("밴드를 만들었어요");
-    expect(screen.getByRole("link", { name: "밴드 홈" })).toHaveAttribute("href", `/band/${TEAM}`);
+    // The card's link and the tab bar's first tab both go to the new band.
+    const bandLinks = screen.getAllByRole("link", { name: "밴드 홈" });
+    expect(bandLinks.map((link) => link.getAttribute("href"))).toEqual([`/band/${TEAM}`, `/band/${TEAM}`]);
     expect(screen.queryByText(PROMPT)).not.toBeInTheDocument();
   });
 
