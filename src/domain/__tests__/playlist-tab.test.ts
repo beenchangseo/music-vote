@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { initialPlaylistTab, playlistTabPath } from "../playlist-tab";
+import { initialPlaylistTab } from "../playlist-tab";
 import { fixtureItems } from "./setlist-fixture";
 
 describe("initialPlaylistTab", () => {
@@ -18,17 +18,5 @@ describe("initialPlaylistTab", () => {
     { case: "a repeated key", tab: ["setlist", "setlist"], setlist: fixtureItems, expected: "playlist" },
   ])("$case", ({ tab, setlist, expected }) => {
     expect(initialPlaylistTab(tab, setlist)).toBe(expected);
-  });
-});
-
-describe("playlistTabPath", () => {
-  it.each([
-    ["playlist", "/playlist/abc123"],
-    ["setlist", "/playlist/abc123?tab=setlist"],
-    ["rehearsal", "/playlist/abc123?tab=rehearsal"],
-  ] as const)("links %s as %s, which the page opens on that tab", (tab, path) => {
-    expect(playlistTabPath("abc123", tab)).toBe(path);
-    const query = new URL(path, "https://plypick.kr").searchParams.get("tab") ?? undefined;
-    expect(initialPlaylistTab(query, fixtureItems)).toBe(tab);
   });
 });

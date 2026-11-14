@@ -16,8 +16,3 @@ export const PLAYLIST_TAB_PARAM = "tab";
 export function initialPlaylistTab(tab: string | string[] | undefined, setlist: readonly SetlistItem[] | null): PlaylistLinkTab {
   return (tab === "setlist" || tab === "rehearsal") && setlist !== null ? tab : "playlist";
 }
-
-/** The address that opens the playlist on `tab`. 후보곡 is where it opens anyway, so its address has no ?tab=. */
-export function playlistTabPath(shareCode: string, tab: PlaylistLinkTab): string {
-  return tab === "playlist" ? `/playlist/${shareCode}` : `/playlist/${shareCode}?${PLAYLIST_TAB_PARAM}=${tab}`;
-}
