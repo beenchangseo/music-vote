@@ -169,9 +169,11 @@ describe("/playlist/[shareCode] bottom tabs for each viewer (#106, #108)", () =>
   });
 });
 
-// The band's other playlists are not the viewer's to see unless they are a member, like the band link above (#110).
-describe("/playlist/[shareCode] the band's other playlists (#110)", () => {
+// Only #110's picker on this screen listed the band's other playlists. With the views back in the tab bar, nothing here
+// shows them, so the page spends no round trip on them for anyone, a member included.
+describe("/playlist/[shareCode] the band's other playlists", () => {
   it.each([
+    ["a band member", { id: MEMBER, nickname: "기타", avatarUrl: null }],
     ["a logged-in viewer outside the band", { id: OUTSIDER, nickname: "손님", avatarUrl: null }],
     ["a logged-out visitor", null],
   ])("hands %s none of the band's other playlists, and never reads them", async (_who, user) => {

@@ -10,15 +10,12 @@ import { inviteSongs, playlistShareCard } from "@/domain/invite-card";
 import { isArchivedPlaylist } from "@/domain/playlist-archive";
 import { hostDenial, isHostOrAdder } from "@/domain/playlist-host";
 import { initialPlaylistTab, PLAYLIST_TAB_PARAM } from "@/domain/playlist-tab";
-import { playlistPick, type PlaylistPick } from "@/domain/playlist-picker";
-import { isSetlistBlock } from "@/domain/playlist-stage";
-import { nestedRows } from "@/lib/supabase/nested";
 import { setlistShareCard, setlistStatus } from "@/domain/setlist-card";
 import { getMyTeams, type MyTeam } from "@/actions/team";
 import { readSetlistItems } from "@/lib/playlist-reads";
 import PlaylistClient from "@/components/playlist/PlaylistClient";
 import type { Metadata } from "next";
-import type { Playlist, PlaylistView, RoomTeam, SetlistItem, Song, SongWithScore } from "@/domain/types";
+import type { Playlist, PlaylistView, RoomTeam, Song, SongWithScore } from "@/domain/types";
 
 /** song_vote_summary 뷰. 점수와 내 표만 담고 다른 사람의 신원은 담지 않는다. */
 type VoteSummaryRow = {
@@ -47,47 +44,20 @@ const PLAYLIST_COLUMNS =
 
 type Admin = ReturnType<typeof createAdminClient>;
 
-type SetlistRef = Pick<SetlistItem, "item_type" | "song_id">;
-
-/** 밴드의 플레이리스트 한 줄. 아래 탭의 고르는 시트가 밴드 홈 카드와 같은 단계 낱말을 쓰도록 셋리스트 블록을 같이 읽는다. */
-type BandPlaylistRow = {
-  share_code: string;
-  title: string;
-  created_at: string;
-  setlist_confirmed: boolean | null;
-  setlist_items: SetlistRef[] | SetlistRef | null;
-};
-
 /**
- * 팀 방의 밴드와 내 멤버 여부, 그리고 아래 탭이 고르는 밴드의 플레이리스트(#110).
- * teams·team_members 는 공개 키로 못 읽으므로 service_role (v19).
- * 실패해도 방 화면은 그대로 뜨게 null + console.error. 플레이리스트 목록만 실패하면 playlists 가 null 이다.
- * 목록은 멤버로 확인된 뒤에만 읽는다. 밴드를 볼 수 없는 사람의 요청이 그 밴드의 플레이리스트를 읽지 않는다.
- * 밴드 조회는 멤버 확인과 나란히 돈다.
+ * 팀 방의 밴드와 내 멤버 여부. teams·team_members 는 공개 키로 못 읽으므로 service_role (v19).
+ * 실패해도 방 화면은 그대로 뜨게 null + console.error.
  */
 async function loadRoomBand(
   admin: Admin,
   teamId: string,
   userId: string | null,
-): Promise<{ id: string; name: string; nextShowAt: string | null; isMember: boolean; playlists: PlaylistPick[] | null } | null> {
-  // Promise.resolve runs the query once; awaiting the builder itself twice would send it twice.
-  const memberRead = Promise.resolve(
+): Promise<{ id: string; name: string; nextShowAt: string | null; isMember: boolean } | null> {
+  const [teamRes, memberRes] = await Promise.all([
+    admin.from("teams").select("id, name, next_show_at").eq("id", teamId).maybeSingle(),
     userId
       ? admin.from("team_members").select("user_id").eq("team_id", teamId).eq("user_id", userId).maybeSingle()
-      : { data: null, error: null },
-  );
-  const [teamRes, memberRes, playlistsRes] = await Promise.all([
-    admin.from("teams").select("id, name, next_show_at").eq("id", teamId).maybeSingle(),
-    memberRead,
-    memberRead.then((res) =>
-      res.data
-        ? admin
-            .from("playlists")
-            .select("share_code, title, created_at, setlist_confirmed, setlist_items(item_type, song_id)")
-            .eq("team_id", teamId)
-            .order("created_at", { ascending: false })
-        : null,
-    ),
+      : Promise.resolve({ data: null, error: null }),
   ]);
   const error = teamRes.error ?? memberRes.error;
   if (error) {
@@ -95,27 +65,11 @@ async function loadRoomBand(
     return null;
   }
   if (!teamRes.data) return null;
-  const isMember = !!memberRes.data;
-  let playlists: PlaylistPick[] | null = null;
-  if (playlistsRes?.error) {
-    console.error(`[playlist] 밴드 플레이리스트 조회 실패 (teamId=${teamId}):`, playlistsRes.error.code);
-  } else if (playlistsRes) {
-    playlists = ((playlistsRes.data ?? []) as BandPlaylistRow[]).map((row) =>
-      playlistPick({
-        shareCode: row.share_code,
-        title: row.title,
-        createdAt: row.created_at,
-        setlistConfirmed: !!row.setlist_confirmed,
-        setlistBlockCount: nestedRows(row.setlist_items).filter(isSetlistBlock).length,
-      }),
-    );
-  }
   return {
     id: teamRes.data.id,
     name: teamRes.data.name,
     nextShowAt: teamRes.data.next_show_at ?? null,
-    isMember,
-    playlists,
+    isMember: !!memberRes.data,
   };
 }
 
@@ -245,8 +199,7 @@ export default async function PlaylistPage({ params, searchParams }: PageProps) 
   const wantsBandPrompt = isHost && !teamId;
 
   // 집계 뷰가 playlist_id 를 들고 있어(v16) 곡 목록을 기다리지 않는다.
-  // 밴드 조회도 같은 Promise.all 에 넣어 순차 왕복 2번을 유지한다 (eng D4). 밴드 멤버만 아래 탭의 플레이리스트
-  // 목록을 멤버 확인 뒤에 읽느라 한 번 더 기다린다(#110).
+  // 밴드 조회도 같은 Promise.all 에 넣어 순차 왕복 2번을 유지한다 (eng D4).
   const [songsResult, stats, summaryResult, votersResult, engagementResult, band, myTeams, memberCountResult, setlistItems] =
     await Promise.all([
       getPlaylistSongs(playlist.id),
