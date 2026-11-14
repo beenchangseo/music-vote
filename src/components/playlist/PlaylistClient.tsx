@@ -735,7 +735,7 @@ export default function PlaylistClient({
             <div className="mt-10 mb-4 text-center">
               <p className="text-caption text-text-subtle mb-2">새로운 플레이리스트가 필요하다면</p>
               <Link
-                href="/"
+                href={memberBand ? `/new?band=${memberBand.id}` : "/"}
                 className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary-fg hover:text-on-primary-tint transition-colors"
               >
                 플레이리스트 만들기

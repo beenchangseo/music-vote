@@ -243,6 +243,22 @@ describe("PlaylistClient list notices", () => {
     expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toHaveAttribute("href", "/");
   });
 
+  // Band home's ＋ 만들기 goes to the same place, so a member does not pick the band again.
+  it("sends a band member to a new playlist in that band", () => {
+    render(ui({ playlist: { ...playlist, team_id: TEAM }, team: bandTeam, memberCount: null, songs: [{ id: "s-1", title: "Creep", score: 1 } as Props["songs"][number]] }));
+    expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toHaveAttribute("href", `/new?band=${TEAM}`);
+  });
+
+  // The page gives the band id to members only (RoomTeam.id), and the link must not carry it to anyone else.
+  it.each([
+    ["someone outside the band", { team: { id: null, name: null, nextShowAt: null, isMember: false }, isHost: false }],
+    ["the owner, who left the band", { team: { id: null, name: "일코해제", nextShowAt: null, isMember: false } }],
+    ["a logged-out visitor", { team: { id: null, name: null, nextShowAt: null, isMember: false }, loggedIn: false, isHost: false }],
+  ])("sends %s to the plain start page", (_label, overrides) => {
+    render(ui({ playlist: { ...playlist, team_id: TEAM }, memberCount: null, songs: [{ id: "s-1", title: "Creep", score: 1 } as Props["songs"][number]], ...(overrides as Partial<Props>) }));
+    expect(screen.getByRole("link", { name: "플레이리스트 만들기" })).toHaveAttribute("href", "/");
+  });
+
   // The notice already links to a new playlist, and one screen does not carry two buttons that do the same thing.
   it("leaves the end-of-page link off an archived playlist, so only the notice links to a new one", () => {
     render(ui({ playlist: { ...playlist, archived: true }, isHost: false, songs: [{ id: "s-1", title: "Creep", score: 1 } as Props["songs"][number]] }));
