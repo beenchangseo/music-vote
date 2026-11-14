@@ -14,12 +14,11 @@ test.describe("account-a: fixed test room screens", () => {
 
   const scoreBadges = (page: Page) => page.getByRole("status", { name: /^점수 -?\d+점/ });
 
-  // The bottom tab bar is the last element named "셋리스트" / "합주" in the DOM: song rows
-  // carry their own "셋리스트" button, and the tab bar renders after them.
+  // Song rows carry their own "셋리스트" button, so the tab is looked up inside the bottom tab bar.
   // aria-current flips in the same render that starts the lazy data load, so waiting for it
   // makes the "loading finished" checks below meaningful instead of racing the click.
   async function openTab(page: Page, name: "셋리스트" | "합주") {
-    const tab = page.getByRole("button", { name, exact: true }).last();
+    const tab = page.getByRole("navigation", { name: "플레이리스트 화면" }).getByRole("button", { name, exact: true });
     await tab.click();
     await expect(tab).toHaveAttribute("aria-current", "page");
   }
