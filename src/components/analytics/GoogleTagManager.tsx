@@ -6,6 +6,12 @@ import { useLayoutEffect, useRef, useSyncExternalStore } from "react";
 import { gaCampaign, gaPage, gaReferrer, parseGtmContainerId } from "@/domain/google-analytics";
 import { isGaOptedOut, isGaOptOutSaved, subscribeGaOptOut } from "@/lib/ga-opt-out";
 
+declare global {
+  interface Window {
+    dataLayer?: unknown[];
+  }
+}
+
 // Set once gtm.js is queued, for the life of the page. A loaded container runs its own tags (user_engagement, enhanced
 // measurement) whatever the page stops pushing, so turning sending off then reloads into a page without it.
 let containerQueued = false;
@@ -19,11 +25,11 @@ export default function GoogleTagManager() {
   const last = useRef<{ pathname: string; location: string } | null>(null);
 
   // Keyed on the pathname alone: a query-only change (/band/x?created=1 → /band/x) is the same page to GA.
-  // A layout effect, so the dataLayer and this page's fields exist before any page's own mount effect calls
-  // track(): passive effects run children first, wherever this component sits in the tree.
+  // A layout effect, so this page's fields and gtm.start are queued before <Script> inserts gtm.js from its own
+  // passive effect, which runs before this component's: passive effects run children first.
   useLayoutEffect(() => {
     if (!id) return;
-    // Still the server's null through hydration, and that commit's mount effects are the first to call track().
+    // Still the server's null through hydration.
     const off = optedOut ?? isGaOptedOut();
     if (off) {
       // Also for a switch turned off in another tab. Not while only memory holds the choice: the reload would forget it.

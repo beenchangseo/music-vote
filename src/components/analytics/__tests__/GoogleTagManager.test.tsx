@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { StrictMode, useEffect, type ComponentType, type ReactElement } from "react";
+import { StrictMode, type ComponentType, type ReactElement } from "react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -31,7 +31,6 @@ type Push = Record<string, unknown>;
 // Fresh modules per test: GoogleTagManager remembers for the page's lifetime that it queued the container.
 let GoogleTagManager: ComponentType;
 let GaOptOutSwitch: ComponentType;
-let track: typeof import("@/lib/analytics").track;
 let setGaOptedOut: typeof import("@/lib/ga-opt-out").setGaOptedOut;
 let isGaOptedOut: typeof import("@/lib/ga-opt-out").isGaOptedOut;
 
@@ -71,14 +70,6 @@ function hydrate(ui: ReactElement) {
   return render(ui, { container, hydrate: true });
 }
 
-/** A page that reports itself from its mount effect, as BandHomeClient does with band_home_viewed. */
-function TracksOnMount() {
-  useEffect(() => {
-    track("band_home_viewed", { role: "owner" });
-  }, []);
-  return null;
-}
-
 function setReferrer(referrer: string) {
   Object.defineProperty(document, "referrer", { value: referrer, configurable: true });
 }
@@ -87,7 +78,6 @@ beforeEach(async () => {
   vi.resetModules();
   ({ default: GoogleTagManager } = await import("../GoogleTagManager"));
   ({ default: GaOptOutSwitch } = await import("../GaOptOutSwitch"));
-  ({ track } = await import("@/lib/analytics"));
   ({ setGaOptedOut, isGaOptedOut } = await import("@/lib/ga-opt-out"));
   delete window.dataLayer;
   scriptLoads.length = 0;
@@ -253,44 +243,6 @@ describe("GoogleTagManager page views", () => {
   });
 });
 
-describe("GoogleTagManager and a page's own mount-time track()", () => {
-  it("pushes the event after the masked fields of its own page, on first load and after a client navigation", () => {
-    vi.stubEnv("NEXT_PUBLIC_GTM_ID", ID);
-    // The page before GoogleTagManager: passive effects run in this order, children first.
-    const tree = () => (
-      <>
-        <TracksOnMount key={navigation.pathname} />
-        <GoogleTagManager />
-      </>
-    );
-    navigation.pathname = "/band/team-1";
-    const { rerender } = hydrate(tree());
-    navigation.pathname = "/playlist/abcd1234";
-    rerender(tree());
-
-    expect(events().map(({ event, model }) => [event, model.page_location])).toEqual([
-      ["gtm.js", `${ORIGIN}/band/[id]`],
-      ["plypick_page_view", `${ORIGIN}/band/[id]`],
-      ["band_home_viewed", `${ORIGIN}/band/[id]`],
-      ["plypick_page_view", `${ORIGIN}/playlist/[code]`],
-      ["band_home_viewed", `${ORIGIN}/playlist/[code]`],
-    ]);
-    const viewed = events().filter(({ event }) => event === "band_home_viewed");
-    expect(viewed.map(({ model }) => model.event_params)).toEqual([{ role: "owner" }, { role: "owner" }]);
-  });
-
-  it("without a container id the event goes nowhere and nothing is queued", () => {
-    render(
-      <>
-        <TracksOnMount />
-        <GoogleTagManager />
-      </>,
-    );
-
-    expect(window.dataLayer).toBeUndefined();
-  });
-});
-
 describe("opting out on /privacy", () => {
   beforeEach(() => {
     vi.stubEnv("NEXT_PUBLIC_GTM_ID", ID);
@@ -305,16 +257,11 @@ describe("opting out on /privacy", () => {
     </>
   );
 
-  it("a visitor who opted out before gets no gtm.js and no dataLayer, and the page's own events go nowhere", () => {
+  it("a visitor who opted out before gets no gtm.js and no dataLayer", () => {
     setGaOptedOut(true);
     navigation.pathname = "/band/team-1";
 
-    hydrate(
-      <>
-        <TracksOnMount />
-        <GoogleTagManager />
-      </>,
-    );
+    hydrate(<GoogleTagManager />);
 
     expect(scriptLoads).toEqual([]);
     expect(window.dataLayer).toBeUndefined();
@@ -328,7 +275,6 @@ describe("opting out on /privacy", () => {
     const before = pushes().length;
 
     fireEvent.click(sendSwitch());
-    track("auth_logout", {});
     navigation.pathname = "/terms";
     rerender(privacyPage());
 
@@ -398,7 +344,6 @@ describe("opting out on /privacy", () => {
     const before = pushes().length;
 
     fireEvent.click(sendSwitch());
-    track("auth_logout", {});
     navigation.pathname = "/terms";
     rerender(privacyPage());
 

@@ -215,15 +215,15 @@ Variable(한국어) + Geist(영문) 폴백. 한글에는 대소문자가 없어�
   `createAdminClient()`(secret 키, RLS 우회라 권한 검사 필수)를 쓴다.
 - **Export route** `src/app/api/*`: OG·셋리스트 이미지는 Edge, 셋리스트 PDF 는 Node, cron 은 서버 런타임.
   Pretendard 는 CDN 에서 받는다.
-- **분석**: `src/lib/analytics.ts` 의 `track()`. 새 이벤트는 `EventMap` 타입에 먼저 등록한다. 분석 실패는 조용히 넘긴다.
-  GA 는 Google 태그 관리자(`NEXT_PUBLIC_GTM_ID`, `components/analytics/GoogleTagManager.tsx`)를 거쳐 `dataLayer` 로만
-  받는다. 페이지마다 `page_location`·`page_title`·`page_referrer`(없으면 `undefined`)를 최상위 키로 넣고, 랜딩 페이지에서만
-  `campaign_source`·`campaign_medium`·`campaign_content` 를 더한 뒤 `{ event: "plypick_page_view" }` 를 넣는다. 첫 페이지는
-  그 값을 `gtm.js` 보다 먼저 넣는다. 앱 이벤트는 `{ event_params: null }` 로 지난 속성을 지우고
-  `{ event: <EventMap 이름>, event_params }` 를 넣는다. 값은 모두 `src/domain/google-analytics.ts` 표의 가린 값이라 새
-  페이지는 그 표에 더하고, 이벤트 속성은 그냥 `string` 으로 두지 않는다. GTM 의 GA4 태그는 이 가린 값만 읽고 기본 제공
-  변수 Page URL·Page Title(공유 코드가 든 진짜 주소와 플레이리스트 제목)은 읽지 않는다. 태그는 GTM 웹 콘솔에서
-  운영자가 직접 설정한다. 끄기 스위치를 끄면 GTM 을 실은 화면은 한 번 새로 고친다.
+- **분석**: `src/lib/analytics.ts` 의 `track()` 은 Vercel Analytics 커스텀 이벤트만 보낸다. 새 이벤트는 `EventMap` 타입에 먼저
+  등록하고 속성은 그냥 `string` 으로 두지 않는다. 분석 실패는 조용히 넘긴다.
+  GA 는 Google 태그 관리자(`NEXT_PUBLIC_GTM_ID`, `components/analytics/GoogleTagManager.tsx`)가 싣는다. 태그·트리거는 분석
+  담당이 GTM 콘솔에서 태그 관리 시트대로 정하고, 앱 코드는 이벤트를 `dataLayer` 로 보내지 않는다. 사이트가 넣는 것은 페이지
+  값뿐이다. 페이지마다 `src/domain/google-analytics.ts` 표의 가린 `page_location`·`page_title`·`page_referrer`(없으면
+  `undefined`)를 최상위 키로 넣고, 랜딩 페이지에서만 `campaign_source`·`campaign_medium`·`campaign_content` 를 더한 뒤
+  `{ event: "plypick_page_view" }` 를 넣는다. 첫 페이지는 그 값을 `gtm.js` 보다 먼저 넣는다. 새 페이지는 그 표에 더한다.
+  GTM 기본 제공 변수 Page URL·Page Title 에는 공유 코드·초대 코드가 든 진짜 주소와 플레이리스트 제목이 있어서, GA4 태그는
+  이 가린 값을 쓰도록 분석 담당에게 알린다. 끄기 스위치를 끄면 GTM 을 실은 화면은 한 번 새로 고친다.
 
 ## 마이그레이션
 
