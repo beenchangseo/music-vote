@@ -17,7 +17,6 @@ type NoFreeText<M> = { [E in keyof M]: { [K in keyof M[E]]: string extends M[E][
 export type GaSafe<M extends NoFreeText<M>> = M;
 
 // 이벤트 이름은 snake_case 일관. 데이터 분석 시 grep 쉬움.
-// GTM 가져오기 파일(docs/analytics/gtm-container.json)이 이 표에서 나온다. 바꾸면 node scripts/gtm-container.mjs 를 돌린다.
 type EventMap = GaSafe<{
   playlist_created: {
     has_deadline: boolean;

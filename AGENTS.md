@@ -222,9 +222,8 @@ Variable(한국어) + Geist(영문) 폴백. 한글에는 대소문자가 없어�
   그 값을 `gtm.js` 보다 먼저 넣는다. 앱 이벤트는 `{ event_params: null }` 로 지난 속성을 지우고
   `{ event: <EventMap 이름>, event_params }` 를 넣는다. 값은 모두 `src/domain/google-analytics.ts` 표의 가린 값이라 새
   페이지는 그 표에 더하고, 이벤트 속성은 그냥 `string` 으로 두지 않는다. GTM 의 GA4 태그는 이 가린 값만 읽고 기본 제공
-  변수 Page URL·Page Title(공유 코드가 든 진짜 주소와 플레이리스트 제목)은 읽지 않는다. 태그 설정의 원본은
-  `docs/analytics/gtm-container.json` 이고 `EventMap` 을 바꾸면 `node scripts/gtm-container.mjs` 로 다시 쓴다.
-  끄기 스위치를 끄면 GTM 을 실은 화면은 한 번 새로 고친다.
+  변수 Page URL·Page Title(공유 코드가 든 진짜 주소와 플레이리스트 제목)은 읽지 않는다. 태그는 GTM 웹 콘솔에서
+  운영자가 직접 설정한다. 끄기 스위치를 끄면 GTM 을 실은 화면은 한 번 새로 고친다.
 
 ## 마이그레이션
 
