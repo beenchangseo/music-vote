@@ -1,4 +1,4 @@
-// The visitor's choice, made on /privacy, to send nothing to Google Analytics from this browser.
+// The visitor's choice, made on /privacy, to send nothing to Google Analytics (loaded by Google Tag Manager) from this browser.
 
 const KEY = "plypick:ga-opt-out";
 const CHANGE = "plypick:ga-opt-out-change";
@@ -12,6 +12,11 @@ export function isGaOptedOut(): boolean {
   } catch {
     return unsaved ?? false;
   }
+}
+
+/** False while only this page's memory holds the choice, so a reload would forget it. */
+export function isGaOptOutSaved(): boolean {
+  return unsaved === null;
 }
 
 export function setGaOptedOut(optedOut: boolean): void {

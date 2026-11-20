@@ -8,50 +8,28 @@ import { track, type GaSafe } from "../analytics";
 
 beforeEach(() => {
   vercelTrack.mockReset();
-  delete window.gtag;
+  // GoogleTagManager creates the queue when GTM may load.
+  window.dataLayer = [];
 });
 
 afterEach(() => {
-  delete window.gtag;
+  delete window.dataLayer;
 });
 
 describe("track", () => {
-  it("sends the same event name and properties to GA and Vercel", () => {
-    const gtag = vi.fn();
-    window.gtag = gtag;
-
+  it("sends the event to Vercel only: GTM tags are set up in the GTM console, not fed by app events", () => {
     track("vote_changed", { from: 1, to: -1 });
 
-    expect(gtag).toHaveBeenCalledExactlyOnceWith("event", "vote_changed", { from: 1, to: -1 });
     expect(vercelTrack).toHaveBeenCalledExactlyOnceWith("vote_changed", { from: 1, to: -1 });
+    expect(window.dataLayer).toEqual([]);
   });
 
-  it("without gtag (GA off, or before it loads) only Vercel gets the event", () => {
-    expect(() => track("setlist_exported", { format: "pdf" })).not.toThrow();
-
-    expect(vercelTrack).toHaveBeenCalledExactlyOnceWith("setlist_exported", { format: "pdf" });
-  });
-
-  it("a throwing gtag stays silent and Vercel still gets the event", () => {
-    window.gtag = () => {
-      throw new Error("gtag broke");
-    };
-
-    expect(() => track("auth_logout", {})).not.toThrow();
-
-    expect(vercelTrack).toHaveBeenCalledExactlyOnceWith("auth_logout", {});
-  });
-
-  it("a throwing Vercel track stays silent and GA still gets the event", () => {
-    const gtag = vi.fn();
-    window.gtag = gtag;
+  it("a throwing Vercel track stays silent", () => {
     vercelTrack.mockImplementation(() => {
       throw new Error("vercel broke");
     });
 
     expect(() => track("tap_tempo_used", { taps: 4 })).not.toThrow();
-
-    expect(gtag).toHaveBeenCalledExactlyOnceWith("event", "tap_tempo_used", { taps: 4 });
   });
 });
 

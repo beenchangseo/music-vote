@@ -1,7 +1,7 @@
 import { readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { describe, expect, it } from "vitest";
-import { GA_PAGES, gaCampaign, gaPage, gaReferrer, parseGaMeasurementId, UNKNOWN_GA_PAGE } from "../google-analytics";
+import { GA_PAGES, gaCampaign, gaPage, gaReferrer, parseGtmContainerId, UNKNOWN_GA_PAGE } from "../google-analytics";
 import { kakaoShareQuery, SHARE_VARIANTS } from "../kakao-share";
 
 const ORIGIN = "https://plypick.kr";
@@ -122,18 +122,20 @@ describe("gaCampaign", () => {
   });
 });
 
-describe("parseGaMeasurementId", () => {
+describe("parseGtmContainerId", () => {
   it.each([
     { raw: undefined, expected: null },
     { raw: "", expected: null },
-    { raw: "G-TEST123456", expected: "G-TEST123456" },
-    { raw: "G-TEST123456\n", expected: "G-TEST123456" },
+    { raw: "GTM-TEST123", expected: "GTM-TEST123" },
+    { raw: " GTM-TEST123\n", expected: "GTM-TEST123" },
+    { raw: "GTM-", expected: null },
+    { raw: "gtm-test123", expected: null },
+    { raw: "G-TEST123456", expected: null },
     { raw: "UA-12345-1", expected: null },
-    { raw: "G-", expected: null },
-    { raw: "g-test123456", expected: null },
-    { raw: "G-TEST123456&foo=1", expected: null },
-    { raw: 'G-1"><script>', expected: null },
+    { raw: "GTM-TEST123&gtm_auth=x", expected: null },
+    { raw: "GTM-TEST 123", expected: null },
+    { raw: 'GTM-1"><script>', expected: null },
   ])("$raw → $expected", ({ raw, expected }) => {
-    expect(parseGaMeasurementId(raw)).toBe(expected);
+    expect(parseGtmContainerId(raw)).toBe(expected);
   });
 });

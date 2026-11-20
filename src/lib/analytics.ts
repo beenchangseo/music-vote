@@ -1,18 +1,10 @@
-// Vercel Analytics·Google Analytics 커스텀 이벤트 wrapper.
+// Vercel Analytics 커스텀 이벤트 wrapper. GA·GTM 으로는 보내지 않는다. GTM 태그는 분석 담당이 GTM 콘솔에서 정한다.
 // 타입 명시 + property 키 통일 + 실패 시 silent.
 
 import { track as vercelTrack } from "@vercel/analytics";
 import type { ShareVariant } from "@/domain/kakao-share";
 
-declare global {
-  interface Window {
-    dataLayer?: unknown[];
-    gtag?: (...args: unknown[]) => void;
-    [gaDisable: `ga-disable-${string}`]: boolean | undefined;
-  }
-}
-
-// GA 는 속성을 그대로 받는다. 그냥 string 인 속성은 공유 코드나 사용자가 쓴 글을 Google 로 실어 보낼 수 있어서,
+// 분석 도구는 속성을 그대로 받는다. 그냥 string 인 속성은 공유 코드나 사용자가 쓴 글을 바깥으로 실어 보낼 수 있어서,
 // 속성은 boolean·number·정해진 문자열의 union 만 된다. 다른 타입을 넣으면 컴파일이 실패한다.
 type NoFreeText<M> = { [E in keyof M]: { [K in keyof M[E]]: string extends M[E][K] ? never : M[E][K] } };
 export type GaSafe<M extends NoFreeText<M>> = M;
@@ -105,9 +97,9 @@ export function track<E extends EventName>(
   event: E,
   properties: EventMap[E],
 ): void {
-  // 분석 실패가 UX 깨면 안 됨. 한쪽이 실패해도 다른 쪽은 보낸다.
+  // 분석 실패가 UX 깨면 안 됨.
   try {
-    // Hobby 플랜은 Vercel 커스텀 이벤트를 버려서 지금은 GA 에만 남는다. Pro 로 바꾸면 Vercel 에도 쌓인다.
+    // Hobby 플랜은 Vercel 커스텀 이벤트를 버린다. Pro 로 바꾸면 쌓인다.
     vercelTrack(
       event,
       properties as unknown as Record<
@@ -115,8 +107,5 @@ export function track<E extends EventName>(
         string | number | boolean | null
       >,
     );
-  } catch {}
-  try {
-    window.gtag?.("event", event, properties);
   } catch {}
 }

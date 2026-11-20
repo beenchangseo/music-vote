@@ -119,7 +119,7 @@ export default function PrivacyPage() {
               <li>Vercel: 서비스 호스팅과 이용 통계</li>
               <li>카카오: 카카오 로그인과 카카오톡 공유</li>
               <li>YouTube(Google): 후보곡 영상 재생과 검색</li>
-              <li>Google: 사용 흐름 통계(Google 애널리틱스)</li>
+              <li>Google: 사용 흐름 통계(Google 태그 관리자로 싣는 Google 애널리틱스)</li>
             </ul>
             <p className="mt-2">Google 애널리틱스 기록은 아래처럼 국외로 옮겨져요.</p>
             <ul className="list-disc list-inside mt-2 space-y-1 text-text-muted">
