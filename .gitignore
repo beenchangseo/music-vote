@@ -58,6 +58,9 @@ docs/*
 !docs/results/
 !docs/results/*.md
 !docs/results/*.tsv
+!docs/analytics/
+!docs/analytics/*.md
+!docs/analytics/*.json
 .env*.local
 .gstack/
 .migration/
