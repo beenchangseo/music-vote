@@ -9,7 +9,7 @@ export default function GaOptOutSwitch() {
   return (
     <Switch
       label="Google 애널리틱스로 사용 통계 보내기"
-      description="이 브라우저에서만 적용돼요. 끄면 바로 멈춰요."
+      description="이 브라우저에서만 적용돼요. 끄면 열린 화면을 새로 고쳐 바로 멈춰요."
       checked={!optedOut}
       onCheckedChange={(sending) => setGaOptedOut(!sending)}
     />

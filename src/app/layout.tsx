@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import KakaoInit from "@/components/share/KakaoInit";
-import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import GoogleTagManager from "@/components/analytics/GoogleTagManager";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Suspense } from "react";
@@ -62,7 +62,7 @@ export default function RootLayout({
           A fixed one (TabBar) covers the end of the page instead, so the body leaves room for the height it publishes. */}
       <body className="min-h-full flex flex-col bg-bg text-text font-sans pb-safe-bottom has-data-safe-bottom:pb-(--bottom-chrome-height)">
         {/* First, so its layout effect also comes before any layout effect below that calls track(). */}
-        <GoogleAnalytics />
+        <GoogleTagManager />
         <DialogProvider>
           {/* A screen that draws the account menu in its own row (data-account-in-flow) takes it over, so the two never stack. */}
           <div className="fixed top-2 right-2 z-50 [body:has([data-account-in-flow])_&]:hidden">

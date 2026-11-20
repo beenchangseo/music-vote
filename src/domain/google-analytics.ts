@@ -80,8 +80,8 @@ export function gaCampaign(search: string): GaCampaign {
   };
 }
 
-/** NEXT_PUBLIC_GA_ID as a measurement ID, or null when it is unset or not `G-` and alphanumerics. */
-export function parseGaMeasurementId(raw: string | undefined): string | null {
+/** NEXT_PUBLIC_GTM_ID as a container ID, or null when it is unset or not `GTM-` and alphanumerics. */
+export function parseGtmContainerId(raw: string | undefined): string | null {
   const id = raw?.trim() ?? "";
-  return /^G-[A-Z0-9]+$/.test(id) ? id : null;
+  return /^GTM-[A-Z0-9]+$/.test(id) ? id : null;
 }
